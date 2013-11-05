@@ -1,0 +1,5 @@
+Este archivo es para volcar ideas/descubrimientos que hagamos:
+
+1- Parece obvio, pero me costo decifrarlo, si lo que se quiere es prelodear una funcion de c, se debe crear el hack en c, es decir extension de archivo .c y no .cpp.
+
+2-

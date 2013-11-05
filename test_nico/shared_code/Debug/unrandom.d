@@ -1,1 +1,1 @@
-unrandom.d: ../unrandom.cpp
+unrandom.d: ../unrandom.c

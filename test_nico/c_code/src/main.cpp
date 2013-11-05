@@ -19,7 +19,7 @@ int main() {
 
 	int iSecret = rand();
 
-	cout << "Mi numero aleatorio entre es: " << iSecret <<endl;
+	cout << "Mi numero aleatorio es: " << iSecret <<endl;
 
 	return 0;
 }
