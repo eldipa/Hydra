@@ -9,6 +9,10 @@
 #include <iostream>
 #include <stdlib.h>     /* srand, rand */
 #include <time.h>       /* time */
+#include <sys/types.h>
+#include <sys/wait.h>
+
+
 
 using namespace std;
 
@@ -19,7 +23,20 @@ int main() {
 
 	int iSecret = rand();
 
-	cout << "Mi numero aleatorio es: " << iSecret <<endl;
+	cout << "Mi numero aleatorio es: " << iSecret << endl;
+
+	cout << "Comienza testeo de fork" << endl;
+
+	int pid = fork();
+	if (pid == 0) {
+		//hijo
+		cout << "Soy el hijo y me ejecute" << endl;
+	} else {
+		//padre
+		cout << "Soy el padre y me ejecute" << endl;
+	}
+
+	wait(NULL);
 
 	return 0;
 }

@@ -4,12 +4,15 @@
 
 # Add inputs and outputs from these tool invocations to the build variables 
 C_SRCS += \
+../forkHack.c \
 ../unrandom.c 
 
 OBJS += \
+./forkHack.o \
 ./unrandom.o 
 
 C_DEPS += \
+./forkHack.d \
 ./unrandom.d 
 
 
