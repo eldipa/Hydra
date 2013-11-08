@@ -4,7 +4,7 @@
 		<style>wxDEFAULT_FRAME_STYLE|wxTAB_TRAVERSAL</style>
 		<size>500,300</size>
 		<title>Test</title>
-		<object class="wxTextCtrl" name="m_textCtrl1">
+		<object class="wxTextCtrl" name="text">
 			<style>wxTE_MULTILINE</style>
 			<value></value>
 			<maxlength>0</maxlength>
