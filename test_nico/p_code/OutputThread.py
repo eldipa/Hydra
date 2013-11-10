@@ -22,7 +22,7 @@ class OutputThread(threading.Thread):
             where = self.fd.tell()
             line = self.fd.readline()
             if not line:
-                time.sleep(1)
+                time.sleep(.5)
                 self.fd.seek(where)
             else:
                 wx.CallAfter(self.text.AppendText, line)
