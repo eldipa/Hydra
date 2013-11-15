@@ -18,7 +18,7 @@ class OutputThread(threading.Thread):
         
 
     def run(self):
-        while 1:
+        while True:
             where = self.fd.tell()
             line = self.fd.readline()
             if not line:
