@@ -1,0 +1,5 @@
+INCLUDE_PATHS = ../../ipc ../../os ../../common ../../log
+LIBRARIES = ../../ipc/libnetwork.a ../../os/libos.a ../../log/liblog.a ../../common/libcommon.a
+EXTERNAL_LIBRARIES = dl 
+LINKER_FLAGS += -rdynamic
+TARGET = connection connectionless

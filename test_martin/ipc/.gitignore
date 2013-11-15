@@ -1,0 +1,32 @@
+#
+*~
+
+# Compiled Object files
+*.slo
+*.lo
+*.o
+
+# Compiled Dynamic libraries
+*.so
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+
+# Dependencies
+*.deps
+
+# Binaries
+db/example
+processes/main
+processes/notificador_descarga
+processes/puesto_checkin
+processes/robot_carga
+processes/robot_checkin
+processes/robot_despacho
+processes/robot_intercargo
+processes/scanner
+processes/torre_de_control
+network/examples/connection
+network/examples/connectionless

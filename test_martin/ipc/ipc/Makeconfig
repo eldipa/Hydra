@@ -1,0 +1,5 @@
+INCLUDE_PATHS =  ../os ../common ../log 
+LIBRARIES = ../os/libos.a ../log/liblog.a ../common/libcommon.a
+EXTERNAL_LIBRARIES = dl 
+LINKER_FLAGS += -rdynamic
+TARGET = libipc.a libnetwork.a

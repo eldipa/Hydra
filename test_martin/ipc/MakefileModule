@@ -1,0 +1,152 @@
+#########################################################################
+#                                                                       #
+#                        This work is licensed under a                  #
+#   CC BY-SA        Creative Commons Attribution-ShareAlike             #
+#                           3.0 Unported License.                       #
+#                                                                       # 
+#  Author: Di Paola Martin Pablo, 2012                                  #
+#                                                                       #
+#########################################################################
+
+###############################################################################
+#                                                                             #
+#  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS        #
+#  "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT          #
+#  LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A    #
+#  PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT OWNER  #
+#  OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,   #
+#  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,        #
+#  PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR         #
+#  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF     #
+#  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING       #
+#  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS         #
+#  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               #
+#                                                                             #
+###############################################################################
+
+# Tipical flags used by the compiler
+STRICT = -Wall -Wextra -pedantic -std=c++98 -fpic -pedantic-errors -Werror 
+DEBUG = -ggdb -DDEBUG -fno-inline -rdynamic
+OPTIMIZATION = -O0
+
+# More flags
+COMPILER_FLAGS = $(STRICT) $(DEBUG) $(OPTIMIZATION)
+ARCHIVER_FLAGS = -ruc
+LINKER_FLAGS =
+DYNAMIC_FLAGS =
+
+# This are 
+# 	- the path to a directory where are the headers files (.h)
+# 	- the path and name of each library. The order is very important! Put the more 'high-level' first, then the more 'generic-and-common'.
+# 	- the path to a directory where external libraries are.
+# 	- the name (no the path) of that libraries.
+INCLUDE_PATHS = 
+LIBRARIES = 
+EXTERNAL_LIBRARY_PATHS = 
+EXTERNAL_LIBRARIES = 
+
+
+# This (this makefile) is a template, so you can override or extend each variable writting
+# a 'Makeconfig', a file with the same syntax that a make file
+#
+# So, the 'GLOBAL' configuration can be modified
+#
+# You MUST define the target name 'TARGET' used to build the final object.
+# This variable can be defined with multiples targets separated by a space
+#
+# If TARGET is of the form:
+#  - lib*.a then the makefile will build a static library archive using ARCHIVE
+#  	    and collecting all the *.o object
+#
+#  - lib*.so the the makefile will build a dynamic library using DYNAMIC
+#  	    and collecting all the *.o object
+#  - *.make then it is assumed that exists a file with that name an is a makefile with
+#           two defined rules 'all' and 'clean'
+#
+#  in other cases, the makefile will build an executable using LINK 
+#  In this case, TARGET MUST BE a name X where the object X.o can be builded (tipically,
+#  X.cpp exists) 
+#  This is required because the linker must link ONLY ONE target at time and this
+#  is implemented filter-out the rest of the targets.
+#  Obviously, X.cpp must have a 'main' function.
+#
+-include Makeconfig
+
+
+# This are the tools used to compile, generate the dependencies, to archive, link and
+# delete files. 
+#
+# The '$@' element represent the target object, '$<' is the first dependency element
+# and '$^' are the dependencies without duplicated of that rule.
+COMPILE = $(TIMEIT) g++ -c $(COMPILER_FLAGS) $(patsubst %, -I%, $(INCLUDE_PATHS)) -DMAKE_PATH=`pwd` -o $@ $<
+DEPEND = $(TIMEIT) g++ -MM $(COMPILER_FLAGS) $(patsubst %, -I%, $(INCLUDE_PATHS)) -MF $@ $(subst .deps,.cpp,$@)
+ARCHIVE = $(TIMEIT) ar $(ARCHIVER_FLAGS) $@ $^ 
+LINK = $(TIMEIT) g++ $(LINKER_FLAGS) $(patsubst %, -L%, $(EXTERNAL_LIBRARY_PATHS)) -o $@ $@.o $(filter-out $(patsubst %, %.o, $(TARGET)), $^)  $(patsubst %, -l%, $(EXTERNAL_LIBRARIES))
+DYNAMIC = $(TIMEIT) g++ -shared $(DYNAMIC_FLAGS) -o $@ $^ 
+MAKE_EXTERN = $(TIMEIT) $(SHELL) -c "( $(MAKE) -e --no-print-directory -f $$external $(MAKECMDGOALS) $(PRINT_MAKE_EXTERN_DONE) )"
+RM = $(TIMEIT) rm -f 
+
+#
+# END OF THE CONFIGURATION
+#
+
+ifeq ($(verbose), 0)
+   PRINT_COMPILE = @printf "\033[35m  %-$(ALIGN)s \033[0m" "Compiling $<" ; 
+   PRINT_DEPEND = @printf "\033[32;2m  %-$(ALIGN)s \033[0m" "Dependencies of $(subst .deps,.cpp,$@)" ; 
+   PRINT_ARCHIVE = @printf "\033[36;1m  %-$(ALIGN)s \033[0m" "Archiving into $@" ; 
+   PRINT_LINK = @printf "\033[36;1m  %-$(ALIGN)s \033[0m" "Linking into $@" ; 
+   PRINT_DYNAMIC = @printf "\033[36;1m  %-$(ALIGN)s \033[0m" "Building shared library $@" ; 
+   PRINT_MAKE_EXTERN = printf "\033[36;3m    %s\033[36;1m %-$(ALIGN)s \033[0m" "Invoking" "make $(MAKECMDGOALS) $$external..." ; echo "" ; 
+   PRINT_RM_DEPS = @printf "\033[31m  %-$(ALIGN)s \033[0m" "Removing depenencies" ; 
+   PRINT_RM_OBJECTS = @printf "\033[31m  %-$(ALIGN)s \033[0m" "Removing objects" ;
+   PRINT_RM_TARGET = @printf "\033[31m  %-$(ALIGN)s \033[0m" "Removing target" ;
+   PRINT_MAKE_EXTERN_DONE = && printf \"\033[36;3m  %-$(ALIGN)s \033[0m\" \"  Done\"
+endif
+
+SRC = $(wildcard *.cpp)
+OBJ = $(SRC:.cpp=.o)	
+DEPS = $(SRC:.cpp=.deps)
+
+.PHONY: all clean depclean mostlyclean e1
+
+.cpp.o:
+	$(PRINT_COMPILE) $(COMPILE) $(NL)
+
+ifndef TARGET
+e1:
+	$(PRINT_ERROR) "The 'TARGET' must be defined (in the Makeconfig file)"
+endif
+
+
+all: $(DEPS) $(filter lib%.a,$(TARGET)) $(filter lib%.so,$(TARGET)) $(filter-out lib%.a lib%.so %.make,$(TARGET))
+	@for external in $(filter %.make,$(TARGET)) ; do $(PRINT_MAKE_EXTERN) $(MAKE_EXTERN) $(NL) ; done  
+
+
+$(filter lib%.a,$(TARGET)): $(OBJ)
+	$(PRINT_ARCHIVE) $(ARCHIVE) $(NL)
+
+$(filter lib%.so,$(TARGET)): $(OBJ)
+	$(PRINT_DYNAMIC) $(DYNAMIC) $(NL)
+
+$(filter-out lib%.a lib%.so %.make,$(TARGET)): $(OBJ) $(LIBRARIES)
+	$(PRINT_LINK) $(LINK) $(NL)
+
+
+$(DEPS): 
+	$(PRINT_DEPEND) $(DEPEND) $(NL)
+
+depclean:
+	$(PRINT_RM_DEPS) $(RM) $(DEPS) $(NL)
+
+mostlyclean: depclean
+	$(PRINT_RM_OBJECTS) $(RM) $(OBJ)  $(NL)
+
+clean: mostlyclean 
+	$(PRINT_RM_TARGET) $(RM) $(filter-out %.make, $(TARGET))  $(NL)
+	@for external in $(filter %.make,$(TARGET)) ; do $(PRINT_MAKE_EXTERN) $(MAKE_EXTERN) ; done  
+
+# This will include in this Makefile all the "sub makefiles" with the depenencies loaded
+# Only if not is a "clean" rule (eg. "make clean" or "make depclean")
+ifneq (clean,$(findstring clean,$(MAKECMDGOALS)))
+-include $(DEPS)
+endif
