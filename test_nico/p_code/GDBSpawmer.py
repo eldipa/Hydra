@@ -6,6 +6,7 @@ Created on 15/11/2013
 import sys
 import threading
 import wx
+import time
 sys.path.append("/home/nicolas/workspace_c++/C-GDB/test_martin/ipc/pyipc")
 
 from ipc import MessageQueue #@UnresolvedImport ignorar!!
@@ -24,6 +25,7 @@ class Spawmer(threading.Thread):
         open(_QUEUE_PATH_, _QUEUE_CHAR_)
         self.msgQueue = MessageQueue(_QUEUE_PATH_, _QUEUE_CHAR_, 0666, True)
         
+        
     def ObtenerID(self, msg):
         struct = unpack('<li', msg)
         return struct[1]
@@ -41,6 +43,8 @@ class Spawmer(threading.Thread):
             pid = self.ObtenerID(msg)
             print pid
             wx.CallAfter(self.gui.AddFrame,"", pid)
+            #TODO Cambiar esto por algo logico....
+            time.sleep(2)
             respuesta = self.CrearRespuesta(pid)
             self.msgQueue.push(respuesta)
             

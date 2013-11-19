@@ -19,9 +19,9 @@ using namespace std;
 int main() {
 	cout << "Hola mundo C++!!" << endl;
 	/* initialize random seed: */
-	srand(time(NULL));
+	srand (time(NULL));
 
-	int iSecret = rand();
+int 	iSecret = rand();
 
 	cout << "Mi numero aleatorio es: " << iSecret << endl;
 
@@ -38,7 +38,10 @@ int main() {
 		cout << "El numero aleatorio dividio por su numero es: "
 				<< ((float) iSecret) / atoi(numero.c_str()) << endl;
 		//Tiro un SIGSEG para ver si gdb lo atrapa
-		kill(getpid(),11);
+		char* c = "hola";
+		while (true) {
+			cout << c++ << endl;
+		}
 		cout << "Soy el hijo y me ejecute" << endl;
 	} else {
 		//padre
@@ -47,7 +50,7 @@ int main() {
 		cout << "Soy el padre y me ejecute" << endl;
 	}
 
-	wait(NULL);
+	wait (NULL);
 
 	return 0;
 }

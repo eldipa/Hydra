@@ -67,7 +67,7 @@ int fork() {
 			printf("Error de msgrcv: %s\n", strerror(errno));
 			fflush(stdout);
 		}
-//		close(cola);
+//		close(cola);?? va ??
 
 		printf("Hack Success!!\n");
 	} else {

@@ -47,6 +47,7 @@ class GUIFrame():
             self.gdb.stdin.write(gdb_ld_preload + shared_path + "\n")
         elif (self.pid != 0):
             self.gdb = subprocess.Popen(["gdb", "-p", str(self.pid)], stdout=outFile, stderr=outFile , stdin=PIPE)
+            self.gdb.stdin.write(gdb_ld_preload + shared_path + "\n")
         self.frame.SetTitle("PID = " + str(self.gdb.pid))
 
     def nuevaLinea(self, event):
