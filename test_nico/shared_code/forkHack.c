@@ -44,33 +44,36 @@ int fork() {
 			printf("Error de ftok: %s\n", strerror(errno));
 			fflush(stdout);
 		}
-		int fd = msgget(clave, 0666 | IPC_CREAT);
-		if (fd == -1) {
+		int cola = msgget(clave, 0666 | IPC_CREAT);
+		if (cola == -1) {
 			printf("Error de msgget: %s\n", strerror(errno));
 			fflush(stdout);
 		}
+
 		MensajeFork msg;
 		msg.mtype = 1;
 		msg.pid = getpid();
+
 		//Envio pid para gdb y espero el ack
-		ok = msgsnd(fd, (struct msgbuf *) &msg, sizeof(MensajeFork), 0);
+		ok = msgsnd(cola, (void *) &msg, sizeof(MensajeFork), 0);
 		if (ok == -1) {
 			printf("Error de msgsnd: %s\n", strerror(errno));
 			fflush(stdout);
 		}
 
-		ok = msgrcv(fd, (struct msgbuf *) &msg, sizeof(MensajeFork), getpid(),
-				0);
+		ok = msgrcv(cola, (void *) &msg, sizeof(MensajeFork) - sizeof(long),
+				getpid(), 0);
 		if (ok == -1) {
 			printf("Error de msgrcv: %s\n", strerror(errno));
 			fflush(stdout);
 		}
-		close(fd);
+//		close(cola);
 
 		printf("Hack Success!!\n");
 	} else {
 		//hack de padre
 		printf("Aca hackeo al padre\n");
+
 	}
 
 	return pid;
