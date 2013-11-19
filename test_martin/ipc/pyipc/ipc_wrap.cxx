@@ -3373,12 +3373,30 @@ SWIG_AsPtr_std_string (PyObject * obj, std::string **val)
 }
 
 SWIGINTERN void MessageQueue_push(MessageQueue *self,std::string const &msg){
-      self->push(msg.data(), msg.size());
+      PyThreadState *_save;
+      try {
+        Py_UNBLOCK_THREADS;
+        self->push(msg.data(), msg.size());
+        Py_BLOCK_THREADS;
+      }catch(...) {
+        Py_BLOCK_THREADS;
+        throw;
+      }
    }
 SWIGINTERN std::string MessageQueue_pull__SWIG_0(MessageQueue *self,long type=0){
       std::vector<char> v;
       v.reserve(8192);
-      ssize_t s = self->pull(&v[0], 8192, type);
+      ssize_t s = 0;
+      
+      PyThreadState *_save;
+      try {
+        Py_UNBLOCK_THREADS;
+        s = self->pull(&v[0], 8192, type);
+        Py_BLOCK_THREADS;
+      }catch(...) {
+        Py_BLOCK_THREADS;
+        throw;
+      }
       
       return std::string(&v[0], s);
    }
