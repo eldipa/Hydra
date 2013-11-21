@@ -75,10 +75,10 @@ def route(url, methods='GET', regexp_flags=0):
 
 
 
-def run():
+def run(port=8000, ip=''):
    server_class = BaseHTTPServer.HTTPServer
    handler_class = Servant
-   server_address = ('', 8000)
+   server_address = (ip, port)
 
    httpd = server_class(server_address, handler_class)
    httpd.serve_forever()
