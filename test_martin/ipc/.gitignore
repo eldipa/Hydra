@@ -29,4 +29,6 @@ processes/robot_intercargo
 processes/scanner
 processes/torre_de_control
 network/examples/connection
+ipc/network_examples/connectionless
+ipc/network_examples/connection
 network/examples/connectionless
