@@ -1,6 +1,8 @@
 import BaseHTTPServer
 import re
 
+_subscribers = {}
+
 class Servant(BaseHTTPServer.BaseHTTPRequestHandler):
    def __init__(self, *args, **kargs):
       BaseHTTPServer.BaseHTTPRequestHandler.__init__(self, *args, **kargs)
@@ -18,8 +20,45 @@ class Servant(BaseHTTPServer.BaseHTTPRequestHandler):
       if payload_response != None:
          self.wfile.write(str(payload_response))
 
+   def handler(self, method):
+      m = method
+      candidate = None
+      best_count = -1
+      for funcs in _subscribers[m]:
+         match = funcs.url_pattern.match(self.path)
+         if not match:
+            continue
 
-_subscribers = {}
+         if match.end() < len(self.path):
+            continue
+
+         count = len(match.groups())
+         if best_count >= count:
+            continue
+
+         args = dict(filter(lambda k_v: k_v[1] != None, match.groupdict(None).items()))
+         candidate = (funcs, args)
+
+      if candidate != None:
+         funcs, args = candidate
+         try:
+            response = (funcs(**args), 200)
+         except ValueError, e:
+            response = str(e), 400
+         except Exception, e:
+            response = str(e), 500
+            
+         self.build_send_response(*response)
+      else:
+         self.build_send_response("Not found", 404)
+
+   def __getattr__(self, name):
+      if name.startswith("do_") and name[3:] in _subscribers:
+         return lambda: self.handler(name[3:])
+
+      raise AttributeError(name)
+
+
 def route(url, methods='GET', regexp_flags=0):
    url_pattern = re.compile(url, regexp_flags)
 
@@ -35,41 +74,8 @@ def route(url, methods='GET', regexp_flags=0):
             _subscribers[m].append(f)
          else:
             _subscribers[m] = [f]
-            def handler(servant):
-               candidate = None
-               best_count = -1
-               for funcs in _subscribers[m]:
-                  match = funcs.url_pattern.match(servant.path)
-                  if not match:
-                     continue
-
-                  if match.end() < len(servant.path):
-                     continue
-
-                  count = len(match.groups())
-                  if best_count >= count:
-                     continue
-
-                  args = dict(filter(lambda k_v: k_v[1] != None, match.groupdict(None).items()))
-                  candidate = (funcs, args)
-
-               if candidate != None:
-                  funcs, args = candidate
-                  response = funcs(**args)
-                  if not isinstance(response, (list, tuple)):
-                     response = response, 200
-                     
-                  servant.build_send_response(*response)
-               else:
-                  servant.build_send_response(None, 404)
-
-
-            setattr(Servant, 'do_%s' % m, handler)
-
-      def wrapper(*args, **kargs):
-         return f(*args, **kargs)
-
-      return wrapper
+      
+      return f
 
    return decorator_builder
 
