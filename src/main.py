@@ -1,7 +1,7 @@
 from bottle import get, request
 import psutil
 
-@get('/parent_children_relation')
+@get('/process/parent_children_relation')
 def get_parent_children_relation():
    pids_query = request.query['pids']
    all_descendents = bool(int(request.query.get('all_descendents', 0)))
@@ -20,6 +20,21 @@ def get_parent_children_relation():
       except psutil.NoSuchProcess:
          pass # the process 'pid' is dead
 
-   return {'results': parent_children}
+   return {'results': set(parent_children)}
 
+@get('/process/state')
+def get_process_state():
+   pids_query = request.query['pids']
+   pids = set(map(int, filter(None, pids_query.split(','))))
 
+   state_by_pid = {}
+   for pid in pids:
+      try:
+         process = psutil.Process(pid)
+         state_by_pid[pid] = process.status
+   
+      except psutil.NoSuchProcess:
+         state_by_pid[pid] = "unknow/destryed"
+
+   return {'results': state_by_pid}
+         
