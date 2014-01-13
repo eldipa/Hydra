@@ -1,4 +1,4 @@
-from bottle import get, request
+from bottle import get, request, static_file
 import psutil
 
 @get('/process/parent_children_relation')
@@ -9,18 +9,24 @@ def get_parent_children_relation():
    pids = set(map(int, filter(None, pids_query.split(','))))
 
    parent_children = []
+   all_pids = []
    for pid in pids:
       try:
          process = psutil.Process(pid)
+         
+         ppid = process.ppid
+         parent_children.append((ppid, pid))
+         all_pids.append(ppid)
+         all_pids.append(pid)
 
-         parent_children.append((process.ppid, pid))
          for cprocess in process.get_children(recursive=all_descendents):
             parent_children.append((pid, cprocess.pid))
+            all_pids.append(cprocess.pid)
 
       except psutil.NoSuchProcess:
          pass # the process 'pid' is dead
 
-   return {'results': set(parent_children)}
+   return {'relations': list(set(parent_children)), 'pids': list(set(all_pids))}
 
 @get('/process/state')
 def get_process_state():
@@ -37,4 +43,13 @@ def get_process_state():
          state_by_pid[pid] = "unknow/destryed"
 
    return {'results': state_by_pid}
-         
+ 
+
+@get('/')
+def index():
+   return static_file("main.html", root=".")
+
+@get('/js/<resource:path>')
+def javascript(resource):
+   return static_file(resource, root="./js")
+
