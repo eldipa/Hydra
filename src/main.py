@@ -9,24 +9,36 @@ def get_parent_children_relation():
    pids = set(map(int, filter(None, pids_query.split(','))))
 
    parent_children = []
-   all_pids = []
+   data = []
+   seen = set()
+   indexs = dict()
    for pid in pids:
       try:
          process = psutil.Process(pid)
+         if pid not in indexs:
+            data.append(process.as_dict())
+            indexs[pid] = len(data)-1
          
          ppid = process.ppid
-         parent_children.append((ppid, pid))
-         all_pids.append(ppid)
-         all_pids.append(pid)
+
+         pprocess = psutil.Process(ppid)
+         if pprocess.pid not in indexs:
+            data.append(pprocess.as_dict())
+            indexs[pprocess.pid] = len(data)-1
+
+         parent_children.append((indexs[ppid], indexs[pid]))
 
          for cprocess in process.get_children(recursive=all_descendents):
-            parent_children.append((pid, cprocess.pid))
-            all_pids.append(cprocess.pid)
+            if cprocess.pid not in indexs:
+               data.append(cprocess.as_dict())
+               indexs[cprocess.pid] = len(data)-1
+
+            parent_children.append((indexs[cprocess.ppid], indexs[cprocess.pid]))
 
       except psutil.NoSuchProcess:
          pass # the process 'pid' is dead
 
-   return {'relations': list(set(parent_children)), 'pids': list(set(all_pids))}
+   return {'relations': list(set(parent_children)), 'processes': data}
 
 @get('/process/state')
 def get_process_state():
@@ -44,6 +56,8 @@ def get_process_state():
 
    return {'results': state_by_pid}
  
+
+
 
 @get('/')
 def index():
