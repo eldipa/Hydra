@@ -136,25 +136,15 @@ define(["d3"], (d3) ->
       
       update(graph)
 
-   (() ->
+   setInterval((() ->
       d3.json('/process/parent_children_relation?pids=1853&all_descendents=1', (err, data) ->
          console.log(err)
          console.log(data)
 
-
-         #(force.nodes().push(process) for process in processes)
-         #(force.links().push({source: rel[0], target: rel[1]}) for rel in data['relations'])
-
          update_graph(force, data.processes, data.relations)
-
-         setTimeout((() ->
-            update_graph(force, data.processes, data.relations)
-         ), 8000)
-
-
       )
       return false
-   )()
+   ), 8000)
    
 )
 
