@@ -81,34 +81,74 @@ define(["d3"], (d3) ->
       console.log(graph.nodes())
       graph.start()
 
+   update_graph = (graph, processes, relations) ->
+      pids = (p.pid for p in processes)
+
+      # remove old processes
+      to_remove = (i for p, i in graph.nodes() when p? and pids.indexOf(p.pid) < 0)
+      offset = 0
+      for i in to_remove
+         graph.nodes().splice(i-offset, 1)
+         offset += 1
+
+
+      # add new processes
+      gpids = (gp.pid for gp in graph.nodes())
+      to_add = (p for p in processes when gpids.indexOf(p.pid) < 0)
+      for p in to_add
+         graph.nodes().push(p)
+
+      
+      # remove old links
+      to_remove = []
+      for l, i in graph.links()
+         found = false
+         for rel in relations
+            if l.source.pid == rel[0] and l.target.pid == rel[1]
+               found = true
+               break
+
+         if not found
+            to_remove.push(i)
+      offset = 0
+      for i in to_remove
+         graph.links().splice(i-offset, 1)
+         offset += 1
+
+      
+      # add new links
+      to_add = []
+      for rel in relations
+         found = false
+         for l in graph.links()
+            if l.source.pid == rel[0] and l.target.pid == rel[1]
+               found = true
+               break
+
+         if not found
+            source = (p for p in graph.nodes() when p? and p.pid == processes[rel[0]].pid)[0]
+            target = (p for p in graph.nodes() when p? and p.pid == processes[rel[1]].pid)[0]
+            to_add.push({source: source, target: target})
+
+      for l in to_add
+         graph.links().push(l)
+      
+      
+      update(graph)
+
    (() ->
       d3.json('/process/parent_children_relation?pids=1853&all_descendents=1', (err, data) ->
          console.log(err)
          console.log(data)
 
-         processes = data['processes']
 
-         (force.nodes().push(process) for process in processes)
-         (force.links().push({source: rel[0], target: rel[1]}) for rel in data['relations'])
+         #(force.nodes().push(process) for process in processes)
+         #(force.links().push({source: rel[0], target: rel[1]}) for rel in data['relations'])
 
-         update(force)
+         update_graph(force, data.processes, data.relations)
 
          setTimeout((() ->
-            to_remove = (i for p, i in force.nodes() when p? and (p.name == "bash"))
-            offset = 0
-            for i in to_remove
-               force.nodes().splice(i-offset, 1)
-               offset += 1
-
-            
-            to_remove = (i for l, i in force.links() when l? and (l.source.name == "bash" or l.target.name == "bash"))
-            offset = 0
-            for i in to_remove
-               force.links().splice(i-offset, 1)
-               offset += 1
-
-            
-            update(force)
+            update_graph(force, data.processes, data.relations)
          ), 8000)
 
 
