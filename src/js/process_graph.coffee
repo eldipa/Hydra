@@ -90,7 +90,14 @@ define(["d3"], (d3) ->
       for i in to_remove
          graph.nodes().splice(i-offset, 1)
          offset += 1
-
+      
+      # update processes
+      for p in processes
+         for gp, i in graph.nodes()
+            if gp.pid == p.pid
+               for attr of p
+                  graph.nodes()[i][attr] = p[attr]
+               break
 
       # add new processes
       gpids = (gp.pid for gp in graph.nodes())
