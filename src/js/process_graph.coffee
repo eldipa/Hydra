@@ -15,6 +15,8 @@ define(["d3"], (d3) ->
    }
    tick = () ->
       console.log('tick')
+      if force.alpha() < 0.03
+         force.alpha(0)
       d3.selectAll('.link')
          .attr("x1", (d) -> d.source.x )
          .attr("y1", (d) -> d.source.y )
@@ -35,7 +37,7 @@ define(["d3"], (d3) ->
    force = d3.layout.force()
       .size([w, h])
       .linkDistance(100)
-      .charge(-200)
+      .charge(-600)
       .on("tick", tick)
 
    svg = d3.select("body").append("svg")
@@ -49,7 +51,7 @@ define(["d3"], (d3) ->
 
    #force.start()
    
-   update = (graph) ->
+   update = (graph, restart) ->
       nodes = svg.selectAll('.node').data(graph.nodes(), (gprocess) -> gprocess.pid)
 
       nodes.exit()
@@ -76,16 +78,19 @@ define(["d3"], (d3) ->
       links.exit()
          .remove()
 
-      
-      console.log(graph.links())
-      console.log(graph.nodes())
-      graph.start()
+      if restart
+         graph.start()
+      else
+         graph.tick()
 
    update_graph = (graph, processes, relations) ->
       pids = (p.pid for p in processes)
+      graph_modified = false
 
       # remove old processes
       to_remove = (i for p, i in graph.nodes() when p? and pids.indexOf(p.pid) < 0)
+      if to_remove.length
+         graph_modified = true
       offset = 0
       for i in to_remove
          graph.nodes().splice(i-offset, 1)
@@ -102,6 +107,8 @@ define(["d3"], (d3) ->
       # add new processes
       gpids = (gp.pid for gp in graph.nodes())
       to_add = (p for p in processes when gpids.indexOf(p.pid) < 0)
+      if to_add.length
+         graph_modified = true
       for p in to_add
          graph.nodes().push(p)
 
@@ -111,13 +118,15 @@ define(["d3"], (d3) ->
       for l, i in graph.links()
          found = false
          for rel in relations
-            if l.source.pid == rel[0] and l.target.pid == rel[1]
+            if l.source.pid == processes[rel[0]].pid and l.target.pid == processes[rel[1]].pid
                found = true
                break
 
          if not found
             to_remove.push(i)
       offset = 0
+      if to_remove.length
+         graph_modified = true
       for i in to_remove
          graph.links().splice(i-offset, 1)
          offset += 1
@@ -128,7 +137,7 @@ define(["d3"], (d3) ->
       for rel in relations
          found = false
          for l in graph.links()
-            if l.source.pid == rel[0] and l.target.pid == rel[1]
+            if l.source.pid == processes[rel[0]].pid and l.target.pid == processes[rel[1]].pid
                found = true
                break
 
@@ -136,12 +145,13 @@ define(["d3"], (d3) ->
             source = (p for p in graph.nodes() when p? and p.pid == processes[rel[0]].pid)[0]
             target = (p for p in graph.nodes() when p? and p.pid == processes[rel[1]].pid)[0]
             to_add.push({source: source, target: target})
-
+      
+      if to_add.length
+         graph_modified = true
       for l in to_add
          graph.links().push(l)
       
-      
-      update(graph)
+      update(graph, graph_modified)
 
    setInterval((() ->
       d3.json('/process/parent_children_relation?pids=1853&all_descendents=1', (err, data) ->
@@ -151,7 +161,7 @@ define(["d3"], (d3) ->
          update_graph(force, data.processes, data.relations)
       )
       return false
-   ), 8000)
+   ), 4000)
    
 )
 

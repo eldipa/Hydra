@@ -16,21 +16,24 @@ def get_parent_children_relation():
       try:
          process = psutil.Process(pid)
          if pid not in indexs:
-            data.append(process.as_dict())
+            #data.append(process.as_dict())
+            data.append({'pid':process.pid, 'name':process.name, 'status':process.status})
             indexs[pid] = len(data)-1
          
          ppid = process.ppid
 
          pprocess = psutil.Process(ppid)
          if pprocess.pid not in indexs:
-            data.append(pprocess.as_dict())
+            data.append({'pid':pprocess.pid, 'name':pprocess.name, 'status':pprocess.status})
+            #data.append(pprocess.as_dict())
             indexs[pprocess.pid] = len(data)-1
 
          parent_children.append((indexs[ppid], indexs[pid]))
 
          for cprocess in process.get_children(recursive=all_descendents):
             if cprocess.pid not in indexs:
-               data.append(cprocess.as_dict())
+               data.append({'pid':cprocess.pid, 'name':cprocess.name, 'status':cprocess.status})
+               #data.append(cprocess.as_dict())
                indexs[cprocess.pid] = len(data)-1
 
             parent_children.append((indexs[cprocess.ppid], indexs[cprocess.pid]))
