@@ -40,14 +40,31 @@ define(["d3"], (d3) ->
       .charge(-600)
       .on("tick", tick)
 
-   svg = d3.select("body").append("svg")
-      .attr("width", w)
-      .attr("height", h)
+   #svg = d3.select("body").append("svg")
+   #   .attr("width", w)
+   #   .attr("height", h)
 
-   svg.append("rect")
-      .attr("width", w)
-      .attr("height", h)
-      .attr('fill', 'none')
+   #svg.append("rect")
+   #   .attr("width", w)
+   #   .attr("height", h)
+   #   .attr('fill', 'none')
+
+   table = d3.select('body').append('table')
+
+   update_table = (processes, relations) ->
+      rows = table.selectAll('tr').data(processes, (p) -> p.pid)
+
+      rows.enter()
+         .append('tr')
+
+      rows.exit()
+         .remove()
+      
+      cells = rows.selectAll('td').data((p) -> [p.pid, p.name, p.status])
+
+      cells.enter()
+         .append('td')
+         .text((attr) -> attr)
 
    #force.start()
    
@@ -158,7 +175,8 @@ define(["d3"], (d3) ->
          console.log(err)
          console.log(data)
 
-         update_graph(force, data.processes, data.relations)
+         #update_graph(force, data.processes, data.relations)
+         update_table(data.processes, data.relations)
       )
       return false
    ), 4000)
