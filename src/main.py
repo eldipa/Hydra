@@ -64,9 +64,13 @@ def get_process_state():
 
 @get('/')
 def index():
-   return static_file("main.html", root=".")
+   return static_file("index.html", root=".")
 
 @get('/js/<resource:path>')
 def javascript(resource):
    return static_file(resource, root="./js")
 
+
+@get('/resources/<resource:path>')
+def javascript(resource):
+   return static_file(resource, root="./resources")
