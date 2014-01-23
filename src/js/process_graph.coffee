@@ -13,21 +13,26 @@ define(["d3"], (d3) ->
       "locked":'#00f',
       "waiting":'#00f'
    }
-   tick = () ->
+   stop_update_graph_on_level = 0.03
+   update_graph_one_round = () ->
       console.log('tick')
-      if force.alpha() < 0.03
+      if force.alpha() < stop_update_graph_on_level
          force.alpha(0)
+   
+      # update links
       d3.selectAll('.link')
          .attr("x1", (d) -> d.source.x )
          .attr("y1", (d) -> d.source.y )
          .attr("x2", (d) -> d.target.x )
          .attr("y2", (d) -> d.target.y )
 
+      # update nodes
       d3.selectAll('.circle_node')
          .attr("cx", (process) -> process.x )
          .attr("cy", (process) -> process.y )
          .attr('fill', (process) -> color_by_status[process.status])
 
+      # update the text of each node
       d3.selectAll('.node_text')
          .attr('x', (process) -> process.x)
          .attr('y', (process) -> process.y)
@@ -38,7 +43,7 @@ define(["d3"], (d3) ->
       .size([w, h])
       .linkDistance(100)
       .charge(-600)
-      .on("tick", tick)
+      .on("tick", update_graph_one_round)
 
    svg = d3.select(".main-container").append("svg")
       .attr("width", w)
@@ -68,7 +73,7 @@ define(["d3"], (d3) ->
 
    #force.start()
    
-   update = (graph, restart) ->
+   update_graph_view = (graph, restart) ->
       nodes = svg.selectAll('.node').data(graph.nodes(), (gprocess) -> gprocess.pid)
 
       nodes.exit()
@@ -98,9 +103,9 @@ define(["d3"], (d3) ->
       if restart
          graph.start()
       else
-         tick()
+         update_graph_one_round()
 
-   update_graph = (graph, processes, relations) ->
+   update_graph_data = (graph, processes, relations) ->
       pids = (p.pid for p in processes)
       graph_modified = false
 
@@ -167,15 +172,18 @@ define(["d3"], (d3) ->
          graph_modified = true
       for l in to_add
          graph.links().push(l)
+
+      return graph_modified
       
-      update(graph, graph_modified)
 
    setInterval((() ->
       d3.json('/process/parent_children_relation?pids=1676&all_descendents=1', (err, data) ->
          console.log(err)
          console.log(data)
 
-         update_graph(force, data.processes, data.relations)
+         changed_graph_or_link_count = update_graph_data(force, data.processes, data.relations)
+         update_graph_view(force, changed_graph_or_link_count)
+
          #update_table(data.processes, data.relations)
       )
       return false
