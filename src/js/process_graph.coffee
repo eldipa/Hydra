@@ -43,6 +43,9 @@ define(["d3"], (d3) ->
          @stop_update_graph_on_level = 0.03
       
       enable: (@container_to_attach = ".main-container") ->
+         if @svg?
+            @disable()
+
          @svg = d3.select(@container_to_attach).append("svg")
             .attr("width", @width)
             .attr("height", @height)
@@ -55,7 +58,9 @@ define(["d3"], (d3) ->
          @graph.on("tick", @update_graph_one_round)
 
       disable: () ->
-         @svg.remove()
+         if @svg?
+            @svg.remove()
+            @svg = null
       
       update_graph_one_round: () =>
          console.log('tick')
@@ -184,8 +189,9 @@ define(["d3"], (d3) ->
          return graph_modified
 
       update: (processes, relations) ->
-         changed_graph_or_link_count = @update_graph_data(processes, relations)
-         @update_graph_view(changed_graph_or_link_count)
+         if @svg?
+            changed_graph_or_link_count = @update_graph_data(processes, relations)
+            @update_graph_view(changed_graph_or_link_count)
 
    
    force = new ProcessGraph()
@@ -203,7 +209,6 @@ define(["d3"], (d3) ->
       return false
    ), 4000)
  
-
 
 )
 
