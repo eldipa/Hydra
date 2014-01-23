@@ -14,23 +14,45 @@ define(["d3"], (d3) ->
       "waiting":'#00f'
    }
 
-   #table = d3.select('body').append('table')
+   class ProcessTable
+      enable: (container_to_attach = ".main-container") ->
+         if @table?
+            @disable()
 
-   update_table = (processes, relations) ->
-      rows = table.selectAll('tr').data(processes, (p) -> p.pid)
+         @table = d3.select(container_to_attach).append('table')
+            .attr('class', 'table table-bordered')
 
-      rows.enter()
-         .append('tr')
+         header = @table.append('thead').append('tr')
+         header.selectAll('th').data(['Pid', 'Cmd', 'Status']).enter()
+            .append('th')
+            .text((d) -> d)
 
-      rows.exit()
-         .remove()
-      
-      cells = rows.selectAll('td').data((p) -> [p.pid, p.name, p.status])
 
-      cells.enter()
-         .append('td')
-         .text((attr) -> attr)
+         @table.append('tbody')
 
+      disable: () ->
+         if @table?
+            @table.remove()
+            @table = null
+
+
+      update_table: (processes, relations) ->
+         rows = @table.select('tbody').selectAll('tr').data(processes, (p) -> p.pid)
+
+         rows.enter()
+            .append('tr')
+
+         rows.exit()
+            .remove()
+         
+         cells = rows.selectAll('td').data((p) -> [p.pid, p.name, p.status])
+
+         cells.enter()
+            .append('td')
+            .text((attr) -> attr)
+
+      update: (processes, relations) ->
+         @update_table(processes, relations)
    
 
    class ProcessGraph
@@ -42,11 +64,11 @@ define(["d3"], (d3) ->
 
          @stop_update_graph_on_level = 0.03
       
-      enable: (@container_to_attach = ".main-container") ->
+      enable: (container_to_attach = ".main-container") ->
          if @svg?
             @disable()
 
-         @svg = d3.select(@container_to_attach).append("svg")
+         @svg = d3.select(container_to_attach).append("svg")
             .attr("width", @width)
             .attr("height", @height)
 
@@ -194,17 +216,15 @@ define(["d3"], (d3) ->
             @update_graph_view(changed_graph_or_link_count)
 
    
-   force = new ProcessGraph()
+   force = new ProcessTable()
    force.enable()
 
    setInterval((() ->
-      d3.json('/process/parent_children_relation?pids=1676&all_descendents=1', (err, data) ->
+      d3.json('/process/parent_children_relation?pids=4782&all_descendents=1', (err, data) ->
          console.log(err)
          console.log(data)
 
          force.update(data.processes, data.relations)
-
-         #update_table(data.processes, data.relations)
       )
       return false
    ), 4000)
