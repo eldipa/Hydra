@@ -33,23 +33,23 @@ define(["d3"], (d3) ->
          .attr('y', (process) -> process.y)
          .text((process) -> process.pid + " " + process.name)
 
-   [w, h] = [600, 400]
+   [w, h] = [600, 480]
    force = d3.layout.force()
       .size([w, h])
       .linkDistance(100)
       .charge(-600)
       .on("tick", tick)
 
-   #svg = d3.select("body").append("svg")
-   #   .attr("width", w)
-   #   .attr("height", h)
+   svg = d3.select(".main-container").append("svg")
+      .attr("width", w)
+      .attr("height", h)
 
-   #svg.append("rect")
-   #   .attr("width", w)
-   #   .attr("height", h)
-   #   .attr('fill', 'none')
+   svg.append("rect")
+      .attr("width", w)
+      .attr("height", h)
+      .attr('fill', 'none')
 
-   table = d3.select('body').append('table')
+   #table = d3.select('body').append('table')
 
    update_table = (processes, relations) ->
       rows = table.selectAll('tr').data(processes, (p) -> p.pid)
@@ -98,7 +98,7 @@ define(["d3"], (d3) ->
       if restart
          graph.start()
       else
-         graph.tick()
+         tick()
 
    update_graph = (graph, processes, relations) ->
       pids = (p.pid for p in processes)
@@ -171,12 +171,12 @@ define(["d3"], (d3) ->
       update(graph, graph_modified)
 
    setInterval((() ->
-      d3.json('/process/parent_children_relation?pids=1853&all_descendents=1', (err, data) ->
+      d3.json('/process/parent_children_relation?pids=1676&all_descendents=1', (err, data) ->
          console.log(err)
          console.log(data)
 
-         #update_graph(force, data.processes, data.relations)
-         update_table(data.processes, data.relations)
+         update_graph(force, data.processes, data.relations)
+         #update_table(data.processes, data.relations)
       )
       return false
    ), 4000)
