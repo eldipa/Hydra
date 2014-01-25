@@ -12,7 +12,7 @@ require.config({
 
 });
 
-require(['cs!process_graph', 'ko'], function () {
+require(['cs!process_view', 'ko'], function () {
 
 },
 function (err) {

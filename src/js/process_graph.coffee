@@ -1,60 +1,4 @@
 define(["d3"], (d3) ->
-   color_by_status = {
-      "running": '#0f0',
-      "sleeping": 'rgb(33, 184, 190)',
-      "disk-sleep": 'rgb(190, 71, 33)',
-      "stopped": '#f00',
-      "tracing-stop": '#f00',
-      "zombie": 'rgb(165, 111, 111)',
-      "dead": '#fff',
-      "wake-kill": 'rgb(111, 165, 120)',
-      "waking": 'rgb(111, 165, 120)',
-      "idle": '#00f',
-      "locked":'#00f',
-      "waiting":'#00f'
-   }
-
-   class ProcessTable
-      enable: (container_to_attach = ".main-container") ->
-         if @table?
-            @disable()
-
-         @table = d3.select(container_to_attach).append('table')
-            .attr('class', 'table table-bordered')
-
-         header = @table.append('thead').append('tr')
-         header.selectAll('th').data(['Pid', 'Cmd', 'Status']).enter()
-            .append('th')
-            .text((d) -> d)
-
-
-         @table.append('tbody')
-
-      disable: () ->
-         if @table?
-            @table.remove()
-            @table = null
-
-
-      update_table: (processes, relations) ->
-         rows = @table.select('tbody').selectAll('tr').data(processes, (p) -> p.pid)
-
-         rows.enter()
-            .append('tr')
-
-         rows.exit()
-            .remove()
-         
-         cells = rows.selectAll('td').data((p) -> [p.pid, p.name, p.status])
-
-         cells.enter()
-            .append('td')
-            .text((attr) -> attr)
-
-      update: (processes, relations) ->
-         @update_table(processes, relations)
-   
-
    class ProcessGraph
       constructor: (@width = 600, @height = 480) ->
          @graph = d3.layout.force()
@@ -63,6 +7,23 @@ define(["d3"], (d3) ->
             .charge(-600)
 
          @stop_update_graph_on_level = 0.03
+         
+         @color_by_status = {
+            "running": '#0f0',
+            "sleeping": 'rgb(33, 184, 190)',
+            "disk-sleep": 'rgb(190, 71, 33)',
+            "stopped": '#f00',
+            "tracing-stop": '#f00',
+            "zombie": 'rgb(165, 111, 111)',
+            "dead": '#fff',
+            "wake-kill": 'rgb(111, 165, 120)',
+            "waking": 'rgb(111, 165, 120)',
+            "idle": '#00f',
+            "locked":'#00f',
+            "waiting":'#00f'
+         }
+
+
       
       enable: (container_to_attach = ".main-container") ->
          if @svg?
@@ -100,7 +61,7 @@ define(["d3"], (d3) ->
          d3.selectAll('.circle_node')
             .attr("cx", (process) -> process.x )
             .attr("cy", (process) -> process.y )
-            .attr('fill', (process) -> color_by_status[process.status])
+            .attr('fill', (process) => @color_by_status[process.status])
 
          # update the text of each node
          d3.selectAll('.node_text')
@@ -215,20 +176,6 @@ define(["d3"], (d3) ->
             changed_graph_or_link_count = @update_graph_data(processes, relations)
             @update_graph_view(changed_graph_or_link_count)
 
-   
-   force = new ProcessTable()
-   force.enable()
-
-   setInterval((() ->
-      d3.json('/process/parent_children_relation?pids=4782&all_descendents=1', (err, data) ->
-         console.log(err)
-         console.log(data)
-
-         force.update(data.processes, data.relations)
-      )
-      return false
-   ), 4000)
- 
-
+   return {'ProcessGraph': ProcessGraph}
 )
 
