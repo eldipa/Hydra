@@ -6,6 +6,7 @@ define(["d3", "ko", "cs!process_table", "cs!process_graph"], (d3, ko, ptable, pg
          @polling = ko.observable(4000)
          @setInterval_id = null
          @view_type = ko.observable('table')
+         @include_all_descendents = ko.observable(true)
 
          @table_view = new ptable.ProcessTable()
          @graph_view = new pgraph.ProcessGraph()
@@ -29,7 +30,8 @@ define(["d3", "ko", "cs!process_table", "cs!process_graph"], (d3, ko, ptable, pg
 
          @set_getter_process_data = ko.computed((() =>
             pids = @track_pids().join()
-            url = '/process/parent_children_relation?pids=' + pids + '&all_descendents=1'
+            descendents = 0 + @include_all_descendents()
+            url = '/process/parent_children_relation?pids=' + pids + '&all_descendents=' + descendents
 
             if @setInterval_id?
                clearInterval(@setInterval_id)
@@ -56,20 +58,6 @@ define(["d3", "ko", "cs!process_table", "cs!process_graph"], (d3, ko, ptable, pg
       .append('div')
       .attr('class', 'form-group')
 
-   form.append('label')
-      .text('Pids')
-   form.append('input')
-      .attr('type', 'text')
-      .attr('class', 'form-control')
-      .attr('placeholder', 'Process ids')
-
-   form.append('label')
-      .text('Polling')
-   form.append('input')
-      .attr('type', 'text')
-      .attr('class', 'form-control')
-      .attr('placeholder', 'Polling time')
-      .attr('data-bind', 'value: polling')
    
    form.append('label')
       .text('View type')
@@ -79,12 +67,26 @@ define(["d3", "ko", "cs!process_table", "cs!process_graph"], (d3, ko, ptable, pg
    s.append('option').text('graph')
    s.append('option').text('table')
 
+   form.append('label')
+      .text('Include all descendents')
+   form.append('input')
+      .attr('type', 'checkbox')
+      .attr('data-bind', 'checked: include_all_descendents')
+
+   form.append('label')
+      .text('Polling')
+   form.append('input')
+      .attr('type', 'text')
+      .attr('class', 'form-control')
+      .attr('placeholder', 'Polling time')
+      .attr('data-bind', 'value: polling')
+
    p = new ProcessView(main)
 
    ko.applyBindings(p)
 
    setTimeout((() ->
-      p.track_pids.push(2520)
+      p.track_pids.push(2526)
    ), 4000)
    
 )
