@@ -25,11 +25,11 @@ define(["d3"], (d3) ->
 
 
       
-      enable: (container_to_attach = ".main-container") ->
+      enable: (container_to_attach) ->
          if @svg?
             @disable()
 
-         @svg = d3.select(container_to_attach).append("svg")
+         @svg = container_to_attach.append("svg")
             .attr("width", @width)
             .attr("height", @height)
 

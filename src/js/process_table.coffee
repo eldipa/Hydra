@@ -1,10 +1,10 @@
 define(["d3"], (d3) ->
    class ProcessTable
-      enable: (container_to_attach = ".main-container") ->
+      enable: (container_to_attach) ->
          if @table?
             @disable()
 
-         @table = d3.select(container_to_attach).append('table')
+         @table = container_to_attach.append('table')
             .attr('class', 'table table-bordered')
 
          header = @table.append('thead').append('tr')

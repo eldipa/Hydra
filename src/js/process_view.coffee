@@ -1,7 +1,7 @@
 define(["d3", "ko", "cs!process_table", "cs!process_graph"], (d3, ko, ptable, pgraph) ->
 
    class ProcessView
-      constructor: () ->
+      constructor: (@container_to_attach) ->
          @track_pids = ko.observableArray()
          @polling = ko.observable(4000)
          @setInterval_id = null
@@ -15,12 +15,12 @@ define(["d3", "ko", "cs!process_table", "cs!process_graph"], (d3, ko, ptable, pg
          @forced_update = ko.computed((() =>
             if @view_type() == 'table'
                @graph_view.disable()
-               @table_view.enable()
+               @table_view.enable(@container_to_attach)
 
                v = @table_view
             else
                @table_view.disable()
-               @graph_view.enable()
+               @graph_view.enable(@container_to_attach)
 
                v = @graph_view
 
@@ -43,6 +43,11 @@ define(["d3", "ko", "cs!process_table", "cs!process_graph"], (d3, ko, ptable, pg
                )
             ), @polling())
          ), this)
+
+   main = d3.select('.main-container')
+      .append('div')
+      .attr('class', 'col-xs-12 col-sm-9')
+
 
    form = d3.select('.main-container')
       .append('div')
@@ -74,12 +79,12 @@ define(["d3", "ko", "cs!process_table", "cs!process_graph"], (d3, ko, ptable, pg
    s.append('option').text('graph')
    s.append('option').text('table')
 
-   p = new ProcessView()
+   p = new ProcessView(main)
 
    ko.applyBindings(p)
 
    setTimeout((() ->
-      p.track_pids.push(1921)
-   ), 6000)
+      p.track_pids.push(2520)
+   ), 4000)
    
 )
