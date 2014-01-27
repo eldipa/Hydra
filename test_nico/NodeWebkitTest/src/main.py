@@ -4,7 +4,7 @@ from subprocess import PIPE
 import subprocess
 
 
-node_path = '../NodeWebkit/node-webkit-v0.8.4-linux-ia32/nw'
+node_path = '../../../NodeWebkit/node-webkit-v0.8.4-linux-ia32/nw'
 node_code_path = '../node_src/test.nw' 
 cpp_path = '../cpp_bin/Cpp_Code'
 shared_path = "../cpp_bin/libShared_Code.so"
