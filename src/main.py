@@ -43,6 +43,28 @@ def get_parent_children_relation():
 
    return {'relations': list(set(parent_children)), 'processes': data}
 
+@get('/process/all')
+def get_all():
+   parent_children = []
+   data = []
+   indexs = dict()
+   processes = list(psutil.process_iter())
+   for process in processes:
+      try:
+         data.append({'pid':process.pid, 'name':process.name, 'status':process.status})
+         indexs[process.pid] = len(data)-1
+
+      except psutil.NoSuchProcess:
+         pass # the process 'pid' is dead
+
+   for process in processes:
+      try:
+         parent_children.append((indexs[process.ppid], indexs[process.pid]))
+      except KeyError:
+         pass # or pid or ppid are dead
+
+   return {'relations': parent_children, 'processes': data}
+
 @get('/process/state')
 def get_process_state():
    pids_query = request.query['pids']
