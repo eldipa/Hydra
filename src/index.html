@@ -38,17 +38,37 @@
         </div>
         <div class="collapse navbar-collapse">
           <ul class="nav navbar-nav">
-            <li class="active"><a href="#ipc">IPC</a></li>
-            <li><a href="#agregar">Agregar Proceso</a></li>
+            
+            <li><a>Agregar Proceso</a></li>
+            <li><a>Step</a></li>
+            
           </ul>
         </div><!--/.nav-collapse -->
       </div>
     </div>
 
     <div class="container">
-       <div class="row row-offcanvas row-offcanvas-right main-container">
-       </div>
+    
+		<!-- Nav tabs -->
+		<ul class="nav nav-pills" id="tabs">
+			<li><a href="#grafo" data-toggle="tab">IPC</a></li>
+			<li><a href="#proceso" data-toggle="tab">Pid XXX</a></li>
+		</ul>
+		
+		<!-- Tab panes -->
+		<div class="tab-content" id="contenidos">
+		
+		 	<div class="tab-pane active" id="grafo">
+		  		<div class="row row-offcanvas row-offcanvas-right main-container">
+		  		</div>
+		  	</div>
+		  	
+		  	<div class="tab-pane" id="proceso">src del proceso XXX</div>
+		  	
+		</div>
+		
     </div><!-- /.container -->
+    
 
 
     <!-- Bootstrap core JavaScript
