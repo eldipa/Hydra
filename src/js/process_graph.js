@@ -119,7 +119,7 @@ define(['d3'], function (d3) {
 
       ProcessGraph.prototype.update_graph_data = function (processes, relations) {
          var pids = [];
-         processes.forEach(function (p) { pids.push(p);}, this);
+         processes.forEach(function (p) { pids.push(p.pid);}, this);
          var graph_modified = false;
 
          // remove old processes
