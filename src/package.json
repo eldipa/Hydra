@@ -1,9 +1,8 @@
 {
    "name": "concu-debug",
-   "main": "nw-main.html",
+   "main": "index.html",
    "window":{
-      "toolbar":false
-   },
-   "nodejs": false
+      "toolbar":true
+   }
 }
 

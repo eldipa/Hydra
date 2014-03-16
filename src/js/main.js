@@ -1,10 +1,8 @@
-require.config({
+requirejs.config({
    baseUrl: 'js',
    waitSeconds: 25,
 
    paths: {
-      'coffee-script': 'external/coffee-script',
-      cs: 'external/cs',
       jquery: 'external/jquery-2.0.3.min',
       d3: 'external/d3.v3.min',
       ko: 'external/knockout-3.0.0'
@@ -12,7 +10,18 @@ require.config({
 
 });
 
-require(['cs!process_view', 'ko'], function () {
+requirejs(['d3', 'ko'], function (d3, ko) {
+   console.log(d3.version);
+   console.log(ko.version);
+
+   var fs = require('fs');
+    
+   fs.readFile('./package.json', 'utf-8', function (error, contents) {
+          //document.write(contents);
+          console.log(contents);
+   });
+
+   var f = require('./js/f.js');
 
 },
 function (err) {
