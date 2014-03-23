@@ -44,30 +44,16 @@ define(['d3', 'ko'], function(d3, ko) {
             return "fieldset" + " " + (fset.classes || "");
          }); 
 
-      var set_heads = fieldset_divs.append('h4')
-         .attr('style', function (fset) { 
-            if(fset.name) {
-               return null;
-            }
-            else {
-               return 'display:none';
-            }
-         })
+      var set_heads = fieldset_divs.filter(function (fset) { return !!fset.name; })
+         .append('h4')
          .text(function (fset) { 
-            return fset.name || "";
+            return fset.name;
          }); 
 
-      set_heads.append('small')
-         .attr('style', function (fset) { 
-            if(fset.description) {
-               return null;
-            }
-            else {
-               return 'display:none';
-            }
-         })
+      set_heads.filter(function (fset) { return !!fset.description; })
+         .append('small')
          .text(function (fset) { 
-            return " " + (fset.description || "");
+            return " " + fset.description;
          }); 
 
 
@@ -97,40 +83,32 @@ define(['d3', 'ko'], function(d3, ko) {
          fields = fields.append('div').attr('class', 'col-sm-10');
       }
 
+      var tag_by_type = {
+         'textarea': 'textarea',
+         'static': 'p',
+         'select': 'select',
+         'multiselect': 'select',
+      }; // default 'input'
+
+      var field_class = {
+         'static': 'form-control-static'
+      }; // default 'form-control'
+
       // field creation (except checkboxs)
       var non_checkbox_packets = fields.filter(function (field) {
          return field.widget.type !== "checkbox";
       })
          .append(function (field) { 
-            var tag = "input";
-            var type = field.widget.type;
-            if(type === "textarea") {
-               tag = "textarea";
-            }
-            else if (type === "static") {
-               tag = "p";
-            }
-            else if (type === "select" || type === "multiselect") {
-               tag = "select";
-            }
-
+            var tag = tag_by_type[field.widget.type] || "input";
             return document.createElement(tag); 
          })
          .attr('placeholder', function (field) { return field.widget.placeholder || null; })
-         .attr('type', function (field) { return field.widget.type || null})
+         .attr('type', function (field) { return field.widget.type; })
          .attr('class', function (field) {
-            if(field.widget.type === "static") {
-               return 'form-control-static';
-            } else {
-               return 'form-control';
-            }
+            return field_class[field.widget.type] || 'form-control';
          })
          .attr('multiple', function (field) { 
-            if(field.widget.type === "multiselect") {
-               return "";
-            } else {
-               return null;
-            }
+            return (field.widget.type === "multiselect") ? "" : null; 
          })
          .text(function (field) { return field.widget.message || "";}); //TODO add more attrs for bootstrap, and ko
 
@@ -156,16 +134,10 @@ define(['d3', 'ko'], function(d3, ko) {
 
       options.text(function (opt) { return opt; });
 
-      fields.append('p').text(function (field) { return field.widget.help || ""; })
-         .attr('class', 'help-block')
-         .attr('style', function (field) { 
-            if(field.widget.help) {
-               return null;
-            }
-            else {
-               return 'display:none';
-            }
-         });
+      // help texts
+      fields.filter(function (field) { return !!field.widget.help; })
+         .append('p').text(function (field) { return field.widget.help; })
+         .attr('class', 'help-block');
 
 
    };

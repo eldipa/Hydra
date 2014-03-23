@@ -53,7 +53,19 @@ requirejs(['d3', 'ko', 'process_view', 'fields'], function (d3, ko, process_view
          
          {
             name: 'Campos B',
-            description: "foooo b",
+            classes: '',
+            fields: [
+                {
+                   name: "Nombre:",
+                   widget: {tag: 'input'}
+                },
+                {
+                   name: "Apellido:",
+                   widget: {tag: 'input'}
+                },
+               ]
+         },
+         {
             classes: '',
             fields: [
                 {
