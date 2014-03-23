@@ -77,5 +77,15 @@
     ================================================== -->
     <!-- Placed at the end of the document so the pages load faster -->
     <script data-main="js/main.js" src="js/external/require.js"></script>
+    <script>
+       (function () {
+          var path = './update';
+          var fs = require('fs');
+
+          fs.watch(path, [], function() {
+            require('nw.gui').Window.get().reload(3);
+          });
+       })();
+    </script>
   </body>
 </html>

@@ -1,0 +1,13 @@
+JS_DIR := 'js'
+JS_SOURCES := $(shell find $(JS_DIR) -name '*.js')
+
+PY_DIR := 'py'
+PY_SOURCES := $(shell find $(PY_DIR) -name '*.py')
+
+RESOURCES_DIR := 'resources'
+RESOURCES_SOURCES := $(shell find $(RESOURCES_DIR) -name '*')
+
+update: $(JS_SOURCES) $(PY_SOURCES) $(RESOURCES_SOURCES)
+	@touch update
+	@echo "update"
+
