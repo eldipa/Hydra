@@ -1,93 +1,80 @@
 
 import subprocess
 from subprocess import PIPE
+from multiprocessing import Queue
 
-from gdb_mi import Output
+from outputReader import OutputReader
 
-HACK_PATH = "../shared/hack.so"
+HACK_PATH = "../../shared/hack.so"
 
 class Gdb:
+                           
 
     # crea un nuevo proceso gdb vacio
-    # La funcion no retorna hasta que gdb esta listo para recibir intrucciones
     def __init__(self):
+        self.queue = Queue()
         self.gdb = subprocess.Popen(["gdb", "-interpreter=mi", "-quiet"], stdin=PIPE, stdout=PIPE, stderr=PIPE)
         self.gdbInput = self.gdb.stdin
         self.gdbOutput = self.gdb.stdout
-        self.waitForPrompt()
+        t = OutputReader(self.gdbOutput, self.queue)
+        t.start()
+
     
     # -Gdb realiza un attach al proceso especificado
-    # -Modifica el entorno (ld_preload)
-    # -Redirecciona stdout del target
-    # -Retorna el numero de linea en el que se encuentra, con el proceso detenido
     def attach(self, pid):
         self.gdbInput.write("-target-attach " + str(pid) + '\n')
-        # TODO esperar ok
-        # TODO entorno (como?), redirect stdout(como?)
-        # TODO obtener linea
+        targetPid = self.queue.get()
+        return targetPid
     
     # -Gdb coloca como proceso target un nuevo proceso del codigo 'file'
     # -Modifica el entorno (ld_preload)
-    # -Redirecciona stdout del target
-    # -Retorna el numero de linea en el que se encuentra y el pid del nuevo proceso, con el proceso detenido
-    def file(self, file):
-        self.gdbInput.write("-file-exec-and-symbols " + file + '\n')
-        # TODO esperar ok
+    # -Retorna el pid del nuevo proceso
+    def file(self, path):
+        self.gdbInput.write("-file-exec-and-symbols " + path + '\n')
         self.gdbInput.write("-gdb-set " + "exec-wrapper env LD_PRELOAD=" + HACK_PATH + '\n')
-        # TODO esperar ok
         self.setBreakPoint("main")
         self.run()
-        # TODO retornar lo pedido
-        # TODO redireccionar stdout
+        pid = self.queue.get()
+        return pid
+
     
     # Ejecuta al target desde el comienzo
-    # La funcion no retorna hasta que la ejecucion se interrumpa
-    # Retorna el numero de linea en que se detuvo y motivo de la interrupcion (error, breakpoint, success, etc)
     def run(self):
-        self.gdbInput.write("-exec-run" + '\n')
-        # TODO esperar al prompt y retornar lo pedido
+        self.gdbInput.write("run > Salida.txt" + '\n') ########## redirigir bien la stdout
+       
     
     # Ejecuta al target desde el punto donde se encontraba
-    # La funcion no retorna hasta que la ejecucion se interrumpa
-    # Retorna el numero de linea en que se detuvo y motivo de la interrupcion (error, breakpoint, success, etc)
     def continueExec(self):
         self.gdbInput.write("-exec-continue" + '\n')
-        # TODO esperar al prompt y retornar lo pedido
     
     # Ejecuta una sola intruccion del target
-    # La funcion no retorna hasta que la ejecucion se interrumpa
-    # Retorna el numero de linea en que se detuvo y motivo de la interrupcion (error, breakpoint, success, etc)
     def stepInto(self):
         self.gdbInput.write("-exec-next-instruction" + '\n')
         # TODO esperar al prompt y retornar lo pedido
     
     
     # Finaliza el proceso gdb, junto con su target si este no hubiera finalizado
-    # Retorna ok/error
     def exit(self):
         # TODO finalizar target
         self.gdbInput.write("-gdb-exit" + '\n')
-        # TODO esperar ok
     
     # Establece un nuevo breakpoint al comienzo de la funcion dada
-    # retorna ok/error
     def setBreakPoint(self, funcion):
         self.gdbInput.write("-break-insert " + funcion + '\n')
-        # TODO esperar prompt
         
-    
-    def waitForPrompt(self):
-        parser = Output()
-        line = parser.parse_line(self.gdbOutput.readline())
-        while(line != "(gdb)"):
-            print line  # Hacer algo mejor con esto
-            line = parser.parse_line(self.gdbOutput.readline())
             
-        
+import time
         
 if __name__ == '__main__':
     gdb = Gdb()
     print "En prompt"
+    
+    gdb.file("../../cppTestCode/Prueba")
+    
+    gdb.continueExec();
+    
+    time.sleep(5)
+    
     gdb.exit()
     print "Finalizo"
     
