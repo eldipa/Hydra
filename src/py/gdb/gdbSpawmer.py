@@ -20,11 +20,17 @@ class GdbSpawmer:
         gdb = Gdb()
         pid = gdb.file(path)
         self.listaGdb[pid] = gdb
+        return pid
+    
+    def contineExecOfProcess(self,pid):
+        self.listaGdb[pid].continueExec()
         
         
         
 if __name__ == '__main__':
     spawmer = GdbSpawmer()
-    spawmer.startNewProcessWithGdb("../../cppTestCode/Prueba")
-    time.sleep(5)
+    pid = spawmer.startNewProcessWithGdb("../../cppTestCode/Prueba")
+    spawmer.contineExecOfProcess(pid)
+    while(True):
+        time.sleep(1)
     

@@ -1,2 +1,2 @@
 all:
-	gcc -shared -fPIC -o hack.so *.c
+	gcc -g -shared -fPIC -o hack.so *.c -ldl

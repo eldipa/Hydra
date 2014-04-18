@@ -29,13 +29,13 @@ class ForkDetector(threading.Thread):
         return msg
         
     def run(self):
+        print "iniciando pesca"
         while (True):
             msg = self.msgQueue.pull(type=1)
 #             print ' '.join(format(ord(i), 'b').zfill(8) for i in msg) 
             pid = self.ObtenerID(msg)
-            print pid
-            self.spawmer.attachAGdb(pid)
-            # TODO Cambiar esto por algo logico....
-            time.sleep(2)
+            self.spawmer.attachAGdb(pid)# no retorna hasta que el attach este completo
+            #Esta linea no va aca
+            self.spawmer.contineExecOfProcess(pid)
             respuesta = self.CrearRespuesta(pid)
             self.msgQueue.push(respuesta)

@@ -24,6 +24,7 @@ class OutputReader(threading.Thread):
                     
             
         while True:
-            record = self.parser.parse_line(self.gdbOutput.readline())
+#             record = self.parser.parse_line(self.gdbOutput.readline())
+            record = self.gdbOutput.readline()
             Messenger().put([self.pid, record])
         
