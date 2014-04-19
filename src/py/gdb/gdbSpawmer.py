@@ -28,6 +28,14 @@ class GdbSpawmer:
     def stepIntoOfProcess(self, pid):
         self.listaGdb[pid].stepInto()
         
+    #finaliza el gdb del proceso deseado, se acepta all
+    def exit(self, pid):
+        if pid != "all":
+            self.listaGdb[pid].exit()
+        else:
+            for gdb in self.listaGdb:
+                gdb.exit()
+        
         
         
 if __name__ == '__main__':
