@@ -61,7 +61,7 @@ int fork() {
 			fflush(stdout);
 		}
 
-		ok = msgrcv(cola, (void *) &msg, sizeof(MensajeFork) - sizeof(long),
+		ok = msgrcv(cola, (void *) &msg, sizeof(MensajeFork),
 				getpid(), 0);
 		if (ok == -1) {
 			printf("Error de msgrcv: %s\n", strerror(errno));
@@ -69,10 +69,8 @@ int fork() {
 		}
 //		close(cola);?? va ??
 
-		printf("Hack Success!!\n");
 	} else {
 		//hack de padre
-		printf("Aca hackeo al padre\n");
 
 	}
 
