@@ -3,18 +3,44 @@ requirejs.config({
    waitSeconds: 25,
 
    paths: {
-      jquery: 'external/jquery-2.0.3.min',
+      jquery: 'external/jquery-2.1.0',
       d3: 'external/d3.v3.min',
-      ko: 'external/knockout-3.0.0'
+      ko: 'external/knockout-3.0.0',
+      ace_internals: 'external/ace/ace',
+      ace: 'external/ace',
+      w2ui_internals: 'external/w2ui-1.3.2',
+      w2ui: 'external/w2ui'
+   },
+
+   shim: {
+      "w2ui_internals": {
+         deps: ['jquery'],
+         exports: "w2ui"
+      }
    }
 
 });
 
-requirejs(['d3', 'ko', 'process_view', 'fields'], function (d3, ko, process_view, fields) {
+requirejs(['w2ui', 'code_view', 'jquery'], function (w2ui, code_view, $) {
    var fs = require('fs');
+
+   var view_dom = code_view.view_dom;
+
+
+   var pstyle = 'border: 1px solid #dfdfdf; padding: 5px;';
+   $('#layout').w2layout({
+      name: 'layout',
+      panels: [
+         { type: 'main', style: pstyle, content: "main" },
+         { type: 'bottom', size: 50, resizable: true, style: pstyle, content: 'bottom' }
+      ]
+   });
+
+   w2ui.objects['layout'].content("main", view_dom);
    
    //process_view.start();
    //require('nw.gui').Window.get().reload(3);
+   /*
    var model = {
       fieldsets: [
          {
@@ -82,7 +108,7 @@ requirejs(['d3', 'ko', 'process_view', 'fields'], function (d3, ko, process_view
          ]
    };
    fields.view_it(model, '.main', true);
-
+   */
 
    /*
    var v = new pgraph.ProcessGraph();
