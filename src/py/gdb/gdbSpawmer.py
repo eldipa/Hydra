@@ -2,33 +2,50 @@
 from gdb import Gdb
 from forkDetector import ForkDetector
 import time
+from multiprocessing import Lock
+from Messenger import Messenger
+import socket
 
+
+def Locker(func):
+        def newFunc(self, *args, **kwargs):
+            self.lock.acquire()
+            result = func(self, *args, **kwargs)
+            self.lock.release()
+            return result
+        return newFunc
 
 class GdbSpawmer:
     
     def __init__(self):
+        self.lock = Lock()
         self.listaGdb = {}
         t = ForkDetector(self)
         t.start()
-        
+    
+    @Locker
     def attachAGdb(self, pid):
         gdb = Gdb()
         gdb.attach(pid)
         self.listaGdb[pid] = gdb
         
+    @Locker
     def startNewProcessWithGdb(self, path):
         gdb = Gdb()
         pid = gdb.file(path)
         self.listaGdb[pid] = gdb
         return pid
     
-    def contineExecOfProcess(self,pid):
+    @Locker
+    def contineExecOfProcess(self, pid):
         self.listaGdb[pid].continueExec()
         
+    @Locker
     def stepIntoOfProcess(self, pid):
         self.listaGdb[pid].stepInto()
         
-    #finaliza el gdb del proceso deseado, se acepta all
+    # finaliza el gdb del proceso deseado, se acepta all
+    @Locker
     def exit(self, pid):
         if pid != "all":
             self.listaGdb[pid].exit()
@@ -39,7 +56,9 @@ class GdbSpawmer:
         
         
 if __name__ == '__main__':
+    socket = s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     spawmer = GdbSpawmer()
+    msnger = Messenger(socket, spawmer)
     pid = spawmer.startNewProcessWithGdb("../../cppTestCode/Prueba")
     spawmer.contineExecOfProcess(pid)
     while(True):

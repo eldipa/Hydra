@@ -29,7 +29,6 @@ class ForkDetector(threading.Thread):
         return msg
         
     def run(self):
-        print "iniciando pesca"
         while (True):
             msg = self.msgQueue.pull(type=1)
 #             print ' '.join(format(ord(i), 'b').zfill(8) for i in msg) 
