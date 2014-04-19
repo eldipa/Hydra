@@ -25,6 +25,9 @@ class GdbSpawmer:
     def contineExecOfProcess(self,pid):
         self.listaGdb[pid].continueExec()
         
+    def stepIntoOfProcess(self, pid):
+        self.listaGdb[pid].stepInto()
+        
         
         
 if __name__ == '__main__':
