@@ -3,7 +3,7 @@ import subprocess
 from subprocess import PIPE
 from multiprocessing import Queue
 
-from outputReader import OutputReader
+import outputReader
 
 HACK_PATH = "../../shared/hack.so"
 
@@ -16,7 +16,7 @@ class Gdb:
         self.gdb = subprocess.Popen(["gdb", "-interpreter=mi", "-quiet"], stdin=PIPE, stdout=PIPE, stderr=PIPE)
         self.gdbInput = self.gdb.stdin
         self.gdbOutput = self.gdb.stdout
-        t = OutputReader(self.gdbOutput, self.queue)
+        t = outputReader.OutputReader(self.gdbOutput, self.queue)
         t.start()
 
     
@@ -49,7 +49,7 @@ class Gdb:
     
     # Ejecuta una sola intruccion del target
     def stepInto(self):
-        self.gdbInput.write("-exec-next-instruction" + '\n')
+        self.gdbInput.write("-exec-step" + '\n')
         # TODO esperar al prompt y retornar lo pedido
     
     
@@ -61,22 +61,6 @@ class Gdb:
     # Establece un nuevo breakpoint al comienzo de la funcion dada
     def setBreakPoint(self, funcion):
         self.gdbInput.write("-break-insert " + funcion + '\n')
-        
-            
-import time
-        
-if __name__ == '__main__':
-    gdb = Gdb()
-    print "En prompt"
-    
-    gdb.file("../../cppTestCode/Prueba")
-    
-    gdb.continueExec();
-    
-    time.sleep(5)
-    
-    gdb.exit()
-    print "Finalizo"
     
     
     

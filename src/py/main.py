@@ -4,8 +4,8 @@ Created on 19/04/2014
 @author: nicolas
 '''
 
-from gdb.gdbSpawmer import GdbSpawmer
-from Messenger import Messenger
+import gdb.gdbSpawmer
+import messenger
 import socket
 import subprocess
 import os
@@ -25,8 +25,8 @@ os.chdir("./py/gdb")
 # print os.getcwd()
 (clientsocket, address) = serversocket.accept()
 
-spawmer = GdbSpawmer()
-messenger = Messenger(clientsocket, spawmer)
+spawmer = gdb.gdbSpawmer.GdbSpawmer()
+messenger = messenger.Messenger(clientsocket, spawmer)
 
 # esperar quit
 while(stdin.readline() != "quit"):

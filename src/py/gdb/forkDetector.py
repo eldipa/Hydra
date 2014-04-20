@@ -1,6 +1,5 @@
 import threading
 import sys
-import time
 sys.path.append("/home/nicolas/workspace_c++/C-GDB/test_martin/ipc/pyipc")
 from ipc import MessageQueue  # @UnresolvedImport ignorar!!
 

@@ -1,5 +1,5 @@
 import threading
-from Messenger import Messenger
+import messenger
 from gdb_mi import Output, Record
 
 class OutputReader(threading.Thread):
@@ -25,5 +25,5 @@ class OutputReader(threading.Thread):
             
         while True:
             record = self.parser.parse_line(self.gdbOutput.readline())
-            Messenger().put([self.pid, record])
+            messenger.Messenger().put([self.pid, record])
         

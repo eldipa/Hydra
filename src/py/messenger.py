@@ -1,8 +1,6 @@
 import threading
 from multiprocessing import Queue
-from gdb.gdb_mi import Record
-
-
+import gdb.gdb_mi  
 
 # Singleton con metaclass
 class Singleton(type):
@@ -16,13 +14,29 @@ class Singleton(type):
             cls.__instance = type.__call__(cls, *args, **kw)
         return cls.__instance
  
+def makeLineMsg(pid, reason, filePath, line):
+    msg = ""
+    msg += pid
+    msg += ","
+    msg += reason
+    msg += ","
+    msg += filePath
+    msg += ","
+    msg += line
+    msg += '\n'
+    return msg
+ 
 class Messenger:
     __metaclass__ = Singleton
     
     def __init__(self, socket=None, gdbSpawmer=None):
         self.queue = Queue()
         self.socket = socket
-        self.fsocket = self.socket.makefile() 
+        if socket:
+            self.fsocket = self.socket.makefile() 
+            t = threading.Thread(target=self.leerDeSocket)
+            t.daemon = True
+            t.start()
         self.gdbSpawmer = gdbSpawmer
         t = threading.Thread(target=self.leerDeCola)
         t.daemon = True
@@ -35,22 +49,22 @@ class Messenger:
     def leerDeCola(self):
         while(True):
             data = self.queue.get()
-            if isinstance(data, Record):
-                if (data[1].klass == "stopped"):
-                    msg = ""
-                    msg += data[0]
-                    msg += ","
-                    msg += data[1].results.frame.fullname
-                    msg += ","
-                    msg += data[1].results.frame.line
-                    msg += '\n'
-                    self.fsocket.write(msg)
-                    self.fsocket.flush()
-                    print data
+            print data
+            if isinstance(data[1], gdb.gdb_mi.Record):
+                klass = data[1].klass
+                if (klass == "stopped"):
+                    results = data[1].results
+                    if "reason" in results:
+                        if results["reason"] == 'exited-normally':
+                            msg = makeLineMsg(data[0], results["reason"] , "", "")
+                        else:
+                            msg = makeLineMsg(data[0], results["reason"], results["frame"]["file"], results["frame"]["line"])
+                        if self.socket:
+                            self.fsocket.write(msg)
+                            self.fsocket.flush()
                 else:
                     pass
             else:
-                print data
                 pass
             
             

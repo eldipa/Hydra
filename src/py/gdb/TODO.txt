@@ -7,7 +7,8 @@ Prioridad maxima:
 
 -exec-run
 -exec-continue
--exec-next-instruction
+-exec-step
+
 
 -file-exec-and-symbols file // para un nuevo proceso
 
@@ -45,8 +46,8 @@ Prioridad a definir:
 -exec-finish
 -exec-interrupt
 -exec-next
+-exec-next-instruction
 -exec-return
--exec-step
 -exec-step-instruction
 -exec-until [ location ]
 

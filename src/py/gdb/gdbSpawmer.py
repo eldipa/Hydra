@@ -1,10 +1,9 @@
 
 from gdb import Gdb
-from forkDetector import ForkDetector
+import forkDetector 
 import time
 from multiprocessing import Lock
-from Messenger import Messenger
-import socket
+import messenger
 
 
 def Locker(func):
@@ -20,7 +19,7 @@ class GdbSpawmer:
     def __init__(self):
         self.lock = Lock()
         self.listaGdb = {}
-        t = ForkDetector(self)
+        t = forkDetector.ForkDetector(self)
         t.start()
     
     @Locker
@@ -51,14 +50,13 @@ class GdbSpawmer:
             self.listaGdb[pid].exit()
         else:
             for gdb in self.listaGdb:
-                gdb.exit()
+                gdb.exit() 
         
         
         
 if __name__ == '__main__':
-    socket = s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     spawmer = GdbSpawmer()
-    msnger = Messenger(socket, spawmer)
+    messenger.Messenger(gdbSpawmer=spawmer)
     pid = spawmer.startNewProcessWithGdb("../../cppTestCode/Prueba")
     spawmer.contineExecOfProcess(pid)
     while(True):
