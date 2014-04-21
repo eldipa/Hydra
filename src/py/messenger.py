@@ -69,7 +69,8 @@ class Messenger:
             
             
     def leerDeSocket(self):
-        for l in self.fsocket.readline(): 
+        l = self.fsocket.readline()
+        while l:
             fields = l.split(',')    
             if fields[0] == "new":
                 self.gdbSpawmer.startNewProcessWithGdb(fields[1])
@@ -77,6 +78,8 @@ class Messenger:
                 self.gdbSpawmer.stepIntoOfProcess(fields[1])
             elif fields[0] == "attach":
                 self.gdbSpawmer.attachAGdb(fields[1])
+            
+            l = self.fsocket.readline()
             
 
     
