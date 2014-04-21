@@ -30,7 +30,7 @@ requirejs(['w2ui', 'code_view', 'jquery', 'server'], function (w2ui, code_view, 
    var view = new code_view.CodeView();
 
    /*
-   server.suscribe('source', function (data) {
+   server.subscribe('source', function (data) {
       view.load_code_from_file(data.filename);
       //view.highlightLine(data.line_num, 'info');
       view.gotoLine(data.line_num);

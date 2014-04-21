@@ -34,7 +34,7 @@ define(function () {
       this.socket.write(JSON.stringify({type: 'publish', topic: topic, data: data}));
    };
 
-   Server.prototype.suscribe = function (topic, callback) {
+   Server.prototype.subscribe = function (topic, callback) {
       topic = topic || '';
       var callbacks = this.callbacks_by_topic[topic];
       if(!callbacks) {
@@ -42,7 +42,7 @@ define(function () {
       }
       this.callbacks_by_topic[topic].push(callback);
 
-      this.socket.write(JSON.stringify({type: 'suscribe', topic: topic}));
+      this.socket.write(JSON.stringify({type: 'subscribe', topic: topic}));
    };
 
    Server.prototype.init_dispacher = function () {
