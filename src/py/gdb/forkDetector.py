@@ -27,7 +27,7 @@ class ForkDetector(threading.Thread):
         return msg
     
     def salir(self):
-        respuesta  = pack('<li', 1, 1)
+        respuesta = pack('<li', 1, 1)
         self.msgQueue.push(respuesta)
         
     def run(self):
@@ -36,9 +36,10 @@ class ForkDetector(threading.Thread):
 #             print ' '.join(format(ord(i), 'b').zfill(8) for i in msg) 
             pid = self.ObtenerID(msg)
             if pid == 1:
+                del self.msgQueue
                 return 0
-            self.spawmer.attachAGdb(pid)# no retorna hasta que el attach este completo
-            #Esta linea no va aca
+            self.spawmer.attachAGdb(pid)  # no retorna hasta que el attach este completo
+            # Esta linea no va aca
             self.spawmer.contineExecOfProcess(pid)
             respuesta = self.CrearRespuesta(pid)
             self.msgQueue.push(respuesta)
