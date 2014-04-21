@@ -23,18 +23,31 @@ requirejs.config({
 
 requirejs(['w2ui', 'code_view', 'jquery', 'server'], function (w2ui, code_view, $, server) {
    var fs = require('fs');
-   var server = new server.Server();
+   /*var server = new server.Server();
    server.init();
+   */
 
    var view = new code_view.CodeView();
 
+   /*
    server.suscribe('source', function (data) {
       view.load_code_from_file(data.filename);
       //view.highlightLine(data.line_num, 'info');
       view.gotoLine(data.line_num);
    });
+   */
 
-
+   var socket = require('net').Socket();
+   socket.connect(5555, '');
+   socket.setEncoding('ascii');
+      
+   socket.write("new,/home/martin/a.out\n");
+   //socket.write("step-into,9061\n");
+   socket.on('data', function (chunk) {
+      var items = chunk.trim().split(',');
+      view.load_code_from_file("/home/martin/" + items[2]);
+      view.gotoLine(items[3] * 1);
+   });
 
    var pstyle = 'border: 1px solid #dfdfdf; padding: 5px;';
    $('#layout').w2layout({
