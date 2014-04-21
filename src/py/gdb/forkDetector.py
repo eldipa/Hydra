@@ -14,7 +14,6 @@ class ForkDetector(threading.Thread):
     
     def __init__(self, spawmer):
         threading.Thread.__init__(self)
-        self.daemon = True
         open(_QUEUE_PATH_, _QUEUE_CHAR_)
         self.msgQueue = MessageQueue(_QUEUE_PATH_, _QUEUE_CHAR_, 0666, True)
         self.spawmer = spawmer
@@ -26,12 +25,18 @@ class ForkDetector(threading.Thread):
     def CrearRespuesta(self, pid):
         msg = pack('<li', pid, 0)
         return msg
+    
+    def salir(self):
+        respuesta  = pack('<li', 1, 1)
+        self.msgQueue.push(respuesta)
         
     def run(self):
         while (True):
             msg = self.msgQueue.pull(type=1)
 #             print ' '.join(format(ord(i), 'b').zfill(8) for i in msg) 
             pid = self.ObtenerID(msg)
+            if pid == 1:
+                return 0
             self.spawmer.attachAGdb(pid)# no retorna hasta que el attach este completo
             #Esta linea no va aca
             self.spawmer.contineExecOfProcess(pid)

@@ -19,8 +19,8 @@ class GdbSpawmer:
     def __init__(self):
         self.lock = Lock()
         self.listaGdb = {}
-        t = forkDetector.ForkDetector(self)
-        t.start()
+        self.forkDetector = forkDetector.ForkDetector(self)
+        self.forkDetector.start()
     
     @Locker
     def attachAGdb(self, pid):
@@ -51,6 +51,10 @@ class GdbSpawmer:
         else:
             for gdb in self.listaGdb:
                 gdb.exit() 
+                
+    def eliminarCola(self):
+        self.forkDetector.salir()
+        self.forkDetector.join()
         
         
         

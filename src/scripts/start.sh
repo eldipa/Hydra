@@ -1,4 +1,4 @@
-trap "killall nw; kill 0" EXIT
+trap "killall nw" EXIT
 
 touch update
 ./scripts/keep_refreshing.sh &
