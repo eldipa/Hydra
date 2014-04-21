@@ -1,5 +1,8 @@
 define(function () {
    function Server() {
+      this.callbacks_by_topic = {};
+      this.max_buf_length = 1024 * 1024;
+      this.log_to_console = true;
    }
    
    Server.prototype.init = function () {
@@ -44,21 +47,23 @@ define(function () {
 
    Server.prototype.init_dispacher = function () {
       var buf = '';
+      var self = this;
       this.socket.on('data', function (chunk) {
          var events = [];
          var incremental_chunks = chunk.split('}');
          var index_of_the_last = incremental_chunks.length-1;
-         if((!buf && incremental_chunks[0][0] !== '{') || (buf && buf[0] !== '{')) {
-            throw "Bogus chunck-buffer state.";
-         }
 
          // We join each sub-chunk in an incremental way.
          // In each step we try to parse the full string to extract
          // the event (an object).
-         for(var i = 0; i < incremental_chunks.length; i++) { 
+         for(var i = 0; i < incremental_chunks.length; i++) {
             buf += incremental_chunks[i] + ((i === index_of_the_last)? '': '}');
             if(!buf) {
                continue;
+            }
+
+            if(buf.length > this.max_buf_length) {
+               throw "Too much data. Buffer's length exceeded .";
             }
 
             var event = null;
@@ -89,25 +94,30 @@ define(function () {
 
          //finally we dispatch the events, if any
          for(var i = 0; i < events.length; i++) {
-            this.dispatch(events[i]);
+            self.dispatch(events[i]);
          }
       });
    };
 
    Server.prototype.dispatch = function (event) {
-      var subtopics = event.topic.split('.');
-      if(subtopics[0] !== '') {
-         subtopics.unshift(''); //add the 'empty' subtopic
-      } // because that, the subtopic list always has one or more elements
+      if(this.log_to_console) {
+         console.log("Dispatch: ");
+         console.log(event);
+      }
 
       // we build the topic chain:
       // if the event's topic is empty, the chain is ['']
       // if the event's topic was A, the chain is ['', A]
       // if the event's topic was A.B, the chain is ['', A, B]
       // and so on
-      var topic_chain = [];
-      for(var i = 1; i < subtopics.length; i++) {
-         topic_chain.push( subtopics.slice(0, i).join('.') );
+      var subtopics = event.topic.split('.');
+      var topic_chain = ['']; // the 'empty' topic is added
+      for(var i = 0; i < subtopics.length; i++) {
+         topic_chain.push( subtopics.slice(0, i+1).join('.') );
+      }
+      if(this.log_to_console) {
+         console.log("Topic chain:");
+         console.log(topic_chain);
       }
    
       // we call the callbacks for each topic in the topic chain.
@@ -115,6 +125,10 @@ define(function () {
       for(var j = topic_chain.length-1; j >= 0; j--) {
          var topic = topic_chain[j];
          var callbacks = this.callbacks_by_topic[topic] || [];
+         if(this.log_to_console) {
+            console.log(" on '" + topic + "': ");
+            console.log(callbacks);
+         }
          for(var i = 0; i < callbacks.length; i++) {
             try {
                callbacks[i](event.data);

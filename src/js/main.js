@@ -21,15 +21,20 @@ requirejs.config({
 
 });
 
-requirejs(['w2ui', 'code_view', 'jquery'], function (w2ui, code_view, $) {
+requirejs(['w2ui', 'code_view', 'jquery', 'server'], function (w2ui, code_view, $, server) {
    var fs = require('fs');
+   var server = new server.Server();
+   server.init();
 
    var view = new code_view.CodeView();
 
-   //view.load_code_from_string("void func(int a, int b) {\n   return;\n}\n");
-   view.load_code_from_file("js/main.js");
-   view.gotoLine(2);
-   view.highlightLine(1, 'info');
+   server.suscribe('source', function (data) {
+      view.load_code_from_file(data.filename);
+      //view.highlightLine(data.line_num, 'info');
+      view.gotoLine(data.line_num);
+   });
+
+
 
    var pstyle = 'border: 1px solid #dfdfdf; padding: 5px;';
    $('#layout').w2layout({
@@ -41,6 +46,7 @@ requirejs(['w2ui', 'code_view', 'jquery'], function (w2ui, code_view, $) {
    });
 
    w2ui.objects['layout'].content("main", view.view_dom);
+
    
    //process_view.start();
    //require('nw.gui').Window.get().reload(3);
