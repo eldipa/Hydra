@@ -5,15 +5,16 @@ Created on 20/04/2014
 '''
 import json
 import threading
+import socket
 
 MSGLEN = 100
 
 class EventHandler(threading.Thread):
     
-    # Pre: socket ya conectado
-    def __init__(self, socket):
+    def __init__(self):
         threading.Thread.__init__(self)
-        self.socket = socket
+        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.socket.connect(("localhost", 5555))
         self.callbacks = {}
         self.max_buf_length = 1024 * 1024
         self.log_to_console = True
@@ -39,11 +40,11 @@ class EventHandler(threading.Thread):
             incremental_chunks = chunk.split('}')
             index_of_the_last = incremental_chunks.length - 1
             
-            for i in range(incremental_chunks.length):
+            for i in range(len(incremental_chunks)):
                 buf += incremental_chunks[i] + ('' if (i == index_of_the_last) else '}')
                 if(not buf):
                     continue
-                if(buf.length > self.max_buf_length):
+                if(len(buf) > self.max_buf_length):
                     raise "Too much data. Buffer's length exceeded ."
                 
                 event = None;
@@ -83,9 +84,9 @@ class EventHandler(threading.Thread):
 #        if the event's topic was A.B, the chain is ['', A, B]
 #        and so on
         subtopics = event.topic.split('.');
-        topic_chain = ['']; # the 'empty' topic is added
-        for i in range(subtopics.length): 
-            topic_chain.push( subtopics.slice(0, i+1).join('.') )
+        topic_chain = [''];  # the 'empty' topic is added
+        for i in range(len(subtopics)): 
+            topic_chain.push(subtopics.slice(0, i + 1).join('.'))
         if(self.log_to_console):
             print("Topic chain:")
             print(topic_chain)
@@ -93,7 +94,7 @@ class EventHandler(threading.Thread):
 #        we call the callbacks for each topic in the topic chain.
 #        the chain is iterated in reverse order (the more specific topic first)
 #         for(var j = topic_chain.length-1; j >= 0; j--) 
-        for j in range(topic_chain.length-1, 0,-1):                            
+        for j in range(len(topic_chain)- 1, 0, -1):                            
             topic = topic_chain[j];
             callbacks = self.callbacks_by_topic[topic];
             if(self.log_to_console):
@@ -104,7 +105,7 @@ class EventHandler(threading.Thread):
                 try:
                     callback(event.data)
                 except:
-                    pass# TODO
+                    pass  # TODO
 
          
 
