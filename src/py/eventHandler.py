@@ -14,7 +14,6 @@ class EventHandler(threading.Thread):
     
     def __init__(self):
         threading.Thread.__init__(self)
-        self.daemon = True
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.socket.connect(("localhost", 5555))
         self.max_buf_length = 1024 * 1024
@@ -54,9 +53,12 @@ class EventHandler(threading.Thread):
         
     def run(self):
         buf = ''
-        
-        while(True):
+        salir = False
+        while(not salir):
             chunk = self.socket.recv(MSGLEN)
+            if chunk == '':
+                salir = True
+                continue
             if(self.log_to_console):
                 print("chunk: ")
                 print chunk
@@ -91,6 +93,9 @@ class EventHandler(threading.Thread):
             # finally we dispatch the events, if any
             for event in events:
                 self.dispatch(event)
+                
+        self.socket.shutdown()
+        self.socket.close()
                 
     def dispatch(self, event):
         if(self.log_to_console):
