@@ -1,11 +1,13 @@
 import threading
-import messenger
 from gdb_mi import Output, Record
+import eventHandler
+
 
 class OutputReader(threading.Thread):
     
     def __init__(self, gdbOutput, queue):
         threading.Thread.__init__(self)
+        self.eventHandler = eventHandler.EventHandler()
         self.queue = queue
         self.parser = Output()
         self.gdbOutput = gdbOutput
@@ -25,5 +27,5 @@ class OutputReader(threading.Thread):
             
         while True:
             record = self.parser.parse_line(self.gdbOutput.readline())
-            messenger.Messenger().put([self.pid, record])
+            #self.eventHandler.publish(topic, data)
         

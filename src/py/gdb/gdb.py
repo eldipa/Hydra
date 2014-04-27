@@ -4,6 +4,7 @@ from subprocess import PIPE
 from multiprocessing import Queue
 
 import outputReader
+import eventHandler
 
 HACK_PATH = "../../shared/hack.so"
 
@@ -18,12 +19,14 @@ class Gdb:
         self.gdbOutput = self.gdb.stdout
         t = outputReader.OutputReader(self.gdbOutput, self.queue)
         t.start()
+        self.eventHandler = eventHandler.EventHandler()
 
     
     # -Gdb realiza un attach al proceso especificado
     def attach(self, pid):
         self.gdbInput.write("-target-attach " + str(pid) + '\n')
         targetPid = self.queue.get()
+        #suscribirse a eventos
         return targetPid
     
     # -Gdb coloca como proceso target un nuevo proceso del codigo 'file'
@@ -35,6 +38,7 @@ class Gdb:
         self.setBreakPoint("main")
         self.run()
         pid = self.queue.get()
+        #suscribirse a eventos
         return pid
 
     

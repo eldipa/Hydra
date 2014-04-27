@@ -1,9 +1,7 @@
 
 from gdb import Gdb
 import forkDetector 
-import time
 from multiprocessing import Lock
-import messenger
 
 
 def Locker(func):
@@ -56,13 +54,5 @@ class GdbSpawmer:
         self.forkDetector.salir()
         self.forkDetector.join()
         
-        
-        
-if __name__ == '__main__':
-    spawmer = GdbSpawmer()
-    messenger.Messenger(gdbSpawmer=spawmer)
-    pid = spawmer.startNewProcessWithGdb("../../cppTestCode/Prueba")
-    spawmer.contineExecOfProcess(pid)
-    while(True):
-        time.sleep(1)
+
     

@@ -6,39 +6,63 @@ Created on 20/04/2014
 import json
 import threading
 import socket
+from multiprocessing import Lock
 
-MSGLEN = 100
+MSGLEN = 500
 
 class EventHandler(threading.Thread):
     
     def __init__(self):
         threading.Thread.__init__(self)
+        self.daemon = True
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.socket.connect(("localhost", 5555))
-        self.callbacks = {}
         self.max_buf_length = 1024 * 1024
         self.log_to_console = True
+        self.lock = Lock()
         self.callbacks_by_topic = {}
         
         
     def subscribe(self, topic, callback):
-        self.callbacks[topic] = callback;
-        self.socket.write(json.loads({type: 'subscribe', topic: topic}))
+        self.lock.acquire()
+        if self.callbacks_by_topic.has_key(topic):
+            self.callbacks_by_topic[topic].append(callback)
+        else:
+            self.callbacks_by_topic[topic] = []
+            self.callbacks_by_topic[topic].append(callback)
+        self.lock.release()
+        msg = json.dumps({'type': 'subscribe', 'topic': topic})
+            
+        totalsent = 0
+        while totalsent < len(msg):
+            sent = self.sock.send(msg[totalsent:])
+            if sent == 0:
+                raise RuntimeError("socket connection broken")
+            totalsent = totalsent + sent
     
     def publish(self, topic, data):
         if(not topic):
             raise "The topic must not be empty"
 
-        self.socket.write(json.loads({type: 'publish', topic: topic, data: data}))
+        msg = json.dumps({'type': 'publish', 'topic': topic, 'data': data})
+        totalsent = 0
+        while totalsent < len(msg):
+            sent = self.sock.send(msg[totalsent:])
+            if sent == 0:
+                raise RuntimeError("socket connection broken")
+            totalsent = totalsent + sent
         
     def run(self):
         buf = ''
         
         while(True):
             chunk = self.socket.recv(MSGLEN)
+            if(self.log_to_console):
+                print("chunk: ")
+                print chunk
             events = [];
             incremental_chunks = chunk.split('}')
-            index_of_the_last = incremental_chunks.length - 1
+            index_of_the_last = len(incremental_chunks) - 1
             
             for i in range(len(incremental_chunks)):
                 buf += incremental_chunks[i] + ('' if (i == index_of_the_last) else '}')
@@ -49,7 +73,7 @@ class EventHandler(threading.Thread):
                 
                 event = None;
                 try:
-                    event = json.dumps(buf)
+                    event = json.loads(buf)
                 except:
                     pass
                     # JSON fail, so the 'event object' is not complete yet
@@ -57,15 +81,10 @@ class EventHandler(threading.Thread):
                 if(not event):
                     continue
 
-                old_buf = buf  # for logging
                 buf = '';
                 
-                if(isinstance(event, 'object')):
+                if(not isinstance(event, dict)):
                     raise "Bogus 'event' payload. It isn't an object like {...} ."
-        
-
-                if(isinstance(event.topic, 'undefined') or isinstance(event.data, 'undefined')):
-                    raise "Bogus 'event' payload. It has an incorrect or missing property."
                 
                 events.append(event)
                 
@@ -83,19 +102,18 @@ class EventHandler(threading.Thread):
 #        if the event's topic was A, the chain is ['', A]
 #        if the event's topic was A.B, the chain is ['', A, B]
 #        and so on
-        subtopics = event.topic.split('.');
+        subtopics = event['topic'].split('.');
         topic_chain = [''];  # the 'empty' topic is added
-        for i in range(len(subtopics)): 
-            topic_chain.push(subtopics.slice(0, i + 1).join('.'))
+        for topic in subtopics:
+            topic_chain.append(topic)
         if(self.log_to_console):
             print("Topic chain:")
             print(topic_chain)
             
 #        we call the callbacks for each topic in the topic chain.
 #        the chain is iterated in reverse order (the more specific topic first)
-#         for(var j = topic_chain.length-1; j >= 0; j--) 
-        for j in range(len(topic_chain)- 1, 0, -1):                            
-            topic = topic_chain[j];
+        self.lock.acquire()
+        for topic in reversed(topic_chain):
             callbacks = self.callbacks_by_topic[topic];
             if(self.log_to_console):
                 print(" on '" + topic + "': ")
@@ -103,11 +121,13 @@ class EventHandler(threading.Thread):
             
             for callback in callbacks:
                 try:
-                    callback(event.data)
+                    callback(event['data'])
                 except:
                     pass  # TODO
+        self.lock.release()
 
-         
+    
+    
 
                     
                 
