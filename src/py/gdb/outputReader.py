@@ -8,6 +8,7 @@ class OutputReader(threading.Thread):
     def __init__(self, gdbOutput, queue):
         threading.Thread.__init__(self)
         self.eventHandler = eventHandler.EventHandler()
+        self.eventHandler.start()
         self.queue = queue
         self.parser = Output()
         self.gdbOutput = gdbOutput

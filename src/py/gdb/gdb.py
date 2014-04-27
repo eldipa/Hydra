@@ -20,6 +20,7 @@ class Gdb:
         t = outputReader.OutputReader(self.gdbOutput, self.queue)
         t.start()
         self.eventHandler = eventHandler.EventHandler()
+        self.eventHandler.start()
 
     
     # -Gdb realiza un attach al proceso especificado

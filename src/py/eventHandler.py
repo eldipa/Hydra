@@ -8,18 +8,17 @@ import threading
 import socket
 from multiprocessing import Lock
 
-MSGLEN = 500
-
 class EventHandler(threading.Thread):
     
     def __init__(self):
         threading.Thread.__init__(self)
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.socket.connect(("localhost", 5555))
+        self.fsocket = self.socket.makefile()
         self.max_buf_length = 1024 * 1024
         self.log_to_console = True
         self.lock = Lock()
-        self.callbacks_by_topic = {}
+        self.callbacks_by_topic = {'':[]}
         
         
     def subscribe(self, topic, callback):
@@ -31,37 +30,31 @@ class EventHandler(threading.Thread):
             self.callbacks_by_topic[topic].append(callback)
         self.lock.release()
         msg = json.dumps({'type': 'subscribe', 'topic': topic})
-            
-        totalsent = 0
-        while totalsent < len(msg):
-            sent = self.sock.send(msg[totalsent:])
-            if sent == 0:
-                raise RuntimeError("socket connection broken")
-            totalsent = totalsent + sent
+        self.fsocket.write(msg)
+        self.fsocket.flush()
+        if(self.log_to_console):
+            print 'Mensaje enviado ' + msg
     
     def publish(self, topic, data):
         if(not topic):
             raise "The topic must not be empty"
 
         msg = json.dumps({'type': 'publish', 'topic': topic, 'data': data})
-        totalsent = 0
-        while totalsent < len(msg):
-            sent = self.sock.send(msg[totalsent:])
-            if sent == 0:
-                raise RuntimeError("socket connection broken")
-            totalsent = totalsent + sent
+        self.fsocket.write(msg)
+        self.fsocket.flush()
+        if(self.log_to_console):
+            print 'Mensaje enviado ' + msg
         
     def run(self):
         buf = ''
         salir = False
         while(not salir):
-            chunk = self.socket.recv(MSGLEN)
+            chunk = self.fsocket.read()
+            if(self.log_to_console):
+                print("chunk: " + chunk)
             if chunk == '':
                 salir = True
                 continue
-            if(self.log_to_console):
-                print("chunk: ")
-                print chunk
             events = [];
             incremental_chunks = chunk.split('}')
             index_of_the_last = len(incremental_chunks) - 1
@@ -94,7 +87,7 @@ class EventHandler(threading.Thread):
             for event in events:
                 self.dispatch(event)
                 
-        self.socket.shutdown()
+#         self.socket.shutdown(socket.SHUT_RDWR)
         self.socket.close()
                 
     def dispatch(self, event):
@@ -119,18 +112,99 @@ class EventHandler(threading.Thread):
 #        the chain is iterated in reverse order (the more specific topic first)
         self.lock.acquire()
         for topic in reversed(topic_chain):
-            callbacks = self.callbacks_by_topic[topic];
-            if(self.log_to_console):
-                print(" on '" + topic + "': ")
-                print(callbacks)
-            
-            for callback in callbacks:
-                try:
-                    callback(event['data'])
-                except:
-                    pass  # TODO
+            if self.callbacks_by_topic.has_key(topic):
+                callbacks = self.callbacks_by_topic[topic];
+                if(self.log_to_console):
+                    print(" on '" + topic + "': ")
+                    print(callbacks)
+                
+                for callback in callbacks:
+                    try:
+                        callback(event['data'])
+                    except:
+                        pass  # TODO
+            else:
+                if(self.log_to_console):
+                    print("Unknown topic '" + topic + "' discarted")
+
         self.lock.release()
 
+    
+    
+if __name__ == "__main__":
+    
+    def funcionCallback(data):
+        print 'Sucess: ' + data
+        
+    def otherCallback(data):
+        print "Other Sucess " + data
+        
+    def defaultCallback(data):
+        print "Esto pasa siempre " + data
+        
+    def myreceive(sock):
+        msg = ''
+        char = ''
+        cont = 0
+        salir = False
+        while not salir:
+            char = sock.read(1) 
+            msg += char
+            if char == '{':
+                cont += 1
+            if char == '}':
+                cont -= 1
+                if cont == 0:
+                    salir = True
+        return msg
+     
+    def mysend(sock, msg):
+        sock.write(msg)
+        sock.flush()
+        
+    serversocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    serversocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    try:
+        serversocket.bind(("localhost", 5555))
+        serversocket.listen(1)
+        
+        handler = EventHandler()
+
+        (clientsocket, address) = serversocket.accept()
+        
+        sfile = clientsocket.makefile()
+        
+        handler.start()
+        
+        handler.publish("prueba", "1234567")
+        print "publicado"
+        recvData = myreceive(sfile)
+        print 'recvData: ' + recvData
+
+        handler.subscribe("prueba", funcionCallback)
+        recvData = myreceive(sfile)
+        print 'recvData: ' + recvData
+        
+        handler.subscribe("prueba", otherCallback)
+        recvData = myreceive(sfile)
+        print 'recvData: ' + recvData
+        
+        handler.subscribe('', defaultCallback)
+        recvData = myreceive(sfile)
+        print 'recvData: ' + recvData
+        
+        msg = '{"topic": "prueba", "data": "1234567", "type": "publish"}'
+        mysend(sfile, msg)
+        
+        msg = '{"topic": "otro", "data": "42", "type": "publish"}'
+        mysend(sfile, msg)
+     
+    finally:
+        serversocket.close()
+        if clientsocket:
+            clientsocket.shutdown(2)
+            clientsocket.close()
+            
     
     
 
