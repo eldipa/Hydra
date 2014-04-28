@@ -31,15 +31,16 @@ To run the server,
    >>> import os
    >>> from subprocess import check_output
 
-   >>> # just an auxiliary function for testing purpose only to count how many 
-   >>> # processes named 'process_name' are running
-   >>> def pgrep_count(process_name):
-   ...   out = check_output(["pgrep", "-c", process_name])
-   ...   return int(out)
+   >>> # just an auxiliary function for testing purpose only to know if the process 
+   >>> # is running
+   >>> def is_running():
+   ...   out = check_output(["python", "publish_subscribe/billboard.py", "status"])
+   ...   return "running" in out
 
-   >>> os.system("python publish_subscribe/publish_subscribe.py start")
-
-   >>> pgrep_count("publish_subscribe_server") == 1
+   >>> os.system("python publish_subscribe/billboard.py start")
+   0
+   >>> is_running()
+   True
 
 The *publish_subscribe* script will spawn the server and will wait until it is ready.
 
@@ -47,17 +48,20 @@ To shutdown the system (only the server, this doesn't affect the clients),
 
 ::
 
-   >>> os.system("python publish_subscribe/publish_subscribe.py stop")
-   >>> pgrep_count("publish_subscribe_server") == 0
+   >>> os.system("python publish_subscribe/billboard.py stop")
+   0
+   >>> is_running()
+   False
 
 
 The server should be able to use the same port again.
 
 ::
 
-   >>> os.system("python publish_subscribe/publish_subscribe.py start")
-   >>> pgrep_count("publish_subscribe_server") == 1
-   >>>
+   >>> os.system("python publish_subscribe/billboard.py start")
+   0
+   >>> is_running()
+   True
    >>> # we let the server running for the rest of this doctest
 
 Entity's API
@@ -74,15 +78,15 @@ Before any action, the entity must initialize the lib
 
 ::
    
-   >>> import publish_subscribe as pubsub
-   >>> pubsub.init()
+   >>> import publish_subscribe.eventHandler 
+   >>> pubsub = publish_subscribe.eventHandler.EventHandler()
 
 
 Additional initializations are allowed and discarded.
 
 ::
    
-   >>> pubsub.init()
+   >>> #pubsub.init()
 
 
 Subscribe method
@@ -106,8 +110,7 @@ a while, the events will be delivered correctly.
 The last semantic definition can be used to implement a premature filtering of each
 publication. So, if an event hasn't any subscriber, the publish method can drop the event.
 
-   Because there isn't any performance bottleneck (yet), our implementation uses
-   the *strong* semantic.
+   Our implementation uses the *weak* semantic.
 
 
 To subscribe to an event, the entity must provide a callback to be executed. This
@@ -161,18 +164,23 @@ Our implementation support only filtering by topic.
 
 ::
    
-   >>> import threading
+   >>> import threading, time
    >>> shared_list = []
    >>> shared_lock = threading.Lock()
 
    >>> def add_sync(data):
-   ...   shared_lock.lock()
+   ...   global shared_lock
+   ...   global shared_list
+   ...
+   ...   shared_lock.acquire()
    ...   shared_list.append(data)
    ...   shared_lock.release()
 
    >>> pubsub.subscribe('A', add_sync)    # subcribed to the A topic
    
+   >>> time.sleep(2) # we wait some time so the subscription is effective
    >>> pubsub.publish('A', "A")
+   >>> time.sleep(2) # we wait some time so the event comes back
    >>> shared_list.count("A")
    1
 
@@ -181,15 +189,18 @@ The topic can be seen as a hierarchy of topics.
 ::
 
    >>> pubsub.subscribe('B', add_sync)    # subcribed to the B topic but also to any with prefix 'B.'
-   >>> pubsub.subcribed('B.C', add_sync)  # subcribed to B.C only
+   >>> pubsub.subscribe('B.C', add_sync)  # subcribed to B.C only
 
+   >>> time.sleep(2) 
    >>> pubsub.publish('B.C', "B, sub C")
-   >>> shared_list.count("B, sub C")
-   1
-
-   >>> pubsub.pubsub('B', "just B")
-   >>> shared_list.count("just B")  # this will be received by the two callbacks
+   >>> time.sleep(2) 
+   >>> shared_list.count("B, sub C")   # 'B' and 'B.C' called 
    2
+
+   >>> pubsub.publish('B', "just B")
+   >>> time.sleep(2) 
+   >>> shared_list.count("just B")  # this will be received by only one callbacks
+   1
 
 Finally, the *empty* topic means that the subscriber in interested in anything.
 It's not possible to publish an event with an *empty* topic.
@@ -197,15 +208,25 @@ It's not possible to publish an event with an *empty* topic.
 ::
 
 
-   >>> pubsub.pubsub('X', "some X event")    # these events will be dropped
-   >>> pubsub.pubsub('W.X.Y.Z', "a very specific event")
+   >>> pubsub.publish('X', "some X event")    # these events will be dropped
+   >>> pubsub.publish('W.X.Y.Z', "a very specific event")
+   >>> time.sleep(2) 
    >>> shared_list.count("some X event"), shared_list.count("a very specific event")
    (0, 0)
    
    >>> pubsub.subscribe('', add_sync) 
 
-   >>> pubsub.pubsub('X', "some X event")
-   >>> pubsub.pubsub('W.X.Y.Z', "a very specific event")
+   >>> time.sleep(2) 
+   >>> pubsub.publish('X', "some X event")
+   >>> pubsub.publish('W.X.Y.Z', "a very specific event")
+   >>> time.sleep(2) 
    >>> shared_list.count("some X event"), shared_list.count("a very specific event")
    (1, 1)
 
+
+::
+
+   >>> os.system("python publish_subscribe/billboard.py stop")
+   0
+   >>> is_running()
+   False

@@ -111,10 +111,10 @@ class Daemon(object):
       signal.signal(signal.SIGTERM, self.signal_terminate_handler)
       signal.signal(signal.SIGHUP, self.signal_hup_handler)
    
-   def signal_terminate_handler(sig_num, stack_frame):
+   def signal_terminate_handler(self, sig_num, stack_frame):
       raise SystemExit("Process %s killed by a SIGTERM signal." % self.name)
    
-   def signal_hup_handler(sig_num, stack_frame):
+   def signal_hup_handler(self, sig_num, stack_frame):
       pass
 
    def create_pidfile(self):

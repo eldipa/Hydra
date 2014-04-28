@@ -7,6 +7,8 @@ import json
 import threading
 import socket
 from multiprocessing import Lock
+import syslog, traceback
+from message_ensambler import ensamble_messages
 
 class EventHandler(threading.Thread):
     
@@ -14,11 +16,12 @@ class EventHandler(threading.Thread):
         threading.Thread.__init__(self)
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.socket.connect(("localhost", 5555))
-        self.fsocket = self.socket.makefile()
         self.max_buf_length = 1024 * 1024
-        self.log_to_console = True
+        self.log_to_console = False
         self.lock = Lock()
         self.callbacks_by_topic = {'':[]}
+
+        self.start()
         
         
     def subscribe(self, topic, callback):
@@ -29,105 +32,89 @@ class EventHandler(threading.Thread):
             self.callbacks_by_topic[topic] = []
             self.callbacks_by_topic[topic].append(callback)
         self.lock.release()
+
         msg = json.dumps({'type': 'subscribe', 'topic': topic})
-        self.fsocket.write(msg)
-        self.fsocket.flush()
-        if(self.log_to_console):
-            print 'Mensaje enviado ' + msg
+        syslog.syslog(syslog.LOG_DEBUG, "Subscribing to the topic '%s'. Sending: '%s'." % (topic, msg))
+        self.socket.sendall(msg)
     
     def publish(self, topic, data):
         if(not topic):
             raise "The topic must not be empty"
 
         msg = json.dumps({'type': 'publish', 'topic': topic, 'data': data})
-        self.fsocket.write(msg)
-        self.fsocket.flush()
-        if(self.log_to_console):
-            print 'Mensaje enviado ' + msg
+        syslog.syslog(syslog.LOG_DEBUG, "Publising an event of topic '%s'. Sending: '%s'." % (topic, msg))
+        self.socket.sendall(msg)
         
-    def run(self):
-        buf = ''
-        salir = False
-        while(not salir):
-            chunk = self.fsocket.read()
-            if(self.log_to_console):
-                print("chunk: " + chunk)
-            if chunk == '':
-                salir = True
-                continue
-            events = [];
-            incremental_chunks = chunk.split('}')
-            index_of_the_last = len(incremental_chunks) - 1
-            
-            for i in range(len(incremental_chunks)):
-                buf += incremental_chunks[i] + ('' if (i == index_of_the_last) else '}')
-                if(not buf):
-                    continue
-                if(len(buf) > self.max_buf_length):
-                    raise "Too much data. Buffer's length exceeded ."
-                
-                event = None;
-                try:
-                    event = json.loads(buf)
-                except:
-                    pass
-                    # JSON fail, so the 'event object' is not complete yet
-                    
-                if(not event):
-                    continue
+    def _read_chunk(self):
+        chunk = self.socket.recv(1024)
+        if not chunk:
+           syslog.syslog(syslog.LOG_DEBUG, "Endpoint close the connection.")
+      
+        return chunk
 
-                buf = '';
-                
-                if(not isinstance(event, dict)):
-                    raise "Bogus 'event' payload. It isn't an object like {...} ."
-                
-                events.append(event)
-                
-            # finally we dispatch the events, if any
-            for event in events:
-                self.dispatch(event)
-                
-#         self.socket.shutdown(socket.SHUT_RDWR)
-        self.socket.close()
+
+    def run(self):
+        try:
+           buf = ''
+           while True:
+               chunk = self._read_chunk()
+               end_of_the_communication = not chunk
+
+               if end_of_the_communication:
+                  break
+               
+               messages, buf = ensamble_messages(buf, chunk, 8912)
+
+               events = messages
+                   
+               # finally we dispatch the events, if any
+               for event in events:
+                   self.dispatch(event)
+                   
+        except:
+           syslog.syslog(syslog.LOG_ERR, "Exception when receiving a message: %s." % traceback.format_exc())
+        finally:
+           self.socket.shutdown(socket.SHUT_RDWR)
+           self.socket.close()
                 
     def dispatch(self, event):
         if(self.log_to_console):
             print("Dispatch: ")
             print(event)
             
-#        we build the topic chain:
-#        if the event's topic is empty, the chain is ['']
-#        if the event's topic was A, the chain is ['', A]
-#        if the event's topic was A.B, the chain is ['', A, B]
-#        and so on
-        subtopics = event['topic'].split('.');
-        topic_chain = [''];  # the 'empty' topic is added
-        for topic in subtopics:
-            topic_chain.append(topic)
+        # we build the topic chain:
+        # if the event's topic is empty, the chain is ['']
+        # if the event's topic was A, the chain is ['', A]
+        # if the event's topic was A.B, the chain is ['', A, B]
+        # and so on
+        topic = event["topic"]
+        subtopics = topic.split(".")
+        topic_chain = [""] # the empty topic
+        for i in range(len(subtopics)):
+           topic_chain.append('.'.join(subtopics[:i+1]))
+
         if(self.log_to_console):
             print("Topic chain:")
             print(topic_chain)
             
-#        we call the callbacks for each topic in the topic chain.
-#        the chain is iterated in reverse order (the more specific topic first)
+        # we call the callbacks for each topic in the topic chain.
+        # the chain is reversed (the more specific topic first)
+        topic_chain.reverse()
         self.lock.acquire()
-        for topic in reversed(topic_chain):
-            if self.callbacks_by_topic.has_key(topic):
-                callbacks = self.callbacks_by_topic[topic];
-                if(self.log_to_console):
-                    print(" on '" + topic + "': ")
-                    print(callbacks)
+        try:
+           syslog.syslog(syslog.LOG_DEBUG, "Executing callback over the topic chain '%s'." % (str(topic_chain)))
+           for t in topic_chain:
+               callbacks = self.callbacks_by_topic.get(t, []);
+               syslog.syslog(syslog.LOG_DEBUG, "For the topic '%s' there are %i callbacks." % (t if t else "(the empty topic)", len(callbacks)))
                 
-                for callback in callbacks:
-                    try:
-                        callback(event['data'])
-                    except:
-                        pass  # TODO
-            else:
-                if(self.log_to_console):
-                    print("Unknown topic '" + topic + "' discarted")
+               for callback in callbacks:
+                   try:
+                       callback(event['data'])
+                   except:
+                       syslog.syslog(syslog.LOG_ERR, "Exception in callback for the topic '%s': %s" % (t if t else "(the empty topic)", traceback.format_exc()))
 
-        self.lock.release()
+        finally:
+           self.lock.release()
 
     
     
