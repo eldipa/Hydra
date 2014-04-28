@@ -135,6 +135,7 @@ In that case, the set of values with the same key are merged into a single entry
 in the dictionary and its value will be the list of the original values.
 
 ::
+
    >>> t = Tuple()
    >>> t.parse(r'{a="b",a="d"}', 0)
    13
@@ -143,7 +144,7 @@ in the dictionary and its value will be the list of the original values.
    >>> print t
    {'a': ['b', 'd']}
 
-Of course, wrong inputs are catched
+Of course, wrong inputs are caught
 
 ::
 
@@ -158,6 +159,7 @@ Of course, wrong inputs are catched
    ParsingError: Wrong begin. Expected a '['.
    
 ::
+
    >>> t = Tuple()
 
    >>> t.parse(r'{x', 0)
@@ -187,7 +189,7 @@ Of course, wrong inputs are catched
 At the top most of the construction, the structured messages returned by GDB are 
 AsyncRecords and ResultRecord.
 Both are a named list (possibly empty) of key-value pairs where each value 
-can be a c-string, a list or a tuple, endig the list with a newline.
+can be a c-string, a list or a tuple, ending the list with a newline.
 
 ::
 
@@ -220,6 +222,7 @@ can be a c-string, a list or a tuple, endig the list with a newline.
     'type': 'Notify'}
    
 ::
+
    >>> r = ResultRecord()
    >>> r.parse('^bar,a="b"\n', 0)
    10
@@ -232,6 +235,7 @@ can be a c-string, a list or a tuple, endig the list with a newline.
 The other top level construction are the Stream. These are unstructured c-strings.
 
 ::
+
    >>> s = StreamRecord()
    >>> s.parse('~"foo"\n', 0)
    6
@@ -257,14 +261,15 @@ The other top level construction are the Stream. These are unstructured c-string
    >>> print stream
    {'stream': 'baz', 'type': 'Log'}
 
-Finally, the messages returned by GDB are a sequence (may be empty) of asynchronious 
+Finally, the messages returned by GDB are a sequence (may be empty) of asynchronous 
 messages and streams, followed by an optional result record. Then, the special token
 '(gdb)' should be found, followed by a newline.
 
 Instead of delivery these big messages one by one, the Output parser will deliver
-each asynchronious message / stream / result separately.
+each asynchronous message / stream / result separately.
 
 ::
+
    >>> o = Output()
    
    >>> text = '(gdb) \n'  #the extra space is not specified in GDB's docs but it's necessary
@@ -282,6 +287,7 @@ each asynchronious message / stream / result separately.
 For example, this is the message after setting a breakpoint
 
 ::
+
    >>> o = Output()
 
    >>> text = '^done,bkpt={number="1",type="breakpoint",disp="keep",enabled="y",addr="0x08048564",func="main",file="myprog.c",fullname="/home/nickrob/myprog.c",line="68",thread-groups=["i1"],times="0"}\n'
@@ -312,6 +318,7 @@ For example, this is the message after setting a breakpoint
 Or, when a execution is stopped
 
 ::
+
    >>> o = Output()
 
    >>> text = '*stopped,reason="breakpoint-hit",disp="keep",bkptno="1",thread-id="0",frame={addr="0x08048564",func="main",args=[{name="argc",value="1"},{name="argv",value="0xbfc4d4d4"}],file="myprog.c",fullname="/home/nickrob/myprog.c",line="68"}\n'
