@@ -4,7 +4,7 @@ from subprocess import PIPE
 from multiprocessing import Queue
 
 import outputReader
-import eventHandler
+import publish_subscribe.eventHandler
 
 HACK_PATH = "../../shared/hack.so"
 
@@ -13,22 +13,27 @@ class Gdb:
 
     # crea un nuevo proceso gdb vacio
     def __init__(self):
+        self.targetPid = 0
         self.queue = Queue()
         self.gdb = subprocess.Popen(["gdb", "-interpreter=mi", "-quiet"], stdin=PIPE, stdout=PIPE, stderr=PIPE)
         self.gdbInput = self.gdb.stdin
         self.gdbOutput = self.gdb.stdout
         t = outputReader.OutputReader(self.gdbOutput, self.queue)
         t.start()
-        self.eventHandler = eventHandler.EventHandler()
-        self.eventHandler.start()
+        self.eventHandler = publish_subscribe.eventHandler.EventHandler()
+        
+    def subscribe(self):
+        self.eventHandler.subscribe(str(self.targetPid) + ".run",self.run)
+        self.eventHandler.subscribe(str(self.targetPid) + ".continue",self.continueExec)
+        self.eventHandler.subscribe(str(self.targetPid) + ".step-into",self.stepInto)
 
     
     # -Gdb realiza un attach al proceso especificado
     def attach(self, pid):
         self.gdbInput.write("-target-attach " + str(pid) + '\n')
-        targetPid = self.queue.get()
-        #suscribirse a eventos
-        return targetPid
+        self.targetPid = self.queue.get()
+        self.subscribe()
+        return self.targetPid
     
     # -Gdb coloca como proceso target un nuevo proceso del codigo 'file'
     # -Modifica el entorno (ld_preload)
@@ -38,9 +43,9 @@ class Gdb:
         self.gdbInput.write("-gdb-set " + "exec-wrapper env LD_PRELOAD=" + HACK_PATH + '\n')
         self.setBreakPoint("main")
         self.run()
-        pid = self.queue.get()
-        #suscribirse a eventos
-        return pid
+        self.targetPid = self.queue.get()
+        self.subscribe()
+        return self.targetPid
 
     
     # Ejecuta al target desde el comienzo

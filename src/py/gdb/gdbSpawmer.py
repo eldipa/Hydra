@@ -2,6 +2,7 @@
 from gdb import Gdb
 import forkDetector 
 from multiprocessing import Lock
+import publish_subscribe.eventHandler
 
 
 def Locker(func):
@@ -19,6 +20,12 @@ class GdbSpawmer:
         self.listaGdb = {}
         self.forkDetector = forkDetector.ForkDetector(self)
         self.forkDetector.start()
+        self.eventHandler = publish_subscribe.eventHandler.EventHandler()
+        self.subscribe()
+        
+    def subscribe(self):
+        self.eventHandler.subscribe("attach", self.attachAGdb)
+        self.eventHandler.subscribe("new", self.startNewProcessWithGdb)
     
     @Locker
     def attachAGdb(self, pid):
