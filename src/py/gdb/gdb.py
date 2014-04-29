@@ -49,16 +49,16 @@ class Gdb:
 
     
     # Ejecuta al target desde el comienzo
-    def run(self):
+    def run(self, data = ""):
         self.gdbInput.write("run > Salida.txt" + '\n') ########## redirigir bien la stdout
        
     
     # Ejecuta al target desde el punto donde se encontraba
-    def continueExec(self):
+    def continueExec(self, data = ""):
         self.gdbInput.write("-exec-continue" + '\n')
     
     # Ejecuta una sola intruccion del target
-    def stepInto(self):
+    def stepInto(self, data = ""):
         self.gdbInput.write("-exec-step" + '\n')
         # TODO esperar al prompt y retornar lo pedido
     
