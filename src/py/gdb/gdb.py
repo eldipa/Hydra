@@ -26,6 +26,7 @@ class Gdb:
         self.eventHandler.subscribe(str(self.targetPid) + ".run",self.run)
         self.eventHandler.subscribe(str(self.targetPid) + ".continue",self.continueExec)
         self.eventHandler.subscribe(str(self.targetPid) + ".step-into",self.stepInto)
+        self.eventHandler.subscribe(str(self.targetPid) + ".exit",self.exit)
 
     
     # -Gdb realiza un attach al proceso especificado
@@ -65,7 +66,7 @@ class Gdb:
     
     # Finaliza el proceso gdb, junto con su target si este no hubiera finalizado
     def exit(self):
-        # TODO finalizar target
+        self.gdbInput.write("kill" + '\n')
         self.gdbInput.write("-gdb-exit" + '\n')
     
     # Establece un nuevo breakpoint al comienzo de la funcion dada
