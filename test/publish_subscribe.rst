@@ -34,10 +34,10 @@ To run the server,
    >>> # just an auxiliary function for testing purpose only to know if the process 
    >>> # is running
    >>> def is_running():
-   ...   out = check_output(["python", "publish_subscribe/billboard.py", "status"])
+   ...   out = check_output(["python", "publish_subscribe/notifier.py", "status"])
    ...   return "running" in out
 
-   >>> os.system("python publish_subscribe/billboard.py start")
+   >>> os.system("python publish_subscribe/notifier.py start")
    0
    >>> is_running()
    True
@@ -48,7 +48,7 @@ To shutdown the system (only the server, this doesn't affect the clients),
 
 ::
 
-   >>> os.system("python publish_subscribe/billboard.py stop")
+   >>> os.system("python publish_subscribe/notifier.py stop")
    0
    >>> is_running()
    False
@@ -58,7 +58,7 @@ The server should be able to use the same port again.
 
 ::
 
-   >>> os.system("python publish_subscribe/billboard.py start")
+   >>> os.system("python publish_subscribe/notifier.py start")
    0
    >>> is_running()
    True
@@ -228,7 +228,7 @@ Don't forget to close the connection and stop the server.
 
    >>> pubsub.close()
    >>>
-   >>> os.system("python publish_subscribe/billboard.py stop")
+   >>> os.system("python publish_subscribe/notifier.py stop")
    0
    >>> is_running()
    False
