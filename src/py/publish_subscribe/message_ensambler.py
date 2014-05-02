@@ -9,7 +9,6 @@ def ensamble_messages(buf, chunk, MAX_BUF_LENGTH):
       '''
    messages = []
 
-   syslog.syslog(syslog.LOG_DEBUG, "Chunk received '%s'." % (chunk))
    incremental_chunks = chunk.split('}')
    index_of_the_last = len(incremental_chunks) - 1
    

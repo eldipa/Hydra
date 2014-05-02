@@ -52,7 +52,9 @@ class _Endpoint(threading.Thread):
       chunk = self.socket.recv(8912)
       if not chunk:
          syslog.syslog(syslog.LOG_NOTICE, "Endpoint close the connection.")
-      
+      else:
+         syslog.syslog(syslog.LOG_DEBUG, "Chunk received (%i bytes): '%s'." % (len(chunk), chunk))
+
       return chunk
 
    def run(self):
