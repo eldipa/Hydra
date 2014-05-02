@@ -79,17 +79,15 @@ class _Endpoint(threading.Thread):
 # TODO endpoints_by_topic (and endpoint_subscription_lock) as a single object
 
 class Billboard(daemon.Daemon):
-   def __init__(self, address):
-      import os
-      script_home = os.path.abspath(os.path.dirname(__file__))
-      pidfile = os.path.join(script_home, "publish_subscribe.pid")
+   def __init__(self, address, pidfile, name, foreground, listen_queue_len):
       daemon.Daemon.__init__(self,
             pidfile=pidfile, 
-            name="publish_subscribe_billboard",
+            name=name,
             keep_open_fileno=[0, 1, 2],
-            foreground = False)
+            foreground=foreground)
 
       self.address = address
+      self.listen_queue_len = listen_queue_len
       self.endpoints = []
       self.endpoints_by_topic = {}
       self.endpoint_subscription_lock = threading.Lock()
@@ -97,7 +95,6 @@ class Billboard(daemon.Daemon):
       self.socket = None
 
    def run(self):
-      syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_ERR))
       
       import gc
       gc.disable()
@@ -113,7 +110,7 @@ class Billboard(daemon.Daemon):
       try:
          self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
          self.socket.bind(self.address)
-         self.socket.listen(10)
+         self.socket.listen(self.listen_queue_len)
       except:
          syslog.syslog(syslog.LOG_ERR, "Exception in the init of the billboard: %s" % (traceback.format_exc()))
          sys.exit(1)
@@ -156,7 +153,7 @@ class Billboard(daemon.Daemon):
       topic = event['topic']
       topic_chain = build_topic_chain(topic)
       
-      self.endpoint_subscription_lock.acquire()
+      self.endpoint_subscription_lock.acquire() # with this we guarrante that all the events are delivered in the correct order
       try:
          syslog.syslog(syslog.LOG_DEBUG, "Distributing event over the topic chain '%s': %s." % (str(topic_chain), json.dumps(event)))
          all_interested_endpoints = sum(map(self.get_and_update_endpoints_by_topic, topic_chain), [])
@@ -213,7 +210,45 @@ class Billboard(daemon.Daemon):
          pass
 
 if __name__ == '__main__':
-   import sys
-   billboard = Billboard(('', 5555))
+   import sys, os, ConfigParser
+   script_home = os.path.abspath(os.path.dirname(__file__))
+   parent = os.path.pardir
+
+   # TODO This shouldn't be hardcoded!
+   config_file = os.path.join(script_home, parent, parent, parent, "config", "publish_subscribe.cfg")
+
+   config = ConfigParser.SafeConfigParser(
+         defaults = {
+            'name': 'notifier',
+            'pid_file': os.path.join(script_home, "notifier.pid"),
+            'foreground': "no",
+
+            'listen_queue_len': "10",
+            'wait_on_address': "localhost",
+            'wait_on_port': "5555",
+
+            'log_level': "LOG_DEBUG",
+            }
+         )
+
+   with open(config_file, 'r') as source:
+      config.readfp(source)
+
+
+   syslog.openlog(config.get("notifier", "name"))
+   syslog.setlogmask(syslog.LOG_UPTO(getattr(syslog, config.get("notifier", "log_level"))))
+
+   pid_file = config.get("notifier", 'pid_file')
+   if not os.path.isabs(pid_file): # it's relative to our home directory
+      pid_file = os.path.abspath(os.path.join(script_home, pid_file))
+
+   billboard = Billboard(
+         address = (config.get("notifier", 'wait_on_address'), config.getint("notifier", 'wait_on_port')),
+         pidfile = pid_file,
+         name = config.get("notifier", 'name'),
+         foreground = config.getboolean("notifier", 'foreground'),
+         listen_queue_len = config.getint("notifier", 'listen_queue_len')
+         )
+
    billboard.do_from_arg(sys.argv[1] if len(sys.argv) == 2 else None)
 
