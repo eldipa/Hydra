@@ -130,36 +130,41 @@ class Billboard(daemon.Daemon):
             break
 
          self.endpoints.append(_Endpoint(socket, self))
+         self.reap()
 
-         to_close = filter(lambda endpoint: endpoint.is_finished, self.endpoints)
-         syslog.syslog(syslog.LOG_DEBUG, "Collecting dead endpoints: %i endpoints to be collected." % len(to_close))
-         for endpoint in to_close:
-            endpoint.close()
-            endpoint.join()
 
-         self.endpoints = filter(lambda endpoint: not endpoint.is_finished, self.endpoints)
-         syslog.syslog(syslog.LOG_NOTICE, "Still alive %i endpoints." % len(self.endpoints))
+   def reap(self):
+      to_close = filter(lambda endpoint: endpoint.is_finished, self.endpoints)
+      syslog.syslog(syslog.LOG_DEBUG, "Collecting dead endpoints: %i endpoints to be collected." % len(to_close))
+      for endpoint in to_close:
+         endpoint.close()
+         endpoint.join()
+
+      self.endpoints = filter(lambda endpoint: not endpoint.is_finished, self.endpoints)
+      syslog.syslog(syslog.LOG_DEBUG, "Still alive %i endpoints." % len(self.endpoints))
+
+
+   def get_and_update_endpoints_by_topic(self, topic):
+      endpoints = filter(lambda endpoint: not endpoint.is_finished, self.endpoints_by_topic.get(topic, []))
+      if self.endpoints_by_topic.get(topic, []): # update the dictionary only if there is something
+         self.endpoints_by_topic[topic] = endpoints
+
+      return endpoints
+
 
    def distribute_event(self, topic, event):
       topic_chain = build_topic_chain(topic)
       
       self.endpoint_subscription_lock.acquire()
       try:
-         endpoints_already_notified = set()
          syslog.syslog(syslog.LOG_DEBUG, "Distributing event over the topic chain '%s': %s." % (str(topic_chain), json.dumps(event)))
-         for t in topic_chain:
-            endpoints = filter(lambda endpoint: not endpoint.is_finished, self.endpoints_by_topic.get(t, []))
-            syslog.syslog(syslog.LOG_DEBUG, "For the topic '%s' there are %i subscribed." % (t if t else "(the empty topic)", len(endpoints)))
-
-            for endpoint in endpoints:
-               if endpoint in endpoints_already_notified:
-                  syslog.syslog(syslog.LOG_DEBUG, "Don't send. Endpoint already notified.")
-               else:
-                  endpoints_already_notified.add(endpoint)
-                  endpoint.send_event(topic, event)
+         all_interested_endpoints = sum(map(self.get_and_update_endpoints_by_topic, topic_chain), [])
+         endpoints = set(all_interested_endpoints)
+         syslog.syslog(syslog.LOG_DEBUG, "There are %i subscribed in total." % (len(endpoints)))
          
-            if len(endpoints):
-               syslog.syslog(syslog.LOG_DEBUG, "Event of topic '%s' distributed to %i endpoints subscribed." % (t if t else "(the empty topic)", len(endpoints)))
+         for endpoint in endpoints:
+            endpoint.send_event(topic, event)
+         
 
       except:
          syslog.syslog(syslog.LOG_ERR, "Exception in the distribution: %s" % (traceback.format_exc()))
