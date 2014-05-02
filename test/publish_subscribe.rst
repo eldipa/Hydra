@@ -166,7 +166,8 @@ Our implementation support only filtering by topic.
    
    >>> import threading, time
    >>> shared_list = []
-   >>> shared_lock = threading.Lock()
+   >>> shared_lock = threading.Lock() # we are using a lock because the
+   >>>                                # callback runs in a separeted thread 
 
    >>> def add_sync(data):
    ...   global shared_lock
@@ -178,7 +179,6 @@ Our implementation support only filtering by topic.
 
    >>> pubsub.subscribe('A', add_sync)    # subcribed to the A topic
    
-   >>> time.sleep(2) # we wait some time so the subscription is effective
    >>> pubsub.publish('A', "A")
    >>> time.sleep(2) # we wait some time so the event comes back
    >>> shared_list.count("A")
@@ -191,7 +191,6 @@ The topic can be seen as a hierarchy of topics.
    >>> pubsub.subscribe('B', add_sync)    # subcribed to the B topic but also to any with prefix 'B.'
    >>> pubsub.subscribe('B.C', add_sync)  # subcribed to B.C only
 
-   >>> time.sleep(2) 
    >>> pubsub.publish('B.C', "B, sub C")
    >>> time.sleep(2) 
    >>> shared_list.count("B, sub C")   # 'B' and 'B.C' called 
@@ -216,7 +215,6 @@ It's not possible to publish an event with an *empty* topic.
    
    >>> pubsub.subscribe('', add_sync) 
 
-   >>> time.sleep(2) 
    >>> pubsub.publish('X', "some X event")
    >>> pubsub.publish('W.X.Y.Z', "a very specific event")
    >>> time.sleep(2) 
@@ -224,8 +222,12 @@ It's not possible to publish an event with an *empty* topic.
    (1, 1)
 
 
+Don't forget to close the connection and stop the server.
+
 ::
 
+   >>> pubsub.close()
+   >>>
    >>> os.system("python publish_subscribe/billboard.py stop")
    0
    >>> is_running()

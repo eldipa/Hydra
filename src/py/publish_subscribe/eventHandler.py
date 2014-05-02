@@ -97,8 +97,11 @@ class EventHandler(threading.Thread):
         finally:
            self.lock.release()
 
-    
-    
+    def close(self):
+       self.connection.close()
+       self.join()
+
+
 if __name__ == "__main__":
     
     def funcionCallback(data):

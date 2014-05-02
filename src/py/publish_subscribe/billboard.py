@@ -23,7 +23,7 @@ class _Endpoint(threading.Thread):
          return False
 
       if not message["type"] in ("subscribe", "publish"):
-         syslog.syslog(syslog.LOG_ERR, "Invalid message. Unknow type: '%s'." % json.dumps(message))
+         syslog.syslog(syslog.LOG_ERR, "Invalid message. Unknown type: '%s'." % json.dumps(message))
          return False
 
       if message["type"] == "publish" and "data" not in message:
@@ -55,8 +55,9 @@ class _Endpoint(threading.Thread):
 
             self._process_messages(messages)
 
+         syslog.syslog(syslog.LOG_NOTICE, "The connection was closed by the other point of the connection.")
       except:
-         syslog.syslog(syslog.LOG_ERR, "Endpoint exception when receiving a message from he: %s." % traceback.format_exc())
+         syslog.syslog(syslog.LOG_ERR, "An exception has occurred when receiving/processing the messages: %s." % traceback.format_exc())
       finally:
          self.is_finished = True
 
@@ -65,11 +66,12 @@ class _Endpoint(threading.Thread):
       try:
          self.connection.send_object({"topic": topic, "data": event})
       except:
-         syslog.syslog(syslog.LOG_ERR, "Endpoint exception when sending a message to he: %s." % traceback.format_exc())
+         syslog.syslog(syslog.LOG_ERR, "Endpoint exception when sending a message to it: %s." % traceback.format_exc())
          self.is_finished = True
 
    def close(self):
       syslog.syslog(syslog.LOG_NOTICE, "Closing the connection with the endpoint.")
+      self.is_finished = True
       self.connection.close()
       syslog.syslog(syslog.LOG_NOTICE, "Connection closed.")
 
@@ -119,7 +121,7 @@ class Billboard(daemon.Daemon):
    def wait_for_new_endpoints(self):
       while True:
          try:
-            syslog.syslog(syslog.LOG_DEBUG, "Waitin for a new endpoint to connect with self.")
+            syslog.syslog(syslog.LOG_DEBUG, "Waiting for a new endpoint to connect with self.")
             socket, address = self.socket.accept()
             syslog.syslog(syslog.LOG_NOTICE, "New endpoint connected: %s." % str(address))
          except: # TODO separate the real unexpected exceptions from the "shutdown" exception

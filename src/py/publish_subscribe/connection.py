@@ -6,6 +6,10 @@ import traceback
 
 class Connection(object):
    def __init__(self, address_or_already_open_socket):
+      self.buf = ""
+      self.end_of_the_communication = False
+      self.closed = False
+
       if isinstance(address_or_already_open_socket, (tuple, list)):
          address = address_or_already_open_socket
 
@@ -15,9 +19,6 @@ class Connection(object):
       else:
          self.socket = address_or_already_open_socket
 
-      self.buf = ""
-      self.end_of_the_communication = False
-      self.closed = False
 
    def send_object(self, obj):
       if self.end_of_the_communication:
@@ -56,17 +57,12 @@ class Connection(object):
       except:
          syslog.syslog(syslog.LOG_ERR, "Error in the close: '%s'" % traceback.format_exc())
 
-      del self.buf
-
     
    def _read_chunk(self):
       syslog.syslog(syslog.LOG_DEBUG, "Waiting for the next chunk of data")
       chunk = self.socket.recv(8912)
       syslog.syslog(syslog.LOG_DEBUG, "Chunk received (%i bytes)." % len(chunk))
 
-      if not chunk:
-         syslog.syslog(syslog.LOG_DEBUG, "The connection was closed.")
-   
       return chunk
 
    def _ensamble_objects(self, chunk, MAX_BUF_LENGTH):
