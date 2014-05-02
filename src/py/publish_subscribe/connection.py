@@ -43,18 +43,19 @@ class Connection(object):
       if self.closed:
          return 
 
+      self.closed = True
+      self.end_of_the_communication = True
+
       try:
          self.socket.shutdown(socket.SHUT_RDWR)
       except:
-         syslog.syslog(syslog.LOG_DEBUG, "Error in the shutdown: '%s'" % traceback.format_exc())
+         syslog.syslog(syslog.LOG_ERR, "Error in the shutdown: '%s'" % traceback.format_exc())
 
       try:
          self.socket.close()
       except:
-         syslog.syslog(syslog.LOG_DEBUG, "Error in the close: '%s'" % traceback.format_exc())
+         syslog.syslog(syslog.LOG_ERR, "Error in the close: '%s'" % traceback.format_exc())
 
-      self.end_of_the_communication = True
-      self.closed = True
       del self.buf
 
     

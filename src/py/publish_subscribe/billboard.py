@@ -1,12 +1,12 @@
 import socket, threading, json
 import daemon, syslog, traceback
-from message_ensambler import ensamble_messages
+from connection import Connection
 
 #TODO add keep alive
 class _Endpoint(threading.Thread):
    def __init__(self, socket, billboard):
       threading.Thread.__init__(self)
-      self.socket = socket
+      self.connection = Connection(socket)
       self.is_finished = False
       self.billboard = billboard
 
@@ -47,27 +47,12 @@ class _Endpoint(threading.Thread):
             assert message["type"] == "subscribe"
             self.billboard.register_subscriber(message["topic"], self)
 
-   def _read_chunk(self):
-      syslog.syslog(syslog.LOG_DEBUG, "Waiting for the next chunk of data")
-      chunk = self.socket.recv(8912)
-      if not chunk:
-         syslog.syslog(syslog.LOG_NOTICE, "Endpoint close the connection.")
-      else:
-         syslog.syslog(syslog.LOG_DEBUG, "Chunk received (%i bytes): '%s'." % (len(chunk), chunk))
-
-      return chunk
-
    def run(self):
       try:
-         buf = ''
-         while True:
-            chunk = self._read_chunk()
-            end_of_the_communication = not chunk
+         while not self.connection.end_of_the_communication:
+            messages = self.connection.receive_objects()
+            syslog.syslog(syslog.LOG_DEBUG, "Received %i messages" % len(messages))
 
-            if end_of_the_communication:
-               break
-
-            messages, buf = ensamble_messages(buf, chunk, 8912)
             self._process_messages(messages)
 
       except:
@@ -78,20 +63,15 @@ class _Endpoint(threading.Thread):
 
    def send_event(self, topic, event):
       try:
-         message = json.dumps({"topic": topic, "data": event})
-         syslog.syslog(syslog.LOG_DEBUG, "Sending event: %s." % message)
-         self.socket.sendall(message)
-         syslog.syslog(syslog.LOG_DEBUG, "Event sent.")
+         self.connection.send_object({"topic": topic, "data": event})
       except:
          syslog.syslog(syslog.LOG_ERR, "Endpoint exception when sending a message to he: %s." % traceback.format_exc())
          self.is_finished = True
 
    def close(self):
-      try:
-         self.socket.shutdown(2)
-         self.socket.close()
-      except:
-         syslog.syslog(syslog.LOG_ERR, "Endpoint exception on close: %s." % traceback.format_exc())
+      syslog.syslog(syslog.LOG_NOTICE, "Closing the connection with the endpoint.")
+      self.connection.close()
+      syslog.syslog(syslog.LOG_NOTICE, "Connection closed.")
 
 # TODO endpoints_by_topic (and endpoint_subscription_lock) as a single object
 
@@ -203,8 +183,16 @@ class Billboard(daemon.Daemon):
    def close(self):
       if self.socket:
          syslog.syslog(syslog.LOG_NOTICE, "Shutting down 'publish_subscribe_billboard' daemon.")
-         self.socket.shutdown(2)
-         self.socket.close()
+         try:
+            self.socket.shutdown(socket.SHUT_RDWR)
+         except:
+            syslog.syslog(syslog.LOG_ERR, "Error in the shutdown: '%s'" % traceback.format_exc())
+
+         try:
+            self.socket.close()
+         except:
+            syslog.syslog(syslog.LOG_ERR, "Error in the close: '%s'" % traceback.format_exc())
+
          self.socket = None
 
          for e in self.endpoints:

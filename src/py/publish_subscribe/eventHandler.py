@@ -21,7 +21,6 @@ class EventHandler(threading.Thread):
         threading.Thread.__init__(self)
 
         self.connection = Connection(("localhost", 5555))
-        self.log_to_console = False
         self.lock = Lock()
         self.callbacks_by_topic = {'':[]}
 
@@ -40,24 +39,23 @@ class EventHandler(threading.Thread):
         finally:
            self.lock.release()
 
-        #syslog.syslog(syslog.LOG_DEBUG, "Subscribing to the topic '%s'. Sending: '%s'." % (topic, msg))
+        syslog.syslog(syslog.LOG_DEBUG, "Sending subscription to the topic '%s'." % (topic))
         self.connection.send_object({'type': 'subscribe', 'topic': topic})
-        syslog.syslog(syslog.LOG_DEBUG, "Message sent.")
+        syslog.syslog(syslog.LOG_DEBUG, "Subscription sent.")
     
     def publish(self, topic, data):
         if(not topic):
             raise Exception("The topic must not be empty")
 
-        #syslog.syslog(syslog.LOG_DEBUG, "Publising an event of topic '%s'. Sending: '%s'." % (topic, msg))
+        syslog.syslog(syslog.LOG_DEBUG, "Sending publication of an event with topic '%s'." % (topic))
         self.connection.send_object({'type': 'publish', 'topic': topic, 'data': data})
-        syslog.syslog(syslog.LOG_DEBUG, "Message sent.")
+        syslog.syslog(syslog.LOG_DEBUG, "Publication of an event sent.")
         
 
     def run(self):
         try:
            while not self.connection.end_of_the_communication:
                events = self.connection.receive_objects()
-               syslog.syslog(syslog.LOG_DEBUG, "Received %i events" % len(events))
 
                for event in events:
                    self.dispatch(event)
@@ -68,10 +66,6 @@ class EventHandler(threading.Thread):
            self.connection.close()
 
     def dispatch(self, event):
-        if(self.log_to_console):
-            print("Dispatch: ")
-            print(event)
-            
         # we build the topic chain:
         # if the event's topic is empty, the chain is ['']
         # if the event's topic was A, the chain is ['', A]
@@ -83,9 +77,6 @@ class EventHandler(threading.Thread):
         for i in range(len(subtopics)):
            topic_chain.append('.'.join(subtopics[:i+1]))
 
-        if(self.log_to_console):
-            print("Topic chain:")
-            print(topic_chain)
             
         # we call the callbacks for each topic in the topic chain.
         # the chain is reversed (the more specific topic first)
