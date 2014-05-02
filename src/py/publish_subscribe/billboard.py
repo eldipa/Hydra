@@ -42,7 +42,7 @@ class _Endpoint(threading.Thread):
             raise Exception("Invalid message.")
 
          if message["type"] == "publish":
-            self.billboard.distribute_event(message["topic"], message["data"])
+            self.billboard.distribute_event({"topic": message["topic"], "data": message["data"]})
          
          else:
             assert message["type"] == "subscribe"
@@ -63,9 +63,9 @@ class _Endpoint(threading.Thread):
          self.is_finished = True
 
 
-   def send_event(self, topic, event):
+   def send_event(self, event):
       try:
-         self.connection.send_object({"topic": topic, "data": event})
+         self.connection.send_object(event)
       except:
          syslog.syslog(syslog.LOG_ERR, "Endpoint exception when sending a message to it: %s." % traceback.format_exc())
          self.is_finished = True
@@ -97,7 +97,7 @@ class Billboard(daemon.Daemon):
       self.socket = None
 
    def run(self):
-      syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_DEBUG))
+      syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_ERR))
       
       import gc
       gc.disable()
@@ -152,7 +152,8 @@ class Billboard(daemon.Daemon):
       return endpoints
 
 
-   def distribute_event(self, topic, event):
+   def distribute_event(self, event):
+      topic = event['topic']
       topic_chain = build_topic_chain(topic)
       
       self.endpoint_subscription_lock.acquire()
@@ -163,7 +164,7 @@ class Billboard(daemon.Daemon):
          syslog.syslog(syslog.LOG_DEBUG, "There are %i subscribed in total." % (len(endpoints)))
          
          for endpoint in endpoints:
-            endpoint.send_event(topic, event)
+            endpoint.send_event(event)
          
 
       except:
