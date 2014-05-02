@@ -27,5 +27,6 @@ class OutputReader(threading.Thread):
             
         while True:
             record = self.parser.parse_line(self.gdbOutput.readline())
-            self.eventHandler.publish("pid." + str(self.pid), record)
+            if record != "(gdb)":
+                self.eventHandler.publish("pid." + str(self.pid), vars(record))
         
