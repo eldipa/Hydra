@@ -115,6 +115,9 @@ class Billboard(daemon.Daemon):
 
    def run(self):
       syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_DEBUG))
+      
+      import gc
+      gc.disable()
 
       syslog.syslog(syslog.LOG_NOTICE, "Starting 'publish_subscribe_billboard' daemon on %s." % str(self.address))
       self.init()
@@ -166,7 +169,7 @@ class Billboard(daemon.Daemon):
          endpoints_already_notified = set()
          syslog.syslog(syslog.LOG_DEBUG, "Distributing event over the topic chain '%s': %s." % (str(topic_chain), json.dumps(event)))
          for t in topic_chain:
-            endpoints = self.endpoints_by_topic.get(t, [])
+            endpoints = filter(lambda endpoint: not endpoint.is_finished, self.endpoints_by_topic.get(t, []))
             syslog.syslog(syslog.LOG_DEBUG, "For the topic '%s' there are %i subscribed." % (t if t else "(the empty topic)", len(endpoints)))
 
             for endpoint in endpoints:
