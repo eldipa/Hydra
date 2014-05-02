@@ -78,7 +78,7 @@ class _Endpoint(threading.Thread):
 
 # TODO endpoints_by_topic (and endpoint_subscription_lock) as a single object
 
-class Billboard(daemon.Daemon):
+class Notifier(daemon.Daemon):
    def __init__(self, address, pidfile, name, foreground, listen_queue_len):
       daemon.Daemon.__init__(self,
             pidfile=pidfile, 
@@ -227,7 +227,7 @@ if __name__ == '__main__':
             'wait_on_address': "localhost",
             'wait_on_port': "5555",
 
-            'log_level': "LOG_DEBUG",
+            'log_level': "LOG_ERR",
             }
          )
 
@@ -242,7 +242,7 @@ if __name__ == '__main__':
    if not os.path.isabs(pid_file): # it's relative to our home directory
       pid_file = os.path.abspath(os.path.join(script_home, pid_file))
 
-   billboard = Billboard(
+   notifier = Notifier(
          address = (config.get("notifier", 'wait_on_address'), config.getint("notifier", 'wait_on_port')),
          pidfile = pid_file,
          name = config.get("notifier", 'name'),
@@ -250,5 +250,5 @@ if __name__ == '__main__':
          listen_queue_len = config.getint("notifier", 'listen_queue_len')
          )
 
-   billboard.do_from_arg(sys.argv[1] if len(sys.argv) == 2 else None)
+   notifier.do_from_arg(sys.argv[1] if len(sys.argv) == 2 else None)
 
