@@ -12,15 +12,13 @@ from connection import Connection
 from topic_chain import build_topic_chain
 
 
-#syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_ERR))
-syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_DEBUG))
 
 class EventHandler(threading.Thread):
     
     def __init__(self):
         threading.Thread.__init__(self)
 
-        self.connection = Connection(("localhost", 5555))
+        self.connection = Connection(self._get_address())
         self.lock = Lock()
         self.callbacks_by_topic = {'':[]}
 
@@ -87,6 +85,27 @@ class EventHandler(threading.Thread):
     def close(self):
        self.connection.close()
        self.join()
+
+    
+    def _get_address(self):
+        import os, ConfigParser
+        script_home = os.path.abspath(os.path.dirname(__file__))
+        parent = os.path.pardir
+
+        # TODO This shouldn't be hardcoded!
+        config_file = os.path.join(script_home, parent, parent, parent, "config", "publish_subscribe.cfg")
+
+        config = ConfigParser.SafeConfigParser(defaults={
+                    'wait_on_address': "localhost",
+                    'wait_on_port': "5555",
+                     })
+
+        with open(config_file, 'r') as source:
+           config.readfp(source)
+
+        address = (config.get("notifier", 'wait_on_address'), config.getint("notifier", 'wait_on_port'))
+
+        return address
 
 
 if __name__ == "__main__":
