@@ -9,13 +9,18 @@ import socket
 from threading import Lock
 import syslog, traceback
 from message_ensambler import ensamble_messages
+from connection import Connection
+
+
+#syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_ERR))
+syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_DEBUG))
 
 class EventHandler(threading.Thread):
     
     def __init__(self):
         threading.Thread.__init__(self)
-        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.socket.connect(("localhost", 5555))
+
+        self.connection = Connection(("localhost", 5555))
         self.log_to_console = False
         self.lock = Lock()
         self.callbacks_by_topic = {'':[]}
@@ -35,55 +40,33 @@ class EventHandler(threading.Thread):
         finally:
            self.lock.release()
 
-        msg = json.dumps({'type': 'subscribe', 'topic': topic})
-        syslog.syslog(syslog.LOG_DEBUG, "Subscribing to the topic '%s'. Sending: '%s'." % (topic, msg))
-        self.socket.sendall(msg)
+        #syslog.syslog(syslog.LOG_DEBUG, "Subscribing to the topic '%s'. Sending: '%s'." % (topic, msg))
+        self.connection.send_object({'type': 'subscribe', 'topic': topic})
         syslog.syslog(syslog.LOG_DEBUG, "Message sent.")
     
     def publish(self, topic, data):
         if(not topic):
             raise Exception("The topic must not be empty")
 
-        msg = json.dumps({'type': 'publish', 'topic': topic, 'data': data})
-        syslog.syslog(syslog.LOG_DEBUG, "Publising an event of topic '%s'. Sending: '%s'." % (topic, msg))
-        self.socket.sendall(msg)
+        #syslog.syslog(syslog.LOG_DEBUG, "Publising an event of topic '%s'. Sending: '%s'." % (topic, msg))
+        self.connection.send_object({'type': 'publish', 'topic': topic, 'data': data})
         syslog.syslog(syslog.LOG_DEBUG, "Message sent.")
         
-    def _read_chunk(self):
-        syslog.syslog(syslog.LOG_DEBUG, "Waiting for the next chunk of data")
-        chunk = self.socket.recv(1024)
-        if not chunk:
-           syslog.syslog(syslog.LOG_DEBUG, "Endpoint close the connection.")
-        else:
-           syslog.syslog(syslog.LOG_DEBUG, "Chunk received (%i bytes): '%s'." % (len(chunk), chunk))
-      
-        return chunk
-
 
     def run(self):
         try:
-           buf = ''
-           while True:
-               chunk = self._read_chunk()
-               end_of_the_communication = not chunk
+           while not self.connection.end_of_the_communication:
+               events = self.connection.receive_objects()
+               syslog.syslog(syslog.LOG_DEBUG, "Received %i events" % len(events))
 
-               if end_of_the_communication:
-                  break
-               
-               messages, buf = ensamble_messages(buf, chunk, 8912)
-
-               events = messages
-                   
-               # finally we dispatch the events, if any
                for event in events:
                    self.dispatch(event)
                    
         except:
            syslog.syslog(syslog.LOG_ERR, "Exception when receiving a message: %s." % traceback.format_exc())
         finally:
-           self.socket.shutdown(socket.SHUT_RDWR)
-           self.socket.close()
-                
+           self.connection.close()
+
     def dispatch(self, event):
         if(self.log_to_console):
             print("Dispatch: ")
