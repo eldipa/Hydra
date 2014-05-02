@@ -2,6 +2,7 @@ import socket, threading, json
 import daemon, syslog, traceback
 from message_ensambler import ensamble_messages
 
+#TODO add keep alive
 class _Endpoint(threading.Thread):
    def __init__(self, socket, billboard):
       threading.Thread.__init__(self)
@@ -13,13 +14,20 @@ class _Endpoint(threading.Thread):
 
 
    def _is_valid_message(self, message):
+      if not isinstance(message, dict):
+         syslog.syslog(syslog.LOG_ERR, "Invalid message. It isn't an object like {...} : '%s'." % json.dumps(message))
+         return False
+
       if not "topic" in message or not "type" in message:
+         syslog.syslog(syslog.LOG_ERR, "Invalid message. It hasn't any topic or type: '%s'." % json.dumps(message))
          return False
 
       if not message["type"] in ("subscribe", "publish"):
+         syslog.syslog(syslog.LOG_ERR, "Invalid message. Unknow type: '%s'." % json.dumps(message))
          return False
 
       if message["type"] == "publish" and "data" not in message:
+         syslog.syslog(syslog.LOG_ERR, "Invalid message. Publish message hasn't any data: '%s'." % json.dumps(message))
          return False
 
       return True
@@ -30,18 +38,20 @@ class _Endpoint(threading.Thread):
          is_valid = self._is_valid_message(message)
          if not is_valid:
             syslog.syslog(syslog.LOG_ERR, "Invalid message: '%s'." % json.dumps(message))
-            continue
+            raise Exception("Invalid message.")
 
          if message["type"] == "publish":
             self.billboard.distribute_event(message["topic"], message["data"])
          
          else:
+            assert message["type"] == "subscribe"
             self.billboard.register_subscriber(message["topic"], self)
 
    def _read_chunk(self):
-      chunk = self.socket.recv(1024)
+      syslog.syslog(syslog.LOG_DEBUG, "Waiting for the next chunk of data")
+      chunk = self.socket.recv(8912)
       if not chunk:
-         syslog.syslog(syslog.LOG_DEBUG, "Endpoint close the connection.")
+         syslog.syslog(syslog.LOG_NOTICE, "Endpoint close the connection.")
       
       return chunk
 
@@ -58,7 +68,6 @@ class _Endpoint(threading.Thread):
             messages, buf = ensamble_messages(buf, chunk, 8912)
             self._process_messages(messages)
 
-
       except:
          syslog.syslog(syslog.LOG_ERR, "Endpoint exception when receiving a message from he: %s." % traceback.format_exc())
       finally:
@@ -70,13 +79,17 @@ class _Endpoint(threading.Thread):
          message = json.dumps({"topic": topic, "data": event})
          syslog.syslog(syslog.LOG_DEBUG, "Sending event: %s." % message)
          self.socket.sendall(message)
+         syslog.syslog(syslog.LOG_DEBUG, "Event sent.")
       except:
          syslog.syslog(syslog.LOG_ERR, "Endpoint exception when sending a message to he: %s." % traceback.format_exc())
          self.is_finished = True
 
    def close(self):
-      self.socket.shutdown(2)
-      self.socket.close()
+      try:
+         self.socket.shutdown(2)
+         self.socket.close()
+      except:
+         syslog.syslog(syslog.LOG_ERR, "Endpoint exception on close: %s." % traceback.format_exc())
 
 # TODO endpoints_by_topic (and endpoint_subscription_lock) as a single object
 
@@ -121,8 +134,9 @@ class Billboard(daemon.Daemon):
    def wait_for_new_endpoints(self):
       while True:
          try:
+            syslog.syslog(syslog.LOG_DEBUG, "Waitin for a new endpoint to connect with self.")
             socket, address = self.socket.accept()
-            syslog.syslog(syslog.LOG_DEBUG, "New endpoint connected: %s." % str(address))
+            syslog.syslog(syslog.LOG_NOTICE, "New endpoint connected: %s." % str(address))
          except: # TODO separate the real unexpected exceptions from the "shutdown" exception
             syslog.syslog(syslog.LOG_ERR, "Exception in the wait for new endpoints of the billboard: %s" % (traceback.format_exc()))
             break
@@ -133,9 +147,10 @@ class Billboard(daemon.Daemon):
          syslog.syslog(syslog.LOG_DEBUG, "Collecting dead endpoints: %i endpoints to be collected." % len(to_close))
          for endpoint in to_close:
             endpoint.close()
+            endpoint.join()
 
          self.endpoints = filter(lambda endpoint: not endpoint.is_finished, self.endpoints)
-         syslog.syslog(syslog.LOG_DEBUG, "Still alive %i endpoints." % len(self.endpoints))
+         syslog.syslog(syslog.LOG_NOTICE, "Still alive %i endpoints." % len(self.endpoints))
 
    def distribute_event(self, topic, event):
       self.endpoint_subscription_lock.acquire()
@@ -162,6 +177,8 @@ class Billboard(daemon.Daemon):
             if len(endpoints):
                syslog.syslog(syslog.LOG_DEBUG, "Event of topic '%s' distributed to %i endpoints subscribed." % (t if t else "(the empty topic)", len(endpoints)))
 
+      except:
+         syslog.syslog(syslog.LOG_ERR, "Exception in the distribution: %s" % (traceback.format_exc()))
 
       finally:
          self.endpoint_subscription_lock.release()
@@ -169,7 +186,7 @@ class Billboard(daemon.Daemon):
    def register_subscriber(self, topic, endpoint):
       self.endpoint_subscription_lock.acquire()
       try:
-         syslog.syslog(syslog.LOG_DEBUG, "Endpoint subscribed to topic '%s'." % (topic if topic else "(the empty topic)"))
+         syslog.syslog(syslog.LOG_NOTICE, "Endpoint subscribed to topic '%s'." % (topic if topic else "(the empty topic)"))
          if topic in self.endpoints_by_topic:
             self.endpoints_by_topic[topic].append(endpoint)
          else:
@@ -187,11 +204,15 @@ class Billboard(daemon.Daemon):
 
          for e in self.endpoints:
             e.close()
+            e.join()
 
          syslog.syslog(syslog.LOG_NOTICE, "Shutdown 'publish_subscribe_billboard' daemon.")
 
    def signal_terminate_handler(self, sig_num, stack_frame):
-      self.close()
+      try:
+         self.close()
+      except:
+         pass
 
 if __name__ == '__main__':
    import sys
