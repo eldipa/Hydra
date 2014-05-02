@@ -8,8 +8,8 @@ import threading
 import socket
 from threading import Lock
 import syslog, traceback
-from message_ensambler import ensamble_messages
 from connection import Connection
+from topic_chain import build_topic_chain
 
 
 #syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_ERR))
@@ -66,21 +66,8 @@ class EventHandler(threading.Thread):
            self.connection.close()
 
     def dispatch(self, event):
-        # we build the topic chain:
-        # if the event's topic is empty, the chain is ['']
-        # if the event's topic was A, the chain is ['', A]
-        # if the event's topic was A.B, the chain is ['', A, B]
-        # and so on
-        topic = event["topic"]
-        subtopics = topic.split(".")
-        topic_chain = [""] # the empty topic
-        for i in range(len(subtopics)):
-           topic_chain.append('.'.join(subtopics[:i+1]))
+        topic_chain = build_topic_chain(event['topic'])
 
-            
-        # we call the callbacks for each topic in the topic chain.
-        # the chain is reversed (the more specific topic first)
-        topic_chain.reverse()
         self.lock.acquire()
         try:
            syslog.syslog(syslog.LOG_DEBUG, "Executing callback over the topic chain '%s'." % (str(topic_chain)))

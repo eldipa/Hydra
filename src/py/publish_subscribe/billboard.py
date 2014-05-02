@@ -1,6 +1,7 @@
 import socket, threading, json
 import daemon, syslog, traceback
 from connection import Connection
+from topic_chain import build_topic_chain
 
 #TODO add keep alive
 class _Endpoint(threading.Thread):
@@ -140,14 +141,10 @@ class Billboard(daemon.Daemon):
          syslog.syslog(syslog.LOG_NOTICE, "Still alive %i endpoints." % len(self.endpoints))
 
    def distribute_event(self, topic, event):
+      topic_chain = build_topic_chain(topic)
+      
       self.endpoint_subscription_lock.acquire()
       try:
-         subtopics = topic.split(".")
-         topic_chain = [""] # the empty topic
-         for i in range(len(subtopics)):
-            topic_chain.append('.'.join(subtopics[:i+1]))
-         
-         topic_chain.reverse()
          endpoints_already_notified = set()
          syslog.syslog(syslog.LOG_DEBUG, "Distributing event over the topic chain '%s': %s." % (str(topic_chain), json.dumps(event)))
          for t in topic_chain:
