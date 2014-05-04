@@ -8,7 +8,9 @@ def doctests(source_dir):
 
 
 def run_doctests(sources, working_directory):
-   os.system("cd %s; python -m doctest %s" % (working_directory, " ".join(sources)))
+   for source in sources:
+      print "Run tests in %s" % source
+      os.system("cd %s; python -m doctest %s" % (working_directory, source))
    
 
 def generate_wiki_pages(sources, wiki_directory):
