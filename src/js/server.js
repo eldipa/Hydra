@@ -38,11 +38,12 @@ define(function () {
       topic = topic || '';
       var callbacks = this.callbacks_by_topic[topic];
       if(!callbacks) {
-         this.callbacks_by_topic[topic] = [];
+         this.callbacks_by_topic[topic] = [callback];
+         this.socket.write(JSON.stringify({type: 'subscribe', topic: topic}));
       }
-      this.callbacks_by_topic[topic].push(callback);
-
-      this.socket.write(JSON.stringify({type: 'subscribe', topic: topic}));
+      else {
+         this.callbacks_by_topic[topic].push(callback);
+      }
    };
 
    Server.prototype.init_dispacher = function () {

@@ -20,7 +20,7 @@ class EventHandler(threading.Thread):
 
         self.connection = Connection(self._get_address())
         self.lock = Lock()
-        self.callbacks_by_topic = {'':[]}
+        self.callbacks_by_topic = {}
 
         self.start()
         
@@ -32,16 +32,16 @@ class EventHandler(threading.Thread):
         try:
            if self.callbacks_by_topic.has_key(topic):
                self.callbacks_by_topic[topic].append(callback)
+               syslog.syslog(syslog.LOG_DEBUG, "Registered subscription locally. Subscription to the topic '%s' already sent." % (topic))
            else:
-               self.callbacks_by_topic[topic] = []
-               self.callbacks_by_topic[topic].append(callback)
+               self.callbacks_by_topic[topic] = [callback]
+               syslog.syslog(syslog.LOG_DEBUG, "Sending subscription to the topic '%s'." % (topic))
+               self.connection.send_object({'type': 'subscribe', 'topic': topic})
+               syslog.syslog(syslog.LOG_DEBUG, "Subscription sent.")
 
         finally:
            self.lock.release()
 
-        syslog.syslog(syslog.LOG_DEBUG, "Sending subscription to the topic '%s'." % (topic))
-        self.connection.send_object({'type': 'subscribe', 'topic': topic})
-        syslog.syslog(syslog.LOG_DEBUG, "Subscription sent.")
     
     def publish(self, topic, data):
         fail_if_topic_isnt_valid(topic, allow_empty=False)
