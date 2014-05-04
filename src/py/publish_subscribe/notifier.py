@@ -1,7 +1,7 @@
 import socket, threading, json
 import daemon, syslog, traceback
 from connection import Connection
-from topic_chain import build_topic_chain
+from topic import build_topic_chain, fail_if_topic_isnt_valid
 
 #TODO add keep alive
 class _Endpoint(threading.Thread):
@@ -29,6 +29,12 @@ class _Endpoint(threading.Thread):
 
       if message["type"] == "publish" and "data" not in message:
          syslog.syslog(syslog.LOG_ERR, "Invalid message. Publish message hasn't any data: '%s'." % json.dumps(message))
+         return False
+
+      try:
+         fail_if_topic_isnt_valid(message["topic"], allow_empty = (message["type"] == "subscribe"))
+      except Exception as e:
+         syslog.syslog(syslog.LOG_ERR, "Invalid topic: '%s'" % str(e))
          return False
 
       return True
@@ -95,7 +101,6 @@ class Notifier(daemon.Daemon):
       self.socket = None
 
    def run(self):
-      
       import gc
       gc.disable()
 
@@ -151,6 +156,7 @@ class Notifier(daemon.Daemon):
 
    def distribute_event(self, event):
       topic = event['topic']
+      fail_if_topic_isnt_valid(topic) # this shouldn't fail (it should be checked and filtered before)
       topic_chain = build_topic_chain(topic)
       
       self.endpoint_subscription_lock.acquire() # with this we guarrante that all the events are delivered in the correct order

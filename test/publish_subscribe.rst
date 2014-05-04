@@ -28,12 +28,13 @@ To run the server,
 
 ::
 
-   >>> import os
+   >>> import os, time
    >>> from subprocess import check_output
 
    >>> # just an auxiliary function for testing purpose only to know if the process 
    >>> # is running
    >>> def is_running():
+   ...   time.sleep(0.01)
    ...   out = check_output(["python", "publish_subscribe/notifier.py", "status"])
    ...   return "running" in out
 
@@ -81,12 +82,6 @@ Before any action, the entity must initialize the lib
    >>> import publish_subscribe.eventHandler 
    >>> pubsub = publish_subscribe.eventHandler.EventHandler()
 
-
-Additional initializations are allowed and discarded.
-
-::
-   
-   >>> #pubsub.init()
 
 
 Subscribe method
@@ -220,6 +215,70 @@ It's not possible to publish an event with an *empty* topic.
    >>> time.sleep(2) 
    >>> shared_list.count("some X event"), shared_list.count("a very specific event")
    (1, 1)
+
+
+Only letters, digits, underscores, dashes and dots are the only valid characters.
+Dots split the topics into subtopics and they cannot be used at the start or the
+end of the topic neither can be two or more consecutive.
+
+::
+
+   >>> pubsub.publish('X Y', 'xxx')          # doctest: +ELLIPSIS
+   Traceback (most recent call last):
+   Exception: ...
+
+   >>> pubsub.publish('X.', 'xxx')           # doctest: +ELLIPSIS
+   Traceback (most recent call last):
+   Exception: ...
+
+   >>> pubsub.publish('.X', 'xxx')           # doctest: +ELLIPSIS
+   Traceback (most recent call last):
+   Exception: ...
+
+   >>> pubsub.publish(' ', 'xxx')            # doctest: +ELLIPSIS
+   Traceback (most recent call last):
+   Exception: ...
+
+   >>> pubsub.publish('xy..z', 'xxx')        # doctest: +ELLIPSIS
+   Traceback (most recent call last):
+   Exception: ...
+
+
+These rules apply to the subscriptions too:
+
+::
+
+   >>> pubsub.subscribe('X Y', lambda: 0)          # doctest: +ELLIPSIS
+   Traceback (most recent call last):
+   Exception: ...
+
+   >>> pubsub.subscribe('X.', lambda: 0)           # doctest: +ELLIPSIS
+   Traceback (most recent call last):
+   Exception: ...
+
+   >>> pubsub.subscribe('.X', lambda: 0)           # doctest: +ELLIPSIS
+   Traceback (most recent call last):
+   Exception: ...
+
+   >>> pubsub.subscribe(' ', lambda: 0)            # doctest: +ELLIPSIS
+   Traceback (most recent call last):
+   Exception: ...
+
+   >>> pubsub.subscribe('xy..z', lambda: 0)        # doctest: +ELLIPSIS
+   Traceback (most recent call last):
+   Exception: ...
+
+The only difference is in the *empty topic*. The subscription to the *empty topic*
+means that the entity is interested in *any* event.
+Publish *any* event make no senses.
+
+::
+
+   >>> pubsub.publish('', 'xxx')        # doctest: +ELLIPSIS
+   Traceback (most recent call last):
+   Exception: ...
+
+   >>> pubsub.subscribe('', lambda: 0)  # no exception here
 
 
 Don't forget to close the connection and stop the server.

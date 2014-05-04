@@ -9,7 +9,7 @@ import socket
 from threading import Lock
 import syslog, traceback
 from connection import Connection
-from topic_chain import build_topic_chain
+from topic import build_topic_chain, fail_if_topic_isnt_valid
 
 
 
@@ -26,6 +26,8 @@ class EventHandler(threading.Thread):
         
         
     def subscribe(self, topic, callback):
+        fail_if_topic_isnt_valid(topic, allow_empty=True)
+
         self.lock.acquire()
         try:
            if self.callbacks_by_topic.has_key(topic):
@@ -42,8 +44,7 @@ class EventHandler(threading.Thread):
         syslog.syslog(syslog.LOG_DEBUG, "Subscription sent.")
     
     def publish(self, topic, data):
-        if(not topic):
-            raise Exception("The topic must not be empty")
+        fail_if_topic_isnt_valid(topic, allow_empty=False)
 
         syslog.syslog(syslog.LOG_DEBUG, "Sending publication of an event with topic '%s'." % (topic))
         self.connection.send_object({'type': 'publish', 'topic': topic, 'data': data})
