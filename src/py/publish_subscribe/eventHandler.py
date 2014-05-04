@@ -69,7 +69,7 @@ class EventHandler(threading.Thread):
 
         self.lock.acquire()
         try:
-           syslog.syslog(syslog.LOG_DEBUG, "Executing callback over the topic chain '%s'." % (str(topic_chain)))
+           syslog.syslog(syslog.LOG_DEBUG, "Executing callback over the topic chain '%s'." % (", ".join(topic_chain)))
            for t in topic_chain:
                callbacks = self.callbacks_by_topic.get(t, []);
                syslog.syslog(syslog.LOG_DEBUG, "For the topic '%s' there are %i callbacks." % (t if t else "(the empty topic)", len(callbacks)))
