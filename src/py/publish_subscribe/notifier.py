@@ -5,11 +5,12 @@ from topic import build_topic_chain, fail_if_topic_isnt_valid
 
 #TODO add keep alive
 class _Endpoint(threading.Thread):
-   def __init__(self, socket, billboard):
+   def __init__(self, socket, notifier, name):
       threading.Thread.__init__(self)
       self.connection = Connection(socket)
       self.is_finished = False
-      self.billboard = billboard
+      self.notifier = notifier
+      self.name = name
 
       self.start()
 
@@ -48,11 +49,11 @@ class _Endpoint(threading.Thread):
             raise Exception("Invalid message.")
 
          if message["type"] == "publish":
-            self.billboard.distribute_event({"topic": message["topic"], "data": message["data"]})
+            self.notifier.distribute_event({"topic": message["topic"], "data": message["data"]})
          
          else:
             assert message["type"] == "subscribe"
-            self.billboard.register_subscriber(message["topic"], self)
+            self.notifier.register_subscriber(message["topic"], self)
 
    def run(self):
       try:
@@ -82,10 +83,14 @@ class _Endpoint(threading.Thread):
       self.connection.close()
       syslog.syslog(syslog.LOG_NOTICE, "Connection closed.")
 
+   def __repr__(self):
+      return "%s%s" % (self.name, (" [dead]" if self.is_finished else ""))
+
+
 # TODO endpoints_by_topic (and endpoint_subscription_lock) as a single object
 
 class Notifier(daemon.Daemon):
-   def __init__(self, address, pidfile, name, foreground, listen_queue_len):
+   def __init__(self, address, pidfile, name, foreground, listen_queue_len, show_stats, stats_file):
       daemon.Daemon.__init__(self,
             pidfile=pidfile, 
             name=name,
@@ -98,13 +103,16 @@ class Notifier(daemon.Daemon):
       self.endpoints_by_topic = {}
       self.endpoint_subscription_lock = threading.Lock()
 
+      self.show_stats = show_stats
+      self.stats_file = stats_file
+
       self.socket = None
 
    def run(self):
       import gc
       gc.disable()
 
-      syslog.syslog(syslog.LOG_NOTICE, "Starting 'publish_subscribe_billboard' daemon on %s." % str(self.address))
+      syslog.syslog(syslog.LOG_NOTICE, "Starting 'publish_subscribe_notifier' daemon on %s." % str(self.address))
       self.init()
       self.wait_for_new_endpoints()
 
@@ -117,7 +125,7 @@ class Notifier(daemon.Daemon):
          self.socket.bind(self.address)
          self.socket.listen(self.listen_queue_len)
       except:
-         syslog.syslog(syslog.LOG_ERR, "Exception in the init of the billboard: %s" % (traceback.format_exc()))
+         syslog.syslog(syslog.LOG_ERR, "Exception in the init of the notifier: %s" % (traceback.format_exc()))
          sys.exit(1)
 
    
@@ -126,12 +134,13 @@ class Notifier(daemon.Daemon):
          try:
             syslog.syslog(syslog.LOG_DEBUG, "Waiting for a new endpoint to connect with self.")
             socket, address = self.socket.accept()
+            name = "Endpoint to %s:%s" % (str(address[0]), str(address[1]))
             syslog.syslog(syslog.LOG_NOTICE, "New endpoint connected: %s." % str(address))
          except: # TODO separate the real unexpected exceptions from the "shutdown" exception
-            syslog.syslog(syslog.LOG_ERR, "Exception in the wait for new endpoints of the billboard: %s" % (traceback.format_exc()))
+            syslog.syslog(syslog.LOG_ERR, "Exception in the wait for new endpoints of the notifier: %s" % (traceback.format_exc()))
             break
 
-         self.endpoints.append(_Endpoint(socket, self))
+         self.endpoints.append(_Endpoint(socket, self, name))
          self.reap()
 
 
@@ -176,6 +185,9 @@ class Notifier(daemon.Daemon):
       finally:
          self.endpoint_subscription_lock.release()
 
+      if self.show_stats:
+         self.show_endpoints_and_subscriptions()
+
    def register_subscriber(self, topic, endpoint):
       self.endpoint_subscription_lock.acquire()
       try:
@@ -188,9 +200,12 @@ class Notifier(daemon.Daemon):
       finally:
          self.endpoint_subscription_lock.release()
 
+      if self.show_stats:
+         self.show_endpoints_and_subscriptions()
+
    def close(self):
       if self.socket:
-         syslog.syslog(syslog.LOG_NOTICE, "Shutting down 'publish_subscribe_billboard' daemon.")
+         syslog.syslog(syslog.LOG_NOTICE, "Shutting down 'publish/subscribe notifier' daemon.")
          try:
             self.socket.shutdown(socket.SHUT_RDWR)
          except:
@@ -207,13 +222,36 @@ class Notifier(daemon.Daemon):
             e.close()
             e.join()
 
-         syslog.syslog(syslog.LOG_NOTICE, "Shutdown 'publish_subscribe_billboard' daemon.")
+         syslog.syslog(syslog.LOG_NOTICE, "Shutdown 'publish/subscribe notifier' daemon.")
 
    def signal_terminate_handler(self, sig_num, stack_frame):
       try:
          self.close()
       except:
          pass
+
+   def show_endpoints_and_subscriptions(self):
+      import pprint
+
+      self.endpoint_subscription_lock.acquire()
+      try:
+         with open(self.stats_file, 'w') as out:
+            topics = sorted(self.endpoints_by_topic.keys())
+            endpoints = sorted(list(set(sum(self.endpoints_by_topic.values(), []))))
+            
+            out.write("Subcriptions:\n=============\n")
+            for endpoint in endpoints:
+               out.write(repr(endpoint))
+               out.write(": ")
+               out.write(", ".join(
+                  map(lambda topic: "<any>" if not topic else topic, 
+                     filter(lambda topic: endpoint in self.endpoints_by_topic[topic], topics))))
+               out.write("\n")
+
+      finally:
+         self.endpoint_subscription_lock.release()
+
+      
 
 def main():
    import sys, os, ConfigParser
@@ -234,6 +272,9 @@ def main():
             'wait_on_port': "5555",
 
             'log_level': "LOG_ERR",
+            
+            'show_stats': "no",
+            'stats_file': '',
             }
          )
 
@@ -248,12 +289,22 @@ def main():
    if not os.path.isabs(pid_file): # it's relative to our home directory
       pid_file = os.path.abspath(os.path.join(script_home, pid_file))
 
+   show_stats = config.getboolean("notifier", "show_stats")
+   if show_stats:
+      stats_file = config.get("notifier", "stats_file")
+      if not os.path.isabs(stats_file): 
+         stats_file = os.path.abspath(os.path.join(script_home, stats_file))
+   else:
+      stats_file = None
+
    notifier = Notifier(
          address = (config.get("notifier", 'wait_on_address'), config.getint("notifier", 'wait_on_port')),
          pidfile = pid_file,
          name = config.get("notifier", 'name'),
          foreground = config.getboolean("notifier", 'foreground'),
-         listen_queue_len = config.getint("notifier", 'listen_queue_len')
+         listen_queue_len = config.getint("notifier", 'listen_queue_len'),
+         show_stats = show_stats,
+         stats_file = stats_file
          )
 
    notifier.do_from_arg(sys.argv[1] if len(sys.argv) == 2 else None)
