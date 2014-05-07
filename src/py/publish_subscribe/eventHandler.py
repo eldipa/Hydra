@@ -101,8 +101,10 @@ class EventHandler(threading.Thread):
                     'wait_on_port': "5555",
                      })
 
-        with open(config_file, 'r') as source:
-           config.readfp(source)
+        config.read([config_file])
+        if not config.has_section("notifier"):
+           config.add_section("notifier")
+
 
         address = (config.get("notifier", 'wait_on_address'), config.getint("notifier", 'wait_on_port'))
 

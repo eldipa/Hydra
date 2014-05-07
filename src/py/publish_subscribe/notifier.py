@@ -278,11 +278,12 @@ def main():
             }
          )
 
-   with open(config_file, 'r') as source:
-      config.readfp(source)
+   config.read([config_file])
+   if not config.has_section("notifier"):
+      config.add_section("notifier")
 
 
-   syslog.openlog(config.get("notifier", "name"))
+   syslog.openlog(config.get("notifier", "name"), logoption=syslog.LOG_PID)
    syslog.setlogmask(syslog.LOG_UPTO(getattr(syslog, config.get("notifier", "log_level"))))
 
    pid_file = config.get("notifier", 'pid_file')
