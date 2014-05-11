@@ -118,3 +118,32 @@ used to check each tests. These same flags can be used for both, Python and Java
    <BLANKLINE>
    world
 
+Errors and exceptions can be checked too (in python is easy, but in javascript is more weird)
+
+::
+
+   >>> raise Exception("Some reason")
+   Traceback (most recent call last):
+   Exception: Some reason
+
+   >>> f(]        # invalid syntax
+   Traceback (most recent call last):
+   SyntaxError: invalid syntax
+
+   >>> non_existent_var        
+   Traceback (most recent call last):
+   NameError: name 'non_existent_var' is not defined
+
+::
+
+   js> throw "Some reason"       // there is no way to distinguish some output from an exception
+   Some reason
+
+   js> // this test cannot be reproduced in javascript!
+   js> f(]        // doctest: +SKIP 
+
+   // in this case, is a little more easy to know if it is an exception or not
+   js> non_existent_var    // doctest: +ELLIPSIS       
+   ReferenceError: non_existent_var is not defined
+   ...
+
