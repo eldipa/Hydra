@@ -1,7 +1,11 @@
 import doctest, re, sys
 
 class DocTestJSParser(doctest.DocTestParser):
-    _EXAMPLE_RE = re.compile(r'''
+   '''This is an adaptation of the original parser. Instead of
+      be using '>>>' for the interactive session and '#' for commenting
+      a line, they are replaced by 'js>' and '//' respectively, so they
+      can be used with a javascript session.'''
+   _EXAMPLE_RE = re.compile(r'''
         # Source consists of a PS1 line followed by zero or more PS2 lines.
         (?P<source>
             (?:^(?P<indent> [ ]*) js>    .*)    # PS1 line
@@ -15,18 +19,22 @@ class DocTestJSParser(doctest.DocTestParser):
         ''', re.MULTILINE | re.VERBOSE)
 
 
-    _IS_BLANK_OR_COMMENT = re.compile(r'^[ ]*(//.*)?$').match
+   _IS_BLANK_OR_COMMENT = re.compile(r'^[ ]*(//.*)?$').match
     
-    _OPTION_DIRECTIVE_RE = re.compile(r'//\s*doctest:\s*([^\n\'"]*)$',
+   _OPTION_DIRECTIVE_RE = re.compile(r'//\s*doctest:\s*([^\n\'"]*)$',
                                       re.MULTILINE)
 
-
+# Connect with the remote javascript session
 import socket
 _js_s = socket.socket()
-
 _js_s.connect(('', 5001))
 
 def _js_test(data):
+   '''Takes the data as valid javascript code and send it to the remote 
+      javascript session. Then, waits for the prompt 'js> ' so we can
+      assume that the code was executed and its output was received by
+      us. Finally write this output into the stdout stream (so it can
+      be captured by the doctest's workflow.'''
    #import pdb
    #pdb.set_trace()
    if data is not None:
@@ -52,9 +60,15 @@ def _js_test(data):
 
       buf += next_chunk
 
+# Wait for the prompt of the remote session
 _js_test(None)
 
 class DocTestMixedParser(doctest.DocTestParser):
+   '''This object will parse python and javascript code and will keep
+      track of which type is each source code.
+      Then, all the tests are mixed and sorted so their order match the 
+      lexical order in which the tests were found during the parsing stage.'''
+
    def __init__(self, parsers):
       self.pyparser = doctest.DocTestParser()
       self.jsparser = DocTestJSParser()
@@ -93,13 +107,23 @@ class DocTestMixedParser(doctest.DocTestParser):
       return all_examples
 
 
-
+# Create the mixed parser
 mixed_parser = DocTestMixedParser([doctest.DocTestParser(), DocTestJSParser()])
 
+# This a very funny and dirty part. Because the DocTestRunner uses the built-in
+# 'compile' function to compile the source code (because he assume that it is python 
+# code), this is the only way to change that behaviour so he can support python
+# and javascript code.
 import __builtin__
-
 original_compile_func = __builtin__.compile
+
 def compile(source, filename, mode, flags=0, dont_inherit=0):
+   '''Take the source and compile it into a runnable python code.
+      Each source is looked up in the global mixed parser table
+      to know of what type the source is it.
+      If it is python, just  execute the 'compile' built-in function.
+      If it is javascript, invoke the _js_test function to send the
+      source to the remote javascript session so it is evaluated there.'''
    _, source_type = mixed_parser.type_of_source[source].pop()
 
    if source_type == "js":
@@ -116,9 +140,11 @@ def compile(source, filename, mode, flags=0, dont_inherit=0):
 
    return original_compile_func(source, filename, mode, flags, dont_inherit)
 
-__builtin__.compile = compile
+__builtin__.compile = compile    # patching!
 
 
+# This is to override the default argument 'parser' so we can use DocTestMixedParser
+# here, instead of the default DocTestParser.
 original_testfile_func = doctest.testfile
 def testfile(filename, module_relative=True, name=None, package=None,
              globs=None, verbose=None, report=True, optionflags=0,
@@ -129,38 +155,9 @@ def testfile(filename, module_relative=True, name=None, package=None,
          globs, verbose, report, optionflags, extraglobs, raise_on_error, parser,
          encoding)
 
-doctest.testfile = testfile
+doctest.testfile = testfile   # patching!
 
-
-# parse the file using the 'parser' (which we can change, so it is ok)
-# then, run the doctests with a runner (DocTestRunner/DebugRunner) that
-# we can't change, this is NOT ok, calling the 'run' method.
-#
-# tal vez haciendo que el codigo parseado no sea js sino que sea algo como:
-# r = connect_to_jsvm_and_send(jscode).then_recv_response()
-# if r looks like an exception:
-#   raise that exception
-# else:
-#   import sys; sys.stdout.write(r); sys.stdout.flush()
-#
-# excpetions like:
-# ReferenceError: f is not defined
-#    at repl:1:2
-#    at REPLServer.self.eval (repl.js:110:21)
-#    at Interface.<anonymous> (repl.js:239:12)
-#    at Interface.EventEmitter.emit (events.js:95:17)
-#    at Interface._onLine (readline.js:202:10)
-#    at Interface._line (readline.js:531:8)
-#    at Interface._ttyWrite (readline.js:760:14)
-#    at ReadStream.onkeypress (readline.js:99:10)
-#    at ReadStream.EventEmitter.emit (events.js:98:17)
-#    at emitKey (readline.js:1095:12)
-# 
-# or
-#  TypeError: Cannot read property 'f' of undefined
 
 if __name__ == "__main__":
     sys.exit(doctest._test())
-    s.shutdown(2)
-    s.close()
 
