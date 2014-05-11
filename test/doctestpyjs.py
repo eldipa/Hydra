@@ -26,7 +26,7 @@ class DocTestJSParser(doctest.DocTestParser):
 
 # Connect with the remote javascript session
 import socket
-_js_s = socket.socket()
+_js_s = socket.socket()    # TODO this is a problem, the connection is not explicit closed
 _js_s.connect(('', 5001))
 
 def _js_test(data):
