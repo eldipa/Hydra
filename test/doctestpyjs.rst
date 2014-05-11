@@ -44,3 +44,77 @@ Both kind of sessions can be mixed in the same file and are executed in the same
    js> f()
    2
 
+Multiline code is supported too:
+
+:: 
+
+   >>> def g():
+   ...   return 3
+   >>> g()
+   3
+
+
+::
+
+   js> function g() {
+   ...   return 3;
+   ... }
+   js> g()
+   3
+
+Printing to the console is a *side effect* that can be used in the tests but it's not
+very elegant (or very documentative)
+
+:: 
+
+   >>> def side_effect():
+   ...   print "effect"
+   >>> side_effect()
+   effect
+
+::
+
+   js> function side_effect() {
+   ...   console.log("effect");
+   ... }
+   js> side_effect()
+   effect
+
+
+The *doctest* module support various flags to customize the behaviour of the comparator
+used to check each tests. These same flags can be used for both, Python and Javascript tests.
+
+::
+
+   >>> print range(20)     # doctest: +NORMALIZE_WHITESPACE
+   [0,   1,  2,  3,  4,  5,  6,  7,  8,  9,
+   10,  11, 12, 13, 14, 15, 16, 17, 18, 19]
+
+   >>> print range(20)      # doctest: +ELLIPSIS
+   [0, 1, ..., 18, 19]
+
+   >>> print "hello\n\nworld"
+   hello
+   <BLANKLINE>
+   world
+
+
+::
+
+   js> function range(stop) {       // javascript version of the python's range function (simplified) 
+   ...   var a=[0], b=0;
+   ...   while(b<stop-1){ b+=1; a.push(b) }
+   ...   return a;
+   ... }
+   js> console.log(range(20))       // doctest: +NORMALIZE_WHITESPACE
+   [ 0,   1,  2,  3,  4,  5,  6,  7,  8,  9,
+   10,  11, 12, 13, 14, 15, 16, 17, 18, 19 ]
+
+   js> console.log(range(20))       // doctest: +ELLIPSIS
+   [ 0, 1, ..., 18, 19 ]
+
+   js> console.log("hello\n\nworld")
+   hello
+   <BLANKLINE>
+   world
+

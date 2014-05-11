@@ -35,6 +35,9 @@ def _js_test(data):
    buf = _js_s.recv(1024)
 
    while True:
+      while buf[:4] == "... ":
+         buf = buf[4:]
+
       if buf[-4:] == "js> ":
          response = buf[:-4]
          if not response:
@@ -101,7 +104,7 @@ def compile(source, filename, mode, flags=0, dont_inherit=0):
 
    if source_type == "js":
       js_code = source
-      python_code_wrapper = "_js_test('''%s''')\n" % js_code
+      python_code_wrapper = "_js_test(r'''%s''')\n" % js_code
 
       source = python_code_wrapper
 
