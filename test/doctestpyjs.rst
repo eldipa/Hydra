@@ -1,3 +1,6 @@
+Doctests for Javascript
+-----------------------
+
 The *doctest* module that can be found in the standard library of Python searches
 for pieces of texts that look like interactive Python sessions and then execute them, 
 checking the result obtained with the expected.
@@ -19,6 +22,9 @@ For Javascript:
    Hello world!
 
 Both kind of sessions can be mixed in the same file and are executed in the same order
+
+Basic examples
+--------------
 
 ::
 
@@ -81,6 +87,9 @@ very elegant (or very documentative)
    effect
 
 
+Option flags
+------------
+
 The *doctest* module support various flags to customize the behaviour of the comparator
 used to check each tests. These same flags can be used for both, Python and Javascript tests.
 
@@ -117,6 +126,9 @@ used to check each tests. These same flags can be used for both, Python and Java
    hello
    <BLANKLINE>
    world
+
+Checking exceptions
+-------------------
 
 Errors and exceptions can be checked too (in python is easy, but in javascript is more weird)
 
