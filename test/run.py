@@ -10,7 +10,10 @@ def doctests(source_dir):
 def run_doctests(sources, working_directory):
    for source in sources:
       print "Run tests in %s" % source
-      os.system("cd %s; python -m doctest %s" % (working_directory, source))
+      os.system("cd %s; python %s %s" % (
+         working_directory, 
+         "doctestpyjs.py", 
+         source))
    
 
 def generate_wiki_pages(sources, wiki_directory):

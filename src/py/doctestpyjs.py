@@ -1,4 +1,6 @@
-import doctest, re, sys
+import doctest, re, sys, subprocess, time, socket, traceback
+
+JS_SESSION_ADDRESS = ('', 5001)
 
 class DocTestJSParser(doctest.DocTestParser):
    '''This is an adaptation of the original parser. Instead of
@@ -24,44 +26,90 @@ class DocTestJSParser(doctest.DocTestParser):
    _OPTION_DIRECTIVE_RE = re.compile(r'//\s*doctest:\s*([^\n\'"]*)$',
                                       re.MULTILINE)
 
-# Connect with the remote javascript session
-import socket
-_js_s = socket.socket()    # TODO this is a problem, the connection is not explicit closed
-_js_s.connect(('', 5001))
 
-def _js_test(data):
-   '''Takes the data as valid javascript code and send it to the remote 
-      javascript session. Then, waits for the prompt 'js> ' so we can
-      assume that the code was executed and its output was received by
-      us. Finally write this output into the stdout stream (so it can
-      be captured by the doctest's workflow.'''
-   #import pdb
-   #pdb.set_trace()
-   if data is not None:
-      _js_s.sendall(data)
+class JavascriptSessionError(Exception):
+   def __init__(self, *args, **kargs):
+      Exception.__init__(self, *args, **kargs)
 
-   buf = _js_s.recv(1024)
+class JavascriptSession(object):
+   def __init__(self, address):
+      self.address = address
+      self.PS1, self.PS2 = "js> ", "... "
 
-   while True:
-      while buf[:4] == "... ":
-         buf = buf[4:]
+   def connect(self):
+      # Connect with the remote javascript session
+      # TODO this is a problem, the connection is not explicit closed
+      count = 0
+      self.remote_console = socket.socket()
+      self.remote_console.settimeout(10)
+      while True:
+         try:
+            self.remote_console.connect(self.address)
+            self.remote_console.settimeout(60*5)
+            
+            # Wait for the prompt of the remote session
+            self.test(None, discard_response=True)
 
-      if buf[-4:] == "js> ":
-         response = buf[:-4]
-         if not response:
-            return None
+            # Send a 'clean up' command
+            self.test(".clear\n", discard_response=True)
 
-         sys.stdout.write(response)
-         return None
+            return
+         except socket.error, e:
+            count = count + 1
+            if count > 5:
+               raise JavascriptSessionError(str(e))
 
-      next_chunk = _js_s.recv(1024)
-      if not next_chunk:
-         return ""
+            time.sleep(5)
 
-      buf += next_chunk
+   def close_connection(self):
+      try:
+         self.remote_console.shutdown(socket.SHUT_RDWR)
+      except:
+         pass
 
-# Wait for the prompt of the remote session
-_js_test(None)
+      self.remote_console.close()
+
+   def shutdown(self):
+      self.close_connection()
+
+
+   def test(self, data, discard_response=False):
+      '''Takes the data as valid javascript code and send it to the remote 
+         javascript session. Then, waits for the prompt 'js> ' (see the
+         PS1 attribute) so we can assume that the code was executed and 
+         its output was received by us. Finally write this output into the 
+         stdout stream (so it can be captured by the doctest's workflow.'''
+
+      try:
+         #import pdb
+         #pdb.set_trace()
+         if data is not None:
+            self.remote_console.sendall(data)
+
+         buf = self.remote_console.recv(1024)
+
+         while True:
+            while buf[:4] == self.PS2:
+               buf = buf[4:]
+
+            if buf[-4:] == self.PS1:
+               response = buf[:-4]
+               if not response:
+                  return None
+
+               if not discard_response:
+                  sys.stdout.write(response)
+
+               return None
+
+            next_chunk = self.remote_console.recv(1024)
+            if not next_chunk:
+               return None
+
+            buf += next_chunk
+      except socket.error, e:
+         raise JavascriptSessionError("Original traceback:\n%s\n%s" % (traceback.format_exc(), str(e)))
+
 
 class DocTestMixedParser(doctest.DocTestParser):
    '''This object will parse python and javascript code and will keep
@@ -73,9 +121,13 @@ class DocTestMixedParser(doctest.DocTestParser):
       self.pyparser = doctest.DocTestParser()
       self.jsparser = DocTestJSParser()
 
+      self.javascript_remote_session = JavascriptSession(JS_SESSION_ADDRESS)
+
    def get_doctest(self, string, globs, name, filename, lineno):
+      self.javascript_remote_session.connect()
+
       globs = globs.copy()
-      globs["_js_test"] = _js_test
+      globs["_js_test"] = self.javascript_remote_session.test
 
       return doctest.DocTest(self.get_examples(string, name), globs,
                        name, filename, lineno, string)     
@@ -105,6 +157,9 @@ class DocTestMixedParser(doctest.DocTestParser):
          self.type_of_source[source].reverse()
 
       return all_examples
+
+   def shutdown(self):
+      self.javascript_remote_session.shutdown()
 
 
 # Create the mixed parser
@@ -136,7 +191,7 @@ def compile(source, filename, mode, flags=0, dont_inherit=0):
       pass
 
    else:
-      raise Exception("Unknow source's type: %s" % source_type)
+      raise Exception("Unknown source's type: %s" % source_type)
 
    return original_compile_func(source, filename, mode, flags, dont_inherit)
 
@@ -151,9 +206,12 @@ def testfile(filename, module_relative=True, name=None, package=None,
              extraglobs=None, raise_on_error=False, parser=mixed_parser,
              encoding=None):
 
-   return original_testfile_func(filename, module_relative, name, package,
-         globs, verbose, report, optionflags, extraglobs, raise_on_error, parser,
-         encoding)
+   try:
+      return original_testfile_func(filename, module_relative, name, package,
+            globs, verbose, report, optionflags, extraglobs, raise_on_error, parser,
+            encoding)
+   finally:
+      mixed_parser.shutdown() # this object is VERY coupled!!
 
 doctest.testfile = testfile   # patching!
 
