@@ -24,6 +24,7 @@ def generate_wiki_pages(sources, wiki_directory):
    for source, page in zip(sources, wiki_pages):
       # the source is newer?
       if not os.path.exists(page) or (os.path.getmtime(source) > os.path.getmtime(page)): 
+         print "Generating wiki for %s" % source
          os.system("wikir %s > %s" % (source, page))
 
 

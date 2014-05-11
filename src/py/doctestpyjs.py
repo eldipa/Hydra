@@ -41,7 +41,7 @@ class JavascriptSession(object):
       # TODO this is a problem, the connection is not explicit closed
       count = 0
       self.remote_console = socket.socket()
-      self.remote_console.settimeout(10)
+      self.remote_console.settimeout(5)
       while True:
          try:
             self.remote_console.connect(self.address)
@@ -59,7 +59,7 @@ class JavascriptSession(object):
             if count > 5:
                raise JavascriptSessionError(str(e))
 
-            time.sleep(5)
+            time.sleep(1)
 
    def close_connection(self):
       try:
@@ -124,7 +124,12 @@ class DocTestMixedParser(doctest.DocTestParser):
       self.javascript_remote_session = JavascriptSession(JS_SESSION_ADDRESS)
 
    def get_doctest(self, string, globs, name, filename, lineno):
-      self.javascript_remote_session.connect()
+      try:
+         self.javascript_remote_session.connect()
+         self.skip_javascript_tests = False
+      except JavascriptSessionError, e:
+         print "[Warning] The javascript tests will BE SKIPPED! because the connection failed:\n %s" % str(e)
+         self.skip_javascript_tests = True
 
       globs = globs.copy()
       globs["_js_test"] = self.javascript_remote_session.test
@@ -137,6 +142,10 @@ class DocTestMixedParser(doctest.DocTestParser):
       all_examples = []
       for type, parser in [("py", self.pyparser), ("js", self.jsparser)]:
          examples = parser.get_examples(string, name)
+
+         if self.skip_javascript_tests and type == "js":
+            for example in examples:
+               example.options[doctest.OPTIONFLAGS_BY_NAME["SKIP"]] = True
 
          for example in examples:
             link = (example.lineno, type)
