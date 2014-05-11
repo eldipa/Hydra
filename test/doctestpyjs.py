@@ -70,11 +70,23 @@ class DocTestMixedParser(doctest.DocTestParser):
          examples = parser.get_examples(string, name)
 
          for example in examples:
-            self.type_of_source[example.source] = type
+            link = (example.lineno, type)
+            try:
+               self.type_of_source[example.source].append(link)
+            except KeyError:
+               self.type_of_source[example.source] = [link]
+
 
          all_examples.extend(examples)
 
+      # sort the examples and its types in the same order that were found in the file
+      # the types are then reversed so they can be 'pop-ed' in the same order that
+      # its example is executed.
       all_examples.sort(lambda this, other: cmp(this.lineno, other.lineno))
+      for source in self.type_of_source.keys():
+         self.type_of_source[source].sort(lambda this, other: cmp(this[0], other[0]))
+         self.type_of_source[source].reverse()
+
       return all_examples
 
 
@@ -85,7 +97,7 @@ import __builtin__
 
 original_compile_func = __builtin__.compile
 def compile(source, filename, mode, flags=0, dont_inherit=0):
-   source_type = mixed_parser.type_of_source[source]
+   _, source_type = mixed_parser.type_of_source[source].pop()
 
    if source_type == "js":
       js_code = source
