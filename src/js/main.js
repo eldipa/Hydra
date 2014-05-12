@@ -21,7 +21,7 @@ requirejs.config({
 
 });
 
-requirejs(['w2ui', 'code_view', 'jquery', 'server'], function (w2ui, code_view, $, server) {
+requirejs(['w2ui', 'code_view', 'jquery', 'server', 'export_console'], function (w2ui, code_view, $, server, export_console) {
    var fs = require('fs');
    /*var server = new server.Server();
    server.init();
