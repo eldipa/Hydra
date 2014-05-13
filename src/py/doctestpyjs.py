@@ -128,24 +128,32 @@ class DocTestMixedParser(doctest.DocTestParser):
          self.javascript_remote_session.connect()
          self.skip_javascript_tests = False
       except JavascriptSessionError, e:
-         print "[Warning] The javascript tests will BE SKIPPED! because the connection failed:\n %s" % str(e)
          self.skip_javascript_tests = True
 
       globs = globs.copy()
       globs["_js_test"] = self.javascript_remote_session.test
 
-      return doctest.DocTest(self.get_examples(string, name), globs,
+      _doctest = doctest.DocTest(self.get_examples(string, name), globs,
                        name, filename, lineno, string)     
+
+      if self.skip_javascript_tests and self.has_javascript_tests:
+         print "[Warning] The javascript tests will BE SKIPPED! because the connection failed:\n %s" % str(e)
+
+      return _doctest
 
    def get_examples(self, string, name):
       self.type_of_source = {}
       all_examples = []
+      self.has_javascript_tests = False
       for type, parser in [("py", self.pyparser), ("js", self.jsparser)]:
          examples = parser.get_examples(string, name)
 
          if self.skip_javascript_tests and type == "js":
             for example in examples:
                example.options[doctest.OPTIONFLAGS_BY_NAME["SKIP"]] = True
+
+         if type == "js":
+            self.has_javascript_tests = len(examples) > 0
 
          for example in examples:
             link = (example.lineno, type)

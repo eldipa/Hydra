@@ -1,4 +1,4 @@
-import socket, threading, json
+import socket, threading, json, sys
 import daemon, syslog, traceback
 from connection import Connection
 from topic import build_topic_chain, fail_if_topic_isnt_valid

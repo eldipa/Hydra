@@ -1,10 +1,11 @@
 import os, sys
 import os.path 
 
-def doctests(source_dir):
+def doctests(source_dir, whitelist):
    return [os.path.abspath(fname) for fname in os.listdir(source_dir) if \
          os.path.isfile(fname) \
-         and os.path.splitext(fname)[1] == ".rst"]
+         and os.path.splitext(fname)[1] == ".rst" \
+         and (fname in whitelist or not whitelist)]
 
 
 def run_doctests(sources, working_directory):
@@ -33,7 +34,9 @@ if __name__ == '__main__':
    working_directory = "../src/py"
    wiki_directory = "../../wiki"
 
-   sources = doctests(source_dir)
+   whitelist = sys.argv[1:]
+
+   sources = doctests(source_dir, whitelist)
    run_doctests(sources, working_directory)
    generate_wiki_pages(sources, wiki_directory)
 
