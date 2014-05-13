@@ -1,7 +1,0 @@
-{
-	"name":"nw-demo",
-	"main":"index.html",
-	"window":{
-		"toolbar":false
-	}
-}

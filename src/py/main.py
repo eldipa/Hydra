@@ -23,8 +23,6 @@ try:
 
     os.system("python py/publish_subscribe/billboard.py start")
 
-    os.chdir("./py/gdb")
-
     spawmer = gdb.gdbSpawmer.GdbSpawmer()
 
     # esperar quit
@@ -34,7 +32,7 @@ try:
     spawmer.eliminarCola()
 
 finally:
-    os.system("python ../publish_subscribe/billboard.py stop")
+    os.system("python py/publish_subscribe/billboard.py stop")
  
     if ui_process:
         os.system("killall nw")  # XXX this is too much

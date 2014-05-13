@@ -6,7 +6,7 @@ from multiprocessing import Queue
 import outputReader
 import publish_subscribe.eventHandler
 
-HACK_PATH = "../../shared/hack.so"
+HACK_PATH = "/shared/hack.so"
 
 class Gdb:
                            
@@ -18,21 +18,27 @@ class Gdb:
         self.gdb = subprocess.Popen(["gdb", "-interpreter=mi", "-quiet"], stdin=PIPE, stdout=PIPE, stderr=PIPE)
         self.gdbInput = self.gdb.stdin
         self.gdbOutput = self.gdb.stdout
-        t = outputReader.OutputReader(self.gdbOutput, self.queue)
+        t = outputReader.OutputReader(self.gdbOutput, self.queue, self.gdb.pid)
         t.start()
         self.eventHandler = publish_subscribe.eventHandler.EventHandler()
         
+    def getSessionId(self):
+        return self.gdb.pid
+    
+    def getTargetPid(self):
+        return self.targetPid
+        
     def subscribe(self):
-        self.eventHandler.subscribe(str(self.targetPid) + ".run",self.run)
-        self.eventHandler.subscribe(str(self.targetPid) + ".continue",self.continueExec)
-        self.eventHandler.subscribe(str(self.targetPid) + ".step-into",self.stepInto)
-        self.eventHandler.subscribe(str(self.targetPid) + ".exit",self.exit)
+        self.eventHandler.subscribe(str(self.gdb.pid) + ".run",self.run)
+        self.eventHandler.subscribe(str(self.gdb.pid) + ".continue",self.continueExec)
+        self.eventHandler.subscribe(str(self.gdb.pid) + ".step-into",self.stepInto)
+        self.eventHandler.subscribe(str(self.gdb.pid) + ".exit",self.exit)
 
     
     # -Gdb realiza un attach al proceso especificado
     def attach(self, pid):
         self.gdbInput.write("-target-attach " + str(pid) + '\n')
-        self.targetPid = self.queue.get()
+        self.targetPid = int(self.queue.get())
         self.subscribe()
         return self.targetPid
     
@@ -61,12 +67,11 @@ class Gdb:
     # Ejecuta una sola intruccion del target
     def stepInto(self, data = ""):
         self.gdbInput.write("-exec-step" + '\n')
-        # TODO esperar al prompt y retornar lo pedido
     
     
     # Finaliza el proceso gdb, junto con su target si este no hubiera finalizado
-    def exit(self):
-        self.gdbInput.write("kill" + '\n')
+    def exit(self, data = ""):
+        #self.gdbInput.write("kill" + '\n')
         self.gdbInput.write("-gdb-exit" + '\n')
     
     # Establece un nuevo breakpoint al comienzo de la funcion dada

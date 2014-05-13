@@ -1,1 +1,0 @@
-unrandom.d: ../unrandom.c

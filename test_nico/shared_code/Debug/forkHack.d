@@ -1,1 +1,0 @@
-forkHack.d: ../forkHack.c

@@ -24,18 +24,22 @@ class GdbSpawmer:
         self.subscribe()
         
     def subscribe(self):
-        self.eventHandler.subscribe("attach", self.attachAGdb)
-        self.eventHandler.subscribe("new", self.startNewProcessWithGdb)
+        self.eventHandler.subscribe("debugger.load", self.startNewProcessWithGdb)
+        self.eventHandler.subscribe("debugger.attach", self.attachAGdb)
+        self.eventHandler.subscribe("debugger.exit", self.exit)
     
     @Locker
     def attachAGdb(self, pid):
         gdb = Gdb()
+        self.eventHandler.publish("debugger.new-session", gdb.getSessionid())
         gdb.attach(pid)
         self.listaGdb[pid] = gdb
+        self.eventHandler.publish("debugger.attached", pid)
         
     @Locker
     def startNewProcessWithGdb(self, path):
         gdb = Gdb()
+        self.eventHandler.publish("debugger.new-session", gdb.getSessionId())
         pid = gdb.file(path)
         self.listaGdb[pid] = gdb
         return pid
