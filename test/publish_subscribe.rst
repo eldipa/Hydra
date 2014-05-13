@@ -196,6 +196,19 @@ The topic can be seen as a hierarchy of topics.
    >>> shared_list.count("just B")  # this will be received by only one callbacks
    1
 
+The matching is hierarchal, from the left to the right.
+
+::
+
+   >>> pubsub.subscribe('red.Z', add_sync)
+   >>> pubsub.subscribe('blue.Z', add_sync)
+
+   >>> pubsub.publish('green.Z', 'green') # don't care th *.Z, we start the matching from the left
+   >>> time.sleep(2)
+   >>> shared_list.count('green') 
+   0
+
+
 Finally, the *empty* topic means that the subscriber in interested in anything.
 It's not possible to publish an event with an *empty* topic.
 
