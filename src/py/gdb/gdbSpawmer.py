@@ -8,8 +8,10 @@ import publish_subscribe.eventHandler
 def Locker(func):
         def newFunc(self, *args, **kwargs):
             self.lock.acquire()
-            result = func(self, *args, **kwargs)
-            self.lock.release()
+            try:
+                result = func(self, *args, **kwargs)
+            finally:
+                self.lock.release()
             return result
         return newFunc
 
@@ -31,18 +33,20 @@ class GdbSpawmer:
     @Locker
     def attachAGdb(self, pid):
         gdb = Gdb()
-        self.eventHandler.publish("debugger.new-session", gdb.getSessionid())
+        self.eventHandler.publish("debugger.new-session", gdb.getSessionId())
         gdb.attach(pid)
-        self.listaGdb[pid] = gdb
+        self.listaGdb[gdb.getSessionId()] = gdb
         self.eventHandler.publish("debugger.attached", pid)
+        return gdb.getSessionId()
+
         
     @Locker
     def startNewProcessWithGdb(self, path):
         gdb = Gdb()
         self.eventHandler.publish("debugger.new-session", gdb.getSessionId())
-        pid = gdb.file(path)
-        self.listaGdb[pid] = gdb
-        return pid
+        gdb.file(path)
+        self.listaGdb[gdb.getSessionId()] = gdb
+        return gdb.getSessionId()
     
     @Locker
     def contineExecOfProcess(self, pid):
@@ -52,14 +56,16 @@ class GdbSpawmer:
     def stepIntoOfProcess(self, pid):
         self.listaGdb[pid].stepInto()
         
-    # finaliza el gdb del proceso deseado, se acepta all
+    # finaliza el gdb deseado, se acepta all
     @Locker
     def exit(self, pid):
         if pid != "all":
             self.listaGdb[pid].exit()
+            self.listaGdb.pop(pid)
         else:
             for gdb in self.listaGdb:
-                gdb.exit() 
+                self.listaGdb[gdb].exit() 
+            self.listaGdb = []
                 
     def eliminarCola(self):
         self.forkDetector.salir()

@@ -7,7 +7,7 @@ using namespace std;
 
 int main(int argc, char* argv[]) {
 
-	usleep(3000000);
+	usleep(5000000);
 
 
 	return 0;

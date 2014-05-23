@@ -37,6 +37,7 @@ class ForkDetector(threading.Thread):
     def attached(self, data):
         pid = data
         if pid in self.pidToattach:
+            self.pidToattach.remove(pid)
             respuesta = self.CrearRespuesta(pid)
             self.msgQueue.push(respuesta)
         

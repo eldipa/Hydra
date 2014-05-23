@@ -18,8 +18,8 @@ class Gdb:
         self.gdb = subprocess.Popen(["gdb", "-interpreter=mi", "-quiet"], stdin=PIPE, stdout=PIPE, stderr=PIPE)
         self.gdbInput = self.gdb.stdin
         self.gdbOutput = self.gdb.stdout
-        t = outputReader.OutputReader(self.gdbOutput, self.queue, self.gdb.pid)
-        t.start()
+        self.reader = outputReader.OutputReader(self.gdbOutput, self.queue, self.gdb.pid)
+        self.reader.start()
         self.eventHandler = publish_subscribe.eventHandler.EventHandler()
         
     def getSessionId(self):
@@ -33,14 +33,13 @@ class Gdb:
         self.eventHandler.subscribe(str(self.gdb.pid) + ".continue",self.continueExec)
         self.eventHandler.subscribe(str(self.gdb.pid) + ".step-into",self.stepInto)
         self.eventHandler.subscribe(str(self.gdb.pid) + ".exit",self.exit)
+        self.eventHandler.subscribe(str(self.gdb.pid) + ".break-funcion",self.setBreakPoint)
 
     
     # -Gdb realiza un attach al proceso especificado
     def attach(self, pid):
         self.gdbInput.write("-target-attach " + str(pid) + '\n')
-        self.targetPid = int(self.queue.get())
         self.subscribe()
-        return self.targetPid
     
     # -Gdb coloca como proceso target un nuevo proceso del codigo 'file'
     # -Modifica el entorno (ld_preload)
@@ -48,11 +47,9 @@ class Gdb:
     def file(self, path):
         self.gdbInput.write("-file-exec-and-symbols " + path + '\n')
         self.gdbInput.write("-gdb-set " + "exec-wrapper env LD_PRELOAD=" + HACK_PATH + '\n')
-        self.setBreakPoint("main")
-        self.run()
-        self.targetPid = self.queue.get()
+#         self.setBreakPoint("main")
+#         self.run()
         self.subscribe()
-        return self.targetPid
 
     
     # Ejecuta al target desde el comienzo
@@ -73,6 +70,7 @@ class Gdb:
     def exit(self, data = ""):
         #self.gdbInput.write("kill" + '\n')
         self.gdbInput.write("-gdb-exit" + '\n')
+        self.reader.join()
     
     # Establece un nuevo breakpoint al comienzo de la funcion dada
     def setBreakPoint(self, funcion):

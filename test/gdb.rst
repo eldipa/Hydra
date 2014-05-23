@@ -65,18 +65,18 @@ Para instaciar un nuevo proceso gdb se debe hacer:
    >>> from gdb import gdb
    >>> gdbInstance = gdb.Gdb()
    >>> gdbId = gdbInstance.getSessionId()
+   >>> gdbId > 0 
+   True
    >>> eventHandler.subscribe("pid." + str(gdbId), add_sync)
    >>> time.sleep(2)
    >>> cantEventos1 = len(shared_list)
-   >>> cantEventos1 == 0 
+   >>> cantEventos1 > 0 
    True
    
 Para cargar un nuevo ejecutable en el entorno gdb:
 
 ::
-   >>> targetPid = gdbInstance.file("../cppTestCode/testExe")
-   >>> targetPid > 0
-   True
+   >>> gdbInstance.file("../cppTestCode/testExe")
    >>> time.sleep(2)
    >>> cantEventos2 = len(shared_list)
    >>> cantEventos2 > cantEventos1 
@@ -104,10 +104,10 @@ Para realizar un attach de un proceso ya andando:
    True
    >>> gdbInstance = gdb.Gdb()
    >>> gdbId = gdbInstance.getSessionId()
-   >>> eventHandler.subscribe("pid." + str(gdbId), add_sync)
-   >>> targetPid = gdbInstance.attach(p.pid) 
-   >>> targetPid == p.pid 
+   >>> gdbId > 0 
    True
+   >>> eventHandler.subscribe("pid." + str(gdbId), add_sync)
+   >>> gdbInstance.attach(p.pid) 
    >>> time.sleep(2)
    >>> cantEventos1 = len(shared_list)
    >>> cantEventos1 > 0 
@@ -121,14 +121,23 @@ Para colocar un nuevo breakpoint en una funcion:
     >>> cantEventos2 = len(shared_list)
     >>> cantEventos2 > cantEventos1
     True
+    
+Para realizar un run:
+
+::
+   >>> gdbInstance.run()
+   >>> time.sleep(5)
+   >>> cantEventos3 = len(shared_list)
+   >>> cantEventos3 > cantEventos2
+   True
 
 Para realizar un step-into:
 
 ::
    >>> gdbInstance.stepInto()
    >>> time.sleep(2)
-   >>> cantEventos3 = len(shared_list)
-   >>> cantEventos3 > cantEventos2
+   >>> cantEventos4 = len(shared_list)
+   >>> cantEventos4 > cantEventos3
    True
 
 Para realizar un continue:
@@ -136,15 +145,6 @@ Para realizar un continue:
 ::
    >>> gdbInstance.continueExec()
    >>> time.sleep(2)
-   >>> cantEventos4 = len(shared_list)
-   >>> cantEventos4 > cantEventos3
-   True
-   
-Para realizar un run:
-
-::
-   >>> gdbInstance.run()
-   >>> time.sleep(5)
    >>> cantEventos5 = len(shared_list)
    >>> cantEventos5 > cantEventos4
    True
@@ -165,21 +165,29 @@ la ejecucion el *outputReader* lanzara eventos bajo el topic "pid.1234" (siendo
    >>> shared_list = []
 
    >>> gdbInstance = gdb.Gdb()
-   >>> targetPid = gdbInstance.file("../cppTestCode/testExe")
-   >>> targetPid > 0
-   True
+   >>> gdbInstance.file("../cppTestCode/testExe")
    >>> gdbId = gdbInstance.getSessionId()
    >>> gdbId > 0
    True
    >>> eventHandler.subscribe("pid." + str(gdbId), add_sync)
+   
+Para colocar un breakpoint en una funcion:
+
+::
+   >>> eventHandler.publish(str(gdbId) + ".break-funcion", "main")
+   >>> time.sleep(2)
+   >>> cantEventos1 = len(shared_list)
+   >>> cantEventos1 > 0 
+   True
+
 
 Para realizar un step-into:
 
 ::
    >>> eventHandler.publish(str(gdbId) + ".step-into", "")
    >>> time.sleep(2)
-   >>> cantEventos1 = len(shared_list)
-   >>> cantEventos1 > 0 
+   >>> cantEventos2 = len(shared_list)
+   >>> cantEventos2 >  cantEventos1 
    True
 
 Para realizar un continue:
@@ -187,8 +195,8 @@ Para realizar un continue:
 :: 
    >>> eventHandler.publish(str(gdbId) + ".continue", "")
    >>> time.sleep(2)
-   >>> cantEventos2 = len(shared_list)
-   >>> cantEventos2 > cantEventos1
+   >>> cantEventos3 = len(shared_list)
+   >>> cantEventos3 > cantEventos2
    True
    
 
@@ -197,8 +205,8 @@ Para realizar un run:
 ::
    >>> eventHandler.publish(str(gdbId) + ".run", "")
    >>> time.sleep(5)
-   >>> cantEventos3 = len(shared_list)
-   >>> cantEventos3 > cantEventos2
+   >>> cantEventos4 = len(shared_list)
+   >>> cantEventos4 > cantEventos3
    True
    
 Para realizar un exit:
@@ -206,8 +214,8 @@ Para realizar un exit:
 ::
    >>> eventHandler.publish(str(gdbId) + ".exit", "")
    >>> time.sleep(2)
-   >>> cantEventos4 = len(shared_list)
-   >>> cantEventos4 > cantEventos3
+   >>> cantEventos5 = len(shared_list)
+   >>> cantEventos5 > cantEventos4
    True
 
 

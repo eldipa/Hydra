@@ -16,29 +16,26 @@ class OutputReader(threading.Thread):
         self.pid = 0
     
     def run(self):
-        # leo hasta obtener el pid
-        while (self.pid == 0):
+        salir = False
+
+        while (not salir):
             line = self.gdbOutput.readline()
             
             if line == "":
-                return
+                salir = True
+                continue
 
             record = self.parser.parse_line(line)
 
             if isinstance(record, Record):
                 if (record.klass == "thread-group-started"):
                     self.pid = record.results["pid"]
-                    self.queue.put(record.results["pid"])
+                    self.eventHandler.publish("debugger.new-target" , {'gdbPid': self.gdbPid, 'targetPid': self.pid})
                     
+                elif (record.klass == "stopped"):
+                    if ('reason' in record.results):
+                        self.eventHandler.publish("pid."+ str(self.gdbPid)+".stopped", {'reason':  record.results["reason"], 'output': vars(record)})
             
-        while True:
-            line = self.gdbOutput.readline()
-            
-            if line == "":
-                return
-
-            record = self.parser.parse_line(line)
-
             if record != "(gdb)":
                 self.eventHandler.publish("pid." + str(self.gdbPid), vars(record))
         
