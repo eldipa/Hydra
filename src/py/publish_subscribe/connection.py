@@ -2,6 +2,7 @@
 import socket
 import syslog
 import json
+import time
 import traceback
 
 class Connection(object):
@@ -14,7 +15,18 @@ class Connection(object):
          address = address_or_already_open_socket
 
          self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-         self.socket.connect(address)
+         connected = False
+         attempts = 0
+         while not connected:
+            try:
+               self.socket.connect(address)
+               connected = True
+            except:
+               time.sleep(0.5)
+               attempts += 1
+               if attempts > 100: #approx 0.5*100 = 50 seconds
+                  raise
+
 
       else:
          self.socket = address_or_already_open_socket

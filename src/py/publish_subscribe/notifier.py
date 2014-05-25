@@ -122,6 +122,7 @@ class Notifier(daemon.Daemon):
    def init(self):
       try:
          self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+         self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
          self.socket.bind(self.address)
          self.socket.listen(self.listen_queue_len)
       except:
