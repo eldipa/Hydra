@@ -293,6 +293,8 @@ Publish *any* event make no senses.
 
    >>> pubsub.subscribe('', lambda: 0)  # no exception here
 
+Cleanup
+-------
 
 Don't forget to close the connection and stop the server.
 
@@ -304,6 +306,42 @@ Don't forget to close the connection and stop the server.
    0
    >>> is_running()
    False
+
+Reconnections and duplicated messages
+-------------------------------------
+
+If a established connection was suddenly closed, two options are possible:
+ - reconnect and send the message again.
+ - throw an error
+
+The first approach is the more elaborated but implies that if a message was sent and
+the connection is closed immediately, the client should reconnect and *resend* the
+messages which can lead to duplicated messages and/or to dropped messages due the 
+lack of any acknowledge.
+
+The second approach is safer but simplistic.
+
+We currently support only the second approach, in case that a connection is closed, we
+*throw an error*. The only exception is when the client connects to the server for the
+first time. In that case we attempt several times the connection (and this is safe because
+we don't sent any message, so there is no way to duplicate or drop any message).
+
+::
+
+   >>> is_running()
+   False
+   >>> os.system("( sleep 5 && python publish_subscribe/notifier.py start ) &")
+   0
+   >>> is_running()  # yes, it should not be running right now.
+   False
+
+   >>> pubsub = publish_subscribe.eventHandler.EventHandler() # we block until the server is ready (or timeout)
+   >>> is_running()  # now it should be running
+   True
+   
+   >>> pubsub.close()
+   >>> os.system("python publish_subscribe/notifier.py stop")
+   0
 
 Javascript's API
 ----------------
