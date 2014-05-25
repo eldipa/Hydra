@@ -15,10 +15,33 @@ define(function () {
       }
 
       this.socket = require('net').Socket();
-      this.socket.connect(5555, '');
-      this.socket.setEncoding('ascii');
+      
+      var is_connected = false;
+      var attempts = 0;
+      var that = this;
 
-      this.init_dispacher();
+      this.socket.on('error', function (err) {
+         if (is_connected) {
+            throw new Error(err);
+         }
+
+         if (attempts > 10) {       // 10 * 1000 = 10 seconds
+            throw new Error(err);
+         }
+
+         setTimeout(function () {
+            attempts += 1;
+            that.socket.connect(5555, '');
+         }, 1000);
+      });
+
+      this.socket.on('connect', function () {
+         is_connected = true;
+         that.init_dispacher();
+      });
+
+      this.socket.setEncoding('ascii');
+      this.socket.connect(5555, '');
    };
 
    EventHandler.prototype.shutdown = function () {

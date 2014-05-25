@@ -350,14 +350,32 @@ We provide the same API implemented in Javascript too.
 First we initialize the object
 
 ::
-   >>> os.system("python publish_subscribe/notifier.py start")
+
+   >>> os.system("( sleep 1 && python publish_subscribe/notifier.py start ) &")
    0
-   >>> is_running()
-   True
+   >>> is_running()  # yes, it should not be running right now.
+   False
+
+::
 
    js> var pubsub = new event_handler.EventHandler();
-   js> pubsub.init();
+   js> pubsub.init();            // this method is NOT blocked
 
+-------------------------------------------------------------------------------
+
+.. note:: There is a bug in the Javascript API that if the connection in the *init* fails, 
+   the subsequents calls to *publish* and *subscribe* will trigger a **core dump** in
+   the javascript server. Any action **must** be executed after the API is connected.
+
+   ::
+
+      >>> time.sleep(3)    # workaround!!!
+      >>> is_running()
+      True
+
+-------------------------------------------------------------------------------
+
+   
 Then we can subscribe to any event
 
 ::
