@@ -1,11 +1,15 @@
 define(function () {
-   function Server() {
+   'use strict';
+
+   // TODO extract the constants an put them in a external file
+   // TODO wrap the errors into Error objects
+   function EventHandler() {
       this.callbacks_by_topic = {};
       this.max_buf_length = 1024 * 1024;
       this.log_to_console = true;
    }
    
-   Server.prototype.init = function () {
+   EventHandler.prototype.init = function () {
       if(this.socket) {
          this.shutdown();
       }
@@ -17,7 +21,7 @@ define(function () {
       this.init_dispacher();
    };
 
-   Server.prototype.shutdown = function () {
+   EventHandler.prototype.shutdown = function () {
       if(!this.socket) {
          return;
       }
@@ -26,7 +30,11 @@ define(function () {
       this.socket = null;
    };
 
-   Server.prototype.publish = function (topic, data) {
+   EventHandler.prototype.close = function () {
+      return this.shutdown();
+   }
+
+   EventHandler.prototype.publish = function (topic, data) {
       if(!topic) {
          throw "The topic must not be empty";
       }
@@ -34,7 +42,7 @@ define(function () {
       this.socket.write(JSON.stringify({type: 'publish', topic: topic, data: data}));
    };
 
-   Server.prototype.subscribe = function (topic, callback) {
+   EventHandler.prototype.subscribe = function (topic, callback) {
       topic = topic || '';
       var callbacks = this.callbacks_by_topic[topic];
       if(!callbacks) {
@@ -46,7 +54,7 @@ define(function () {
       }
    };
 
-   Server.prototype.init_dispacher = function () {
+   EventHandler.prototype.init_dispacher = function () {
       var buf = '';
       var self = this;
       this.socket.on('data', function (chunk) {
@@ -100,7 +108,7 @@ define(function () {
       });
    };
 
-   Server.prototype.dispatch = function (event) {
+   EventHandler.prototype.dispatch = function (event) {
       if(this.log_to_console) {
          console.log("Dispatch: ");
          console.log(event);
@@ -141,6 +149,6 @@ define(function () {
       }
    };
 
-   return {Server: Server};
+   return {EventHandler: EventHandler};
 
 });

@@ -21,22 +21,24 @@ requirejs.config({
 
 });
 
-requirejs(['w2ui', 'code_view', 'jquery', 'server', 'export_console'], function (w2ui, code_view, $, server, export_console) {
+requirejs(['w2ui', 'code_view', 'jquery', 'event_handler', 'export_console'], function (w2ui, code_view, $, event_handler, export_console) {
+   var js_console_server = export_console.init();
    var fs = require('fs');
-   /*var server = new server.Server();
-   server.init();
+   /*var event_handler = new event_handler.EventHandler();
+   event_handler.init();
    */
 
    var view = new code_view.CodeView();
 
    /*
-   server.subscribe('source', function (data) {
+   event_handler.subscribe('source', function (data) {
       view.load_code_from_file(data.filename);
       //view.highlightLine(data.line_num, 'info');
       view.gotoLine(data.line_num);
    });
    */
 
+   /*
    var socket = require('net').Socket();
    socket.connect(5555, '');
    socket.setEncoding('ascii');
@@ -59,7 +61,7 @@ requirejs(['w2ui', 'code_view', 'jquery', 'server', 'export_console'], function 
    });
 
    w2ui.objects['layout'].content("main", view.view_dom);
-
+   */
    
    //process_view.start();
    //require('nw.gui').Window.get().reload(3);

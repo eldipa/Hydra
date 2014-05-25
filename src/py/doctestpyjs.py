@@ -50,9 +50,6 @@ class JavascriptSession(object):
             # Wait for the prompt of the remote session
             self.test(None, discard_response=True)
 
-            # Send a 'clean up' command
-            self.test(".clear\n", discard_response=True)
-
             return
          except socket.error, e:
             count = count + 1

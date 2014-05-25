@@ -304,3 +304,70 @@ Don't forget to close the connection and stop the server.
    0
    >>> is_running()
    False
+
+Javascript's API
+----------------
+
+We provide the same API implemented in Javascript too.
+First we initialize the object
+
+::
+   >>> os.system("python publish_subscribe/notifier.py start")
+   0
+   >>> is_running()
+   True
+
+   js> var pubsub = new event_handler.EventHandler();
+   js> pubsub.init();
+
+Then we can subscribe to any event
+
+::
+
+   js> var result = {}
+   js> pubsub.subscribe('baz', function (data) {
+   ...   result.baz_data = data;
+   ... });
+   js> pubsub.subscribe('baz.dac', function (data) {
+   ...   result.dac_data = data;
+   ... });
+   js> pubsub.subscribe('', function (data) {
+   ...   result.any_data = data;
+   ... });
+
+And, of course, we can receive and/or send events
+
+::
+   
+   js> pubsub.publish('baz', 'some data of baz');
+
+   js> var count = 0;   // ugly "bussy wait" to wait for the event
+   js> while ( !result.baz_data && count < 10000 ) { count += 1; } ; result.baz_data; 
+   'some data of baz'
+
+   js> result.any_data === result.baz_data; // 'any' callback was called
+   true
+
+::
+
+   js> pubsub.publish('baz.dac', 'some data of baz.dac but the data is baz too');
+
+   js> var count = 0;   
+   js> while ( !result.dac_data && count < 10000 ) { count += 1; } ; result.dac_data; 
+   'some data of baz.dac but the data is baz too'
+   
+   js> result.baz_data === result.dac_data; // the 'baz' callback is called too when the event is 'baz.*'
+   true
+   js> result.any_data === result.dac_data; // 'any' callback was called too
+   true
+   
+Finally, we close and release any resource
+
+::
+
+   js> pubsub.close();
+   
+   >>> os.system("python publish_subscribe/notifier.py stop")
+   0
+   >>> is_running()
+   False
