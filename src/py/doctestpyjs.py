@@ -195,6 +195,9 @@ def compile(source, filename, mode, flags=0, dont_inherit=0):
       source to the remote javascript session so it is evaluated there.'''
    _, source_type = mixed_parser.type_of_source[source].pop()
 
+   import sys, pprint   # hook the displayhook to use pprint instead of repr
+   sys.displayhook = lambda x: pprint.pprint(x) if x is not None else None
+
    if source_type == "js":
       js_code = source
       python_code_wrapper = "_js_test(r'''%s''')\n" % js_code

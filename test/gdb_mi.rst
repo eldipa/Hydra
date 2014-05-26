@@ -12,7 +12,7 @@ into a python-native object.
    6
    >>> s.as_native()
    'fooo'
-   >>> print s
+   >>> s
    'fooo'
 
 The *parse* method take two arguments, the full raw string and the offset where
@@ -71,21 +71,21 @@ With the c-string implemented, more complex objects can be built like lists or t
    2
    >>> l.as_native()
    []
-   >>> print l
+   >>> l
    []
 
    >>> l.parse(r'["a"]', 0)
    5
    >>> l.as_native()
    ['a']
-   >>> print l
+   >>> l
    ['a']
 
    >>> l.parse(r'["a","b"]', 0)
    9
    >>> l.as_native()
    ['a', 'b']
-   >>> print l
+   >>> l
    ['a', 'b']
 
 ::
@@ -95,14 +95,14 @@ With the c-string implemented, more complex objects can be built like lists or t
    2
    >>> t.as_native()
    {}
-   >>> print t
+   >>> t
    {}
 
    >>> t.parse(r'{a="b"}', 0)
    7
    >>> t.as_native()
    {'a': 'b'}
-   >>> print t
+   >>> t
    {'a': 'b'}
 
    >>> t.parse(r'{a=[]}', 0)
@@ -119,14 +119,14 @@ With the c-string implemented, more complex objects can be built like lists or t
    11
    >>> t.as_native()
    {'a': {'b': 'c'}}
-   >>> print t
+   >>> t
    {'a': {'b': 'c'}}
 
    >>> t.parse(r'{a="b",c="d"}', 0)
    13
    >>> sorted(t.as_native().iteritems()) # we 'sort' the dictionary to make easy the testing
    [('a', 'b'), ('c', 'd')]
-   >>> print t
+   >>> t
    {'a': 'b', 'c': 'd'}
 
 
@@ -141,7 +141,7 @@ in the dictionary and its value will be the list of the original values.
    13
    >>> t.as_native()
    {'a': ['b', 'd']}
-   >>> print t
+   >>> t
    {'a': ['b', 'd']}
 
 Of course, wrong inputs are caught
@@ -199,7 +199,7 @@ can be a c-string, a list or a tuple, ending the list with a newline.
    >>> record = r.as_native()
    >>> record.klass, record.type, record.results
    ('foo', 'Exec', {})
-   >>> print record
+   >>> record
    {'klass': 'foo', 'results': {}, 'token': None, 'type': 'Exec'}
 
    >>> r.parse('+bar,a="b"\n', 0)
@@ -207,7 +207,7 @@ can be a c-string, a list or a tuple, ending the list with a newline.
    >>> record = r.as_native()
    >>> record.klass, record.type, record.results
    ('bar', 'Status', {'a': 'b'})
-   >>> print record
+   >>> record
    {'klass': 'bar', 'results': {'a': 'b'}, 'token': None, 'type': 'Status'}
 
    >>> r.parse('=baz,a=[],b={c="d"}\n', 0)
@@ -215,7 +215,7 @@ can be a c-string, a list or a tuple, ending the list with a newline.
    >>> record = r.as_native()
    >>> record.klass, record.type, record.results
    ('baz', 'Notify', {'a': [], 'b': {'c': 'd'}})
-   >>> print record                          #doctest: +NORMALIZE_WHITESPACE
+   >>> record                          #doctest: +NORMALIZE_WHITESPACE
    {'klass': 'baz', 
     'results': {'a': [], 'b': {'c': 'd'}}, 
     'token': None, 
@@ -229,7 +229,7 @@ can be a c-string, a list or a tuple, ending the list with a newline.
    >>> record = r.as_native()
    >>> record.klass, record.type, record.results
    ('bar', 'Sync', {'a': 'b'})
-   >>> print record
+   >>> record
    {'klass': 'bar', 'results': {'a': 'b'}, 'token': None, 'type': 'Sync'}
 
 The other top level construction are the Stream. These are unstructured c-strings.
@@ -242,7 +242,7 @@ The other top level construction are the Stream. These are unstructured c-string
    >>> stream = s.as_native()
    >>> stream.type, stream.stream
    ('Console', 'foo')
-   >>> print stream
+   >>> stream
    {'stream': 'foo', 'type': 'Console'}
 
    >>> s.parse('@"bar"\n', 0)
@@ -250,7 +250,7 @@ The other top level construction are the Stream. These are unstructured c-string
    >>> stream = s.as_native()
    >>> stream.type, stream.stream
    ('Target', 'bar')
-   >>> print stream
+   >>> stream
    {'stream': 'bar', 'type': 'Target'}
 
    >>> s.parse('&"baz"\n', 0)
@@ -258,7 +258,7 @@ The other top level construction are the Stream. These are unstructured c-string
    >>> stream = s.as_native()
    >>> stream.type, stream.stream
    ('Log', 'baz')
-   >>> print stream
+   >>> stream
    {'stream': 'baz', 'type': 'Log'}
 
 Finally, the messages returned by GDB are a sequence (may be empty) of asynchronous 
@@ -280,7 +280,7 @@ each asynchronous message / stream / result separately.
    >>> stream = o.parse_line(text)
    >>> stream.type, stream.stream
    ('Console', 'foo')
-   >>> print stream
+   >>> stream
    {'stream': 'foo', 'type': 'Console'}
 
 
@@ -296,9 +296,19 @@ For example, this is the message after setting a breakpoint
    ('done', 'Sync')
    >>> len(record.results)
    1
-   >>> sorted(record.results['bkpt'].iteritems())
-   [('addr', '0x08048564'), ('disp', 'keep'), ('enabled', 'y'), ('file', 'myprog.c'), ('fullname', '/home/nickrob/myprog.c'), ('func', 'main'), ('line', '68'), ('number', '1'), ('thread-groups', ['i1']), ('times', '0'), ('type', 'breakpoint')]
-   >>> print record                       #doctest: +NORMALIZE_WHITESPACE
+   >>> record.results['bkpt']             #doctest: +NORMALIZE_WHITESPACE
+   {'addr': '0x08048564',
+   'disp': 'keep',
+   'enabled': 'y',
+   'file': 'myprog.c',
+   'fullname': '/home/nickrob/myprog.c',
+   'func': 'main',
+   'line': '68',
+   'number': '1',
+   'thread-groups': ['i1'],
+   'times': '0',
+   'type': 'breakpoint'}
+   >>> record                          #doctest: +NORMALIZE_WHITESPACE
    {'klass': 'done',
     'results': {'bkpt': {'addr': '0x08048564',
                          'disp': 'keep',
@@ -329,7 +339,7 @@ Or, when a execution is stopped
    5
    >>> record.results['reason'], record.results['disp'], record.results['bkptno'], record.results['thread-id']
    ('breakpoint-hit', 'keep', '1', '0')
-   >>> print record                       #doctest: +NORMALIZE_WHITESPACE
+   >>> record                         #doctest: +NORMALIZE_WHITESPACE
    {'klass': 'stopped',
    'results': {'bkptno': '1',
                'disp': 'keep',
