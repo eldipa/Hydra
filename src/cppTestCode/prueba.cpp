@@ -19,7 +19,7 @@ int main(int argc, char* argv[]) {
 	iSecret = rand() % 100;
 	cout << "El numero aleatorio es: " << iSecret << endl;
 
-	char* a = "HOLA";
+	char a[] = "HOLA";
 
 	for (int i = 0; i < 15; ++i) {
 		int pid = fork();

@@ -53,9 +53,7 @@ evento "debugger.load" con data la ruta del exe, esto generara un
 "debugger.new-session" con data pid de gdb cuando gdb inicie, y un "pid.1234"
 (1234 el pid de gdb) con data la salida de gdb con cada linea de gdb. Cuando
 gdb se una al proceso target (ya sea creado por gdb o atachado de manera
-externa) lanzara un evento "debugger.new-target". Cuando el proceso target se
-detenga se obtendra un evento "pid.1234.stopped" (1234 el pid de gdb) con
-data={reason,gdbOutput} (es un dict).
+externa) lanzara un evento "debugger.new-target".
 
 :: 
    >>> import threading, time
@@ -78,14 +76,6 @@ data={reason,gdbOutput} (es un dict).
    ...
    ...   shared_lock.acquire()
    ...   shared_dict["new_target"] = data
-   ...   shared_lock.release()
-   
-   >>> def stopped(data):
-   ...   global shared_lock
-   ...   global shared_dict
-   ...
-   ...   shared_lock.acquire()
-   ...   shared_dict["stopped"] = data
    ...   shared_lock.release()
    
    >>> eventHandler.subscribe("debugger.new-session", new_session)
@@ -139,15 +129,8 @@ Ejemplo de uso:
    >>> "new_target" in shared_dict
    True
    
-   >>> targetPid = shared_dict["new_target"]
-   >>> eventHandler.subscribe("pid." + str(gdbPid) + ".stopped", stopped)
-   >>> time.sleep(2)
-   
    >>> eventHandler.publish(str(gdbPid) + ".step-into", "")
    >>> time.sleep(2)
-
-   >>> "stopped" in shared_dict
-   True
    
 ::
    >>> spawmer.exit("all")
