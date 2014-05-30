@@ -31,11 +31,7 @@ class OutputReader(threading.Thread):
                 if (record.klass == "thread-group-started"):
                     self.pid = record.results["pid"]
                     self.eventHandler.publish("debugger.new-target" , {'gdbPid': self.gdbPid, 'targetPid': self.pid})
-                    
-                elif (record.klass == "stopped"):
-                    if ('reason' in record.results):
-                        self.eventHandler.publish("pid."+ str(self.gdbPid)+".stopped", {'reason':  record.results["reason"], 'output': vars(record)})
-            
+
             if record != "(gdb)":
                 self.eventHandler.publish("pid." + str(self.gdbPid), vars(record))
         
