@@ -29,11 +29,12 @@ class Gdb:
         return self.targetPid
         
     def subscribe(self):
-        self.eventHandler.subscribe(str(self.gdb.pid) + ".run",self.run)
-        self.eventHandler.subscribe(str(self.gdb.pid) + ".continue",self.continueExec)
-        self.eventHandler.subscribe(str(self.gdb.pid) + ".step-into",self.stepInto)
-        self.eventHandler.subscribe(str(self.gdb.pid) + ".exit",self.exit)
-        self.eventHandler.subscribe(str(self.gdb.pid) + ".break-funcion",self.setBreakPoint)
+        self.eventHandler.subscribe(str(self.gdb.pid) + ".run", self.run)
+        self.eventHandler.subscribe(str(self.gdb.pid) + ".continue", self.continueExec)
+        self.eventHandler.subscribe(str(self.gdb.pid) + ".step-into", self.stepInto)
+        self.eventHandler.subscribe(str(self.gdb.pid) + ".exit", self.exit)
+        self.eventHandler.subscribe(str(self.gdb.pid) + ".break-funcion", self.setBreakPoint)
+        self.eventHandler.subscribe(str(self.gdb.pid) + ".direct-command", self.directCommand)
 
     
     # -Gdb realiza un attach al proceso especificado
@@ -53,29 +54,32 @@ class Gdb:
 
     
     # Ejecuta al target desde el comienzo
-    def run(self, data = ""):
-        self.gdbInput.write("run > Salida.txt" + '\n') ########## redirigir bien la stdout
+    def run(self, data=""):
+        self.gdbInput.write("run > Salida.txt" + '\n')  ########## redirigir bien la stdout
        
     
     # Ejecuta al target desde el punto donde se encontraba
-    def continueExec(self, data = ""):
+    def continueExec(self, data=""):
         self.gdbInput.write("-exec-continue" + '\n')
     
     # Ejecuta una sola intruccion del target
-    def stepInto(self, data = ""):
+    def stepInto(self, data=""):
         self.gdbInput.write("-exec-step" + '\n')
     
     
     # Finaliza el proceso gdb, junto con su target si este no hubiera finalizado
-    def exit(self, data = ""):
-        #self.gdbInput.write("kill" + '\n')
+    def exit(self, data=""):
+        # self.gdbInput.write("kill" + '\n')
         self.gdbInput.write("-gdb-exit" + '\n')
         self.reader.join()
     
     # Establece un nuevo breakpoint al comienzo de la funcion dada
     def setBreakPoint(self, funcion):
         self.gdbInput.write("-break-insert " + funcion + '\n')
-    
+
+    # Ejectua un comando arbitrario pasado como argumento
+    def directCommand(self, command):
+        self.gdbInput.write(command + '\n')
     
     
     

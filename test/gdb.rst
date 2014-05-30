@@ -872,6 +872,32 @@ Para realizar un continue:
     u'type': u'Exec'}
   
    >>> shared_list = []
+   
+Para realizar un comando arbitrario:
+
+
+::
+
+   >>> eventHandler.publish(str(gdbId) + ".direct-command", "-break-insert usleep") 
+   >>> time.sleep(5) 
+   
+   >>> shared_list[0] #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
+   {u'klass': u'done',
+    u'results': {u'bkpt': {u'addr': u'...',
+                           u'disp': u'keep',
+                           u'enabled': u'y',
+                           u'file': u'.../usleep.c',
+                           u'func': u'usleep',
+                           u'line': u'...',
+                           u'number': u'...',
+                           u'original-location': u'usleep',
+                           u'times': u'...',
+                           u'type': u'breakpoint'}},
+    u'token': None,
+    u'type': u'Sync'}
+    
+    >>> shared_list = []
+
  
    
 Para realizar un exit:
