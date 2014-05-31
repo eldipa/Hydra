@@ -2,6 +2,7 @@
 #include <string>
 #include <stdlib.h>     /* srand, rand */
 #include <time.h>       /* time */
+#include <unistd.h>
 
 using namespace std;
 
