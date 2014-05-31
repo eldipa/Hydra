@@ -421,27 +421,6 @@ Para realizar un run:
     u'type': u'Console'}
    
    >>> shared_list[24] #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
-   {u'output': {u'klass': u'stopped',
-                u'results': {u'bkptno': u'1',
-                             u'core': u'...',
-                             u'disp': u'keep',
-                             u'frame': {u'addr': u'...',
-                                        u'args': [{u'name': u'argc',
-                                                   u'value': u'1'},
-                                                  {u'name': u'argv',
-                                                   u'value': u'...'}],
-                                        u'file': u'testExe.cpp',
-                                        u'fullname': u'.../src/cppTestCode/testExe.cpp',
-                                        u'func': u'main',
-                                        u'line': u'10'},
-                             u'reason': u'breakpoint-hit',
-                             u'stopped-threads': u'all',
-                             u'thread-id': u'1'},
-                u'token': None,
-                u'type': u'Exec'},
-    u'reason': u'breakpoint-hit'}
-   
-   >>> shared_list[25] #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
    {u'klass': u'stopped',
     u'results': {u'bkptno': u'1',
                  u'core': u'...',
@@ -461,7 +440,7 @@ Para realizar un run:
     u'token': None,
     u'type': u'Exec'}
 
-   >>> shared_list[26] #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
+   >>> shared_list[25] #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
    {u'klass': u'thread-selected',
     u'results': {u'id': u'...'},
     u'token': None,
@@ -489,22 +468,6 @@ Para realizar un step-into:
     u'type': u'Exec'}
    
    >>> shared_list[2] #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
-   {u'output': {u'klass': u'stopped',
-                u'results': {u'core': u'...',
-                             u'frame': {u'addr': u'...',
-                                        u'args': [{u'name': u'useconds',
-                                                   u'value': u'5000000'}],
-                                        u'file': u'.../usleep.c',
-                                        u'func': u'usleep',
-                                        u'line': u'...'},
-                             u'reason': u'end-stepping-range',
-                             u'stopped-threads': u'all',
-                             u'thread-id': u'...'},
-                u'token': None,
-                u'type': u'Exec'},
-    u'reason': u'end-stepping-range'}
-   
-   >>> shared_list[3] #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
    {u'klass': u'stopped',
     u'results': {u'core': u'...',
                  u'frame': {u'addr': u'...',
@@ -553,15 +516,8 @@ Para realizar un continue:
                  u'id': u'...'},
     u'token': None,
     u'type': u'Notify'}
-   
-   >>> shared_list[4] #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
-   {u'output': {u'klass': u'stopped',
-                u'results': {u'reason': u'exited-normally'},
-                u'token': None,
-                u'type': u'Exec'},
-    u'reason': u'exited-normally'}
      
-   >>> shared_list[5] #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
+   >>> shared_list[4] #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
    {u'klass': u'stopped',
     u'results': {u'reason': u'exited-normally'},
     u'token': None,
@@ -734,27 +690,6 @@ Para realizar un run:
     u'type': u'Console'}
    
    >>> shared_list[15] #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
-   {u'output': {u'klass': u'stopped',
-                u'results': {u'bkptno': u'1',
-                             u'core': u'...',
-                             u'disp': u'keep',
-                             u'frame': {u'addr': u'...',
-                                        u'args': [{u'name': u'argc',
-                                                   u'value': u'1'},
-                                                  {u'name': u'argv',
-                                                   u'value': u'...'}],
-                                        u'file': u'testExe.cpp',
-                                        u'fullname': u'.../src/cppTestCode/testExe.cpp',
-                                        u'func': u'main',
-                                        u'line': u'10'},
-                             u'reason': u'breakpoint-hit',
-                             u'stopped-threads': u'all',
-                             u'thread-id': u'...'},
-                u'token': None,
-                u'type': u'Exec'},
-    u'reason': u'breakpoint-hit'}
-   
-   >>> shared_list[16] #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
    {u'klass': u'stopped',
     u'results': {u'bkptno': u'1',
                  u'core': u'...',
@@ -794,24 +729,8 @@ Para realizar un step-into:
     u'results': {u'thread-id': u'...'},
     u'token': None,
     u'type': u'Exec'}
-   
-   >>> shared_list[2] #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
-   {u'output': {u'klass': u'stopped',
-                u'results': {u'core': u'...',
-                             u'frame': {u'addr': u'...',
-                                        u'args': [{u'name': u'useconds',
-                                                   u'value': u'5000000'}],
-                                        u'file': u'.../usleep.c',
-                                        u'func': u'usleep',
-                                        u'line': u'...'},
-                             u'reason': u'end-stepping-range',
-                             u'stopped-threads': u'all',
-                             u'thread-id': u'...'},
-                u'token': None,
-                u'type': u'Exec'},
-    u'reason': u'end-stepping-range'}
     
-   >>> shared_list[3] #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
+   >>> shared_list[2] #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
    {u'klass': u'stopped',
     u'results': {u'core': u'...',
                  u'frame': {u'addr': u'...',
@@ -857,15 +776,8 @@ Para realizar un continue:
     u'results': {u'exit-code': u'0', u'id': u'...'},
     u'token': None,
     u'type': u'Notify'}
-   
-   >>> shared_list[4] #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
-   {u'output': {u'klass': u'stopped',
-                u'results': {u'reason': u'exited-normally'},
-                u'token': None,
-                u'type': u'Exec'},
-    u'reason': u'exited-normally'}
 
-   >>> shared_list[5] #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
+   >>> shared_list[4] #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
    {u'klass': u'stopped',
     u'results': {u'reason': u'exited-normally'},
     u'token': None,
