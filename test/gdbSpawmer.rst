@@ -78,14 +78,24 @@ externa) lanzara un evento "debugger.new-target".
    ...   shared_dict["new_target"] = data
    ...   shared_lock.release()
    
+   >>> def attached(data):
+   ...   global shared_lock
+   ...   global shared_dict
+   ...
+   ...   shared_lock.acquire()
+   ...   shared_dict["attached"] = data
+   ...   shared_lock.release()
+   
    >>> eventHandler.subscribe("debugger.new-session", new_session)
    >>> eventHandler.subscribe("debugger.new-target", new_target)
+   >>> eventHandler.subscribe("debugger.attached", attached)
    >>> time.sleep(2)
     
    >>> eventHandler.publish("debugger.load", "../cppTestCode/testExe")
 
    >>> time.sleep(5)
-   >>> "new_session" in shared_dict
+   >>> pidGdb = shared_dict["new_session"]
+   >>> pidGdb > 0
    True
    
 Para realizar un attach:
@@ -99,9 +109,19 @@ Para realizar un attach:
    True
    >>> eventHandler.publish("debugger.attach", p.pid)
    >>> time.sleep(5)
-   >>> "new_session" in shared_dict
+   
+   >>> pidGdb = shared_dict["new_session"]
+   >>> pidGdb > 0
    True
-   >>> "new_target" in shared_dict
+   
+   >>> parGdbTarget = shared_dict["new_target"] #devuelve un dict
+   >>> parGdbTarget['gdbPid'] == pidGdb
+   True
+   >>> parGdbTarget['targetPid'] == str(p.pid)
+   True
+   
+   >>> pidTarget = shared_dict["attached"]
+   >>> pidTarget == p.pid
    True
    
 Para finalizar a un gdb (data = "all" para todos):
