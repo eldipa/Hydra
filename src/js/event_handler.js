@@ -7,6 +7,9 @@ define(function () {
       this.callbacks_by_topic = {};
       this.max_buf_length = 1024 * 1024;
       this.log_to_console = true;
+
+      this.subscriptions_by_id = {};
+      this.next_valid_subscription_id = 0;
    }
    
    EventHandler.prototype.init = function () {
@@ -75,7 +78,47 @@ define(function () {
       else {
          this.callbacks_by_topic[topic].push(callback);
       }
+
+      this.subscriptions_by_id[this.next_valid_subscription_id] = {callback: callback, topic: topic};
+      this.next_valid_subscription_id++;
+
+      return this.next_valid_subscription_id-1;
    };
+
+   EventHandler.prototype.unsubscribe = function (subscription_id) {
+      var subscription = this.subscriptions_by_id[subscription_id];
+
+      if (subscription === undefined) {
+         throw new Error("The subscription id '" + subscription_id + "' hasn't any callback registered to it.");
+      }
+
+      var callbackTarget = subscription.callback;
+      var topic = subscription.topic;
+
+      var callbacks = this.callbacks_by_topic[topic];
+
+      // delete the 'callback' unsubscribed
+      callbacks.forEach(function (callback, index) {
+         if(callback === callbackTarget) {
+            callbacks[index] = null;
+         }
+      });
+
+      // filter the deleted
+      this.callbacks_by_topic[topic] = callbacks.filter(function (callback) {
+         return !(callback === null || callback === undefined);
+      });
+
+      // remove the topic if there isn't any callback
+      if (this.callbacks_by_topic[topic].length === 0) {
+         delete this.callbacks_by_topic[topic];
+         // TODO: send a message to the notifier server.
+      }
+
+      // remove the subscription
+      delete this.subscriptions_by_id[subscription_id];
+   };
+
 
    EventHandler.prototype.init_dispacher = function () {
       var buf = '';
