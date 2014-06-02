@@ -6,7 +6,7 @@ define(function () {
    function EventHandler() {
       this.callbacks_by_topic = {};
       this.max_buf_length = 1024 * 1024;
-      this.log_to_console = true;
+      this.log_to_console = false;
 
       this.subscriptions_by_id = {};
       this.next_valid_subscription_id = 0;
@@ -210,6 +210,7 @@ define(function () {
             }
             catch (e) {
                // TODO
+               console.log("Error in callback (topic: "+topic+"): " + e);
             }
          }
       }
