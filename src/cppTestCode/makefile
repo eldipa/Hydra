@@ -1,4 +1,4 @@
-all: Prueba testExe
+all: Prueba testExe testVariables
 
 defines= -D espera
 
@@ -8,5 +8,8 @@ Prueba: prueba.cpp
 testExe: testExe.cpp
 	g++ -g -o testExe testExe.cpp
 	
+testVariables: testVariables.cpp
+	g++ -g -o testVariables testVariables.cpp 
+	
 clean:
-	rm Prueba testExe
+	rm Prueba testExe testVariables

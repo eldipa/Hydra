@@ -35,6 +35,7 @@ class Gdb:
         self.eventHandler.subscribe(str(self.gdb.pid) + ".exit", self.exit)
         self.eventHandler.subscribe(str(self.gdb.pid) + ".break-funcion", self.setBreakPoint)
         self.eventHandler.subscribe(str(self.gdb.pid) + ".direct-command", self.directCommand)
+        self.eventHandler.subscribe(str(self.gdb.pid) + ".get-variables", self.getVariables)
         
         self.eventHandler.publish("debugger.new-session", self.gdb.pid)
 
@@ -76,12 +77,21 @@ class Gdb:
         self.reader.join()
     
     # Establece un nuevo breakpoint al comienzo de la funcion dada
-    def setBreakPoint(self, funcion):
-        self.gdbInput.write("-break-insert " + funcion + '\n')
+    # donde puede ser:
+    # function
+    # filename:linenum
+    # filename:function
+    # *address 
+    def setBreakPoint(self, donde):
+        self.gdbInput.write("-break-insert " + donde + '\n')
 
     # Ejectua un comando arbitrario pasado como argumento
     def directCommand(self, command):
         self.gdbInput.write(command + '\n')
+        
+    # Pide todas las variables y sus tipos 
+    def getVariables(self, data =""):
+        self.gdbInput.write('-stack-list-variables --all-values' + '\n')
     
     
     
