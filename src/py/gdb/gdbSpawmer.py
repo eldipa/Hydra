@@ -33,7 +33,6 @@ class GdbSpawmer:
     @Locker
     def attachAGdb(self, pid):
         gdb = Gdb()
-        self.eventHandler.publish("debugger.new-session", gdb.getSessionId())
         gdb.attach(pid)
         self.listaGdb[gdb.getSessionId()] = gdb
         self.eventHandler.publish("debugger.attached", pid)
@@ -43,7 +42,6 @@ class GdbSpawmer:
     @Locker
     def startNewProcessWithGdb(self, path):
         gdb = Gdb()
-        self.eventHandler.publish("debugger.new-session", gdb.getSessionId())
         gdb.file(path)
         self.listaGdb[gdb.getSessionId()] = gdb
         return gdb.getSessionId()

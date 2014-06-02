@@ -35,6 +35,8 @@ class Gdb:
         self.eventHandler.subscribe(str(self.gdb.pid) + ".exit", self.exit)
         self.eventHandler.subscribe(str(self.gdb.pid) + ".break-funcion", self.setBreakPoint)
         self.eventHandler.subscribe(str(self.gdb.pid) + ".direct-command", self.directCommand)
+        
+        self.eventHandler.publish("debugger.new-session", self.gdb.pid)
 
     
     # -Gdb realiza un attach al proceso especificado
