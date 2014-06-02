@@ -171,10 +171,10 @@ class Notifier(daemon.Daemon):
       
       self.endpoint_subscription_lock.acquire() # with this we guarrante that all the events are delivered in the correct order
       try:
-         syslog.syslog(syslog.LOG_DEBUG, "Distributing event over the topic chain '%s': %s." % (", ".join(topic_chain), json.dumps(event)))
+         syslog.syslog(syslog.LOG_NOTICE, "Distributing event over the topic chain '%s': %s." % (", ".join(topic_chain), json.dumps(event)))
          all_interested_endpoints = sum(map(self.get_and_update_endpoints_by_topic, topic_chain), [])
          endpoints = set(all_interested_endpoints)
-         syslog.syslog(syslog.LOG_DEBUG, "There are %i subscribed in total." % (len(endpoints)))
+         syslog.syslog(syslog.LOG_NOTICE, "There are %i subscribed in total." % (len(endpoints)))
          
          for endpoint in endpoints:
             endpoint.send_event(event)
