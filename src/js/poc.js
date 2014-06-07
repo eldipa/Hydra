@@ -16,6 +16,7 @@ define(['w2ui', 'code_view', 'event_handler', 'jquery'], function (w2ui, code_vi
          { type: 'main', style: pstyle, content: "main",
             toolbar: {
                items: [
+                     { type: 'button',  id: 'run',  caption: 'run', img: 'icon-save'},
                      { type: 'button',  id: 'continue',  caption: 'continue', img: 'icon-save'},
                      { type: 'button',  id: 'next',  caption: 'next', img: 'icon-save'},
                      { type: 'button',  id: 'step',  caption: 'step', img: 'icon-save', disabled: true},
@@ -25,6 +26,10 @@ define(['w2ui', 'code_view', 'event_handler', 'jquery'], function (w2ui, code_vi
                onClick: function (event) {
                   try {
                      switch(event.target) {
+                        case "run":
+                           event_handler.publish(session_id + ".run", "");
+                           break;
+
                         case "continue":
                            //TODO importante, "-exec-continue" NO es equivalente a "c" (continue)
                            //esto quiere decir que no existe una equivalencia 1 a 1.
@@ -96,14 +101,6 @@ define(['w2ui', 'code_view', 'event_handler', 'jquery'], function (w2ui, code_vi
       var last_line = null;
       event_handler.subscribe("pid."+session_id, function (data) {
          if (data.klass === "stopped" && data.type === "Exec") {
-            if (data.results && data.results.reason === "exited-normally") {
-               // TODO end
-               if (last_line) {
-                  view.removeHightlight(last_line.line_highlighted_id);
-                  last_line.line_highlighted_id = last_line.line = null;
-               }
-            }
-
             if (data.results && data.results.frame && data.results.frame.line && data.results.frame.fullname) {
                // load file
                view.load_code_from_file(data.results.frame.fullname);
@@ -119,6 +116,16 @@ define(['w2ui', 'code_view', 'event_handler', 'jquery'], function (w2ui, code_vi
                   last_line.line_highlighted_id = view.highlightLine(line, 'info');
                }
                view.gotoLine(line);
+            }
+         }
+      });
+
+      event_handler.subscribe("pid."+session_id, function (data) {
+         if (data.klass === "thread-group-exited" && data.type === "Notify") {
+            // TODO end
+            if (last_line) {
+               view.removeHightlight(last_line.line_highlighted_id);
+               last_line.line_highlighted_id = last_line.line = null;
             }
          }
       });
@@ -175,9 +182,6 @@ define(['w2ui', 'code_view', 'event_handler', 'jquery'], function (w2ui, code_vi
       event_handler.publish(session_id + ".direct-command", TOKEN+"-file-list-exec-source-file");
 
       event_handler.publish(session_id + ".direct-command", "b main");
-      setTimeout(function () {
-         event_handler.publish(session_id + ".run", "");
-      }, 10000);
    });
 
    event_handler.publish("debugger.load", "cppTestCode/testExe");
