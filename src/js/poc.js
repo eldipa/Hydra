@@ -26,7 +26,13 @@ define(['w2ui', 'code_view', 'event_handler', 'jquery'], function (w2ui, code_vi
                   try {
                      switch(event.target) {
                         case "continue":
-                           event_handler.publish(session_id + ".direct-command", "c");
+                           //TODO importante, "-exec-continue" NO es equivalente a "c" (continue)
+                           //esto quiere decir que no existe una equivalencia 1 a 1.
+                           //Por ejemplo, "c" hara que ciertos logs (Console) se emitan pero
+                           //el evento de stopped tenga un "reason" vacio.
+                           //En cambio, "-exec-continue" hara que no haya logs
+                           //y que el stopped tenga un reason parecido a uno de los logs.
+                           event_handler.publish(session_id + ".direct-command", "-exec-continue");
                            break;
 
                         case "next":
@@ -87,16 +93,32 @@ define(['w2ui', 'code_view', 'event_handler', 'jquery'], function (w2ui, code_vi
       //TODO tambien, ademas de pid.GDBID, habria que hacer una separacion mas 
       //profunda como "pid.GDBID.type" o incluso "pid.GDBID.type.klass."
       //Esto es para evitar una explosion de IFs
+      var last_line = null;
       event_handler.subscribe("pid."+session_id, function (data) {
          if (data.klass === "stopped" && data.type === "Exec") {
             if (data.results && data.results.reason === "exited-normally") {
                // TODO end
+               if (last_line) {
+                  view.removeHightlight(last_line.line_highlighted_id);
+                  last_line.line_highlighted_id = last_line.line = null;
+               }
             }
 
             if (data.results && data.results.frame && data.results.frame.line && data.results.frame.fullname) {
-               // load file and line
+               // load file
                view.load_code_from_file(data.results.frame.fullname);
-               view.gotoLine(data.results.frame.line - 0);
+
+               // and line
+               var line = data.results.frame.line - 0;
+               if (!last_line) {
+                  last_line = {line: line, line_highlighted_id: null};
+                  last_line.line_highlighted_id = view.highlightLine(line, 'info');
+               }
+               else {
+                  view.removeHightlight(last_line.line_highlighted_id);
+                  last_line.line_highlighted_id = view.highlightLine(line, 'info');
+               }
+               view.gotoLine(line);
             }
          }
       });
