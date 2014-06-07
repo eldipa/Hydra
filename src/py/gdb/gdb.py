@@ -75,6 +75,7 @@ class Gdb:
         # self.gdbInput.write("kill" + '\n')
         self.gdbInput.write("-gdb-exit" + '\n')
         self.reader.join()
+        self.gdb.wait()
     
     # Establece un nuevo breakpoint al comienzo de la funcion dada
     # donde puede ser:

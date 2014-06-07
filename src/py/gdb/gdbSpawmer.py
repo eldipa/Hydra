@@ -63,7 +63,7 @@ class GdbSpawmer:
         else:
             for gdb in self.listaGdb:
                 self.listaGdb[gdb].exit() 
-            self.listaGdb = []
+            self.listaGdb = {}
                 
     def eliminarCola(self):
         self.forkDetector.salir()
