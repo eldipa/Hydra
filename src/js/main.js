@@ -9,7 +9,8 @@ requirejs.config({
       ace_internals: 'external/ace/ace',
       ace: 'external/ace',
       w2ui_internals: 'external/w2ui-1.3.2',
-      w2ui: 'external/w2ui'
+      w2ui: 'external/w2ui',
+      ctxmenu: 'external/ctxmenu'
    },
 
    shim: {

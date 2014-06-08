@@ -1,4 +1,4 @@
-define(['w2ui', 'code_view', 'event_handler', 'jquery'], function (w2ui, code_view, event_handler, $) {
+define(['w2ui', 'code_view', 'event_handler', 'ctxmenu', 'jquery'], function (w2ui, code_view, event_handler, ctxmenu, $) {
    // init the event handler system, connecting this with the notifier.
    // now, we can send and receive events.
    var event_handler = new event_handler.EventHandler();
@@ -145,6 +145,7 @@ define(['w2ui', 'code_view', 'event_handler', 'jquery'], function (w2ui, code_vi
       // por linea. De igual manera hay que mantener un registro.
       event_handler.subscribe("pid."+session_id, function (data) {
          if (data.type === "Notify" && data.klass === "breakpoint-created") {
+            //TODO ver los breakpoints de "ace"
             var bkpt = data.results.bkpt;
             view.highlightLine(bkpt.line-0, 'danger');
          }
@@ -181,7 +182,32 @@ define(['w2ui', 'code_view', 'event_handler', 'jquery'], function (w2ui, code_vi
       });
       event_handler.publish(session_id + ".direct-command", TOKEN+"-file-list-exec-source-file");
 
-      event_handler.publish(session_id + ".direct-command", "b main");
+      // inicializamos el modulo para crear menus contextuales
+      // TODO esto solo hay que hacerlo una vez
+      ctxmenu.init({
+             fadeSpeed: 100,
+             filter: function ($obj){},
+             above: 'auto',
+             preventDoubleContext: true,
+             compress: false
+      });
+
+      // creamos el menu para los breakpoints
+      // TODO por alguna razon, el menu se lanza cuando se hace click en cualquier lugar.
+      ctxmenu.attach(view.view_dom, [
+            {
+               header: 'Menu'
+            },
+            {
+               text: 'breakpoint',
+               action: function (e) {
+                  e.preventDefault();
+                  var line = view.viewer.getCursorPosition().row + 1;
+                  event_handler.publish(session_id + ".direct-command", "b " + line);
+               }
+            }
+            ]);
+
    });
 
    event_handler.publish("debugger.load", "cppTestCode/testExe");
