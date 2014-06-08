@@ -36,6 +36,7 @@ class Gdb:
         self.eventHandler.subscribe(str(self.gdb.pid) + ".break-funcion", self.setBreakPoint)
         self.eventHandler.subscribe(str(self.gdb.pid) + ".direct-command", self.directCommand)
         self.eventHandler.subscribe(str(self.gdb.pid) + ".get-variables", self.getVariables)
+        self.eventHandler.subscribe(str(self.gdb.pid) + ".evaluate-expression", self.evaluarExpresion)
         
         self.eventHandler.publish("debugger.new-session", self.gdb.pid)
 
@@ -93,6 +94,9 @@ class Gdb:
     # Pide todas las variables y sus tipos 
     def getVariables(self, data =""):
         self.gdbInput.write('-stack-list-variables --all-values' + '\n')
+        
+    def evaluarExpresion(self, data =""):
+        self.gdbInput.write('-data-evaluate-expression ' + data + '\n')
     
     
     

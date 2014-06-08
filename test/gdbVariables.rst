@@ -94,6 +94,20 @@ Pedimos las variables:
                                 u'value': u'0x...'}]},
    u'token': None,
    u'type': u'Sync'}
+   >>> shared_list = [] 
+   
+Para imprimir el valor de una expresion, en particular, de un puntero:
+
+::
+   >>> eventHandler.publish(str(gdbPid) + ".evaluate-expression", "*punteroEntero")
+   >>> time.sleep(2)
+   
+   >>> shared_list[0] #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
+   {u'klass': u'done',
+    u'results': {u'value': u'0'},
+    u'token': None,
+    u'type': u'Sync'}
+   
    
 Limpieza:
 
