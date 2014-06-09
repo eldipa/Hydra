@@ -1,4 +1,4 @@
-all: Prueba testExe testVariables
+all: Prueba testExe testVariables write_one_char_at_time
 
 defines= -D espera
 
