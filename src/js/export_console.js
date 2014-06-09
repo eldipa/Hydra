@@ -1,4 +1,4 @@
-define(['screenshot', 'event_handler'], function (screenshot, event_handler) {
+define(['event_handler'], function (event_handler) {
    'use strict';
 
    var repl = require("repl");
@@ -27,7 +27,6 @@ define(['screenshot', 'event_handler'], function (screenshot, event_handler) {
 
           // add variables to the context (export variables)
           // repl_object.context.foo = local_foo;
-          repl_object.context.take_screenshot = screenshot.take_screenshot;
           repl_object.context.event_handler = event_handler;
          
       });
