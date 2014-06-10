@@ -9,7 +9,7 @@ define(['ace', 'jquery'], function (ace, $) {
       this.viewer.setReadOnly(true);
       
       this.viewer.getSession().setUseWrapMode(true);
-      this.viewer.setHighlightActiveLine(true);
+      this.viewer.setHighlightActiveLine(false);
    }
 
    CodeView.prototype.load_code_from_file = function (filename, encoding) {
@@ -45,13 +45,17 @@ define(['ace', 'jquery'], function (ace, $) {
     * */
    CodeView.prototype.highlightLines = function (start_line, end_line, mark) {
       var cls = "alert-" + mark + " fixed-position";
-      this.viewer.getSession().highlightLines(start_line - 1, end_line - 1, cls);
-   }
+      return this.viewer.getSession().highlightLines(start_line - 1, end_line - 1, cls).id;
+   };
 
    CodeView.prototype.highlightLine = function (line_num, mark) {
       var cls = "alert-" + mark + " fixed-position";
-      this.viewer.getSession().highlightLines(line_num - 1, cls);
-   }
+      return this.viewer.getSession().highlightLines(line_num - 1, cls).id;
+   };
+
+   CodeView.prototype.removeHightlight = function (highlight_id) {
+      this.viewer.getSession().removeMarker(highlight_id);
+   };
 
    return {CodeView: CodeView};
 });

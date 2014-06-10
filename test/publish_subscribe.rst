@@ -384,12 +384,15 @@ Then we can subscribe to any event
    js> pubsub.subscribe('baz', function (data) {
    ...   result.baz_data = data;
    ... });
+   0
    js> pubsub.subscribe('baz.dac', function (data) {
    ...   result.dac_data = data;
    ... });
+   1
    js> pubsub.subscribe('', function (data) {
    ...   result.any_data = data;
    ... });
+   2
 
 And, of course, we can receive and/or send events
 
@@ -416,6 +419,33 @@ And, of course, we can receive and/or send events
    true
    js> result.any_data === result.dac_data; // 'any' callback was called too
    true
+
+The API support unsubscribe callbacks, first subscribe the callback as usual *but* save
+the subscription id returned.
+
+::
+   
+   js> var subscription = pubsub.subscribe('temporal', function (data) {
+   ...   result.tmp_data = data;
+   ... });
+
+To unsubscribe:
+
+::
+
+   js> pubsub.unsubscribe(subscription);
+
+To prove this, we send a 'temporal' event and it should not be received
+
+::
+
+   js> result.tmp_data = "no data for now";
+   'no data for now'
+
+   js> pubsub.publish('temporal', 'this should not be received');
+   js> while ( !result.tmp_data && count < 10000 ) { count += 1; } ; result.tmp_data;
+   'no data for now'
+
    
 Finally, we close and release any resource
 

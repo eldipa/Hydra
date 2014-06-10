@@ -9,7 +9,8 @@ requirejs.config({
       ace_internals: 'external/ace/ace',
       ace: 'external/ace',
       w2ui_internals: 'external/w2ui-1.3.2',
-      w2ui: 'external/w2ui'
+      w2ui: 'external/w2ui',
+      ctxmenu: 'external/ctxmenu'
    },
 
    shim: {
@@ -21,14 +22,14 @@ requirejs.config({
 
 });
 
-requirejs(['w2ui', 'code_view', 'jquery', 'event_handler', 'export_console'], function (w2ui, code_view, $, event_handler, export_console) {
+requirejs(['w2ui', 'code_view', 'jquery', 'event_handler', 'export_console', 'poc'], function (w2ui, code_view, $, event_handler, export_console, poc) {
    var js_console_server = export_console.init();
    var fs = require('fs');
    /*var event_handler = new event_handler.EventHandler();
    event_handler.init();
    */
 
-   var view = new code_view.CodeView();
+   //var view = new code_view.CodeView();
 
    /*
    event_handler.subscribe('source', function (data) {
