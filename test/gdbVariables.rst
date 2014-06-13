@@ -66,9 +66,7 @@ Pedimos las variables:
    ...   shared_list.append(data) 
    ...   shared_lock.release()
    
-   >>> eventHandler.subscribe("pid." + str(gdbPid), add_sync)
-   >>> time.sleep(2)
-   
+   >>> eventHandler.subscribe("gdb." + str(gdbPid), add_sync)
    >>> eventHandler.publish(str(gdbPid) + ".get-variables", "")
    >>> time.sleep(2)
    
