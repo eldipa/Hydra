@@ -1,5 +1,5 @@
 import threading
-from gdb_mi import Output, Record
+from gdb_mi import Output, Record, Stream
 import publish_subscribe.eventHandler
 
 
@@ -31,7 +31,15 @@ class OutputReader(threading.Thread):
                 if (record.klass == "thread-group-started"):
                     self.pid = record.results["pid"]
                     self.eventHandler.publish("debugger.new-target" , {'gdbPid': self.gdbPid, 'targetPid': self.pid})
-
+                
             if record != "(gdb)":
-                self.eventHandler.publish("pid." + str(self.gdbPid), vars(record))
-        
+                
+                data = vars(record)
+                topic = "gdb." + str(self.gdbPid)
+            
+                if isinstance(record, Record):
+                    topic += (".klass." + record.klass)
+                if isinstance(record, Stream):
+                    topic += (".type." + record.type)
+                   
+                self.eventHandler.publish(topic, data)

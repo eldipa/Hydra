@@ -15,4 +15,4 @@ testVariables: testVariables.cpp
 	g++ -g -o testVariables testVariables.cpp 
 	
 clean:
-	rm Prueba testExe testVariables
+	rm Prueba testExe testVariables write_one_char_at_time
