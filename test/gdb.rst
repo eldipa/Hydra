@@ -535,7 +535,7 @@ Eventos
 A continuacion se detalla el modo de uso de la clase gdb, a traves de eventos.
 La creacion de cada instancia de Gdb no corresponde a la clase Gdb sino a la
 clase GdbSpawmer, probaremos los comandos de un Gdb ya iniciado. Durante toda
-la ejecucion el *outputReader* lanzara eventos bajo el topic "pid.1234" (siendo
+la ejecucion el *outputReader* lanzara eventos bajo el topic "gdb.1234" (siendo
 1234 el pid del proceso gdb).
 
 ::

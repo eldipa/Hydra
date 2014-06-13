@@ -35,11 +35,11 @@ class OutputReader(threading.Thread):
             if record != "(gdb)":
                 
                 data = vars(record)
-                topic = "gdb." + str(self.gdbPid)
+                topic = "gdb." + str(self.gdbPid) + ".type." + record.type
             
                 if isinstance(record, Record):
                     topic += (".klass." + record.klass)
                 if isinstance(record, Stream):
-                    topic += (".type." + record.type)
+                    pass # de momento nada
                    
                 self.eventHandler.publish(topic, data)
