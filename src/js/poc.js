@@ -99,8 +99,7 @@ define(['w2ui', 'code_view', 'event_handler', 'ctxmenu', 'jquery'], function (w2
       //profunda como "pid.GDBID.type" o incluso "pid.GDBID.type.klass."
       //Esto es para evitar una explosion de IFs
       var last_line = null;
-      event_handler.subscribe("pid."+session_id, function (data) {
-         if (data.klass === "stopped" && data.type === "Exec") {
+      event_handler.subscribe("gdb."+session_id+".type.Exec.klass.stopped", function (data) {
             if (data.results && data.results.frame && data.results.frame.line && data.results.frame.fullname) {
                // load file
                view.load_code_from_file(data.results.frame.fullname);
@@ -117,38 +116,31 @@ define(['w2ui', 'code_view', 'event_handler', 'ctxmenu', 'jquery'], function (w2
                }
                view.gotoLine(line);
             }
-         }
       });
 
-      event_handler.subscribe("pid."+session_id, function (data) {
-         if (data.klass === "thread-group-exited" && data.type === "Notify") {
+      event_handler.subscribe("gdb."+session_id+".type.Notify.klass.thread-group-exited", function (data) {
             // TODO end
             if (last_line) {
                view.removeHightlight(last_line.line_highlighted_id);
                last_line.line_highlighted_id = last_line.line = null;
             }
-         }
       });
 
       // Loggeamos lo que pasa en la "consola" del gdb.
-      event_handler.subscribe("pid."+session_id, function (data) {
-         if (data.type === "Console") {
+      event_handler.subscribe("gdb."+session_id+".type.Console", function (data) {
             //TODO, como hacer que siempre se muestre lo ultimo? esto es un tema
             //del scroll. (idealmente deberia ser como el scroll del wireshark.
             var old = w2ui.objects['layout'].content("bottom");
             w2ui.objects['layout'].content("bottom", old + data.stream + "<br />");
-         }
       });
 
       // TODO, poner un breakpoint es relativamente facil, pero eliminarlos no.
       // ya que se hace a traves de un "breakpoint id" o bien, un "clear all breakpoints"
       // por linea. De igual manera hay que mantener un registro.
-      event_handler.subscribe("pid."+session_id, function (data) {
-         if (data.type === "Notify" && data.klass === "breakpoint-created") {
+      event_handler.subscribe("gdb."+session_id+".type.Notify.klass.breakpoint-created", function (data) {
             //TODO ver los breakpoints de "ace"
             var bkpt = data.results.bkpt;
             view.highlightLine(bkpt.line-0, 'danger');
-         }
       });
 
 
@@ -159,8 +151,7 @@ define(['w2ui', 'code_view', 'event_handler', 'ctxmenu', 'jquery'], function (w2
       //
       // Es una especie de "invocacion" pseudo-sincronica.
       var TOKEN = 99;
-      var file_list_source_ID = event_handler.subscribe("pid."+session_id, function (data) {
-         if (data.type === "Sync" && data.klass === "done") {
+      var file_list_source_ID = event_handler.subscribe("gdb."+session_id+".type.Sync.klass.done", function (data) {
             var token = data.token;
             // Sin token, no es para nosotros
             if (token === null || token === undefined) {
@@ -178,7 +169,6 @@ define(['w2ui', 'code_view', 'event_handler', 'ctxmenu', 'jquery'], function (w2
             
             // terminamos y no queremos que nos llamen otra vez.
             event_handler.unsubscribe(file_list_source_ID);
-         }
       });
       event_handler.publish(session_id + ".direct-command", TOKEN+"-file-list-exec-source-file");
 
