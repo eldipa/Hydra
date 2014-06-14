@@ -1,6 +1,6 @@
 import threading
 import sys
-sys.path.append("/home/nicolas/workspace_c++/C-GDB/test_martin/ipc/pyipc")
+sys.path.append("./ipc/pyipc")
 from ipc import MessageQueue  # @UnresolvedImport ignorar!!
 import publish_subscribe.eventHandler
 
