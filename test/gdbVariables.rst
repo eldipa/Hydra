@@ -12,9 +12,9 @@ Iniciamos el publicador
    >>> import time 
    >>> from subprocess import check_output 
    >>> def is_running(): 
-   ...   out = check_output(["python","publish_subscribe/billboard.py", "status"]) 
+   ...   out = check_output(["python","py/publish_subscribe/billboard.py", "status"]) 
    ...   return "running" in out
-   >>> os.system("python publish_subscribe/billboard.py start") 
+   >>> os.system("python py/publish_subscribe/billboard.py start") 
    0
    >>> time.sleep(2) #esperamos que el servidor este andando. 
    >>> is_running() 
@@ -32,7 +32,7 @@ Iniciamos al gdbSpawmer
 Lanzamos un nuevo gdb: 
 
 :: 
-   >>> gdbPid = spawmer.startNewProcessWithGdb("../cppTestCode/testVariables") 
+   >>> gdbPid = spawmer.startNewProcessWithGdb("cppTestCode/testVariables") 
    >>> gdbPid > 0 
    True
    >>> len(spawmer.listaGdb) == 1 
@@ -114,7 +114,7 @@ Limpieza:
    >>> spawmer.exit("all") 
    >>> spawmer.eliminarCola() 
    >>> ##finalizo al server. 
-   >>> os.system("python publish_subscribe/billboard.py stop") 
+   >>> os.system("python py/publish_subscribe/billboard.py stop") 
    0
    >>> is_running() 
    False

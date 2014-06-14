@@ -6,7 +6,7 @@ Iniciamos el server
    >>> import time
    >>> from subprocess import check_output
    
-   >>> os.system("python publish_subscribe/notifier.py start")
+   >>> os.system("python py/publish_subscribe/notifier.py start")
    0
 
 Nos conectamos con el event_handler y lanzamos el gdbSpawner
@@ -45,7 +45,7 @@ Ahora emitimos un load cargar el ejecutable
 
 ::
 
-   >>> eventHandler.publish("debugger.load", "../cppTestCode/testExe")
+   >>> eventHandler.publish("debugger.load", "cppTestCode/testExe")
 
 Y ahora le damos run
 
@@ -69,5 +69,5 @@ Clean up
 
 ::
 
-   >>> os.system("python publish_subscribe/notifier.py stop")
+   >>> os.system("python py/publish_subscribe/notifier.py stop")
    0

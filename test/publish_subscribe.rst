@@ -35,10 +35,10 @@ To run the server,
    >>> # is running
    >>> def is_running():
    ...   time.sleep(0.01)
-   ...   out = check_output(["python", "publish_subscribe/notifier.py", "status"])
+   ...   out = check_output(["python", "py/publish_subscribe/notifier.py", "status"])
    ...   return "running" in out
 
-   >>> os.system("python publish_subscribe/notifier.py start")
+   >>> os.system("python py/publish_subscribe/notifier.py start")
    0
    >>> is_running()
    True
@@ -49,7 +49,7 @@ To shutdown the system (only the server, this doesn't affect the clients),
 
 ::
 
-   >>> os.system("python publish_subscribe/notifier.py stop")
+   >>> os.system("python py/publish_subscribe/notifier.py stop")
    0
    >>> is_running()
    False
@@ -59,7 +59,7 @@ The server should be able to use the same port again.
 
 ::
 
-   >>> os.system("python publish_subscribe/notifier.py start")
+   >>> os.system("python py/publish_subscribe/notifier.py start")
    0
    >>> is_running()
    True
@@ -302,7 +302,7 @@ Don't forget to close the connection and stop the server.
 
    >>> pubsub.close()
    >>>
-   >>> os.system("python publish_subscribe/notifier.py stop")
+   >>> os.system("python py/publish_subscribe/notifier.py stop")
    0
    >>> is_running()
    False
@@ -330,7 +330,7 @@ we don't sent any message, so there is no way to duplicate or drop any message).
 
    >>> is_running()
    False
-   >>> os.system("( sleep 5 && python publish_subscribe/notifier.py start ) &")
+   >>> os.system("( sleep 5 && python py/publish_subscribe/notifier.py start ) &")
    0
    >>> is_running()  # yes, it should not be running right now.
    False
@@ -340,7 +340,7 @@ we don't sent any message, so there is no way to duplicate or drop any message).
    True
    
    >>> pubsub.close()
-   >>> os.system("python publish_subscribe/notifier.py stop")
+   >>> os.system("python py/publish_subscribe/notifier.py stop")
    0
 
 Javascript's API
@@ -351,7 +351,7 @@ First we initialize the object
 
 ::
 
-   >>> os.system("( sleep 1 && python publish_subscribe/notifier.py start ) &")
+   >>> os.system("( sleep 1 && python py/publish_subscribe/notifier.py start ) &")
    0
    >>> is_running()  # yes, it should not be running right now.
    False
@@ -453,7 +453,7 @@ Finally, we close and release any resource
 
    js> pubsub.close();
    
-   >>> os.system("python publish_subscribe/notifier.py stop")
+   >>> os.system("python py/publish_subscribe/notifier.py stop")
    0
    >>> is_running()
    False

@@ -34,7 +34,7 @@ gdb) e instanciamos uno de esos wrapper.
 
 ::
 
-   >>> os.system("python publish_subscribe/notifier.py start")
+   >>> os.system("python py/publish_subscribe/notifier.py start")
    0
 
    >>> from gdb import gdb
@@ -45,8 +45,8 @@ Ahora cargamos 2 *inferiors* con ese ejecutable
 
 ::
 
-   >>> gdbInstance.directCommand("-file-exec-and-symbols ../cppTestCode/write_one_char_at_time")
-   >>> gdbInstance.directCommand("add-inferior -exec ../cppTestCode/write_one_char_at_time")
+   >>> gdbInstance.directCommand("-file-exec-and-symbols cppTestCode/write_one_char_at_time")
+   >>> gdbInstance.directCommand("add-inferior -exec cppTestCode/write_one_char_at_time")
 
 
 Bien, ahora nos moveremos al inferior 1, haremos un *run*, luego iremos al inferior 2 
@@ -115,8 +115,8 @@ Y repetimos los mismos pasos para cargar el ejecutable en 2 inferiores.
 
 ::
 
-   ### gdbInstance.directCommand("-file-exec-and-symbols ../cppTestCode/write_one_char_at_time")
-   ### gdbInstance.directCommand("add-inferior -exec ../cppTestCode/write_one_char_at_time")
+   ### gdbInstance.directCommand("-file-exec-and-symbols cppTestCode/write_one_char_at_time")
+   ### gdbInstance.directCommand("add-inferior -exec cppTestCode/write_one_char_at_time")
 
 Pero esta vez usaremos el comando *run&* en vez de *run*.
 
@@ -154,5 +154,5 @@ Finalmente eliminamos el archivo y cerramos el publish subscriber
 
    >>> os.system("rm data")
    0
-   >>> os.system("python publish_subscribe/notifier.py stop")
+   >>> os.system("python py/publish_subscribe/notifier.py stop")
    0

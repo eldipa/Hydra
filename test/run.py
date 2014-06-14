@@ -13,7 +13,7 @@ def run_doctests(sources, working_directory):
       print "Run tests in %s" % source
       os.system("cd %s; python %s %s" % (
          working_directory, 
-         "doctestpyjs.py", 
+         "py/doctestpyjs.py", 
          source))
    
 
@@ -31,7 +31,7 @@ def generate_wiki_pages(sources, wiki_directory):
 
 if __name__ == '__main__':
    source_dir = "."
-   working_directory = "../src/py"
+   working_directory = "../src"
    wiki_directory = "../../wiki"
 
    whitelist = sys.argv[1:]

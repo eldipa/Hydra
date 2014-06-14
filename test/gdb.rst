@@ -24,9 +24,9 @@ pruebas en primer lugar debemos dar de alta al servidor de *publish_subscribe*:
    >>> import time
    >>> from subprocess import check_output
    >>> def is_running():
-   ...   out = check_output(["python", "publish_subscribe/billboard.py", "status"])
+   ...   out = check_output(["python", "py/publish_subscribe/billboard.py", "status"])
    ...   return "running" in out
-   >>> os.system("python publish_subscribe/billboard.py start")
+   >>> os.system("python py/publish_subscribe/billboard.py start")
    0
    >>> time.sleep(2) #esperamos que el servidor este andando.
    >>> is_running()
@@ -80,7 +80,7 @@ Para instaciar un nuevo proceso gdb se debe hacer:
 Para cargar un nuevo ejecutable en el entorno gdb:
 
 ::
-   >>> gdbInstance.file("../cppTestCode/testExe")
+   >>> gdbInstance.file("cppTestCode/testExe")
    >>> time.sleep(2)
    
    >>> shared_list[1] #DONE debido a la carga del exe #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
@@ -113,7 +113,7 @@ Para realizar un attach de un proceso ya andando:
 :: 
    >>> shared_list = []
    >>> import subprocess 
-   >>> p = subprocess.Popen("../cppTestCode/testExe")
+   >>> p = subprocess.Popen("cppTestCode/testExe")
    >>> p.pid > 0 
    True
    >>> gdbInstance = gdb.Gdb()
@@ -540,7 +540,7 @@ la ejecucion el *outputReader* lanzara eventos bajo el topic "gdb.1234" (siendo
 
 ::
    >>> gdbInstance = gdb.Gdb()
-   >>> gdbInstance.file("../cppTestCode/testExe")
+   >>> gdbInstance.file("cppTestCode/testExe")
    >>> gdbId = gdbInstance.getSessionId()
    >>> gdbId > 0
    True
@@ -826,7 +826,7 @@ Para realizar un exit:
 
 ::
    >>> ##finalizo al server.
-   >>> os.system("python publish_subscribe/billboard.py stop")
+   >>> os.system("python py/publish_subscribe/billboard.py stop")
    0
    >>> is_running()
    False

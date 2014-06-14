@@ -9,12 +9,12 @@ Primero inicamos el servidor de eventos:
    >>> import os
    >>> import time
    >>> from subprocess import check_output
-   
+
    >>> def is_running():
-   ...   out = check_output(["python", "publish_subscribe/billboard.py", "status"])
+   ...   out = check_output(["python", "py/publish_subscribe/billboard.py", "status"])
    ...   return "running" in out
    
-   >>> os.system("python publish_subscribe/billboard.py start")
+   >>> os.system("python py/publish_subscribe/billboard.py start")
    0
    
    >>> time.sleep(2) #esperamos que el servidor este andando.
@@ -33,7 +33,7 @@ Iniciamos al gdbSpawmer
 Para lanzar un nuevo gdb:
 
 ::
-   >>> gdbPid = spawmer.startNewProcessWithGdb("../cppTestCode/testExe")
+   >>> gdbPid = spawmer.startNewProcessWithGdb("cppTestCode/testExe")
    >>> gdbPid > 0
    True
    >>> len(spawmer.listaGdb) == 1
@@ -91,7 +91,7 @@ externa) lanzara un evento "debugger.new-target".
    >>> eventHandler.subscribe("debugger.attached", attached)
    >>> time.sleep(2)
     
-   >>> eventHandler.publish("debugger.load", "../cppTestCode/testExe")
+   >>> eventHandler.publish("debugger.load", "cppTestCode/testExe")
 
    >>> time.sleep(5)
    >>> pidGdb = shared_dict["new_session"]
@@ -104,7 +104,7 @@ Para realizar un attach:
    >>> shared_dict = {}
    
    >>> import subprocess 
-   >>> p = subprocess.Popen("../cppTestCode/testExe")
+   >>> p = subprocess.Popen("cppTestCode/testExe")
    >>> p.pid > 0 
    True
    >>> eventHandler.publish("debugger.attach", p.pid)
@@ -135,7 +135,7 @@ Ejemplo de uso:
 ::
    >>> shared_dict = {}
    
-   >>> eventHandler.publish("debugger.load", "../cppTestCode/testExe")
+   >>> eventHandler.publish("debugger.load", "cppTestCode/testExe")
    >>> time.sleep(2)
 
    >>> gdbPid = shared_dict["new_session"]
@@ -157,7 +157,7 @@ Ejemplo de uso:
    >>> spawmer.eliminarCola()
 
    >>> ##finalizo al server.
-   >>> os.system("python publish_subscribe/billboard.py stop")
+   >>> os.system("python py/publish_subscribe/billboard.py stop")
    0
    >>> is_running()
    False
