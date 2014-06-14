@@ -4,12 +4,12 @@ IPC:
 	$(MAKE) --no-print-directory -C ./ipc
 
 Shared:
-	$(MAKE) -C ./shared
+	$(MAKE) --no-print-directory -C ./shared
 	
 TestCode:
-	$(MAKE) -C ./cppTestCode
+	$(MAKE) --no-print-directory -C ./cppTestCode
 	
 clean:
 	$(MAKE) --no-print-directory -C ./ipc clean
-	$(MAKE) -C ./shared clean
-	$(MAKE) -C ./cppTestCode clean
+	$(MAKE) --no-print-directory -C ./shared clean
+	$(MAKE) --no-print-directory -C ./cppTestCode clean
