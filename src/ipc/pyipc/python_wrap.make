@@ -9,4 +9,6 @@ test:
 	@python test.py
 
 clean:
+	@rm -f $(TARGET).pyc
+	@rm -f $(TARGET)_wrap.o
 	@rm -f _$(TARGET).so
