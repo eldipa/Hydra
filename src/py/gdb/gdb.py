@@ -21,6 +21,7 @@ class Gdb:
         self.reader = outputReader.OutputReader(self.gdbOutput, self.queue, self.gdb.pid)
         self.reader.start()
         self.eventHandler = publish_subscribe.eventHandler.EventHandler()
+        self.gdbInput.write('python execfile("./py/gdb/Commands/pointerPrinter.py")' + '\n')
         
     def getSessionId(self):
         return self.gdb.pid
@@ -37,6 +38,7 @@ class Gdb:
         self.eventHandler.subscribe(str(self.gdb.pid) + ".direct-command", self.directCommand)
         self.eventHandler.subscribe(str(self.gdb.pid) + ".get-variables", self.getVariables)
         self.eventHandler.subscribe(str(self.gdb.pid) + ".evaluate-expression", self.evaluarExpresion)
+        self.eventHandler.subscribe(str(self.gdb.pid) + ".evaluate-multiple-pointers", self.evaluarMultiplesPunteros)
         
         self.eventHandler.publish("debugger.new-session", self.gdb.pid)
 
@@ -97,6 +99,10 @@ class Gdb:
         
     def evaluarExpresion(self, data =""):
         self.gdbInput.write('-data-evaluate-expression ' + data + '\n')
+        
+    def evaluarMultiplesPunteros(self, data = ""):
+        self.gdbInput.write('pointer-printer ' + data + '\n')
+        
     
     
     
