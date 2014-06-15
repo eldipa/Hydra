@@ -33,6 +33,7 @@ Lanzamos un nuevo gdb:
 
 :: 
    >>> gdbPid = spawmer.startNewProcessWithGdb("cppTestCode/testVariables") 
+   >>> time.sleep(2)
    >>> gdbPid > 0 
    True
    >>> len(spawmer.listaGdb) == 1 

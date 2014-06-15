@@ -1,4 +1,4 @@
-all: Prueba testExe testVariables write_one_char_at_time
+all: Prueba testExe testVariables write_one_char_at_time multiplesPunteros
 
 defines= -D espera
 
@@ -13,6 +13,9 @@ write_one_char_at_time: write_one_char_at_time.c
 	
 testVariables: testVariables.cpp
 	g++ -g -o testVariables testVariables.cpp 
+
+multiplesPunteros: multiplesPunteros.cpp
+	g++ -g -o multiplesPunteros multiplesPunteros.cpp
 	
 clean:
-	rm Prueba testExe testVariables write_one_char_at_time
+	rm Prueba testExe testVariables write_one_char_at_time multiplesPunteros
