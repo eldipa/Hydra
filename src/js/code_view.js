@@ -6,16 +6,13 @@ define(['ace', 'jquery'], function (ace, $) {
       this.filename = null;
    }
 
-   CodeView.prototype.create_ace_viewer = function () {
-      this.viewer = ace.ace.edit(this.view_dom.get()[0]);
-      
-      this.viewer.setFontSize(14);
-      this.viewer.setTheme("ace/theme/xcode");
-      this.viewer.setReadOnly(true);
-      
-      this.viewer.setHighlightActiveLine(false);
-   };
-
+   /* 
+    * Load a file only if the file wasn't loaded already.
+    * In any case, the current session is replaced by the session that
+    * represent the state of the file.
+    * If the file is new (is loaded), the session is new too.
+    * But if the file was loaded previously, the session of that file is used.
+    * */
    CodeView.prototype.load_file = function (filename, encoding) {
       var session = this.saved_session_by_filename[filename];
       if(!session) {
@@ -35,21 +32,87 @@ define(['ace', 'jquery'], function (ace, $) {
       }
    };
 
+   /*
+    * Define where should be a breakpoint in the current file.
+    * */
+   CodeView.prototype.setBreakpoint = function (line_num) {
+      this.highlightLine(line_num, 'danger');
+   };
+
+   /*
+    * Define the current line (under execution) in th current file.
+    * If there is a previous 'current' line, this is removed.
+    * */
+   CodeView.prototype.setCurrentLine = function (line_num) {
+      var session = this.viewer.getSession();
+      var last_current_line = session.last_current_line;
+      
+      if(last_current_line) {
+         this.removeHightlight(last_current_line.line_highlighted_id);
+      }
+
+      var line_highlighted_id = this.highlightLine(line_num, 'info');
+      session.last_current_line = {line: line_num, line_highlighted_id: line_highlighted_id};
+   };
+
+   /*
+    * Remove the current line of all the open files.
+    * */
+   CodeView.prototype.cleanCurrentLine = function () {
+      for(var filename in this.saved_session_by_filename) {
+         var session = this.saved_session_by_filename[filename];
+         var last_current_line = session.last_current_line;
+         
+         if(last_current_line) {
+            this.removeHightlight(last_current_line.line_highlighted_id);
+            session.last_current_line = null;
+         }
+      }
+   };
+
+   /*
+    * Move the cursor to that line.
+    * */
+   CodeView.prototype.gotoLine = function (line_num) {
+      this.viewer.gotoLine(line_num);
+   }
+
+   /*
+    * Internal.
+    * Create an Ace editor and put in the DOM.
+    * Set some properties like the font size or the editor's theme.
+    * */
+   CodeView.prototype.create_ace_viewer = function () {
+      this.viewer = ace.ace.edit(this.view_dom.get()[0]);
+      
+      this.viewer.setFontSize(14);
+      this.viewer.setTheme("ace/theme/xcode");
+      this.viewer.setReadOnly(true);
+      
+      this.viewer.setHighlightActiveLine(false);
+   };
+
+   /*
+    * Internal.
+    * Load a file into the current editor's session.
+    * */
    CodeView.prototype.load_code_from_file = function (filename, encoding) {
       var fs = require('fs');
       var code = fs.readFileSync(filename, encoding || "ascii");
       this.load_code_from_string(code);
    };
 
+   /*
+    * Internal.
+    * Same like 'load_code_from_file' but load a string instead a file.
+    * */
    CodeView.prototype.load_code_from_string = function (string) {
       this.viewer.setValue(string);
    };
 
-   CodeView.prototype.gotoLine = function (line_num) {
-      this.viewer.gotoLine(line_num);
-   }
-
-   /*
+   /* 
+    * Internal.
+    *
     * The 'mark' is the type of the highlight: 
     *  - danger
     *  - warning

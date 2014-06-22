@@ -98,7 +98,6 @@ define(['w2ui', 'code_view', 'event_handler', 'ctxmenu', 'jquery'], function (w2
       //TODO tambien, ademas de pid.GDBID, habria que hacer una separacion mas 
       //profunda como "pid.GDBID.type" o incluso "pid.GDBID.type.klass."
       //Esto es para evitar una explosion de IFs
-      var last_line = null;
       event_handler.subscribe("gdb."+session_id+".type.Exec.klass.stopped", function (data) {
             if (data.results && data.results.frame && data.results.frame.line && data.results.frame.fullname) {
                // load file
@@ -106,24 +105,14 @@ define(['w2ui', 'code_view', 'event_handler', 'ctxmenu', 'jquery'], function (w2
 
                // and line
                var line = data.results.frame.line - 0;
-               if (!last_line) {
-                  last_line = {line: line, line_highlighted_id: null};
-                  last_line.line_highlighted_id = view.highlightLine(line, 'info');
-               }
-               else {
-                  view.removeHightlight(last_line.line_highlighted_id);
-                  last_line.line_highlighted_id = view.highlightLine(line, 'info');
-               }
+               view.setCurrentLine(line);
                view.gotoLine(line);
             }
       });
 
       event_handler.subscribe("gdb."+session_id+".type.Notify.klass.thread-group-exited", function (data) {
             // TODO end
-            if (last_line) {
-               view.removeHightlight(last_line.line_highlighted_id);
-               last_line.line_highlighted_id = last_line.line = null;
-            }
+            view.cleanCurrentLine();
       });
 
       // Loggeamos lo que pasa en la "consola" del gdb.
@@ -140,7 +129,7 @@ define(['w2ui', 'code_view', 'event_handler', 'ctxmenu', 'jquery'], function (w2
       event_handler.subscribe("gdb."+session_id+".type.Notify.klass.breakpoint-created", function (data) {
             //TODO ver los breakpoints de "ace"
             var bkpt = data.results.bkpt;
-            view.highlightLine(bkpt.line-0, 'danger');
+            view.setBreakpoint(bkpt.line-0);
       });
 
 
