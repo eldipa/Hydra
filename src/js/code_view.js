@@ -1,21 +1,43 @@
 define(['ace', 'jquery'], function (ace, $) {
    function CodeView() {
       this.view_dom = $('<div style="width: 100%; height: 100%; min-width: 100px; min-height: 100px"></div>');
+      this.create_ace_viewer();
+      this.saved_session_by_filename = {};
+      this.filename = null;
+   }
+
+   CodeView.prototype.create_ace_viewer = function () {
       this.viewer = ace.ace.edit(this.view_dom.get()[0]);
       
       this.viewer.setFontSize(14);
       this.viewer.setTheme("ace/theme/xcode");
-      this.viewer.getSession().setMode("ace/mode/c_cpp");
       this.viewer.setReadOnly(true);
       
-      this.viewer.getSession().setUseWrapMode(true);
       this.viewer.setHighlightActiveLine(false);
-   }
+   };
+
+   CodeView.prototype.load_file = function (filename, encoding) {
+      var session = this.saved_session_by_filename[filename];
+      if(!session) {
+         session = new ace.EditSession("");
+
+         session.setMode("ace/mode/c_cpp");
+         session.setUseWrapMode(true);
+
+         this.viewer.setSession(session);
+         this.saved_session_by_filename[filename] = this.viewer.getSession();
+         this.filename = filename;
+         this.load_code_from_file(filename);
+      }
+      else {
+         this.filename = filename
+         this.viewer.setSession(this.saved_session_by_filename[filename]);
+      }
+   };
 
    CodeView.prototype.load_code_from_file = function (filename, encoding) {
       var fs = require('fs');
       var code = fs.readFileSync(filename, encoding || "ascii");
-
       this.load_code_from_string(code);
    };
 
@@ -45,16 +67,22 @@ define(['ace', 'jquery'], function (ace, $) {
     * */
    CodeView.prototype.highlightLines = function (start_line, end_line, mark) {
       var cls = "alert-" + mark + " fixed-position";
-      return this.viewer.getSession().highlightLines(start_line - 1, end_line - 1, cls).id;
+      return {
+         filename: this.filename,
+         id: this.viewer.getSession().highlightLines(start_line - 1, end_line - 1, cls).id
+      };
    };
 
    CodeView.prototype.highlightLine = function (line_num, mark) {
       var cls = "alert-" + mark + " fixed-position";
-      return this.viewer.getSession().highlightLines(line_num - 1, cls).id;
+      return {
+         filename: this.filename,
+         id: this.viewer.getSession().highlightLines(line_num - 1, cls).id
+      };
    };
 
    CodeView.prototype.removeHightlight = function (highlight_id) {
-      this.viewer.getSession().removeMarker(highlight_id);
+      this.saved_session_by_filename[highlight_id.filename].removeMarker(highlight_id.id);
    };
 
    return {CodeView: CodeView};

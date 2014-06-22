@@ -19,7 +19,7 @@ define(['w2ui', 'code_view', 'event_handler', 'ctxmenu', 'jquery'], function (w2
                      { type: 'button',  id: 'run',  caption: 'run', img: 'icon-save'},
                      { type: 'button',  id: 'continue',  caption: 'continue', img: 'icon-save'},
                      { type: 'button',  id: 'next',  caption: 'next', img: 'icon-save'},
-                     { type: 'button',  id: 'step',  caption: 'step', img: 'icon-save', disabled: true},
+                     { type: 'button',  id: 'step',  caption: 'step', img: 'icon-save'},
                      { type: 'button',  id: 'quit',  caption: 'quit', img: 'icon-save'},
                      { type: 'button',  id: 'quit-all',  caption: 'quit-all', img: 'icon-save'}
                ],
@@ -102,7 +102,7 @@ define(['w2ui', 'code_view', 'event_handler', 'ctxmenu', 'jquery'], function (w2
       event_handler.subscribe("gdb."+session_id+".type.Exec.klass.stopped", function (data) {
             if (data.results && data.results.frame && data.results.frame.line && data.results.frame.fullname) {
                // load file
-               view.load_code_from_file(data.results.frame.fullname);
+               view.load_file(data.results.frame.fullname);
 
                // and line
                var line = data.results.frame.line - 0;
@@ -164,7 +164,7 @@ define(['w2ui', 'code_view', 'event_handler', 'ctxmenu', 'jquery'], function (w2
             }
             
             // ok, es para nosostros,
-            view.load_code_from_file(data.results.fullname);
+            view.load_file(data.results.fullname);
             view.gotoLine(0);
             
             // terminamos y no queremos que nos llamen otra vez.
@@ -200,7 +200,7 @@ define(['w2ui', 'code_view', 'event_handler', 'ctxmenu', 'jquery'], function (w2
 
    });
 
-   event_handler.publish("debugger.load", "cppTestCode/testExe");
+   event_handler.publish("debugger.load", "cppTestCode/multiple_files/sort");
 
    return {};
 });
