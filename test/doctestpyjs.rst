@@ -68,6 +68,27 @@ Multiline code is supported too:
    js> g()
    3
 
+An interesting thing is that the Javascript console has a different prompt for each
+level of nesting using '...' for the first level, '.....' for the second, '.......' for
+the third and so on.
+To simplify, we only request '...' for any level and we will handle the count of dots
+internaly.
+
+::
+
+   js> function one() {
+   ...    function two() {
+   ...       function three() {
+   ...          return 1;
+   ...       }
+   ...       return three() + 1;
+   ...    }
+   ...    return two() + 1;
+   ... }
+   
+   js> one();
+   3
+
 Printing to the console is a *side effect* that can be used in the tests but it's not
 very elegant (or very documentative)
 

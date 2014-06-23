@@ -10,8 +10,8 @@ class DocTestJSParser(doctest.DocTestParser):
    _EXAMPLE_RE = re.compile(r'''
         # Source consists of a PS1 line followed by zero or more PS2 lines.
         (?P<source>
-            (?:^(?P<indent> [ ]*) js>    .*)    # PS1 line
-            (?:\n           [ ]*  \.\.\. .*)*)  # PS2 lines
+            (?:^(?P<indent> [ ]*) js>    .*)        # PS1 line
+            (?:\n           [ ]*  \.\.\. .*)*)      # PS2 lines
         \n?
         # Want consists of any non-blank lines that do not start with PS1.
         (?P<want> (?:(?![ ]*$)    # Not a blank line
@@ -34,7 +34,8 @@ class JavascriptSessionError(Exception):
 class JavascriptSession(object):
    def __init__(self, address):
       self.address = address
-      self.PS1, self.PS2 = "js> ", "... "
+      self.PS1, self.PS2 = "js> ", "..."
+      self.PS2_full = re.compile(r"\.\.\.[.]* ")
 
    def connect(self):
       # Connect with the remote javascript session
@@ -86,8 +87,9 @@ class JavascriptSession(object):
          buf = self.remote_console.recv(1024)
 
          while True:
-            while buf[:4] == self.PS2:
-               buf = buf[4:]
+            while buf[:3] == self.PS2:
+               PS2_prefix = self.PS2_full.match(buf)
+               buf = buf[PS2_prefix.end():]
 
             if buf[-4:] == self.PS1:
                response = buf[:-4]
