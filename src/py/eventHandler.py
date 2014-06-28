@@ -1,4 +1,0 @@
-import publish_subscribe
-import publish_subscribe.eventHandler
-
-EventHandler = publish_subscribe.eventHandler.EventHandler
