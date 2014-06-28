@@ -20,7 +20,7 @@ try:
     # lanzo nw
     ui_process = subprocess.Popen(['./scripts/run_ui.sh'], shell=True)
 
-    os.system("python py/publish_subscribe/billboard.py start")
+    os.system("python py/publish_subscribe/notifier.py start")
 
     spawmer = gdb.gdbSpawmer.GdbSpawmer()
 
@@ -32,7 +32,7 @@ finally:
     
     spawmer.eliminarCola()
     
-    os.system("python py/publish_subscribe/billboard.py stop")
+    os.system("python py/publish_subscribe/notifier.py stop")
  
     if ui_process:
         os.system("killall nw")  # XXX this is too much

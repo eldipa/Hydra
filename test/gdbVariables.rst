@@ -12,9 +12,9 @@ Iniciamos el publicador
    >>> import time 
    >>> from subprocess import check_output 
    >>> def is_running(): 
-   ...   out = check_output(["python","py/publish_subscribe/billboard.py", "status"]) 
+   ...   out = check_output(["python","py/publish_subscribe/notifier.py", "status"]) 
    ...   return "running" in out
-   >>> os.system("python py/publish_subscribe/billboard.py start") 
+   >>> os.system("python py/publish_subscribe/notifier.py start") 
    0
    >>> time.sleep(2) #esperamos que el servidor este andando. 
    >>> is_running() 
@@ -115,7 +115,7 @@ Limpieza:
    >>> spawmer.exit("all") 
    >>> spawmer.eliminarCola() 
    >>> ##finalizo al server. 
-   >>> os.system("python py/publish_subscribe/billboard.py stop") 
+   >>> os.system("python py/publish_subscribe/notifier.py stop") 
    0
    >>> is_running() 
    False
