@@ -83,7 +83,7 @@ define(['jquery', 'w2ui'], function ($, w2ui) {
       this._full = false;
       this._name = ("" + Math.random()).slice(2);
 
-      var pstyle = 'border: 2px solid #000000; padding: 5px;'; 
+      var pstyle = 'border: 2px solid #000000; padding: 0px;'; 
       this._subpanel_layout = $(this._dom_el).w2layout({
          name: this._name,
          panels: [
@@ -118,9 +118,19 @@ define(['jquery', 'w2ui'], function ($, w2ui) {
       this._full = false;
 
       this._name = ("" + Math.random()).slice(2);
-      var pstyle = 'border: 2px solid #0000ef; padding: 5px;'; 
+      var pstyle = 'border: 1px none #0000ef; padding: 0px;'; 
+
+      this._common_style_for_all_positions = pstyle;
+      this._extra_style_per_position = {
+         'top':      'border-bottom-style: solid;',
+         'bottom':   'border-top-style: solid;',
+         'left':     'border-right-style: solid;',
+         'right':    'border-left-style: solid;',
+      };
+
       this._subpanels_layout = $().w2layout({ 
          name: this._name,
+         padding: 3,
          panels: [
             {type: 'main', style: pstyle, content: ''},
             {type: 'left', style: pstyle, size: '50%', resizable: true, hidden: true, content: ''},
@@ -156,14 +166,26 @@ define(['jquery', 'w2ui'], function ($, w2ui) {
 
          this._subpanels_layout.content('main', panel);
          this._main_position_is_mapping_to = position;
+
+         this._subpanels_layout.set('main', {
+            style: this._common_style_for_all_positions + " " + this._extra_style_per_position[position] 
+         });
       }
       else {
          if(get_opposite_position(position) === this._main_position_is_mapping_to) {
             this._subpanels_layout.content(position, panel);
             this._subpanels_layout.show(position);
+            
+            this._subpanels_layout.set(position, {
+               style: this._common_style_for_all_positions + " " + this._extra_style_per_position[position] 
+            });
          }
          else if(position === this._main_position_is_mapping_to) {
             this._subpanels_layout.content('main', panel);
+
+            this._subpanels_layout.set('main', {
+               style: this._common_style_for_all_positions + " " + this._extra_style_per_position[position] 
+            });
          }
          else {
             throw new Error("I'm splitted '"+this._splitted_direction+"' with my '"+this._main_position_is_mapping_to+"' side occupied. The new panel want to be in the wrong position '"+position+"'.");

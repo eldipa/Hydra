@@ -1,5 +1,7 @@
 define(['jquery', 'layout'], function ($, layout) {
    function init() {
+      $('body').find('div').remove();
+
       var Root = layout.Root;
       var Panel = layout.Panel;
 
@@ -16,6 +18,8 @@ define(['jquery', 'layout'], function ($, layout) {
       hello_msg.render = function () {
          $(this.box).html(this.msg);
       };
+
+      /* --------- XXX Expected Result: Nada es mostrado ------------- */
 
       /* 
        * Como se puede ver, el unico requerimiento es que el panel defina un
@@ -36,7 +40,7 @@ define(['jquery', 'layout'], function ($, layout) {
 
       root.push(hello_msg);
 
-      /* --------- XXX ------------- */
+      /* --------- XXX Expected Result: Un panel que contiene el mensaje ------------- */
 
       /* Listo.
        *
@@ -51,7 +55,7 @@ define(['jquery', 'layout'], function ($, layout) {
       hello_msg.msg = hello_msg.msg + '<br />hello world!!!';
       hello_msg.refresh();
 
-      /* --------- XXX ------------- */
+      /* --------- XXX Expected Result: Un panel que contiene el nuevo mensaje ------------- */
 
       /* Con solo un panel, no hay mucha diferencia entre esto y simplemente
        * renderizar en el DOM.
@@ -68,6 +72,10 @@ define(['jquery', 'layout'], function ($, layout) {
 
       hello_msg.split(bye_bye_msg, 'left');
       root.refresh();
+
+      /* --------- XXX Expected Result: Un panel que contiene 2 subpanels,
+       * el de la izquierda (left) tiene el mensaje bye-bye mientras
+       * que el de la derecha tiene el mensaje 'hello world'. ------------- */
 
       /* No hay limite en la cantidad de divisiones que se pueden hacer.
        * Cambiemos los mensajes de los panels actuales y creemos otro panel
@@ -87,6 +95,10 @@ define(['jquery', 'layout'], function ($, layout) {
       bye_bye_msg.split(more_bye_msg, 'bottom');
       more_bye_msg.refresh();
 
+      /* --------- XXX Expected Result: Un panel que contiene 2 subpanels,
+       * el de la izquierda (left) tiene a su vez 2 subpanels, el de arriba
+       * dice tiene el mensaje actualizado de 'bye-bye' mientras que el de
+       * abajo tiene el nuevo mensaje 'bye!'.  ------------- */
    }
 
    return {init: init};
