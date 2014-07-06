@@ -73,6 +73,9 @@ define(['jquery', 'w2ui'], function ($, w2ui) {
    };
 
    Panel.prototype.split = function (new_panel, where_put_new_panel) {
+      if (new_panel.parent()) {
+         throw new Error("Before split me, i checked the new panel and i found that is the child of another panel which is wrong (the panel should not have a parent).");
+      }
       panel_to_splitted_panel(this, new_panel, where_put_new_panel);
    };
 

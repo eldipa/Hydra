@@ -40,7 +40,11 @@ define(['jquery', 'layout'], function ($, layout) {
 
       root.push(hello_msg);
 
-      /* --------- XXX Expected Result: Un panel que contiene el mensaje ------------- */
+      /* --------- XXX Expected Result: Un panel que contiene el mensaje
+       *
+       *    H
+       *
+       * ------------- */
 
       /* Listo.
        *
@@ -193,6 +197,21 @@ define(['jquery', 'layout'], function ($, layout) {
        *    H | B |   |
        *
        * ------------- */
+
+      /*
+       * Hasta ahora hemos siempre agregado nuevos paneles pero que pasa si
+       * queremos agregar 2 veces el mismo panel?
+       *
+       * Esto nos dara un error.
+       * */
+
+      try {
+         lorem_ipsum_msg.split(hello_msg, 'top');
+         throw new Error("Fail");
+      }
+      catch (e) {
+      }
+
 
    }
 
