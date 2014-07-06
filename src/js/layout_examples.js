@@ -192,7 +192,7 @@ define(['jquery', 'layout'], function ($, layout) {
       
       /* --------- XXX Expected Result: 
        *
-       *   F|Z| M |   |
+       *   Z|F| M |   |
        *   ---|---| L | Ba
        *    H | B |   |
        *
@@ -211,6 +211,26 @@ define(['jquery', 'layout'], function ($, layout) {
       }
       catch (e) {
       }
+
+      /*
+       * Asi como podemos agregar paneles podemos removerlos.
+       * Esto no quiere decir que el panel removido es destruido, sino 
+       * que tan solo es quitado del DOM. 
+       * Si se tiene una referencia al panel, este seguira vivo.
+       * Sino, sera removido por la VM de Javascript (garbage).
+       * */
+
+      //zaz_msg.remove();
+      //more_bye_msg.remove();
+      //bye_bye_msg.remove();
+
+      /* --------- XXX Expected Result: 
+       *
+       *    F |   |
+       *   ---| L | Ba
+       *    H |   |
+       *
+       * ------------- */
 
 
    }

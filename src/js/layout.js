@@ -83,6 +83,12 @@ define(['jquery', 'w2ui'], function ($, w2ui) {
       swap_panels(this, other_panel);
    };
 
+   Panel.prototype.remove = function () {
+      if(this._parent) {
+         this._parent.remove_me(this);
+      }
+   };
+
    var Root = function (dom_parent_element) {
       this._dom_el = $('<div style="width: 100%; height: 400px;"></div>');
       dom_parent_element.append(this._dom_el);
@@ -125,6 +131,14 @@ define(['jquery', 'w2ui'], function ($, w2ui) {
       }
 
       this._subpanel_layout.content('main', other_panel);
+   };
+
+   Root.prototype.remove_me = function (panel) {
+      if (panel.parent() !== this) {
+         throw new Error("I can't replace a panel that isn't my.");
+      }
+      
+      this._subpanel_layout.content('main', '');
    };
 
    var Splitted = function () {
@@ -220,6 +234,27 @@ define(['jquery', 'w2ui'], function ($, w2ui) {
       else {
          this._subpanels_layout.content(position, other_panel);
       }
+   };
+
+   Splitted.prototype.remove_me = function (panel) {
+      if (panel.parent() !== this) {
+         throw new Error("I can't replace a panel that isn't my.");
+      }
+
+      var other_position = get_opposite_position(panel.position());
+      var other_panel = null;
+      if(this._main_position_is_mapping_to === other_position) {
+         other_panel = this._subpanels_layout.content('main');
+         this._subpanels_layout.content('main', '');
+         this._subpanels_layout.content(panel.position, '');
+      }
+      else {
+         other_panel = this._subpanels_layout.content(other_position);
+         this._subpanels_layout.content(other_position, '');
+         this._subpanels_layout.content('main', '');
+      }
+
+      this.swap(other_panel);
    };
 
 
