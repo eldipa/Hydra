@@ -55,7 +55,11 @@ define(['jquery', 'layout'], function ($, layout) {
       hello_msg.msg = hello_msg.msg + '<br />hello world!!!';
       hello_msg.refresh();
 
-      /* --------- XXX Expected Result: Un panel que contiene el nuevo mensaje ------------- */
+      /* --------- XXX Expected Result: Un panel que contiene el nuevo mensaje 
+       *
+       *    A
+       *
+       * ------------- */
 
       /* Con solo un panel, no hay mucha diferencia entre esto y simplemente
        * renderizar en el DOM.
@@ -75,7 +79,11 @@ define(['jquery', 'layout'], function ($, layout) {
 
       /* --------- XXX Expected Result: Un panel que contiene 2 subpanels,
        * el de la izquierda (left) tiene el mensaje bye-bye mientras
-       * que el de la derecha tiene el mensaje 'hello world'. ------------- */
+       * que el de la derecha tiene el mensaje 'hello world'. 
+       *
+       *    B | A
+       *
+       * ------------- */
 
       /* No hay limite en la cantidad de divisiones que se pueden hacer.
        * Cambiemos los mensajes de los panels actuales y creemos otro panel
@@ -98,7 +106,39 @@ define(['jquery', 'layout'], function ($, layout) {
       /* --------- XXX Expected Result: Un panel que contiene 2 subpanels,
        * el de la izquierda (left) tiene a su vez 2 subpanels, el de arriba
        * dice tiene el mensaje actualizado de 'bye-bye' mientras que el de
-       * abajo tiene el nuevo mensaje 'bye!'.  ------------- */
+       * abajo tiene el nuevo mensaje 'bye!'.  
+       *
+       *
+       *    B |
+       *  ----| A
+       *    C |
+       *
+       * ------------- */
+
+      /*
+       * Si quisieramos agregar un panel a la izquierda de 'ambos' paneles que
+       * tienen el mensaje 'bye', no podemos hacer un split a solo uno de ellos.
+       * Lo que hay que dividir es a su padre.
+       * */
+
+      if(bye_bye_msg.parent() !== more_bye_msg.parent())
+         throw new Error("Fail!");
+
+      var lorem_ipsum_msg = new Panel();
+      lorem_ipsum_msg.msg = "Lorem ipsum";
+      lorem_ipsum_msg.render = more_bye_msg.render;
+
+      bye_bye_msg.parent().split(lorem_ipsum_msg, 'left');
+      bye_bye_msg.refresh();
+      
+      /* --------- XXX Expected Result: 
+       *
+       *
+       *      | B |
+       *    D |---| A
+       *      | C |
+       *
+       * ------------- */
    }
 
    return {init: init};
