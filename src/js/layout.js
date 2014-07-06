@@ -76,6 +76,10 @@ define(['jquery', 'w2ui'], function ($, w2ui) {
       panel_to_splitted_panel(this, new_panel, where_put_new_panel);
    };
 
+   Panel.prototype.swap = function (other_panel) {
+      swap_panels(this, other_panel);
+   };
+
    var Root = function (dom_parent_element) {
       this._dom_el = $('<div style="width: 100%; height: 400px;"></div>');
       dom_parent_element.append(this._dom_el);
@@ -110,6 +114,14 @@ define(['jquery', 'w2ui'], function ($, w2ui) {
 
    Root.prototype.render = function () {
       this._subpanel_layout.render(this.box);
+   };
+
+   Root.prototype.replace_panel = function (panel, other_panel) {
+      if (panel.parent() !== this) {
+         throw new Error("I can't replace a panel that isn't my.");
+      }
+
+      this._subpanel_layout.content('main', other_panel);
    };
 
    var Splitted = function () {
@@ -193,6 +205,20 @@ define(['jquery', 'w2ui'], function ($, w2ui) {
       }
    };
 
+   Splitted.prototype.replace_panel = function (panel, other_panel) {
+      if (panel.parent() !== this) {
+         throw new Error("I can't replace a panel that isn't my.");
+      }
+
+      var position = panel.position();
+      if(position === this._main_position_is_mapping_to) {
+         this._subpanels_layout.content('main', other_panel);
+      }
+      else {
+         this._subpanels_layout.content(position, other_panel);
+      }
+   };
+
 
    var panel_to_splitted_panel = function (panel, new_panel, where_put_new_panel) {
       var splitted = new Splitted();
@@ -212,6 +238,24 @@ define(['jquery', 'w2ui'], function ($, w2ui) {
       set_parent_child_relationship(tabbed, new_panel, 'last');
 
       tabbed.on_front(new_panel);
+   };
+
+   var swap_panels = function (panel, other_panel) {
+      var old = {
+         parent: panel.parent(),
+         position: panel.position()
+      };
+
+      var other_old = {
+         parent: other_panel.parent(),
+         position: other_panel.position()
+      };
+      
+      old.parent.replace_panel(panel, other_panel);
+      other_old.parent.replace_panel(other_panel, panel);
+
+      panel.parent(other_old.parent, other_old.position);
+      other_panel.parent(old.parent, old.position);
    };
 
 

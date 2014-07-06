@@ -57,7 +57,7 @@ define(['jquery', 'layout'], function ($, layout) {
 
       /* --------- XXX Expected Result: Un panel que contiene el nuevo mensaje 
        *
-       *    A
+       *    H
        *
        * ------------- */
 
@@ -70,9 +70,7 @@ define(['jquery', 'layout'], function ($, layout) {
 
       var bye_bye_msg = new Panel();
       bye_bye_msg.msg = 'Bye Bye Bye';
-      bye_bye_msg.render = function () {
-         $(this.box).html(this.msg);
-      };
+      bye_bye_msg.render = hello_msg.render;
 
       hello_msg.split(bye_bye_msg, 'left');
       root.refresh();
@@ -81,7 +79,7 @@ define(['jquery', 'layout'], function ($, layout) {
        * el de la izquierda (left) tiene el mensaje bye-bye mientras
        * que el de la derecha tiene el mensaje 'hello world'. 
        *
-       *    B | A
+       *    B | H
        *
        * ------------- */
 
@@ -96,9 +94,7 @@ define(['jquery', 'layout'], function ($, layout) {
 
       var more_bye_msg = new Panel();
       more_bye_msg.msg = "... Bye!";
-      more_bye_msg.render = function () {
-         $(this.box).html(this.msg);
-      };
+      more_bye_msg.render = hello_msg.render;
 
       bye_bye_msg.split(more_bye_msg, 'bottom');
       more_bye_msg.refresh();
@@ -110,8 +106,8 @@ define(['jquery', 'layout'], function ($, layout) {
        *
        *
        *    B |
-       *  ----| A
-       *    C |
+       *  ----| H
+       *    M |
        *
        * ------------- */
 
@@ -133,12 +129,71 @@ define(['jquery', 'layout'], function ($, layout) {
       
       /* --------- XXX Expected Result: 
        *
-       *
        *      | B |
-       *    D |---| A
-       *      | C |
+       *    L |---| H
+       *      | M |
        *
        * ------------- */
+
+      /* 
+       * Todos los paneles pueden moverse de un lugar a otro, intercambiando 
+       * lugares.
+       * */
+
+      lorem_ipsum_msg.swap(hello_msg);
+      bye_bye_msg.swap(more_bye_msg);
+      root.refresh();
+      
+      /* --------- XXX Expected Result: 
+       *
+       *      | M |
+       *    H |---| L
+       *      | B |
+       *
+       * ------------- */
+
+      /*
+       * Dado que un swappeo cambia varias relaciones padre-hijo, veamos que
+       * sucede si ahora seguimos spliteando a los paneles.
+       * */
+
+      var foo_msg = new Panel();
+      foo_msg.msg = "foo";
+      foo_msg.render = hello_msg.render;
+
+      var bar_msg = new Panel();
+      bar_msg.msg = "bar";
+      bar_msg.render = hello_msg.render;
+
+      hello_msg.split(foo_msg, 'top');
+      lorem_ipsum_msg.split(bar_msg, 'right');
+
+      root.refresh();
+      
+      /* --------- XXX Expected Result: 
+       *
+       *    F | M |   |
+       *   ---|---| L | Ba
+       *    H | B |   |
+       *
+       * ------------- */
+
+      var zaz_msg = new Panel();
+      zaz_msg.msg = "zaz";
+      zaz_msg.render = hello_msg.render;
+
+      foo_msg.split(zaz_msg, 'left');
+      root.refresh();
+
+      
+      /* --------- XXX Expected Result: 
+       *
+       *   F|Z| M |   |
+       *   ---|---| L | Ba
+       *    H | B |   |
+       *
+       * ------------- */
+
    }
 
    return {init: init};
