@@ -53,7 +53,7 @@ define(['jquery', 'w2ui'], function ($, w2ui) {
 
    Panel.prototype.parent = function (new_parent, new_position) {
       if (new_parent) {
-         if (!new_position) {
+         if (new_parent !== NullParent && !new_position) {
             throw new Error("Empty new-position.");
          }
 
@@ -85,10 +85,13 @@ define(['jquery', 'w2ui'], function ($, w2ui) {
 
    Panel.prototype.remove = function () {
       this._parent.remove_me(this);
+
+      this._parent = NullParent;
+      delete this._position;
    };
 
    NullParent.prototype = Panel.prototype;
-   NullParent.refresh = NullParent.remove_me = NullParent.put = function () {};
+   NullParent.refresh = NullParent.remove_me = NullParent.put = NullParent.replace_panel = function () {};
 
    var Root = function (dom_parent_element) {
       this._dom_el = $('<div style="width: 100%; height: 400px;"></div>');
@@ -255,7 +258,11 @@ define(['jquery', 'w2ui'], function ($, w2ui) {
          this._subpanels_layout.content('main', '');
       }
 
-      this.swap(other_panel);
+      var temporal = new Panel();
+      temporal.render = function () {};
+
+      this.swap(temporal);
+      temporal.swap(other_panel);
    };
 
 

@@ -220,9 +220,9 @@ define(['jquery', 'layout'], function ($, layout) {
        * Sino, sera removido por la VM de Javascript (garbage).
        * */
 
-      //zaz_msg.remove();
-      //more_bye_msg.remove();
-      //bye_bye_msg.remove();
+      zaz_msg.remove();
+      more_bye_msg.remove();
+      bye_bye_msg.remove();
 
       /* --------- XXX Expected Result: 
        *
