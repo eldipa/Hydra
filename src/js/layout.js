@@ -42,7 +42,9 @@ define(['jquery', 'w2ui'], function ($, w2ui) {
 
    
 
+   var NullParent = {};
    var Panel = function () {
+      this._parent = NullParent;
    };
 
    Panel.prototype.position = function () {
@@ -67,13 +69,11 @@ define(['jquery', 'w2ui'], function ($, w2ui) {
    };
 
    Panel.prototype.refresh = function () {
-      if(this._parent) {
-         this._parent.refresh();
-      }
+      this._parent.refresh();
    };
 
    Panel.prototype.split = function (new_panel, where_put_new_panel) {
-      if (new_panel.parent()) {
+      if (new_panel.parent() !== NullParent) {
          throw new Error("Before split me, i checked the new panel and i found that is the child of another panel which is wrong (the panel should not have a parent).");
       }
       panel_to_splitted_panel(this, new_panel, where_put_new_panel);
@@ -84,10 +84,11 @@ define(['jquery', 'w2ui'], function ($, w2ui) {
    };
 
    Panel.prototype.remove = function () {
-      if(this._parent) {
-         this._parent.remove_me(this);
-      }
+      this._parent.remove_me(this);
    };
+
+   NullParent.prototype = Panel.prototype;
+   NullParent.refresh = NullParent.remove_me = NullParent.put = function () {};
 
    var Root = function (dom_parent_element) {
       this._dom_el = $('<div style="width: 100%; height: 400px;"></div>');
