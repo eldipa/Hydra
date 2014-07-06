@@ -138,10 +138,6 @@ define(['jquery', 'w2ui'], function ($, w2ui) {
    };
 
    Splitted.prototype.put = function (panel, position) {
-      if(this._full) {
-         throw new Error("You cannot put another panel. I'm full.");
-      }
-
       if(!this._splitted_direction) {
          switch(position) {
             case 'left':
@@ -165,7 +161,9 @@ define(['jquery', 'w2ui'], function ($, w2ui) {
          if(get_opposite_position(position) === this._main_position_is_mapping_to) {
             this._subpanels_layout.content(position, panel);
             this._subpanels_layout.show(position);
-            this._full = true;
+         }
+         else if(position === this._main_position_is_mapping_to) {
+            this._subpanels_layout.content('main', panel);
          }
          else {
             throw new Error("I'm splitted '"+this._splitted_direction+"' with my '"+this._main_position_is_mapping_to+"' side occupied. The new panel want to be in the wrong position '"+position+"'.");

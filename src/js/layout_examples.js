@@ -69,6 +69,24 @@ define(['jquery', 'layout'], function ($, layout) {
       hello_msg.split(bye_bye_msg, 'left');
       root.refresh();
 
+      /* No hay limite en la cantidad de divisiones que se pueden hacer.
+       * Cambiemos los mensajes de los panels actuales y creemos otro panel
+       * para verlo.
+       * 
+       * */
+
+      bye_bye_msg.msg = bye_bye_msg.msg + '<br />Bye Bye';
+      hello_msg.msg = hello_msg.msg + '<br />!!!';
+
+      var more_bye_msg = new Panel();
+      more_bye_msg.msg = "... Bye!";
+      more_bye_msg.render = function () {
+         $(this.box).html(this.msg);
+      };
+
+      bye_bye_msg.split(more_bye_msg, 'bottom');
+      more_bye_msg.refresh();
+
    }
 
    return {init: init};
