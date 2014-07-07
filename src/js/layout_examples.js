@@ -58,7 +58,7 @@ define(['jquery', 'layout'], function ($, layout) {
 
       hello_msg.msg = hello_msg.msg + '<br />hello world!!!';
       hello_msg.refresh();
-
+      
       /* --------- XXX Expected Result: Un panel que contiene el nuevo mensaje 
        *
        *    H
@@ -77,7 +77,6 @@ define(['jquery', 'layout'], function ($, layout) {
       bye_bye_msg.render = hello_msg.render;
 
       hello_msg.split(bye_bye_msg, 'left');
-      root.refresh();
 
       /* --------- XXX Expected Result: Un panel que contiene 2 subpanels,
        * el de la izquierda (left) tiene el mensaje bye-bye mientras
@@ -101,7 +100,6 @@ define(['jquery', 'layout'], function ($, layout) {
       more_bye_msg.render = hello_msg.render;
 
       bye_bye_msg.split(more_bye_msg, 'bottom');
-      more_bye_msg.refresh();
 
       /* --------- XXX Expected Result: Un panel que contiene 2 subpanels,
        * el de la izquierda (left) tiene a su vez 2 subpanels, el de arriba
@@ -129,7 +127,6 @@ define(['jquery', 'layout'], function ($, layout) {
       lorem_ipsum_msg.render = more_bye_msg.render;
 
       bye_bye_msg.parent().split(lorem_ipsum_msg, 'left');
-      bye_bye_msg.refresh();
       
       /* --------- XXX Expected Result: 
        *
@@ -146,7 +143,6 @@ define(['jquery', 'layout'], function ($, layout) {
 
       lorem_ipsum_msg.swap(hello_msg);
       bye_bye_msg.swap(more_bye_msg);
-      root.refresh();
       
       /* --------- XXX Expected Result: 
        *
@@ -172,7 +168,6 @@ define(['jquery', 'layout'], function ($, layout) {
       hello_msg.split(foo_msg, 'top');
       lorem_ipsum_msg.split(bar_msg, 'right');
 
-      root.refresh();
       
       /* --------- XXX Expected Result: 
        *
@@ -187,7 +182,6 @@ define(['jquery', 'layout'], function ($, layout) {
       zaz_msg.render = hello_msg.render;
 
       foo_msg.split(zaz_msg, 'left');
-      root.refresh();
 
       
       /* --------- XXX Expected Result: 
