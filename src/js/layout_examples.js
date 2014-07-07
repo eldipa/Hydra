@@ -226,7 +226,37 @@ define(['jquery', 'layout'], function ($, layout) {
        *
        * ------------- */
 
+      hello_msg.parent().remove();
 
+
+      /* --------- XXX Expected Result: 
+       *
+       *      |
+       *    L | Ba
+       *      |
+       *
+       * ------------- */
+
+      bar_msg.remove();
+
+      /* --------- XXX Expected Result: 
+       *
+       *      
+       *    L
+       *     
+       *
+       * ------------- */
+
+      lorem_ipsum_msg.remove();
+      root.push(hello_msg);
+
+      /* --------- XXX Expected Result: 
+       *
+       *      
+       *    H
+       *     
+       *
+       * ------------- */
    }
 
    return {init: init};
