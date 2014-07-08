@@ -26,13 +26,6 @@ define(['jquery', 'w2ui'], function ($, w2ui) {
 
       old.parent = child.parent();
       old.position = child.position();
-      
-      //TODO notificar al 'viejo' parent de que su 'hijo' se va con otro.
-      //y al mismo tiempo, que el nuevo parent tiene un 'hijo' nuevo (potencialmente
-      //reemplazando a otro:
-      //
-      //break_parent_to_child_relationship(parent, position);
-      //break_child_to_parent_relationship(child);
 
       parent.put(child, position);
       child.parent(parent, position);
@@ -73,9 +66,7 @@ define(['jquery', 'w2ui'], function ($, w2ui) {
    };
 
    Panel.prototype.split = function (new_panel, where_put_new_panel) {
-      if (new_panel.parent() !== NullParent) {
-         throw new Error("Before split me, i checked the new panel and i found that is the child of another panel which is wrong (the panel should not have a parent).");
-      }
+      new_panel.remove();
       panel_to_splitted_panel(this, new_panel, where_put_new_panel);
    };
 
@@ -94,6 +85,7 @@ define(['jquery', 'w2ui'], function ($, w2ui) {
    NullParent.refresh = NullParent.remove_me = NullParent.put = NullParent.replace_panel = function () {};
 
    var Root = function (dom_parent_element) {
+      this._parent = NullParent;
       this._dom_el = $('<div style="width: 100%; height: 400px;"></div>');
       dom_parent_element.append(this._dom_el);
 
@@ -146,6 +138,7 @@ define(['jquery', 'w2ui'], function ($, w2ui) {
    };
 
    var Splitted = function () {
+      this._parent = NullParent;
       this._splitted_direction = null;
       this._main_position_is_mapping_to = null;
       this._full = false;
@@ -270,10 +263,24 @@ define(['jquery', 'w2ui'], function ($, w2ui) {
       var splitted = new Splitted();
       var where_put_old_panel = get_opposite_position(where_put_new_panel);
       var parent = panel.parent();
+      var position = panel.position();
 
-      set_parent_child_relationship(parent, splitted, panel.position());
+      set_parent_child_relationship(parent, splitted, position);
       set_parent_child_relationship(splitted, new_panel, where_put_new_panel);
       set_parent_child_relationship(splitted, panel, where_put_old_panel);
+
+      if (splitted.parent() !== parent || splitted.position() !== position) {
+         throw new Error("Inconsistent 1");
+      }
+
+      if (new_panel.parent() !== splitted || new_panel.position() !== where_put_new_panel) {
+         throw new Error("Inconsistent 2");
+      }
+
+      if (panel.parent() !== splitted || panel.position() !== where_put_old_panel) {
+         throw new Error("Inconsistent 3");
+      }
+
    };
 
    var panel_to_tabbed_panel = function (panel, new_panel) {

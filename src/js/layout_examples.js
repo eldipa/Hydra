@@ -196,15 +196,28 @@ define(['jquery', 'layout'], function ($, layout) {
        * Hasta ahora hemos siempre agregado nuevos paneles pero que pasa si
        * queremos agregar 2 veces el mismo panel?
        *
-       * Esto nos dara un error.
+       * Esto hace que el panel se mueva de donde esta y se vaya a otro lugar
        * */
 
-      try {
-         lorem_ipsum_msg.split(hello_msg, 'top');
-         throw new Error("Fail");
-      }
-      catch (e) {
-      }
+      lorem_ipsum_msg.split(hello_msg, 'top');
+      
+      /* --------- XXX Expected Result: 
+       *
+       *    | | M | H |
+       *   Z|F|---|---| Ba
+       *    | | B | L |
+       *
+       * ------------- */
+
+      zaz_msg.parent().split(hello_msg, 'bottom');
+      /* --------- XXX Expected Result: 
+       *
+       *   Z|F| M |   |
+       *   ---|---| L | Ba
+       *    H | B |   |
+       *
+       * ------------- */
+
 
       /*
        * Asi como podemos agregar paneles podemos removerlos.
@@ -257,6 +270,8 @@ define(['jquery', 'layout'], function ($, layout) {
        *     
        *
        * ------------- */
+
+      return;
    }
 
    return {init: init};
