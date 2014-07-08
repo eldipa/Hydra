@@ -81,15 +81,19 @@ define(['jquery', 'w2ui'], function ($, w2ui) {
       delete this._position;
    };
 
+   Panel.prototype.is_attached = function () {
+      return this._parent.is_attached();
+   };
+
    NullParent.prototype = Panel.prototype;
    NullParent.refresh = NullParent.remove_me = NullParent.put = NullParent.replace_panel = function () {};
+   NullParent.is_attached = function () { return false; };
 
    var Root = function (dom_parent_element) {
       this._parent = NullParent;
       this._dom_el = $('<div style="width: 100%; height: 400px;"></div>');
       dom_parent_element.append(this._dom_el);
 
-      this._full = false;
       this._name = ("" + Math.random()).slice(2);
 
       var pstyle = 'border: 2px solid #000000; padding: 0px;'; 
@@ -114,6 +118,11 @@ define(['jquery', 'w2ui'], function ($, w2ui) {
 
    Root.prototype.push = function (panel) {
       //TODO check if there is an other panel already?
+      var child = this._subpanel_layout.content('main');
+      if (child) {
+         child.remove();
+      }
+
       set_parent_child_relationship(this, panel, 'main');
    };
 
@@ -137,11 +146,14 @@ define(['jquery', 'w2ui'], function ($, w2ui) {
       this._subpanel_layout.content('main', '');
    };
 
+   Root.prototype.is_attached = function () {
+      return true;
+   };
+
    var Splitted = function () {
       this._parent = NullParent;
       this._splitted_direction = null;
       this._main_position_is_mapping_to = null;
-      this._full = false;
 
       this._name = ("" + Math.random()).slice(2);
       var pstyle = 'border: 1px none #0000ef; padding: 0px;'; 
