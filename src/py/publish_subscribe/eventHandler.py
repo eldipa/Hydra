@@ -83,6 +83,16 @@ class EventHandler(threading.Thread):
         
         del self.subscriptions_by_id[subscription_id]
 
+    def subscribe_for_once_call(self, topic, callback):
+       def wrapper(*args, **kargs):
+          callback.subscription = wrapper.subscription
+          try:
+             return callback(*args, **kargs)
+          finally:
+             self.unsubscribe(wrapper.subscription['id'])
+
+       return self.subscribe(topic, wrapper)
+
     def run(self):
         try:
            while not self.connection.end_of_the_communication:

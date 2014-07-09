@@ -358,22 +358,20 @@ Each subscription has a identifier that you can use to cancel it latter.
 One time Subscription
 ---------------------
 
-Sometimes you are only interested in one particular event and not in all the events
+Sometimes you are only interested in one particular event and not in all the events 
 of some topic.
 This kind of subscription for just one is a shortcut of:
 
 ::
 
    >>> received = None
-   >>> subcription = {}
-   >>> #this code is not thread safe! Don't use this in production
    >>> def called_only_one(data):
    ...   global received
    ...   received = data
    ...
-   ...   pubsub.unsubscribe(subcription['id'])
+   ...   pubsub.unsubscribe(called_only_one.subscription['id'])
 
-   >>> subcription['id'] = pubsub.subscribe('only-one', called_only_one)
+   >>> pubsub.subscribe('only-one', called_only_one)
 
    >>> pubsub.publish('only-one', 'A')
    >>> pubsub.publish('only-one', 'B')
@@ -382,6 +380,24 @@ This kind of subscription for just one is a shortcut of:
    >>> received
    u'A'
 
+The *subscribe_for_once_call* is a shortcut for that:
+
+::
+
+   >>> received = None
+   >>> def called_only_one(data):
+   ...   global received
+   ...   received = data
+
+   >>> pubsub.subscribe_for_once_call('only-one', called_only_one)
+
+   >>> pubsub.publish('only-one', 'A')
+   >>> pubsub.publish('only-one', 'B')
+
+   >>> time.sleep(2)
+   >>> received
+   u'A'
+   
 
 Cleanup
 -------
