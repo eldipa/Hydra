@@ -28,7 +28,7 @@ class EventHandler(threading.Thread):
         self.start()
         
         
-    def subscribe(self, topic, callback):
+    def subscribe(self, topic, callback, return_subscription_id=False):
         fail_if_topic_isnt_valid(topic, allow_empty=True)
 
         self.lock.acquire()
@@ -48,7 +48,10 @@ class EventHandler(threading.Thread):
                  }
 
            self.next_valid_subscription_id += 1
-           return self.next_valid_subscription_id - 1;
+           if return_subscription_id:
+              return self.next_valid_subscription_id - 1;
+           else:
+              return
 
         finally:
            self.lock.release()

@@ -297,7 +297,7 @@ Subscription object
 -------------------
 
 Each call to *subscribe* generate a subscription, each one has an unique id which
-is returned by the *subscribe* call.
+is returned by the *subscribe* call if you request it.
 The subscription object can be accessed as an attribute of the callback when
 is executed.
 
@@ -312,8 +312,8 @@ object will be setted in the *subscription* property of the callback.
    ...    global results
    ...    results.append((data, f.subscription['id']))
 
-   >>> subscription_id_1 = pubsub.subscribe('subcription-object-1', f)
-   >>> subscription_id_2 = pubsub.subscribe('subcription-object-2', f)
+   >>> subscription_id_1 = pubsub.subscribe('subcription-object-1', f, return_subscription_id=True)
+   >>> subscription_id_2 = pubsub.subscribe('subcription-object-2', f, return_subscription_id=True)
 
    >>> pubsub.publish('subcription-object-1', 'A')
    >>> pubsub.publish('subcription-object-2', 'B')
@@ -342,7 +342,7 @@ Each subscription has a identifier that you can use to cancel it latter.
    ...    global receive
    ...    receive = data
 
-   >>> subscription_id = pubsub.subscribe('to-be-cancel', f)
+   >>> subscription_id = pubsub.subscribe('to-be-cancel', f, return_subscription_id=True)
    >>>
    >>> pubsub.publish('to-be-cancel', 'A')
    >>> time.sleep(2)
