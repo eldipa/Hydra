@@ -293,6 +293,40 @@ Publish *any* event make no senses.
 
    >>> pubsub.subscribe('', lambda: 0)  # no exception here
 
+Subscription object
+-------------------
+
+Each call to *subscribe* generate a subscription, each one has an unique id which
+is returned by the *subscribe* call.
+The subscription object can be accessed as an attribute of the callback when
+is executed.
+
+If one callback is registered multiple times, in each execution the correct subscription
+object will be setted in the *subscription* property of the callback.
+
+::
+
+   >>> results = []
+
+   >>> def f(data):
+   ...    global results
+   ...    results.append((data, f.subscription['id']))
+
+   >>> subscription_id_1 = pubsub.subscribe('subcription-object-1', f)
+   >>> subscription_id_2 = pubsub.subscribe('subcription-object-2', f)
+
+   >>> pubsub.publish('subcription-object-1', 'A')
+   >>> pubsub.publish('subcription-object-2', 'B')
+
+   >>> time.sleep(2)
+   >>> results = zip(*results)  # [(a, 1), (b, 2)] --> [(a, b), (1, 2)]
+
+   >>> results[0] 
+   (u'A', u'B')
+
+   >>> results[1] == (subscription_id_1, subscription_id_2)
+   True
+
 
 Unsubscription
 --------------
@@ -330,23 +364,24 @@ This kind of subscription for just one is a shortcut of:
 
 ::
 
-   ### received = None
-   ### subcription = {}
-   ### def called_only_one(data):
+   >>> received = None
+   >>> subcription = {}
+   >>> #this code is not thread safe! Don't use this in production
+   >>> def called_only_one(data):
    ...   global received
    ...   received = data
    ...
    ...   pubsub.unsubscribe(subcription['id'])
 
-   ### #this code is not thread safe!
-   ### subcription['id'] = pubsub.subscribe('only-one', called_only_one)
+   >>> subcription['id'] = pubsub.subscribe('only-one', called_only_one)
 
-   ### pubsub.publish('only-one', 'A')
-   ### pubsub.publish('only-one', 'B')
+   >>> pubsub.publish('only-one', 'A')
+   >>> pubsub.publish('only-one', 'B')
 
-   ### time.sleep(2)
-   ### received
-   'A'
+   >>> time.sleep(2)
+   >>> received
+   u'A'
+
 
 Cleanup
 -------
