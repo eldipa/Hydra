@@ -69,5 +69,7 @@ class GdbSpawmer:
         self.forkDetector.salir()
         self.forkDetector.join()
         
-
+    def shutdown(self):
+        self.eliminarCola()
+        self.exit('all')
     

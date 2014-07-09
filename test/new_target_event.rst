@@ -69,5 +69,6 @@ Clean up
 
 ::
 
+   >>> spawmer.shutdown()
    >>> os.system("python py/publish_subscribe/notifier.py stop")
    0
