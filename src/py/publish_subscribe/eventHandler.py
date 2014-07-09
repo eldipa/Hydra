@@ -37,10 +37,11 @@ class EventHandler(threading.Thread):
                self.callbacks_by_topic[topic].append((callback, {'id': self.next_valid_subscription_id}))
                syslog.syslog(syslog.LOG_DEBUG, "Registered subscription locally. Subscription to the topic '%s' already sent." % (topic))
            else:
-               self.callbacks_by_topic[topic] = [(callback, {'id': self.next_valid_subscription_id})]
-               syslog.syslog(syslog.LOG_DEBUG, "Sending subscription to the topic '%s'." % (topic))
                self.connection.send_object({'type': 'subscribe', 'topic': topic})
                syslog.syslog(syslog.LOG_DEBUG, "Subscription sent.")
+
+               self.callbacks_by_topic[topic] = [(callback, {'id': self.next_valid_subscription_id})]
+               syslog.syslog(syslog.LOG_DEBUG, "Sending subscription to the topic '%s'." % (topic))
 
            self.subscriptions_by_id[self.next_valid_subscription_id] = {
                  'callback': callback,
@@ -66,6 +67,14 @@ class EventHandler(threading.Thread):
 
 
     def unsubscribe(self, subscription_id):
+        self.lock.acquire()
+        try:
+           self._unsubscribe(subscription_id)
+        finally:
+           self.lock.release()
+
+
+    def _unsubscribe(self, subscription_id):
         try:
            subscription = self.subscriptions_by_id[subscription_id]
         except KeyError:
@@ -86,15 +95,40 @@ class EventHandler(threading.Thread):
         
         del self.subscriptions_by_id[subscription_id]
 
-    def subscribe_for_once_call(self, topic, callback, **kargs):
-       def wrapper(*args, **kargs):
-          callback.subscription = wrapper.subscription
-          try:
-             return callback(*args, **kargs)
-          finally:
-             self.unsubscribe(wrapper.subscription['id'])
 
-       return self.subscribe(topic, wrapper, **kargs)
+    def subscribe_for_once_call(self, topic, callback, **kargs):
+       subscription = {}
+       temp_lock = Lock()
+
+       def wait_until_i_can_unsubscribe_myself():
+          temp_lock.acquire()
+          temp_lock.release()
+
+       def dont_allow_unsubscription():
+          temp_lock.acquire()
+
+       def allow_unsubscription():
+          temp_lock.release()
+          
+
+       def wrapper(data):
+          try:
+             return callback(data)
+          finally:
+             wait_until_i_can_unsubscribe_myself()  
+             self._unsubscribe(subscription['id'])
+
+
+       return_subscription_id = kargs.get('return_subscription_id', False)
+       kargs['return_subscription_id'] = True
+
+       dont_allow_unsubscription()
+       try:
+          subscription['id'] = self.subscribe(topic, wrapper, **kargs)
+       finally:
+          allow_unsubscription() #TODO very weak implementation: what happen if the callback is registered but an error happen and its subscriptio id is lost? How we can unsubscribe it?
+
+       return subscription['id'] if return_subscription_id else None
 
     def run(self):
         try:
@@ -121,7 +155,6 @@ class EventHandler(threading.Thread):
                 
                for callback, subscription in callbacks:
                    try:
-                       callback.subscription = subscription
                        callback(event['data'])
                    except:
                        syslog.syslog(syslog.LOG_ERR, "Exception in callback for the topic '%s': %s" % (t if t else "(the empty topic)", traceback.format_exc()))
