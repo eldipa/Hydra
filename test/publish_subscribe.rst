@@ -293,6 +293,61 @@ Publish *any* event make no senses.
 
    >>> pubsub.subscribe('', lambda: 0)  # no exception here
 
+
+Unsubscription
+--------------
+
+In some cases it's necessary to cancel a subscription.
+Each subscription has a identifier that you can use to cancel it latter.
+
+::
+
+   >>> receive = None
+   >>>
+   >>> def f(data):
+   ...    global receive
+   ...    receive = data
+
+   >>> subscription_id = pubsub.subscribe('to-be-cancel', f)
+   >>>
+   >>> pubsub.publish('to-be-cancel', 'A')
+   >>> time.sleep(2)
+
+   >>> pubsub.unsubscribe(subscription_id)
+   >>> pubsub.publish('to-be-cancel', 'B') #this event should be discarted.
+
+   >>> time.sleep(2)
+   >>> receive
+   u'A'
+
+
+One time Subscription
+---------------------
+
+Sometimes you are only interested in one particular event and not in all the events
+of some topic.
+This kind of subscription for just one is a shortcut of:
+
+::
+
+   ### received = None
+   ### subcription = {}
+   ### def called_only_one(data):
+   ...   global received
+   ...   received = data
+   ...
+   ...   pubsub.unsubscribe(subcription['id'])
+
+   ### #this code is not thread safe!
+   ### subcription['id'] = pubsub.subscribe('only-one', called_only_one)
+
+   ### pubsub.publish('only-one', 'A')
+   ### pubsub.publish('only-one', 'B')
+
+   ### time.sleep(2)
+   ### received
+   'A'
+
 Cleanup
 -------
 
