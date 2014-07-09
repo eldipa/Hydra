@@ -483,6 +483,7 @@ First we initialize the object
 
    
 Then we can subscribe to any event
+(Note: the callback will not have a 'subcription' property like the callbacks in Python)
 
 ::
 
@@ -527,7 +528,8 @@ And, of course, we can receive and/or send events
    true
 
 The API support unsubscribe callbacks, first subscribe the callback as usual *but* save
-the subscription id returned.
+the subscription id returned (this is the default, unlike the Python version that you
+need to explicity request it).
 
 ::
    
@@ -549,9 +551,30 @@ To prove this, we send a 'temporal' event and it should not be received
    'no data for now'
 
    js> pubsub.publish('temporal', 'this should not be received');
-   js> while ( !result.tmp_data && count < 10000 ) { count += 1; } ; result.tmp_data;
+
+   js> var count = 0;   
+   js> while ( count < 10000 ) { count += 1; } ; result.tmp_data;
    'no data for now'
 
+
+We support also the *subscribe_for_once_call* too:
+
+::
+
+   js> var result = {}
+   js> var _ = pubsub.subscribe_for_once_call('temporal-once', function (data) {
+   ...   result.tmp_data = data;
+   ... });
+
+   js> result.tmp_data = "no data for now";
+   'no data for now'
+
+   js> pubsub.publish('temporal-once', 'this should be received');
+   js> pubsub.publish('temporal-once', 'this should NOT be received');
+
+   js> var count = 0;
+   js> while ( count < 10000 ) { count += 1; } ; result.tmp_data;
+   'this should be received'
    
 Finally, we close and release any resource
 
