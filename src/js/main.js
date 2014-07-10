@@ -10,21 +10,32 @@ requirejs.config({
       ace: 'external/ace',
       w2ui_internals: 'external/w2ui-1.3.2',
       w2ui: 'external/w2ui',
-      ctxmenu: 'external/ctxmenu'
+      ctxmenu: 'external/ctxmenu',
+      jqueryui: 'external/jquery-ui-1.11.0',
    },
 
    shim: {
       "w2ui_internals": {
          deps: ['jquery'],
          exports: "w2ui"
+      },
+      "jqueryui": {
+         exports: "$",
+         deps: ['jquery']
       }
    }
 
 });
 
-requirejs(['w2ui', 'code_view', 'jquery', 'event_handler', 'export_console', 'poc'], function (w2ui, code_view, $, event_handler, export_console, poc) {
+requirejs(['w2ui', 'code_view', 'jquery', 'export_console', 'layout', 'layout_examples', 'jqueryui'], function (w2ui, code_view, $, export_console, layout, layout_examples, _) {
    var js_console_server = export_console.init();
    var fs = require('fs');
+
+   $( "#tabs" ).tabs();
+
+   //layout_examples.init();
+
+
    /*var event_handler = new event_handler.EventHandler();
    event_handler.init();
    */

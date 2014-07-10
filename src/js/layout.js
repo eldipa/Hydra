@@ -84,6 +84,12 @@ define(['jquery', 'w2ui'], function ($, w2ui) {
    Panel.prototype.is_attached = function () {
       return this._parent.is_attached();
    };
+   
+   Panel.prototype.push = function (new_panel) {
+      new_panel.remove();
+      panel_to_tabbed_panel(this, new_panel);
+   };
+
 
    NullParent.prototype = Panel.prototype;
    NullParent.refresh = NullParent.remove_me = NullParent.put = NullParent.replace_panel = function () {};
@@ -271,6 +277,43 @@ define(['jquery', 'w2ui'], function ($, w2ui) {
    };
 
 
+   var Tabbed = function () {
+      this._parent = NullParent;
+
+      var id = ("" + Math.random()).slice(2);
+      this._tabs_handler = $('<div id="'+id+'"></div>');
+      this._headers = this._tabs_handler.append('<ul></ul>');
+   };
+
+   Tabbed.prototype.__proto__ = Panel.prototype;
+
+   Tabbed.prototype.put = function (panel, position) {
+      var tab = {
+         id: ("" + Math.random()).slice(2),
+         panel: panel
+      };
+
+      tab.header = $('<li><a href="#'+tab.id+'"></a></li>');
+      tab.container = $('<div id="'tab.id+'"></div>');
+
+      this._headers.append(tab.header);
+      this._tabs_handler.append(tab.container);
+   };
+
+   Tabbed.prototype.render = function () {
+      var box = this.box;
+      
+
+   };
+
+   Tabbed.prototype.on_front = function (panel) {
+      if (panel.parent() !== this) {
+         throw new Error("I can't put on front a panel that isn't my.");
+      }
+    
+      //TODO  
+   };
+
    var panel_to_splitted_panel = function (panel, new_panel, where_put_new_panel) {
       var splitted = new Splitted();
       var where_put_old_panel = get_opposite_position(where_put_new_panel);
@@ -299,10 +342,10 @@ define(['jquery', 'w2ui'], function ($, w2ui) {
       var tabbed = new Tabbed();
 
       set_parent_child_relationship(this, tabbed, panel.position());
-      set_parent_child_relationship(tabbed, panel, 'first');
-      set_parent_child_relationship(tabbed, new_panel, 'last');
+      set_parent_child_relationship(tabbed, panel, 0);
+      set_parent_child_relationship(tabbed, new_panel, 1);
 
-      tabbed.on_front(new_panel);
+      //tabbed.on_front(new_panel); TODO
    };
 
    var swap_panels = function (panel, other_panel) {

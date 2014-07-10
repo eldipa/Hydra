@@ -96,7 +96,7 @@ define(['jquery', 'layout'], function ($, layout) {
       hello_msg.msg = hello_msg.msg + '<br />!!!';
 
       var more_bye_msg = new Panel();
-      more_bye_msg.msg = "... Bye!";
+      more_bye_msg.msg = "More ... Bye!";
       more_bye_msg.render = hello_msg.render;
 
       bye_bye_msg.split(more_bye_msg, 'bottom');
@@ -274,5 +274,5 @@ define(['jquery', 'layout'], function ($, layout) {
       return;
    }
 
-   return {init: init};
+   return {init: function () {}}; //init};
 });
