@@ -293,6 +293,59 @@ Publish *any* event make no senses.
 
    >>> pubsub.subscribe('', lambda: 0)  # no exception here
 
+
+Unsubscription
+--------------
+
+In some cases it's necessary to cancel a subscription.
+Each subscription has a identifier that you can use to cancel it latter.
+
+::
+
+   >>> receive = None
+   >>>
+   >>> def f(data):
+   ...    global receive
+   ...    receive = data
+
+   >>> subscription_id = pubsub.subscribe('to-be-cancel', f, return_subscription_id=True)
+   >>>
+   >>> pubsub.publish('to-be-cancel', 'A')
+   >>> time.sleep(2)
+
+   >>> pubsub.unsubscribe(subscription_id)
+   >>> pubsub.publish('to-be-cancel', 'B') #this event should be discarted.
+
+   >>> time.sleep(2)
+   >>> receive
+   u'A'
+
+
+One time Subscription
+---------------------
+
+Sometimes you are only interested in one particular event and not in all the events 
+of some topic.
+
+The *subscribe_for_once_call* is a shortcut for that:
+
+::
+
+   >>> received = None
+   >>> def called_only_one(data):
+   ...   global received
+   ...   received = data
+
+   >>> pubsub.subscribe_for_once_call('only-one', called_only_one)
+
+   >>> pubsub.publish('only-one', 'A')
+   >>> pubsub.publish('only-one', 'B')
+
+   >>> time.sleep(2)
+   >>> received
+   u'A'
+   
+
 Cleanup
 -------
 
@@ -377,6 +430,7 @@ First we initialize the object
 
    
 Then we can subscribe to any event
+(Note: the callback will not have a 'subcription' property like the callbacks in Python)
 
 ::
 
@@ -421,7 +475,8 @@ And, of course, we can receive and/or send events
    true
 
 The API support unsubscribe callbacks, first subscribe the callback as usual *but* save
-the subscription id returned.
+the subscription id returned (this is the default, unlike the Python version that you
+need to explicity request it).
 
 ::
    
@@ -443,9 +498,30 @@ To prove this, we send a 'temporal' event and it should not be received
    'no data for now'
 
    js> pubsub.publish('temporal', 'this should not be received');
-   js> while ( !result.tmp_data && count < 10000 ) { count += 1; } ; result.tmp_data;
+
+   js> var count = 0;   
+   js> while ( count < 10000 ) { count += 1; } ; result.tmp_data;
    'no data for now'
 
+
+We support also the *subscribe_for_once_call* too:
+
+::
+
+   js> var result = {}
+   js> var _ = pubsub.subscribe_for_once_call('temporal-once', function (data) {
+   ...   result.tmp_data = data;
+   ... });
+
+   js> result.tmp_data = "no data for now";
+   'no data for now'
+
+   js> pubsub.publish('temporal-once', 'this should be received');
+   js> pubsub.publish('temporal-once', 'this should NOT be received');
+
+   js> var count = 0;
+   js> while ( count < 10000 ) { count += 1; } ; result.tmp_data;
+   'this should be received'
    
 Finally, we close and release any resource
 

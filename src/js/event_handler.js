@@ -119,6 +119,26 @@ define(function () {
       delete this.subscriptions_by_id[subscription_id];
    };
 
+   EventHandler.prototype.subscribe_for_once_call = function (topic, callback) {
+      var subscription_id = null;
+      var that = this;
+      var wrapper = function () {
+         var args = Array.prototype.slice.call(arguments);
+         try {
+            return callback.apply(null, args);
+         } 
+         catch (err) {
+            throw err;
+         }
+         finally {
+            that.unsubscribe(subscription_id);
+         }
+      };
+
+      subscription_id = this.subscribe(topic, wrapper);
+      return subscription_id;
+   };
+
 
    EventHandler.prototype.init_dispacher = function () {
       var buf = '';

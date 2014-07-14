@@ -21,23 +21,38 @@ class EventHandler(threading.Thread):
         self.connection = Connection(self._get_address())
         self.lock = Lock()
         self.callbacks_by_topic = {}
+      
+        self.subscriptions_by_id = {}
+        self.next_valid_subscription_id = 0
 
         self.start()
         
         
-    def subscribe(self, topic, callback):
+    def subscribe(self, topic, callback, return_subscription_id=False):
         fail_if_topic_isnt_valid(topic, allow_empty=True)
 
         self.lock.acquire()
         try:
            if self.callbacks_by_topic.has_key(topic):
-               self.callbacks_by_topic[topic].append(callback)
+               self.callbacks_by_topic[topic].append((callback, {'id': self.next_valid_subscription_id}))
                syslog.syslog(syslog.LOG_DEBUG, "Registered subscription locally. Subscription to the topic '%s' already sent." % (topic))
            else:
-               self.callbacks_by_topic[topic] = [callback]
-               syslog.syslog(syslog.LOG_DEBUG, "Sending subscription to the topic '%s'." % (topic))
                self.connection.send_object({'type': 'subscribe', 'topic': topic})
                syslog.syslog(syslog.LOG_DEBUG, "Subscription sent.")
+
+               self.callbacks_by_topic[topic] = [(callback, {'id': self.next_valid_subscription_id})]
+               syslog.syslog(syslog.LOG_DEBUG, "Sending subscription to the topic '%s'." % (topic))
+
+           self.subscriptions_by_id[self.next_valid_subscription_id] = {
+                 'callback': callback,
+                 'topic': topic,
+                 }
+
+           self.next_valid_subscription_id += 1
+           if return_subscription_id:
+              return self.next_valid_subscription_id - 1;
+           else:
+              return
 
         finally:
            self.lock.release()
@@ -49,7 +64,71 @@ class EventHandler(threading.Thread):
         syslog.syslog(syslog.LOG_DEBUG, "Sending publication of an event with topic '%s'." % (topic))
         self.connection.send_object({'type': 'publish', 'topic': topic, 'data': data})
         syslog.syslog(syslog.LOG_DEBUG, "Publication of an event sent.")
+
+
+    def unsubscribe(self, subscription_id):
+        self.lock.acquire()
+        try:
+           self._unsubscribe(subscription_id)
+        finally:
+           self.lock.release()
+
+
+    def _unsubscribe(self, subscription_id):
+        try:
+           subscription = self.subscriptions_by_id[subscription_id]
+        except KeyError:
+           raise Exception("The subscription id '%i' hasn't any callback registered to it." % subscription_id)
+
+        topic = subscription['topic']
+        callbackToBeRemoved = subscription['callback']
+
+        for i, callback_and_meta in enumerate(self.callbacks_by_topic[topic]):
+           callback, meta = callback_and_meta
+           if callback == callbackToBeRemoved and meta['id'] == subscription_id:
+              del self.callbacks_by_topic[topic][i]
+              break
+
+        if not self.callbacks_by_topic[topic]:
+           del self.callbacks_by_topic[topic]
+           #TODO send a message to the server, we are not interested in 'topic' any more
         
+        del self.subscriptions_by_id[subscription_id]
+
+
+    def subscribe_for_once_call(self, topic, callback, **kargs):
+       subscription = {}
+       temp_lock = Lock()
+
+       def wait_until_i_can_unsubscribe_myself():
+          temp_lock.acquire()
+          temp_lock.release()
+
+       def dont_allow_unsubscription():
+          temp_lock.acquire()
+
+       def allow_unsubscription():
+          temp_lock.release()
+          
+
+       def wrapper(data):
+          try:
+             return callback(data)
+          finally:
+             wait_until_i_can_unsubscribe_myself()  
+             self._unsubscribe(subscription['id'])
+
+
+       return_subscription_id = kargs.get('return_subscription_id', False)
+       kargs['return_subscription_id'] = True
+
+       dont_allow_unsubscription()
+       try:
+          subscription['id'] = self.subscribe(topic, wrapper, **kargs)
+       finally:
+          allow_unsubscription() #TODO very weak implementation: what happen if the callback is registered but an error happen and its subscriptio id is lost? How we can unsubscribe it?
+
+       return subscription['id'] if return_subscription_id else None
 
     def run(self):
         try:
@@ -74,7 +153,7 @@ class EventHandler(threading.Thread):
                callbacks = self.callbacks_by_topic.get(t, []);
                syslog.syslog(syslog.LOG_DEBUG, "For the topic '%s' there are %i callbacks." % (t if t else "(the empty topic)", len(callbacks)))
                 
-               for callback in callbacks:
+               for callback, subscription in callbacks:
                    try:
                        callback(event['data'])
                    except:
