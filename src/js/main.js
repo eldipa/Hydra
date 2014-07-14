@@ -31,10 +31,9 @@ requirejs(['w2ui', 'code_view', 'jquery', 'export_console', 'layout', 'layout_ex
    var js_console_server = export_console.init();
    var fs = require('fs');
 
-   $( "#tabs" ).tabs();
+   //$( "#tabs" ).tabs();
 
-   //layout_examples.init();
-
+   layout_examples.init();
 
    /*var event_handler = new event_handler.EventHandler();
    event_handler.init();

@@ -271,8 +271,36 @@ define(['jquery', 'layout'], function ($, layout) {
        *
        * ------------- */
 
+      /*
+       * En un mismo lugar pueden convivir varios paneles usando una vista basada
+       * en tabs. A diferencia de un split, solo uno de los paneles es mostrado
+       * y el resto esta en background.
+       * */
+
+      hello_msg.push(lorem_ipsum_msg);
+      hello_msg.refresh();
+
+      /* --------- XXX Expected Result: 
+       *
+       *      
+       *    H/(L)
+       *     
+       *
+       * ------------- */
+
+      hello_msg.push(bye_bye_msg);
+      hello_msg.refresh();
+      
+      /* --------- XXX Expected Result: 
+       *
+       *      
+       *    H/(L,B)
+       *     
+       *
+       * ------------- */
+
       return;
    }
 
-   return {init: function () {}}; //init};
+   return {init: init};
 });

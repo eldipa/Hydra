@@ -93,7 +93,7 @@ define(['jquery', 'w2ui'], function ($, w2ui) {
 
    NullParent.prototype = Panel.prototype;
    NullParent.refresh = NullParent.remove_me = NullParent.put = NullParent.replace_panel = function () {};
-   NullParent.is_attached = function () { return false; };
+   NullParent.is_attached = NullParent.is_tabbed = function () { return false; };
 
    var Root = function (dom_parent_element) {
       this._parent = NullParent;
@@ -112,6 +112,7 @@ define(['jquery', 'w2ui'], function ($, w2ui) {
    };
 
    Root.prototype.__proto__ = Panel.prototype;
+   Root.prototype.is_tabbed = function () { return false; };
 
    Root.prototype.put = function (panel, position) {
       //TODO any position is valid?
@@ -281,11 +282,20 @@ define(['jquery', 'w2ui'], function ($, w2ui) {
       this._parent = NullParent;
 
       var id = ("" + Math.random()).slice(2);
+
+      this._id = id;
       this._tabs_handler = $('<div id="'+id+'"></div>');
-      this._headers = this._tabs_handler.append('<ul></ul>');
+      this._headers = $('<ul></ul>');
+      this._tabs = [];
+
+      this._tabs_handler.append(this._headers);
    };
 
    Tabbed.prototype.__proto__ = Panel.prototype;
+
+   Tabbed.prototype.is_tabbed = function () {
+      return true;
+   };
 
    Tabbed.prototype.put = function (panel, position) {
       var tab = {
@@ -293,17 +303,31 @@ define(['jquery', 'w2ui'], function ($, w2ui) {
          panel: panel
       };
 
-      tab.header = $('<li><a href="#'+tab.id+'"></a></li>');
-      tab.container = $('<div id="'tab.id+'"></div>');
+      tab.header = $('<li><a href="#'+tab.id+'">AAA</a></li>');
+      tab.container = $('<div id="'+tab.id+'"></div>');
 
       this._headers.append(tab.header);
       this._tabs_handler.append(tab.container);
+      this._tabs.push(tab);
    };
 
    Tabbed.prototype.render = function () {
       var box = this.box;
-      
 
+      if ($('#' + this._id).length === 0 ) {
+         $(box).contents().remove();
+         $(box).append(this._tabs_handler);
+      }
+
+      for(var i = 0; i < this._tabs.length; i++) {
+         var tab = this._tabs[i];
+         tab.panel.box = $('#' + tab.id);
+         tab.panel.render();
+         //TODO update header
+      }
+
+      $('#' + this._id).tabs();
+      $('#' + this._id).tabs( "refresh" );
    };
 
    Tabbed.prototype.on_front = function (panel) {
@@ -339,11 +363,20 @@ define(['jquery', 'w2ui'], function ($, w2ui) {
    };
 
    var panel_to_tabbed_panel = function (panel, new_panel) {
-      var tabbed = new Tabbed();
+      var parent = panel.parent();
 
-      set_parent_child_relationship(this, tabbed, panel.position());
-      set_parent_child_relationship(tabbed, panel, 0);
-      set_parent_child_relationship(tabbed, new_panel, 1);
+      if (parent.is_tabbed() !== true) {
+         var position = panel.position();
+         var tabbed = new Tabbed();
+
+         set_parent_child_relationship(parent, tabbed, position);
+         set_parent_child_relationship(tabbed, panel, 'first');
+      }
+      else {
+         var tabbed = parent;
+      }
+
+      set_parent_child_relationship(tabbed, new_panel, 'last');
 
       //tabbed.on_front(new_panel); TODO
    };
