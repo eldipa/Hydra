@@ -66,8 +66,14 @@ define(['jquery', 'w2ui'], function ($, w2ui) {
    };
 
    Panel.prototype.split = function (new_panel, where_put_new_panel) {
-      new_panel.remove();
-      panel_to_splitted_panel(this, new_panel, where_put_new_panel);
+      if (this._parent.is_tabbed()) {
+         new_panel.remove();
+         panel_to_splitted_panel(this._parent, new_panel, where_put_new_panel);
+      }
+      else {
+         new_panel.remove();
+         panel_to_splitted_panel(this, new_panel, where_put_new_panel);
+      }
    };
 
    Panel.prototype.swap = function (other_panel) {
@@ -187,6 +193,7 @@ define(['jquery', 'w2ui'], function ($, w2ui) {
    };
 
    Splitted.prototype.__proto__ = Panel.prototype;
+   Splitted.prototype.is_tabbed = function () { return false; };
 
    Splitted.prototype.render = function () {
       this._subpanels_layout.render(this.box);

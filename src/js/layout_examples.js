@@ -299,6 +299,34 @@ define(['jquery', 'layout'], function ($, layout) {
        *
        * ------------- */
 
+      /*
+       * Splittear un panel con tabs es igual a splittear un panel sin los tabs.
+       * El contenido de un tab NO es splitteado (No hay por default un split dentro
+       * de un tab)
+       * */
+
+      hello_msg.split(more_bye_msg, 'left');
+      hello_msg.refresh();
+      
+      /* --------- XXX Expected Result: 
+       *
+       *      |
+       *    M | H/(L,B)
+       *      |
+       *
+       * ------------- */
+      return;
+
+      lorem_ipsum_msg.split(foo_msg, 'top'); //TODO
+      
+      /* --------- XXX Expected Result: 
+       *
+       *      | F
+       *    M |------- 
+       *      | H/(L,B)
+       *
+       * ------------- */
+
       return;
    }
 
