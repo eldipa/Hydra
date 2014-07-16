@@ -344,6 +344,26 @@ define(['jquery', 'w2ui'], function ($, w2ui) {
     
       //TODO  
    };
+   
+   Tabbed.prototype.replace_panel = function (panel, other_panel) {
+      if (panel.parent() !== this) {
+         throw new Error("I can't replace a panel that isn't my.");
+      }
+
+      var index = null;
+      for (var i = 0; i < this._tabs.length; i++) {
+         if (panel === this._tabs[i].panel) {
+            index = i;
+            break;
+         }
+      }
+
+      if (index === null) {
+         throw new Error("I can't replace a panel that i can't find.");
+      }
+
+      this._tabs[index].panel = other_panel; //TODO update title?
+   };
 
    var panel_to_splitted_panel = function (panel, new_panel, where_put_new_panel) {
       var splitted = new Splitted();

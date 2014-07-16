@@ -315,9 +315,9 @@ define(['jquery', 'layout'], function ($, layout) {
        *      |
        *
        * ------------- */
-      return;
 
-      lorem_ipsum_msg.split(foo_msg, 'top'); //TODO
+      lorem_ipsum_msg.split(foo_msg, 'top');
+      lorem_ipsum_msg.refresh();
       
       /* --------- XXX Expected Result: 
        *
@@ -327,7 +327,30 @@ define(['jquery', 'layout'], function ($, layout) {
        *
        * ------------- */
 
-      return;
+      bye_bye_msg.split(bar_msg, 'right');
+      bye_bye_msg.refresh();
+
+      
+      /* --------- XXX Expected Result: 
+       *
+       *      | F
+       *    M |----------------
+       *      | H/(L,B)  | Ba
+       *
+       * ------------- */
+
+      hello_msg.swap(more_bye_msg);
+      more_bye_msg.refresh(); //TODO
+
+      
+      /* --------- XXX Expected Result: 
+       *
+       *      | F
+       *    H |----------------
+       *      | M/(L,B)  | Ba
+       *
+       * ------------- */
+
    }
 
    return {init: init};
