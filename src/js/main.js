@@ -10,7 +10,8 @@ requirejs.config({
       ace: 'external/ace',
       w2ui_internals: 'external/w2ui-1.3.2',
       w2ui: 'external/w2ui',
-      ctxmenu: 'external/ctxmenu'
+      ctxmenu: 'external/ctxmenu',
+      varViewer: 'varViewer'
    },
 
    shim: {

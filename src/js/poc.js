@@ -1,4 +1,4 @@
-define(['w2ui', 'code_view', 'event_handler', 'ctxmenu', 'jquery'], function (w2ui, code_view, event_handler, ctxmenu, $) {
+define(['w2ui', 'code_view', 'event_handler', 'ctxmenu', 'jquery','varViewer'], function (w2ui, code_view, event_handler, ctxmenu, $, varViewer) {
    // init the event handler system, connecting this with the notifier.
    // now, we can send and receive events.
    var event_handler = new event_handler.EventHandler();
@@ -66,12 +66,15 @@ define(['w2ui', 'code_view', 'event_handler', 'ctxmenu', 'jquery'], function (w2
                   }
                }
          }},
-         { type: 'bottom', size: 50, resizable: true, style: pstyle, content: '' }
+         { type: 'bottom', size: 50, resizable: true, style: pstyle, content: '' },
+         { type: 'right', size: 50, resizable: true, style: pstyle, content: '' }
       ]
    });
 
    // we assign the ui objects to the layout
    w2ui.objects['layout'].content("main", view.view_dom);
+   
+   varViewer.visor.setUI(w2ui.objects['layout']);
 
    var session_id = null;
    var target_id = null;
@@ -189,7 +192,7 @@ define(['w2ui', 'code_view', 'event_handler', 'ctxmenu', 'jquery'], function (w2
 
    });
 
-   event_handler.publish("debugger.load", "cppTestCode/multiple_files/sort");
+   event_handler.publish("debugger.load", "cppTestCode/testVariables");
 
    return {};
 });
