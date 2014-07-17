@@ -44,9 +44,7 @@ define([ 'event_handler' ], function(event_handler) {
 		}
 	};
 
-	var visor = new VarViewer();
-
 	return {
-		visor : visor
+		VarViewer : VarViewer
 	};
 });

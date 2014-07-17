@@ -74,7 +74,8 @@ define(['w2ui', 'code_view', 'event_handler', 'ctxmenu', 'jquery','varViewer'], 
    // we assign the ui objects to the layout
    w2ui.objects['layout'].content("main", view.view_dom);
    
-   varViewer.visor.setUI(w2ui.objects['layout']);
+   var visor = new varViewer.VarViewer();
+   visor.setUI(w2ui.objects['layout']);
 
    var session_id = null;
    var target_id = null;
