@@ -22,7 +22,7 @@ try:
 
     os.system("python py/publish_subscribe/notifier.py start")
 
-    spawmer = gdb.gdbSpawmer.GdbSpawmer()
+    spawmer = gdb.gdbSpawmer.GdbSpawmer(comandos=True)
 
     # esperar quit
     while(stdin.readline() not in ["quit\n","q\n"]):
