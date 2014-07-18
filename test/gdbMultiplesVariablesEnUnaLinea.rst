@@ -23,11 +23,12 @@ Iniciamos el publicador
    >>> eventHandler = publish_subscribe.eventHandler.EventHandler()
    
 
-Iniciamos al gdbSpawmer  
+Iniciamos al gdbSpawmer, notar que le pasamos el flag para que acepte comandos
+nuevos:
 
 :: 
    >>> import gdb.gdbSpawmer 
-   >>> spawmer = gdb.gdbSpawmer.GdbSpawmer() 
+   >>> spawmer = gdb.gdbSpawmer.GdbSpawmer(comandos = True) 
    
 Lanzamos un nuevo gdb: 
 

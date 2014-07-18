@@ -17,7 +17,8 @@ def Locker(func):
 
 class GdbSpawmer:
     
-    def __init__(self):
+    def __init__(self, comandos=False):
+        self.comandos = comandos;
         self.lock = Lock()
         self.listaGdb = {}
         self.forkDetector = forkDetector.ForkDetector(self)
@@ -32,7 +33,10 @@ class GdbSpawmer:
     
     @Locker
     def attachAGdb(self, pid):
-        gdb = Gdb()
+        if (self.comandos):
+            gdb = Gdb(comandos=True)
+        else:
+            gdb = Gdb()
         gdb.attach(pid)
         self.listaGdb[gdb.getSessionId()] = gdb
         self.eventHandler.publish("debugger.attached", pid)
@@ -41,7 +45,10 @@ class GdbSpawmer:
         
     @Locker
     def startNewProcessWithGdb(self, path):
-        gdb = Gdb()
+        if (self.comandos):
+            gdb = Gdb(comandos=True)
+        else:
+            gdb = Gdb()
         gdb.file(path)
         self.listaGdb[gdb.getSessionId()] = gdb
         return gdb.getSessionId()

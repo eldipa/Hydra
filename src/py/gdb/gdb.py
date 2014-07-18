@@ -12,8 +12,9 @@ class Gdb:
                            
 
     # crea un nuevo proceso gdb vacio
-    def __init__(self):
+    def __init__(self, comandos = False):
         self.targetPid = 0
+        self.comandos = comandos;
         self.queue = Queue()
         self.gdb = subprocess.Popen(["gdb", "-interpreter=mi", "-quiet"], stdin=PIPE, stdout=PIPE, stderr=PIPE)
         self.gdbInput = self.gdb.stdin
@@ -21,7 +22,8 @@ class Gdb:
         self.reader = outputReader.OutputReader(self.gdbOutput, self.queue, self.gdb.pid)
         self.reader.start()
         self.eventHandler = publish_subscribe.eventHandler.EventHandler()
-        self.gdbInput.write('python execfile("./py/gdb/Commands/pointerPrinter.py")' + '\n')
+        if (comandos):
+            self.gdbInput.write('python execfile("./py/gdb/Commands/pointerPrinter.py")' + '\n')
         
     def getSessionId(self):
         return self.gdb.pid
@@ -38,7 +40,8 @@ class Gdb:
         self.eventHandler.subscribe(str(self.gdb.pid) + ".direct-command", self.directCommand)
         self.eventHandler.subscribe(str(self.gdb.pid) + ".get-variables", self.getVariables)
         self.eventHandler.subscribe(str(self.gdb.pid) + ".evaluate-expression", self.evaluarExpresion)
-        self.eventHandler.subscribe(str(self.gdb.pid) + ".evaluate-multiple-pointers", self.evaluarMultiplesPunteros)
+        if (self.comandos):
+            self.eventHandler.subscribe(str(self.gdb.pid) + ".evaluate-multiple-pointers", self.evaluarMultiplesPunteros)
         
         self.eventHandler.publish("debugger.new-session", self.gdb.pid)
 
