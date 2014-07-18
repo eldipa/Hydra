@@ -67,7 +67,7 @@ define(['w2ui', 'code_view', 'event_handler', 'ctxmenu', 'jquery','varViewer'], 
                }
          }},
          { type: 'bottom', size: 50, resizable: true, style: pstyle, content: '' },
-         { type: 'right', size: 50, resizable: true, style: pstyle, content: '' }
+         { type: 'right', size: 200, resizable: true, style: pstyle, content: '' }
       ]
    });
 
