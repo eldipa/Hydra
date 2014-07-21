@@ -1,4 +1,5 @@
 define(['jquery', 'w2ui'], function ($, w2ui) {
+   /*
    var get_opposite_position = function (position) {
       var opposite_position = null;
       switch(position) {
@@ -425,10 +426,437 @@ define(['jquery', 'w2ui'], function ($, w2ui) {
       panel.parent(other_old.parent, other_old.position);
       other_panel.parent(old.parent, old.position);
    };
+   */
 
+   /* --------- XXX --------- */
+
+   var NullParent = {};
+
+   NullParent.refresh = function () {};
+   NullParent._add_child = NullParent._remove_child = NullParent._replace_child = function () {};
+   NullParent.toString = function () {
+      return "[NullParent]";
+   };
+
+   var Panel = function (name) {
+      this._parent = NullParent;
+      this._name = name || "panel";
+   };
+
+   var new_tmp_panel = function () {
+      var tmp = new Panel("tmp");
+      tmp.render = function () {};
+      return tmp;
+   };
+   
+   Panel.prototype.parent = function (new_parent) {
+      if (new_parent) {
+         this._parent = new_parent;
+      }
+
+      return this._parent;
+   };
+
+   Panel.prototype.split = function (panel, position) {
+      var splitted_direction = null;
+      var my_position = null;
+      switch(position) {
+         case 'top':
+            my_position = 'bottom';
+            splitted_direction = 'horizontally';
+            break;
+         case 'bottom':
+            my_position = 'top';
+            splitted_direction = 'horizontally';
+            break;
+
+         case 'left':
+            my_position = 'right';
+            splitted_direction = 'vertically';
+            break;
+         case 'right':
+            my_position = 'left';
+            splitted_direction = 'vertically';
+            break;
+
+         default:
+            throw new Error("Invalid position '"+position+"' for the panel '"+panel+"'.");
+      }
+
+      var splitted = new Splitted(splitted_direction);
+
+      this.swap(splitted);
+
+      var e1 = new_tmp_panel()
+      var e2 = new_tmp_panel()
+
+      splitted.add_child(e1, my_position); //TODO el problema aca es que esto (debido a la implementacion de w2layout) va a generar un refresh y un re-renderizado. Esto por cada add_child y swap lo que lo hace ineficiente en una construccion.
+      splitted.add_child(e2, position);
+
+      e1.swap(this);
+      e2.swap(panel);
+   };
+
+   Panel.prototype.swap = function (panel) {
+      var my_parent = this.parent();
+      var your_parent = panel.parent();
+
+      var tmp = new_tmp_panel();
+
+      my_parent.replace_child(this, tmp);
+      your_parent.replace_child(panel, this);
+      my_parent.replace_child(tmp, panel);
+   };
+
+   Panel.prototype.attach = function (dom_parent_element) {
+      if (this.parent() !== NullParent) {
+         throw new Error("I can't attach me because i have a parent.");
+      }
+
+      var root = new Root(dom_parent_element);
+      root.add_child(this, 'main');
+   };
+
+   Panel.prototype.refresh = function () {
+      this._parent.refresh();
+   };
+
+   Panel.prototype.render = function () {
+      throw new Error("Not implemented error: The 'render' method of '"+this+"' was not implemented!. It should be to render something meaningful in the box '"+this.box+"'.");
+   };
+
+   Panel.prototype.toString = function () {
+      return "[panel ("+this._name.slice(0,8)+") Panel]";
+   };
+
+   Panel.prototype.remove = function () {
+      this._parent.remove_child(this);
+   };
+
+   var Parent = function () { //TODO, se podria obviar usar el prototipo de Parent y usar una unica instancia de Parent (como se hace con NullParent)
+   };
+
+   // NullParent --> Parent --> Panel
+   Parent.prototype.__proto__ = Panel.prototype;
+   NullParent.__proto__ = Parent.prototype;
+
+   Parent.prototype.add_child = function (panel, position) {
+      if (panel.parent() !== NullParent) {
+         throw new Error("Precondition: The panel to be my child '"+panel+"' in '"+position+"' must not have another parent.");
+      }
+
+      this._add_child(panel, position);
+      panel.parent(this);
+   };
+
+   Parent.prototype.remove_child = function (panel) {
+      if (panel.parent() !== this) {
+         throw new Error("Precondition: The panel '"+panel+"' must be a child of my.");
+      }
+
+      this._remove_child(panel);
+      panel.parent(NullParent);
+   };
+
+   Parent.prototype.replace_child = function (my_panel, other_panel) {
+      if (my_panel.parent() !== this) {
+         throw new Error("Precondition: The panel '"+my_panel+"' must be a child of my.");
+      }
+
+      if (other_panel.parent() !== NullParent) {
+         throw new Error("Precondition: The panel to be my child '"+other_panel+"' replacing my child '"+my_panel+"' must not have another parent.");
+      }
+      
+      this._replace_child(my_panel, other_panel);
+      other_panel.parent(this);
+      my_panel.parent(NullParent);
+   };
+
+
+   var Root = function (dom_parent_element) {
+      this._parent = NullParent;
+
+      this._dom_el = $('<div style="width: 100%; height: 400px;"></div>');
+      dom_parent_element.append(this._dom_el);
+
+      this._name = ("" + Math.random()).slice(2);
+
+      var pstyle = 'border: 2px solid #000000; padding: 0px;'; 
+      this._subpanel_layout = $(this._dom_el).w2layout({
+         name: this._name,
+         panels: [
+            {type: 'main', style: pstyle, content: ''}
+         ]
+      });
+   };
+
+   Root.prototype.__proto__ = Parent.prototype;
+
+   Root.prototype._add_child = function (panel, position) {
+      if (position !== 'main') {
+         throw new Error("Precondition: Invalid position '"+position+"' of the panel '"+panel+"'. It should be 'main'.");
+      }
+      
+      var previous = this._subpanel_layout.content('main');
+      if(previous) {
+         throw new Error("Precondition: The position '"+position+"' of the panel '"+panel+"' is already in use by the panel '"+previous+"'.");
+      }
+
+      this._subpanel_layout.content('main', panel);
+   };
+
+   Root.prototype._remove_child = function (panel) {
+      var previous = this._subpanel_layout.content('main');
+      if(previous !== panel) {
+         throw new Error("Inconsistency: The previous panel '"+previous+"' is not '"+panel+"'.");
+      }
+
+      delete panel.box;
+
+      this._parent.remove_child(this);
+      
+      $(this._dom_el).remove();
+      this._subpanel_layout.content('main', '');
+   };
+   
+   Root.prototype._replace_child = function (panel, other_panel) {
+      var previous = this._subpanel_layout.content('main');
+      if(previous !== panel) {
+         throw new Error("Inconsistency: I can't replace a panel '"+panel+"' that i can't find.");
+      }
+
+      this._subpanel_layout.content('main', other_panel);
+   };
+
+   Root.prototype.refresh = function () {
+      this._subpanel_layout.refresh();
+   };
+   
+   Root.prototype.toString = function () {
+      return "[root ("+this._name.slice(0,6)+") Root]";
+   };
+
+   Root.prototype.render = function () {
+      this._subpanel_layout.render(this.box);
+   };
+
+   var Splitted = function (splitted_direction) {
+      this._parent = NullParent;
+
+      if(splitted_direction !== 'vertically' && splitted_direction !== 'horizontally') {
+         throw new Error("Precondition: The split direction must be 'vertically' or 'horizontally', the direction '"+splitted_direction+"' was used.");
+      }
+
+      this._splitted_direction = splitted_direction;
+
+      this._name = ("" + Math.random()).slice(2);
+      var pstyle = 'border: 1px none #0000ef; padding: 0px;'; 
+
+      this._common_style_for_all_positions = pstyle;
+      this._extra_style_per_position = {
+         'top':      'border-bottom-style: solid;',
+         'bottom':   'border-top-style: solid;',
+         'left':     'border-right-style: solid;',
+         'right':    'border-left-style: solid;',
+      };
+
+      if(this._splitted_direction === 'vertically') {
+         this._main_position_is_mapping_to = 'right';
+         this._subpanels_layout = $().w2layout({ 
+            name: this._name,
+            padding: 3,
+            panels: [
+               {type: 'main', style: pstyle + this._extra_style_per_position['right'], content: ''},
+               {type: 'left', style: pstyle + this._extra_style_per_position['left'], size: '50%', resizable: true, content: ''},
+            ]
+         });
+      }
+      else {
+         this._main_position_is_mapping_to = 'bottom';
+         this._subpanels_layout = $().w2layout({ 
+            name: this._name,
+            padding: 3,
+            panels: [
+               {type: 'main', style: pstyle + this._extra_style_per_position['bottom'], content: ''},
+               {type: 'top', style: pstyle + this._extra_style_per_position['top'], size: '50%', resizable: true, content: ''}
+            ]
+         });
+      }
+   };
+
+   Splitted.prototype.__proto__ = Parent.prototype;
+
+   Splitted.prototype._add_child = function (panel, position) {
+      if(this._splitted_direction === 'vertically') {
+         if(position !== 'left' && position !== 'right') {
+            throw new Error("Precondition: Invalid position '"+position+"' of the panel '"+panel+"'. It should be 'left' or 'right' (the parent is splitted '"+this._splitted_direction+"').");
+         }
+      }
+      else {
+         if(position !== 'top' && position !== 'bottom') {
+            throw new Error("Precondition: Invalid position '"+position+"' of the panel '"+panel+"'. It should be 'top' or 'bottom' (the parent is splitted '"+this._splitted_direction+"').");
+         }
+      }
+
+      var real_position = position;
+      if (position === 'right' || position === 'bottom') {
+         real_position = 'main';
+      }
+
+      var previous = this._subpanels_layout.content(real_position);
+      if(previous) {
+         throw new Error("Precondition: The position '"+position+"' of the panel '"+panel+"' is already in use by the panel '"+previous+"'.");
+      }
+
+      this._subpanels_layout.content(real_position, panel);
+   };
+
+   Splitted.prototype._remove_child = function (panel) {
+      var position = null;
+      var the_other_position = null;
+      var positions = {'top':0, 'left':0, 'main':0};
+      for (var pos in positions) {
+         if (this._subpanels_layout.content(pos) === panel) {
+            position = pos;
+         }
+         else if (this._subpanels_layout.content(pos)) {
+            the_other_position = pos;
+         }
+      }
+
+      if(position === null) {
+         throw new Error("Inconsistency: I can't remove a panel '"+panel+"' that i can't find.");
+      }
+
+      if(the_other_position === null) {
+         throw new Error("Inconsistency: I found the panel '"+panel+"' to be removed but i can't find the other panel!");
+      }
+
+      var the_other_panel = this._subpanels_layout.content(the_other_position);
+
+      var tmp = new_tmp_panel();
+      this.swap(tmp);
+      tmp.swap(the_other_panel);
+
+      this._parent.remove_child(this);
+      
+      this._subpanels_layout.content(position, '');
+      this._subpanels_layout.content(the_other_position, '');
+   };
+
+   Splitted.prototype._replace_child = function (panel, other_panel) {
+      var position = null;
+      var positions = {'top':0, 'left':0, 'main':0};
+      for (var pos in positions) {
+         if (this._subpanels_layout.content(pos) === panel) {
+            position = pos;
+            break;
+         }
+      }
+
+      if(position === null) {
+         throw new Error("Inconsistency: I can't replace a panel '"+panel+"' that i can't find.");
+      }
+
+      this._subpanels_layout.content(position, other_panel);
+   };
+
+   Splitted.prototype.refresh = function () {
+      this._subpanels_layout.refresh();
+   };
+   
+   Splitted.prototype.toString = function () {
+      return "[split "+this._splitted_direction+" ("+this._name.slice(0,6)+") Splitted]";
+   };
+   
+   Splitted.prototype.render = function () {
+      this._subpanels_layout.render(this.box);
+   };
+
+   var Tabbed = function () {
+      this._parent = NullParent;
+
+      var id = ("" + Math.random()).slice(2);
+
+      this._name = id;
+      this._tabs_handler = $('<div id="'+id+'"></div>');
+      this._headers = $('<ul></ul>');
+      this._tabs = [];
+
+      this._tabs_handler.append(this._headers);
+   };
+
+   Tabbed.prototype.__proto__ = Parent.prototype;
+
+   Tabbed.prototype._add_child = function (panel, position) {
+      if(position !== 'intab') {
+         throw new Error("Precondition: Invalid position '"+position+"' of the panel '"+panel+"'. It must be 'intab'.");
+      }
+
+      var tab = {
+         id: ("" + Math.random()).slice(2),
+         panel: panel
+      };
+
+      tab.header = $('<li><a href="#'+tab.id+'">AAA</a></li>');
+      tab.container = $('<div id="'+tab.id+'"></div>');
+
+      this._headers.append(tab.header);
+      this._tabs_handler.append(tab.container);
+      this._tabs.push(tab);
+   };
+
+   Tabbed.prototype._remove_child = function (panel) {
+      var index = null;
+      for (var i = 0; i < this._tabs.length; i++) {
+         if (panel === this._tabs[i].panel) {
+            index = i;
+            break;
+         }
+      }
+
+      if (index === null) {
+         throw new Error("I can't remove a panel that i can't find.");
+      }
+
+      this._tabs.splice(index, 1);
+      this._tabs_handler.splice(index, 1);
+      this._headers.splice(index, 1);
+
+      //TODO que pasa si no me quedan mas tabs? Debo destruir este objeto tambien.
+      //y en ese caso:
+      //this._parent.remove_child(this);
+   };
+
+   Tabbed.prototype._replace_child = function (panel, other_panel) {
+      var index = null;
+      for (var i = 0; i < this._tabs.length; i++) {
+         if (panel === this._tabs[i].panel) {
+            index = i;
+            break;
+         }
+      }
+
+      if (index === null) {
+         throw new Error("I can't remove a panel that i can't find.");
+      }
+
+      this._tabs[index] = other_panel;
+   };
+
+   Tabbed.prototype.refresh = function () {
+      throw new Error("Not implemented yet. 'refresh' method on Tabbed.");
+   };
+   
+   Tabbed.prototype.toString = function () {
+      return "[tabs ("+this._name.slice(0,6)+") Tabbed]";
+   };
+
+   Tabbed.prototype.render = function () {
+      throw new Error("Not implemented yet. 'render' method on Tabbed.");
+   };
 
    return {
-      Root: Root,
       Panel: Panel
    };
 });
