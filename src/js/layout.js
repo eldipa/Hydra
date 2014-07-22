@@ -830,8 +830,11 @@ define(['jquery', 'w2ui'], function ($, w2ui) {
       if (index === null) {
          throw new Error("I can't remove a panel '"+panel+"' that i can't find ('"+this+"').");
       }
+
+      var tab = this._tabs[index];
       
-      //TODO remove header
+      $('#header_' + tab.id).parent().remove();
+
       this._tabs.splice(index, 1);
       this._tabs_handler.splice(index, 1);
 

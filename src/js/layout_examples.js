@@ -544,6 +544,7 @@ define(['jquery', 'layout'], function ($, layout) {
        * ------------- */
 
       bar_msg.remove();
+      more_bye_msg.refresh();
       
       /* --------- XXX Expected Result: 
        *
@@ -552,7 +553,17 @@ define(['jquery', 'layout'], function ($, layout) {
        *          |     
        *
        * ------------- */
+
+      bye_bye_msg.remove();
       more_bye_msg.refresh();
+
+      /* --------- XXX Expected Result: 
+       *
+       *          |          
+       *    H/(F) | M/(L) 
+       *          |     
+       *
+       * ------------- */
 
       return;
 
