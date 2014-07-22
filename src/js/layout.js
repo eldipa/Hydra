@@ -458,43 +458,7 @@ define(['jquery', 'w2ui'], function ($, w2ui) {
    };
 
    Panel.prototype.split = function (panel, position) {
-      var splitted_direction = null;
-      var my_position = null;
-      switch(position) {
-         case 'top':
-            my_position = 'bottom';
-            splitted_direction = 'horizontally';
-            break;
-         case 'bottom':
-            my_position = 'top';
-            splitted_direction = 'horizontally';
-            break;
-
-         case 'left':
-            my_position = 'right';
-            splitted_direction = 'vertically';
-            break;
-         case 'right':
-            my_position = 'left';
-            splitted_direction = 'vertically';
-            break;
-
-         default:
-            throw new Error("Invalid position '"+position+"' for the panel '"+panel+"'.");
-      }
-
-      var splitted = new Splitted(splitted_direction);
-
-      this.swap(splitted);
-
-      var e1 = new_tmp_panel()
-      var e2 = new_tmp_panel()
-
-      splitted.add_child(e1, my_position); //TODO el problema aca es que esto (debido a la implementacion de w2layout) va a generar un refresh y un re-renderizado. Esto por cada add_child y swap lo que lo hace ineficiente en una construccion.
-      splitted.add_child(e2, position);
-
-      e1.swap(this);
-      e2.swap(panel);
+      this._parent.split_child(this, panel, position);
    };
 
    Panel.prototype.swap = function (panel) {
@@ -510,7 +474,7 @@ define(['jquery', 'w2ui'], function ($, w2ui) {
 
    Panel.prototype.attach = function (dom_parent_element) {
       if (this.parent() !== NullParent) {
-         throw new Error("I can't attach me because i have a parent.");
+         throw new Error("I can't attach me '"+this+"'because i have a parent '"+this._parent+"'.");
       }
 
       var root = new Root(dom_parent_element);
@@ -533,6 +497,14 @@ define(['jquery', 'w2ui'], function ($, w2ui) {
       this._parent.remove_child(this);
    };
 
+   Panel.prototype.name = function (name) {
+      if(name !== null && name !== undefined) {
+         this._name = "" + name;
+      }
+
+      return this._name;
+   };
+
    var Parent = function () { //TODO, se podria obviar usar el prototipo de Parent y usar una unica instancia de Parent (como se hace con NullParent)
    };
 
@@ -542,7 +514,7 @@ define(['jquery', 'w2ui'], function ($, w2ui) {
 
    Parent.prototype.add_child = function (panel, position) {
       if (panel.parent() !== NullParent) {
-         throw new Error("Precondition: The panel to be my child '"+panel+"' in '"+position+"' must not have another parent.");
+         throw new Error("Precondition: The panel to be my child '"+panel+"' in '"+position+"' must not have another parent ('"+panel.parent()+"').");
       }
 
       this._add_child(panel, position);
@@ -570,6 +542,46 @@ define(['jquery', 'w2ui'], function ($, w2ui) {
       this._replace_child(my_panel, other_panel);
       other_panel.parent(this);
       my_panel.parent(NullParent);
+   };
+
+   Parent.prototype.split_child = function (my_panel, panel, position) {
+      var splitted_direction = null;
+      var my_position = null;
+      switch(position) {
+         case 'top':
+            my_position = 'bottom';
+            splitted_direction = 'horizontally';
+            break;
+         case 'bottom':
+            my_position = 'top';
+            splitted_direction = 'horizontally';
+            break;
+
+         case 'left':
+            my_position = 'right';
+            splitted_direction = 'vertically';
+            break;
+         case 'right':
+            my_position = 'left';
+            splitted_direction = 'vertically';
+            break;
+
+         default:
+            throw new Error("Invalid position '"+position+"' for the panel '"+panel+"'.");
+      }
+
+      var splitted = new Splitted(splitted_direction);
+
+      my_panel.swap(splitted);
+
+      var e1 = new_tmp_panel()
+      var e2 = new_tmp_panel()
+
+      splitted.add_child(e1, my_position); //TODO el problema aca es que esto (debido a la implementacion de w2layout) va a generar un refresh y un re-renderizado. Esto por cada add_child y swap lo que lo hace ineficiente en una construccion.
+      splitted.add_child(e2, position);
+
+      e1.swap(my_panel);
+      e2.swap(panel);
    };
 
 
@@ -798,7 +810,7 @@ define(['jquery', 'w2ui'], function ($, w2ui) {
          panel: panel
       };
 
-      tab.header = $('<li><a href="#'+tab.id+'">AAA</a></li>');
+      tab.header = $('<li><a id="header_'+tab.id+'" href="#'+tab.id+'">'+(panel.name()||"tab")+'</a></li>');
       tab.container = $('<div id="'+tab.id+'"></div>');
 
       this._headers.append(tab.header);
@@ -816,12 +828,12 @@ define(['jquery', 'w2ui'], function ($, w2ui) {
       }
 
       if (index === null) {
-         throw new Error("I can't remove a panel that i can't find.");
+         throw new Error("I can't remove a panel '"+panel+"' that i can't find ('"+this+"').");
       }
-
+      
+      //TODO remove header
       this._tabs.splice(index, 1);
       this._tabs_handler.splice(index, 1);
-      this._headers.splice(index, 1);
 
       //TODO que pasa si no me quedan mas tabs? Debo destruir este objeto tambien.
       //y en ese caso:
@@ -838,14 +850,14 @@ define(['jquery', 'w2ui'], function ($, w2ui) {
       }
 
       if (index === null) {
-         throw new Error("I can't remove a panel that i can't find.");
+         throw new Error("I can't replace a panel '"+panel+"' that i can't find ('"+this+"').");
       }
 
-      this._tabs[index] = other_panel;
+      this._tabs[index].panel = other_panel;
    };
 
    Tabbed.prototype.refresh = function () {
-      throw new Error("Not implemented yet. 'refresh' method on Tabbed.");
+      this._parent.refresh();
    };
    
    Tabbed.prototype.toString = function () {
@@ -853,10 +865,31 @@ define(['jquery', 'w2ui'], function ($, w2ui) {
    };
 
    Tabbed.prototype.render = function () {
-      throw new Error("Not implemented yet. 'render' method on Tabbed.");
+      var box = this.box;
+
+      if ($('#' + this._name).length === 0 ) {
+         $(box).contents().remove();
+         $(box).append(this._tabs_handler);
+      }
+
+      for(var i = 0; i < this._tabs.length; i++) {
+         var tab = this._tabs[i];
+         tab.panel.box = $('#' + tab.id);
+         tab.panel.render();
+
+         $('#header_' + tab.id).text(tab.panel.name() || "tab");
+      }
+
+      $('#' + this._name).tabs();
+      $('#' + this._name).tabs( "refresh" );
+   };
+
+   Tabbed.prototype.split_child = function (my_panel, panel, position) {
+      this._parent.split_child(this, panel, position);
    };
 
    return {
-      Panel: Panel
+      Panel: Panel,
+      Tabbed: Tabbed
    };
 });

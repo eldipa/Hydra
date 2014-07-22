@@ -3,6 +3,7 @@ define(['jquery', 'layout'], function ($, layout) {
       $('body').find('div').remove();
 
       var Panel = layout.Panel;
+      var Tabbed = layout.Tabbed;
 
       /*
        * El sistema de layout esta compuesto por una serie de objetos 'Panel' que
@@ -427,7 +428,6 @@ define(['jquery', 'layout'], function ($, layout) {
        *     
        *
        * ------------- */
-      return;
 
       /*
        * En un mismo lugar pueden convivir varios paneles usando una vista basada
@@ -435,8 +435,16 @@ define(['jquery', 'layout'], function ($, layout) {
        * y el resto esta en background.
        * */
 
-      hello_msg.push(lorem_ipsum_msg);
-      hello_msg.refresh();
+      var tabs = new Tabbed();
+
+      tabs.swap(hello_msg);
+      tabs.add_child(hello_msg, 'intab');
+      tabs.add_child(lorem_ipsum_msg, 'intab');
+
+      tabs.refresh();
+
+      //hello_msg.push(lorem_ipsum_msg);
+      //hello_msg.refresh();
 
       /* --------- XXX Expected Result: 
        *
@@ -446,8 +454,11 @@ define(['jquery', 'layout'], function ($, layout) {
        *
        * ------------- */
 
-      hello_msg.push(bye_bye_msg);
-      hello_msg.refresh();
+      tabs.add_child(bye_bye_msg, 'intab');
+      tabs.refresh();
+
+      //hello_msg.push(bye_bye_msg);
+      //hello_msg.refresh();
       
       /* --------- XXX Expected Result: 
        *
@@ -461,10 +472,13 @@ define(['jquery', 'layout'], function ($, layout) {
        * Splittear un panel con tabs es igual a splittear un panel sin los tabs.
        * El contenido de un tab NO es splitteado (No hay por default un split dentro
        * de un tab)
+       *
+       * Esto es, splittear un panel dentro de un tab es igual a splittear al tab mismo.
        * */
 
-      hello_msg.split(more_bye_msg, 'left');
-      hello_msg.refresh();
+      tabs.split(more_bye_msg, 'left');
+      //hello_msg.split(more_bye_msg, 'left');
+      //hello_msg.refresh();
       
       /* --------- XXX Expected Result: 
        *
@@ -498,7 +512,7 @@ define(['jquery', 'layout'], function ($, layout) {
        * ------------- */
 
       hello_msg.swap(more_bye_msg);
-      more_bye_msg.refresh(); //TODO
+      more_bye_msg.refresh();
 
       
       /* --------- XXX Expected Result: 
@@ -508,6 +522,39 @@ define(['jquery', 'layout'], function ($, layout) {
        *      | M/(L,B)  | Ba
        *
        * ------------- */
+
+      foo_msg.remove();
+
+      var tabs2 = new Tabbed();
+
+      tabs2.swap(hello_msg);
+      tabs2.add_child(hello_msg, 'intab');
+      tabs2.add_child(foo_msg, 'intab');
+
+      //hello_msg.push(foo_msg);
+
+      hello_msg.refresh();
+      
+      /* --------- XXX Expected Result: 
+       *
+       *          |          |
+       *    H/(F) | M/(L,B)  | Ba
+       *          |          |
+       *
+       * ------------- */
+
+      bar_msg.remove();
+      
+      /* --------- XXX Expected Result: 
+       *
+       *          |          
+       *    H/(F) | M/(L,B) 
+       *          |     
+       *
+       * ------------- */
+      more_bye_msg.refresh();
+
+      return;
 
    }
 
