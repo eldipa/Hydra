@@ -8,7 +8,7 @@ requirejs.config({
       ko: 'external/knockout-3.0.0',
       ace_internals: 'external/ace/ace',
       ace: 'external/ace',
-      w2ui_internals: 'external/w2ui-1.3.2',
+      w2ui_internals: 'external/w2ui-simple', //change w2ui-1.3.2 (full) or w2ui-simple (simple)
       w2ui: 'external/w2ui',
       ctxmenu: 'external/ctxmenu',
       jqueryui: 'external/jquery-ui-1.11.0',
