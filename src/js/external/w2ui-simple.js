@@ -5422,7 +5422,7 @@ w2utils.keyboard = (function (obj) {
 				if ($.isPlainObject(object.panels[p].toolbar) || $.isArray(object.panels[p].toolbar)) initToolbar(object, panels[p].type);
 			}
 			// add all other panels
-			for (var p in { 'top':'', 'left':'', 'main':'', 'preview':'', 'right':'', 'bottom':'' }) { 
+			for (var p in { 'top':'', 'left':'', 'main':''}) { 
 				if (object.get(p) != null) continue;
 				object.panels[p] = $.extend(true, {}, w2layout.prototype.panel, { type: p, hidden: true, size: 50 }); 
 			}
@@ -5792,7 +5792,7 @@ w2utils.keyboard = (function (obj) {
 				.html('<div></div>');
 			if ($(obj.box).length > 0) $(obj.box)[0].style.cssText += obj.style;
 			// create all panels
-			var tmp = ['top', 'left', 'main', 'preview', 'right', 'bottom'];
+			var tmp = ['top', 'left', 'main'];
 			for (var t in tmp) {
 				var pan  = obj.get(tmp[t]);
 				var html =  '<div id="layout_'+ obj.name + '_panel_'+ tmp[t] +'" class="w2ui-panel">'+
@@ -5840,10 +5840,10 @@ w2utils.keyboard = (function (obj) {
 					div_y 	: 0,
 					value	: 0
 				};
-				if (type == 'left' || type == 'right') {
+				if (type == 'left' ) {
 					obj.tmp.resize.value = parseInt($('#layout_'+ obj.name + '_resizer_'+ type)[0].style.left);
 				}
-				if (type == 'top' || type == 'preview' || type == 'bottom') {
+				if (type == 'top' ) {
 					obj.tmp.resize.value = parseInt($('#layout_'+ obj.name + '_resizer_'+ type)[0].style.top);
 				}
 			}
@@ -5866,21 +5866,8 @@ w2utils.keyboard = (function (obj) {
 							var ns = parseInt(panel.sizeCalculated) + obj.tmp.resize.div_y;
 							var nd = 0;
 							break;
-						case 'bottom':
-							var ns = parseInt(panel.sizeCalculated) - obj.tmp.resize.div_y;
-							var nd = 0;
-							break;
-						case 'preview':
-							var ns = parseInt(panel.sizeCalculated) - obj.tmp.resize.div_y;
-							var nd = (ptop && !ptop.hidden ? ptop.sizeCalculated : 0) 
-								   + (pbottom && !pbottom.hidden ? pbottom.sizeCalculated : 0);
-							break;
 						case 'left':
 							var ns = parseInt(panel.sizeCalculated) + obj.tmp.resize.div_x;
-							var nd = 0;
-							break;
-						case 'right': 
-							var ns = parseInt(panel.sizeCalculated) - obj.tmp.resize.div_x;
 							var nd = 0;
 							break;
 					}	
@@ -5917,13 +5904,6 @@ w2utils.keyboard = (function (obj) {
 				if (obj.tmp.resize.type == 'left' && (obj.get('main').minSize + obj.tmp.resize.div_x > obj.get('main').width)) {
 					obj.tmp.resize.div_x = obj.get('main').width - obj.get('main').minSize;
 				}
-				// right panel -> drag 
-				if (obj.tmp.resize.type == 'right' &&  (obj.get('right').minSize + obj.tmp.resize.div_x > obj.get('right').width)) {
-					obj.tmp.resize.div_x = obj.get('right').width - obj.get('right').minSize;
-				}
-				if (obj.tmp.resize.type == 'right' && (obj.get('main').minSize - obj.tmp.resize.div_x > obj.get('main').width)) {
-					obj.tmp.resize.div_x =  obj.get('main').minSize - obj.get('main').width;
-				}
 				// top panel -> drag
 				if (obj.tmp.resize.type == 'top' &&  (obj.get('top').minSize - obj.tmp.resize.div_y > obj.get('top').height)) {
 					obj.tmp.resize.div_y = obj.get('top').minSize - obj.get('top').height;
@@ -5931,29 +5911,12 @@ w2utils.keyboard = (function (obj) {
 				if (obj.tmp.resize.type == 'top' && (obj.get('main').minSize + obj.tmp.resize.div_y > obj.get('main').height)) {
 					obj.tmp.resize.div_y = obj.get('main').height - obj.get('main').minSize;
 				}
-				// bottom panel -> drag 
-				if (obj.tmp.resize.type == 'bottom' &&  (obj.get('bottom').minSize + obj.tmp.resize.div_y > obj.get('bottom').height)) {
-					obj.tmp.resize.div_y = obj.get('bottom').height - obj.get('bottom').minSize;
-				}
-				if (obj.tmp.resize.type == 'bottom' && (obj.get('main').minSize - obj.tmp.resize.div_y > obj.get('main').height)) {
-					obj.tmp.resize.div_y =  obj.get('main').minSize - obj.get('main').height;
-				}
-				// preview panel -> drag 
-				if (obj.tmp.resize.type == 'preview' &&  (obj.get('preview').minSize + obj.tmp.resize.div_y > obj.get('preview').height)) {
-					obj.tmp.resize.div_y = obj.get('preview').height - obj.get('preview').minSize;
-				}
-				if (obj.tmp.resize.type == 'preview' && (obj.get('main').minSize - obj.tmp.resize.div_y > obj.get('main').height)) {
-					obj.tmp.resize.div_y =  obj.get('main').minSize - obj.get('main').height;
-				}
 				switch(obj.tmp.resize.type) {
 					case 'top':
-					case 'preview':
-					case 'bottom':
 						obj.tmp.resize.div_x = 0;
 						if (p.length > 0) p[0].style.top = (obj.tmp.resize.value + obj.tmp.resize.div_y) + 'px';
 						break;
 					case 'left':
-					case 'right':
 						obj.tmp.resize.div_y = 0;
 						if (p.length > 0) p[0].style.left = (obj.tmp.resize.value + obj.tmp.resize.div_x) + 'px';
 						break;
@@ -6024,11 +5987,11 @@ w2utils.keyboard = (function (obj) {
 			var obj = this;
 			// panels
 			var pmain   = this.get('main');
-			var pprev   = this.get('preview');
+			var pprev   = null;
 			var pleft   = this.get('left');
-			var pright  = this.get('right');
+			var pright  = null;
 			var ptop    = this.get('top');
-			var pbottom = this.get('bottom');
+			var pbottom = null;
 			var smain	= true; // main always on
 			var sprev   = (pprev != null && pprev.hidden != true ? true : false);
 			var sleft   = (pleft != null && pleft.hidden != true ? true : false);
@@ -6036,7 +5999,7 @@ w2utils.keyboard = (function (obj) {
 			var stop    = (ptop != null && ptop.hidden != true ? true : false);
 			var sbottom = (pbottom != null && pbottom.hidden != true ? true : false);
 			// calculate %
-			for (var p in { 'top':'', 'left':'', 'right':'', 'bottom':'', 'preview':'' }) { 
+			for (var p in { 'top':'', 'left':''}) { 
 				var tmp = this.get(p);
 				var str = String(tmp.size);
 				if (tmp && str.substr(str.length-1) == '%') {
@@ -6124,75 +6087,6 @@ w2utils.keyboard = (function (obj) {
 				$('#layout_'+ this.name +'_panel_left').hide();
 				$('#layout_'+ this.name +'_resizer_left').hide();
 			}
-			// right if any
-			if (pright != null && pright.hidden != true) {
-				var l = width - pright.sizeCalculated;
-				var t = 0 + (stop ? ptop.sizeCalculated + this.padding : 0);
-				var w = pright.sizeCalculated;
-				var h = height - (stop ? ptop.sizeCalculated + this.padding : 0) - 
-									  (sbottom ? pbottom.sizeCalculated + this.padding : 0);
-				$('#layout_'+ this.name +'_panel_right').css({
-					'display': 'block',
-					'left': l + 'px',
-					'top': t + 'px',
-					'width': w + 'px',
-					'height': h + 'px'
-				}).show();
-				pright.width  = w;
-				pright.height = h;
-				// resizer
-				if (pright.resizable) {
-					l = l - this.padding;
-					w = (this.resizer > this.padding ? this.resizer : this.padding);
-					$('#layout_'+ this.name +'_resizer_right').show().css({
-						'display': 'block',
-						'left': l + 'px',
-						'top': t + 'px',
-						'width': w + 'px',
-						'height': h + 'px',
-						'cursor': 'ew-resize'
-					}).bind('mousedown', function (event) {
-						w2ui[obj.name].tmp.events.resizeStart('right', event);
-						return false;
-					});
-				}			
-			} else {
-				$('#layout_'+ this.name +'_panel_right').hide();
-			}
-			// bottom if any
-			if (pbottom != null && pbottom.hidden != true) {
-				var l = 0;
-				var t = height - pbottom.sizeCalculated;
-				var w = width;
-				var h = pbottom.sizeCalculated;
-				$('#layout_'+ this.name +'_panel_bottom').css({
-					'display': 'block',
-					'left': l + 'px',
-					'top': t + 'px',
-					'width': w + 'px',
-					'height': h + 'px'
-				}).show();
-				pbottom.width  = w;
-				pbottom.height = h;
-				// resizer
-				if (pbottom.resizable) {
-					t = t - (this.padding == 0 ? 0 : this.padding);
-					h = (this.resizer > this.padding ? this.resizer : this.padding);
-					$('#layout_'+ this.name +'_resizer_bottom').show().css({
-						'display': 'block',
-						'left': l + 'px',
-						'top': t + 'px',
-						'width': w + 'px',
-						'height': h + 'px',
-						'cursor': 'ns-resize'
-					}).bind('mousedown', function (event) {
-						w2ui[obj.name].tmp.events.resizeStart('bottom', event);
-						return false;
-					});
-				}
-			} else {
-				$('#layout_'+ this.name +'_panel_bottom').hide();
-			}
 			// main - always there
 			var l = 0 + (sleft ? pleft.sizeCalculated + this.padding : 0);
 			var t = 0 + (stop ? ptop.sizeCalculated + this.padding : 0);
@@ -6213,59 +6107,6 @@ w2utils.keyboard = (function (obj) {
 			pmain.width  = w;
 			pmain.height = h;
 			
-			// preview if any
-			if (pprev != null && pprev.hidden != true) {
-				var l = 0 + (sleft ? pleft.sizeCalculated + this.padding : 0);
-				var t = height - (sbottom ? pbottom.sizeCalculated + this.padding : 0) - pprev.sizeCalculated;
-				var w = width  - (sleft ? pleft.sizeCalculated + this.padding : 0) - 
-									  (sright ? pright.sizeCalculated + this.padding : 0);
-				var h = pprev.sizeCalculated;
-				var e = $('#layout_'+ this.name +'_panel_preview');
-				if (window.navigator.userAgent.indexOf('MSIE') > 0 && e.length > 0 && e[0].clientHeight < e[0].scrollHeight) w += 17; // IE hack
-				$('#layout_'+ this.name +'_panel_preview').css({
-					'display': 'block',
-					'left': l + 'px',
-					'top': t + 'px',
-					'width': w + 'px',
-					'height': h + 'px'
-				}).show();
-				pprev.width  = w;
-				pprev.height = h;
-				// resizer
-				if (pprev.resizable) {
-					t = t - (this.padding == 0 ? 0 : this.padding);
-					h = (this.resizer > this.padding ? this.resizer : this.padding);
-					$('#layout_'+ this.name +'_resizer_preview').show().css({
-						'display': 'block',
-						'left': l + 'px',
-						'top': t + 'px',
-						'width': w + 'px',
-						'height': h + 'px',
-						'cursor': 'ns-resize'
-					}).bind('mousedown', function (event) {
-						w2ui[obj.name].tmp.events.resizeStart('preview', event);
-						return false;
-					});
-				}
-			} else {
-				$('#layout_'+ this.name +'_panel_preview').hide();
-			}
-
-			// display tabs and toolbar if needed
-			for (var p in { 'top':'', 'left':'', 'main':'', 'preview':'', 'right':'', 'bottom':'' }) { 
-				var pan = this.get(p);
-				var tmp = '#layout_'+ this.name +'_panel_'+ p +' > .w2ui-panel-';
-				var height = 0;
-				if (pan.show.tabs) {
-					if (pan.tabs != null && w2ui[this.name +'_'+ p +'_tabs']) w2ui[this.name +'_'+ p +'_tabs'].resize();
-					height += w2utils.getSize($(tmp + 'tabs').css({ display: 'block' }), 'height');
-				}
-				if (pan.show.toolbar) {
-					if (pan.toolbar != null && w2ui[this.name +'_'+ p +'_toolbar']) w2ui[this.name +'_'+ p +'_toolbar'].resize();
-					height += w2utils.getSize($(tmp + 'toolbar').css({ top: height + 'px', display: 'block' }), 'height');
-				}
-				$(tmp + 'content').css({ display: 'block' }).css({ top: height + 'px' });
-			}
 			// send resize to all objects
 			var obj = this;
 			clearTimeout(this._resize_timer);
@@ -6308,7 +6149,7 @@ w2utils.keyboard = (function (obj) {
 		},
 
 		lock: function (panel, msg, showSpinner) {
-			if ($.inArray(String(panel), ['left', 'right', 'top', 'bottom', 'preview', 'main']) == -1) {
+			if ($.inArray(String(panel), ['left', 'top', 'main']) == -1) {
 				console.log('ERROR: First parameter needs to be the a valid panel name.');
 				return;
 			}
@@ -6317,7 +6158,7 @@ w2utils.keyboard = (function (obj) {
 		},
 
 		unlock: function (panel) { 
-			if ($.inArray(String(panel), ['left', 'right', 'top', 'bottom', 'preview', 'main']) == -1) {
+			if ($.inArray(String(panel), ['left', 'top', 'main']) == -1) {
 				console.log('ERROR: First parameter needs to be the a valid panel name.');
 				return;
 			}
