@@ -5501,11 +5501,6 @@ w2utils.keyboard = (function (obj) {
 		content: function (panel, data, transition) {
 			var obj = this;
 			var p = this.get(panel);
-			// if it is CSS panel
-			if (panel == 'css') {
-				$('#layout_'+ obj.name +'_panel_css').html('<style>'+ data +'</style>');
-				return true;
-			}
 			if (p === null) return false;
 			if (typeof data == 'undefined' || data === null) {
 				return p.content;
@@ -5563,13 +5558,6 @@ w2utils.keyboard = (function (obj) {
 		
 		load: function (panel, url, transition, onLoad) {
 			var obj = this;
-			if (panel == 'css') {
-				$.get(url, function (data, status, xhr) {					
-					obj.content(panel, xhr.responseText);
-					if (onLoad) onLoad();
-				});
-				return true;
-			}
 			if (this.get(panel) != null) {
 				$.get(url, function (data, status, xhr) {
 					obj.content(panel, xhr.responseText, transition);
@@ -5802,8 +5790,6 @@ w2utils.keyboard = (function (obj) {
 				$(obj.box).find(' > div').append(html);
 				// tabs are rendered in refresh()
 			}
-			$(obj.box).find(' > div')
-				.append('<div id="layout_'+ obj.name + '_panel_css" style="position: absolute; top: 10000px;"></div');
 			obj.refresh(); // if refresh is not called here, the layout will not be available right after initialization
 			// process event
 			obj.trigger($.extend(eventData, { phase: 'after' }));	
