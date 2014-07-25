@@ -235,6 +235,10 @@ define(function () {
          }
       }
    };
+   
+   EventHandler.prototype.toString = function(){
+	   return "EventHandler Instance";
+   }
 
    return {EventHandler: EventHandler};
 
