@@ -6,6 +6,67 @@ define(['jquery', 'w2ui'], function ($, w2ui) {
    NullParent.toString = function () {
       return "[NullParent]";
    };
+   
+   var as_tree = function (panels) {
+      var lineage = [];
+
+      for(var i = 0; i < panels.length; i++) {
+         lineage.push(panels[i].ancestry().reverse());
+      }
+
+      //sanity check
+      for(var i = 0; i < lineage.length; i++) {
+         if(lineage[i][0] !== NullParent) {
+            throw new Error("The panel '"+panels[i]+"' has as its oldest ancestor to '"+lineage[i][0]+"'. It should be NullParent.");
+         }
+      }
+
+      var toString = function (ident) {
+         var ident = ident || "";
+         var s = ident + this.panel + "\n";
+         if(this.children) {
+            for(var c in this.children) {
+               s += ident + " " + this.children[c].toString(ident + " ");
+            }
+         }
+
+         return s;
+      };
+
+      var root = {
+         panel: NullParent,
+         children: {},
+         toString: toString
+      };
+
+      var nodes = [root];
+
+      while(nodes.length > 0) {
+         var actual = nodes.shift();
+
+         for(var i = 0; i < lineage.length; i++) {
+            if(lineage[i][0] === actual.panel) {
+               if(lineage[i][1]) {
+                  var child = lineage[i][1];
+
+                  if(!actual.children[child]) {
+                     actual.children[child] = {
+                        panel: child,
+                        children: {},
+                        toString: toString
+                     };
+
+                     nodes.push(actual.children[child]);
+                  }
+               }
+
+               lineage[i].shift();
+            }
+         }
+      }
+
+      return root;
+   };
 
    var Panel = function (name) {
       this._parent = NullParent;
@@ -89,6 +150,19 @@ define(['jquery', 'w2ui'], function ($, w2ui) {
       }
       ]
    };
+
+   Panel.prototype.ancestry = function () {
+      var parent = this.parent();
+
+      var ancestry = [this];
+      while (parent !== NullParent) {
+         ancestry.push(parent);
+         parent = parent.parent();
+      }
+
+      ancestry.push(parent);
+      return ancestry;
+   }
 
    var Parent = function () { //TODO, se podria obviar usar el prototipo de Parent y usar una unica instancia de Parent (como se hace con NullParent)
    };
@@ -512,6 +586,7 @@ define(['jquery', 'w2ui'], function ($, w2ui) {
 
    return {
       Panel: Panel,
-      Tabbed: Tabbed
+      Tabbed: Tabbed,
+      as_tree: as_tree
    };
 });
