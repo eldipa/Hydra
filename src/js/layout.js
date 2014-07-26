@@ -465,7 +465,7 @@ define(['jquery', 'w2ui'], function ($, w2ui) {
 
       this._name = id;
       this._$tabs_handler = $('<div id="'+id+'"></div>');
-      this._headers = $('<ul></ul>');
+      this._headers = $('<ul class="nav nav-pills"></ul>');
       this._tabs = [];
 
       this._$tabs_handler.append(this._headers);
@@ -517,7 +517,6 @@ define(['jquery', 'w2ui'], function ($, w2ui) {
       $('#' + tab.id).remove();
 
       this._tabs.splice(index, 1);
-      //this._$tabs_handler.splice(index, 1);
 
       //TODO que pasa si no me quedan mas tabs? Debo destruir este objeto tambien.
       //y en ese caso:
@@ -569,6 +568,12 @@ define(['jquery', 'w2ui'], function ($, w2ui) {
       if ($('#' + this._name).length === 0) {
          $(box).contents().remove();
          $(box).append(this._$tabs_handler);
+         $('#' + this._name).tabs({
+            activate: function (ev, ui) {
+               ui.oldTab.removeClass('active');
+               ui.newTab.addClass('active');
+            }
+         });
       }
 
       for(var i = 0; i < this._tabs.length; i++) {
@@ -579,12 +584,12 @@ define(['jquery', 'w2ui'], function ($, w2ui) {
          $('#header_' + tab.id).text(tab.panel.name() || "tab");
       }
 
-      $('#' + this._name).tabs();
       if(this._active_on_next_refresh !== null) {
          $('#' + this._name).tabs({active: this._active_on_next_refresh});
          this._active_on_next_refresh = null;
       }
       $('#' + this._name).tabs( "refresh" );
+
    };
 
    Tabbed.prototype.split_child = function (my_panel, panel, position) {
