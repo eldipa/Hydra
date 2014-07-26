@@ -16,6 +16,7 @@ define(['jquery', 'layout'], function ($, layout) {
  
       hello_msg.msg = 'hello world';     
       hello_msg.render = function () {
+         $(this.box).data('controller', this);
          $(this.box).html(this.msg);
       };
 
@@ -441,11 +442,6 @@ define(['jquery', 'layout'], function ($, layout) {
       tabs.add_child(hello_msg, 'intab');
       tabs.add_child(lorem_ipsum_msg, 'intab');
 
-      tabs.refresh();
-
-      //hello_msg.push(lorem_ipsum_msg);
-      //hello_msg.refresh();
-
       /* --------- XXX Expected Result: 
        *
        *      
@@ -455,10 +451,6 @@ define(['jquery', 'layout'], function ($, layout) {
        * ------------- */
 
       tabs.add_child(bye_bye_msg, 'intab');
-      tabs.refresh();
-
-      //hello_msg.push(bye_bye_msg);
-      //hello_msg.refresh();
       
       /* --------- XXX Expected Result: 
        *
@@ -477,8 +469,6 @@ define(['jquery', 'layout'], function ($, layout) {
        * */
 
       tabs.split(more_bye_msg, 'left');
-      //hello_msg.split(more_bye_msg, 'left');
-      //hello_msg.refresh();
       
       /* --------- XXX Expected Result: 
        *
@@ -489,7 +479,6 @@ define(['jquery', 'layout'], function ($, layout) {
        * ------------- */
 
       lorem_ipsum_msg.split(foo_msg, 'top');
-      lorem_ipsum_msg.refresh();
       
       /* --------- XXX Expected Result: 
        *
@@ -500,8 +489,6 @@ define(['jquery', 'layout'], function ($, layout) {
        * ------------- */
 
       bye_bye_msg.split(bar_msg, 'right');
-      bye_bye_msg.refresh();
-
       
       /* --------- XXX Expected Result: 
        *
@@ -512,8 +499,6 @@ define(['jquery', 'layout'], function ($, layout) {
        * ------------- */
 
       hello_msg.swap(more_bye_msg);
-      more_bye_msg.refresh();
-
       
       /* --------- XXX Expected Result: 
        *
@@ -530,10 +515,6 @@ define(['jquery', 'layout'], function ($, layout) {
       tabs2.swap(hello_msg);
       tabs2.add_child(hello_msg, 'intab');
       tabs2.add_child(foo_msg, 'intab');
-
-      //hello_msg.push(foo_msg);
-
-      hello_msg.refresh();
       
       /* --------- XXX Expected Result: 
        *
@@ -544,7 +525,7 @@ define(['jquery', 'layout'], function ($, layout) {
        * ------------- */
 
       bar_msg.remove();
-      more_bye_msg.refresh();
+      //more_bye_msg.refresh(); //TODO why
       
       /* --------- XXX Expected Result: 
        *
@@ -555,7 +536,6 @@ define(['jquery', 'layout'], function ($, layout) {
        * ------------- */
 
       bye_bye_msg.remove();
-      more_bye_msg.refresh();
 
       /* --------- XXX Expected Result: 
        *
@@ -565,6 +545,35 @@ define(['jquery', 'layout'], function ($, layout) {
        *
        * ------------- */
 
+      hello_msg.swap(more_bye_msg);
+
+      /* --------- XXX Expected Result: 
+       *
+       *          |          
+       *    M/(F) | H/(L) 
+       *          |     
+       *
+       * ------------- */
+
+      hello_msg.swap(lorem_ipsum_msg);
+
+      /* --------- XXX Expected Result: 
+       *
+       *          |          
+       *    M/(F) | L/(H) 
+       *          |     
+       *
+       * ------------- */
+
+      hello_msg.swap(foo_msg);
+
+      /* --------- XXX Expected Result: 
+       *
+       *          |          
+       *    M/(H) | L/(F) 
+       *          |     
+       *
+       * ------------- */
       return;
 
    }

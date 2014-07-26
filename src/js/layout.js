@@ -169,7 +169,6 @@ define(['jquery', 'w2ui'], function ($, w2ui) {
       e2.swap(panel);
    };
 
-
    var Root = function (dom_parent_element) {
       this._parent = NullParent;
 
@@ -418,6 +417,12 @@ define(['jquery', 'w2ui'], function ($, w2ui) {
       this._tabs.push(tab);
    };
 
+   Tabbed.prototype.add_child = function (panel, position) {
+      var result = Tabbed.prototype.__proto__.add_child.apply(this, [panel, position]);
+      this.refresh();
+      return result;
+   }
+
    Tabbed.prototype._remove_child = function (panel) {
       var index = null;
       for (var i = 0; i < this._tabs.length; i++) {
@@ -443,6 +448,13 @@ define(['jquery', 'w2ui'], function ($, w2ui) {
       //this._parent.remove_child(this);
    };
 
+   Tabbed.prototype.remove_child = function (panel) {
+      var result = Tabbed.prototype.__proto__.remove_child.apply(this, [panel]);
+      this.refresh();
+      return result;
+   }
+
+
    Tabbed.prototype._replace_child = function (panel, other_panel) {
       var index = null;
       for (var i = 0; i < this._tabs.length; i++) {
@@ -458,6 +470,13 @@ define(['jquery', 'w2ui'], function ($, w2ui) {
 
       this._tabs[index].panel = other_panel;
    };
+   
+   Tabbed.prototype.replace_child = function (panel, other_panel) {
+      var result = Tabbed.prototype.__proto__.replace_child.apply(this, [panel, other_panel]);
+      this.refresh();
+      return result;
+   }
+
 
    Tabbed.prototype.refresh = function () {
       this._parent.refresh();
