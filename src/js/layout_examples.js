@@ -445,7 +445,7 @@ define(['jquery', 'layout'], function ($, layout) {
       /* --------- XXX Expected Result: 
        *
        *      
-       *    (H,L)
+       *    [],H,L
        *     
        *
        * ------------- */
@@ -461,7 +461,7 @@ define(['jquery', 'layout'], function ($, layout) {
       /* --------- XXX Expected Result: 
        *
        *      
-       *    H/(L)
+       *    [H],L
        *     
        *
        * ------------- */
@@ -471,7 +471,7 @@ define(['jquery', 'layout'], function ($, layout) {
       /* --------- XXX Expected Result: 
        *
        *      
-       *    H/(L,B)
+       *    [H],L,B
        *     
        *
        * ------------- */
@@ -489,7 +489,7 @@ define(['jquery', 'layout'], function ($, layout) {
       /* --------- XXX Expected Result: 
        *
        *      |
-       *    M | H/(L,B)
+       *    M | [H],L,B
        *      |
        *
        * ------------- */
@@ -499,8 +499,8 @@ define(['jquery', 'layout'], function ($, layout) {
       /* --------- XXX Expected Result: 
        *
        *      | F
-       *    M |------- 
-       *      | H/(L,B)
+       *    M |---------- 
+       *      | [H],L,B
        *
        * ------------- */
 
@@ -510,7 +510,7 @@ define(['jquery', 'layout'], function ($, layout) {
        *
        *      | F
        *    M |----------------
-       *      | H/(L,B)  | Ba
+       *      | [H],L,B  | Ba
        *
        * ------------- */
 
@@ -520,7 +520,7 @@ define(['jquery', 'layout'], function ($, layout) {
        *
        *      | F
        *    H |----------------
-       *      | M/(L,B)  | Ba
+       *      | [M],L,B  | Ba
        *
        * ------------- */
 
@@ -538,7 +538,7 @@ define(['jquery', 'layout'], function ($, layout) {
       /* --------- XXX Expected Result: 
        *
        *          |          |
-       *    F/(H) | M/(L,B)  | Ba
+       *    H,[F] | [M],L,B  | Ba
        *          |          |
        *
        * ------------- */
@@ -549,7 +549,7 @@ define(['jquery', 'layout'], function ($, layout) {
       /* --------- XXX Expected Result: 
        *
        *          |          
-       *    F/(H) | M/(L,B) 
+       *    H,[F] | [M],L,B
        *          |     
        *
        * ------------- */
@@ -559,7 +559,7 @@ define(['jquery', 'layout'], function ($, layout) {
       /* --------- XXX Expected Result: 
        *
        *          |          
-       *    F/(H) | M/(L) 
+       *    H,[F] | [M],L
        *          |     
        *
        * ------------- */
@@ -569,7 +569,7 @@ define(['jquery', 'layout'], function ($, layout) {
       /* --------- XXX Expected Result: 
        *
        *          |          
-       *    F/(M) | H/(L) 
+       *    M,[F] | [H],L
        *          |     
        *
        * ------------- */
@@ -579,7 +579,7 @@ define(['jquery', 'layout'], function ($, layout) {
       /* --------- XXX Expected Result: 
        *
        *          |          
-       *    F/(M) | L/(H) 
+       *    M,[F] | [L],H
        *          |     
        *
        * ------------- */
@@ -589,7 +589,7 @@ define(['jquery', 'layout'], function ($, layout) {
       /* --------- XXX Expected Result: 
        *
        *          |          
-       *    H/(M) | L/(F) 
+       *    M,[H] | [L],F
        *          |     
        *
        * ------------- */
@@ -599,7 +599,7 @@ define(['jquery', 'layout'], function ($, layout) {
       /* --------- XXX Expected Result: 
        *
        *          |          
-       *    H/(M) | F/() 
+       *    M,[H] | [F]
        *          |     
        *
        * ------------- */
@@ -607,10 +607,11 @@ define(['jquery', 'layout'], function ($, layout) {
       foo_msg.remove();
       tabs.refresh();
 
+      //TODO mostrar algo cuando no hay tabs
       /* --------- XXX Expected Result: 
        *
        *          |          
-       *    H/(M) | /() 
+       *    M,[H] | []
        *          |     
        *
        * ------------- */
@@ -622,7 +623,7 @@ define(['jquery', 'layout'], function ($, layout) {
       /* --------- XXX Expected Result: 
        *
        *          |          
-       *    H/(M) | /(L) 
+       *    M,[H] | L,[]
        *          |     
        *
        * ------------- */
@@ -633,7 +634,40 @@ define(['jquery', 'layout'], function ($, layout) {
       /* --------- XXX Expected Result: 
        *
        *          |          
-       *    H/(M) | L/() 
+       *    M,[H] | [L]
+       *          |     
+       *
+       * ------------- */
+
+      tabs.add_child(foo_msg, 'intab');
+      tabs.add_child(bar_msg, 'intab');
+      tabs.display(2);
+      tabs.refresh();
+
+      /* --------- XXX Expected Result: 
+       *
+       *          |          
+       *    M,[H] | L,F,[Ba]
+       *          |     
+       *
+       * ------------- */
+
+      bar_msg.remove();
+
+      /* --------- XXX Expected Result: 
+       *
+       *          |          
+       *    M,[H] | L,[F]
+       *          |     
+       *
+       * ------------- */
+
+      lorem_ipsum_msg.remove();
+
+      /* --------- XXX Expected Result: 
+       *
+       *          |          
+       *    M,[H] | [F]
        *          |     
        *
        * ------------- */
