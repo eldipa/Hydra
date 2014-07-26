@@ -464,11 +464,11 @@ define(['jquery', 'w2ui'], function ($, w2ui) {
       var id = ("" + Math.random()).slice(2);
 
       this._name = id;
-      this._tabs_handler = $('<div id="'+id+'"></div>');
+      this._$tabs_handler = $('<div id="'+id+'"></div>');
       this._headers = $('<ul></ul>');
       this._tabs = [];
 
-      this._tabs_handler.append(this._headers);
+      this._$tabs_handler.append(this._headers);
       this._active_on_next_refresh = null;
    };
 
@@ -488,7 +488,7 @@ define(['jquery', 'w2ui'], function ($, w2ui) {
       tab.container = $('<div id="'+tab.id+'"></div>');
 
       this._headers.append(tab.header);
-      this._tabs_handler.append(tab.container);
+      this._$tabs_handler.append(tab.container);
       this._tabs.push(tab);
    };
 
@@ -514,9 +514,10 @@ define(['jquery', 'w2ui'], function ($, w2ui) {
       var tab = this._tabs[index];
       
       $('#header_' + tab.id).parent().remove();
+      $('#' + tab.id).remove();
 
       this._tabs.splice(index, 1);
-      this._tabs_handler.splice(index, 1);
+      //this._$tabs_handler.splice(index, 1);
 
       //TODO que pasa si no me quedan mas tabs? Debo destruir este objeto tambien.
       //y en ese caso:
@@ -564,9 +565,10 @@ define(['jquery', 'w2ui'], function ($, w2ui) {
    Tabbed.prototype.render = function () {
       var box = this.box;
 
-      if ($('#' + this._name).length === 0 ) {
+      // TODO que pasa si no hay tabs para mostrar???
+      if ($('#' + this._name).length === 0) {
          $(box).contents().remove();
-         $(box).append(this._tabs_handler);
+         $(box).append(this._$tabs_handler);
       }
 
       for(var i = 0; i < this._tabs.length; i++) {

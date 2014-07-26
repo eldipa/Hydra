@@ -593,6 +593,51 @@ define(['jquery', 'layout'], function ($, layout) {
        *          |     
        *
        * ------------- */
+
+      lorem_ipsum_msg.remove();
+
+      /* --------- XXX Expected Result: 
+       *
+       *          |          
+       *    H/(M) | F/() 
+       *          |     
+       *
+       * ------------- */
+
+      foo_msg.remove();
+      tabs.refresh();
+
+      /* --------- XXX Expected Result: 
+       *
+       *          |          
+       *    H/(M) | /() 
+       *          |     
+       *
+       * ------------- */
+
+      tabs.add_child(lorem_ipsum_msg, 'intab');
+      tabs.display(1);
+      tabs.refresh();
+
+      /* --------- XXX Expected Result: 
+       *
+       *          |          
+       *    H/(M) | /(L) 
+       *          |     
+       *
+       * ------------- */
+
+      tabs.display(0);
+      tabs.refresh();
+
+      /* --------- XXX Expected Result: 
+       *
+       *          |          
+       *    H/(M) | L/() 
+       *          |     
+       *
+       * ------------- */
+
       return
 
    }
