@@ -469,6 +469,7 @@ define(['jquery', 'w2ui'], function ($, w2ui) {
       this._tabs = [];
 
       this._tabs_handler.append(this._headers);
+      this._active_on_next_refresh = null;
    };
 
    Tabbed.prototype.__proto__ = Parent.prototype;
@@ -577,11 +578,19 @@ define(['jquery', 'w2ui'], function ($, w2ui) {
       }
 
       $('#' + this._name).tabs();
+      if(this._active_on_next_refresh !== null) {
+         $('#' + this._name).tabs({active: this._active_on_next_refresh});
+         this._active_on_next_refresh = null;
+      }
       $('#' + this._name).tabs( "refresh" );
    };
 
    Tabbed.prototype.split_child = function (my_panel, panel, position) {
       this._parent.split_child(this, panel, position);
+   };
+
+   Tabbed.prototype.display = function(tab_index) {
+      this._active_on_next_refresh = tab_index;
    };
 
    return {

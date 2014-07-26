@@ -445,6 +445,22 @@ define(['jquery', 'layout'], function ($, layout) {
       /* --------- XXX Expected Result: 
        *
        *      
+       *    (H,L)
+       *     
+       *
+       * ------------- */
+
+      /*
+       * Por default, ninguna de la tabs muestra. Para ello, usar el metodo display
+       * indicando el numero de tab a mostrar (indice zero-based, acepta negativos tambien)
+       * */
+
+      tabs.display(0);
+      tabs.refresh();
+
+      /* --------- XXX Expected Result: 
+       *
+       *      
        *    H/(L)
        *     
        *
@@ -515,22 +531,25 @@ define(['jquery', 'layout'], function ($, layout) {
       tabs2.swap(hello_msg);
       tabs2.add_child(hello_msg, 'intab');
       tabs2.add_child(foo_msg, 'intab');
+
+      tabs2.display(-1);
+      tabs2.refresh();
       
       /* --------- XXX Expected Result: 
        *
        *          |          |
-       *    H/(F) | M/(L,B)  | Ba
+       *    F/(H) | M/(L,B)  | Ba
        *          |          |
        *
        * ------------- */
 
       bar_msg.remove();
-      //more_bye_msg.refresh(); //TODO why
+      more_bye_msg.refresh(); //TODO why?
       
       /* --------- XXX Expected Result: 
        *
        *          |          
-       *    H/(F) | M/(L,B) 
+       *    F/(H) | M/(L,B) 
        *          |     
        *
        * ------------- */
@@ -540,7 +559,7 @@ define(['jquery', 'layout'], function ($, layout) {
       /* --------- XXX Expected Result: 
        *
        *          |          
-       *    H/(F) | M/(L) 
+       *    F/(H) | M/(L) 
        *          |     
        *
        * ------------- */
@@ -550,7 +569,7 @@ define(['jquery', 'layout'], function ($, layout) {
       /* --------- XXX Expected Result: 
        *
        *          |          
-       *    M/(F) | H/(L) 
+       *    F/(M) | H/(L) 
        *          |     
        *
        * ------------- */
@@ -560,7 +579,7 @@ define(['jquery', 'layout'], function ($, layout) {
       /* --------- XXX Expected Result: 
        *
        *          |          
-       *    M/(F) | L/(H) 
+       *    F/(M) | L/(H) 
        *          |     
        *
        * ------------- */
@@ -570,11 +589,11 @@ define(['jquery', 'layout'], function ($, layout) {
       /* --------- XXX Expected Result: 
        *
        *          |          
-       *    M/(H) | L/(F) 
+       *    H/(M) | L/(F) 
        *          |     
        *
        * ------------- */
-      return;
+      return
 
    }
 
