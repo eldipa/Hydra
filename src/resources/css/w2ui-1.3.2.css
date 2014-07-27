@@ -954,7 +954,6 @@ select {
   bottom: 0px;
   z-index: 1;
   color: inherit;
-  background-color: #f5f6f7;
 }
 .w2ui-layout > div .w2ui-resizer {
   display: none;
@@ -962,10 +961,12 @@ select {
   z-index: 121;
   background-color: transparent;
 }
+/*
 .w2ui-layout > div .w2ui-resizer:hover,
 .w2ui-layout > div .w2ui-resizer.active {
   background-color: #d7e4f2;
 }
+*/
 /*************************************************
 * ---- Grid ----
 */

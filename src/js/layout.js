@@ -246,7 +246,7 @@ define(['jquery', 'w2ui'], function ($, w2ui) {
    var Root = function (dom_parent_element) {
       this._parent = NullParent;
 
-      this._dom_el = $('<div style="width: 100%; height: 400px;"></div>');
+      this._dom_el = $('<div style="width: 100%; height: 100px; min-height: 300px"></div>');
       dom_parent_element.append(this._dom_el);
 
       this._name = ("" + Math.random()).slice(2);
@@ -320,7 +320,7 @@ define(['jquery', 'w2ui'], function ($, w2ui) {
       this._splitted_direction = splitted_direction;
 
       this._name = ("" + Math.random()).slice(2);
-      var pstyle = 'border: 1px none #0000ef; padding: 0px;'; 
+      var pstyle = 'border: 1px none #000000; padding: 0px;'; 
 
       this._common_style_for_all_positions = pstyle;
       this._extra_style_per_position = {

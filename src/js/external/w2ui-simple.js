@@ -5515,7 +5515,7 @@ w2utils.keyboard = (function (obj) {
 				if (tmp.length > 0) {
 					$(pname).scrollTop(0);
 					panelTop = $(tmp).position().top;
-					tmp.attr('class', 'w2ui-panel-content');
+					tmp.attr('class', 'w2ui-panel-content ui-widget-content');
 					if (p.style) tmp[0].style.cssText = p.style;
 				}
 				if (p.content === '') {
@@ -5527,7 +5527,7 @@ w2utils.keyboard = (function (obj) {
 						if (transition !== null && transition !== '' && typeof transition != 'undefined') {
 							// apply transition
 							var div1 = $(pname + ' > .w2ui-panel-content');
-							div1.after('<div class="w2ui-panel-content new-panel" style="'+ div1[0].style.cssText +'"></div>');
+							div1.after('<div class="w2ui-panel-content new-panel ui-widget-content" style="'+ div1[0].style.cssText +'"></div>');
 							var div2 = $(pname + ' > .w2ui-panel-content.new-panel');
 							div1.css('top', panelTop);
 							div2.css('top', panelTop);
@@ -5783,10 +5783,10 @@ w2utils.keyboard = (function (obj) {
 			var tmp = ['top', 'left', 'main'];
 			for (var t in tmp) {
 				var pan  = obj.get(tmp[t]);
-				var html =  '<div id="layout_'+ obj.name + '_panel_'+ tmp[t] +'" class="w2ui-panel">'+
+				var html =  '<div id="layout_'+ obj.name + '_panel_'+ tmp[t] +'" class="w2ui-panel ui-widget ui-widget-content" style="border: 0px;">'+
 							'	<div class="w2ui-panel-content"></div>'+
 							'</div>'+
-							'<div id="layout_'+ obj.name + '_resizer_'+ tmp[t] +'" class="w2ui-resizer"></div>';
+							'<div id="layout_'+ obj.name + '_resizer_'+ tmp[t] +'" class="w2ui-resizer ui-state-default"></div>';
 				$(obj.box).find(' > div').append(html);
 				// tabs are rendered in refresh()
 			}
@@ -5866,7 +5866,7 @@ w2utils.keyboard = (function (obj) {
 					}
 					obj.resize();
 				}
-				$('#layout_'+ obj.name + '_resizer_'+ obj.tmp.resize.type).removeClass('active');
+				$('#layout_'+ obj.name + '_resizer_'+ obj.tmp.resize.type).removeClass('active').removeClass('ui-state-focus');
 				delete obj.tmp.resize;
 			}
 
@@ -5880,7 +5880,7 @@ w2utils.keyboard = (function (obj) {
 				if (eventData.isCancelled === true) return false;
 
 				var p = $('#layout_'+ obj.name + '_resizer_'+ obj.tmp.resize.type);
-				if (!p.hasClass('active')) p.addClass('active');
+				if (!p.hasClass('active')) p.addClass('active').addClass('ui-state-focus');
 				obj.tmp.resize.div_x = (evnt.screenX - obj.tmp.resize.x); 
 				obj.tmp.resize.div_y = (evnt.screenY - obj.tmp.resize.y); 
 				// left panel -> drag
