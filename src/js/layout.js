@@ -1,4 +1,4 @@
-define(['jquery', 'w2ui'], function ($, w2ui) {
+define(['jquery', 'w2ui', 'jqueryui_tabsoverflow'], function ($, w2ui, _) {
    var NullParent = {};
 
    NullParent.refresh = function () {};
@@ -338,7 +338,14 @@ define(['jquery', 'w2ui'], function ($, w2ui) {
             panels: [
                {type: 'main', style: pstyle + this._extra_style_per_position['right'], content: ''},
                {type: 'left', style: pstyle + this._extra_style_per_position['left'], size: '50%', resizable: true, content: ''},
-            ]
+            ],
+            onResize: function (ev) {
+               var that = this;
+               setTimeout(function () {
+                  that.refresh('main');
+                  that.refresh('left');
+               }, 200);
+            }
          });
       }
       else {
@@ -349,7 +356,14 @@ define(['jquery', 'w2ui'], function ($, w2ui) {
             panels: [
                {type: 'main', style: pstyle + this._extra_style_per_position['bottom'], content: ''},
                {type: 'top', style: pstyle + this._extra_style_per_position['top'], size: '50%', resizable: true, content: ''}
-            ]
+            ],
+            onResize: function (ev) {
+               var that = this;
+               setTimeout(function () {
+                  that.refresh('main');
+                  that.refresh('top');
+               }, 200);
+            }
          });
       }
    };
@@ -569,10 +583,7 @@ define(['jquery', 'w2ui'], function ($, w2ui) {
          $(box).contents().remove();
          $(box).append(this._$tabs_handler);
          $('#' + this._name).tabs({
-            activate: function (ev, ui) {
-               ui.oldTab.removeClass('active');
-               ui.newTab.addClass('active');
-            }
+            overflowTabs: true
          });
       }
 
