@@ -246,7 +246,7 @@ define(['jquery', 'w2ui'], function ($, w2ui) {
    var Root = function (dom_parent_element) {
       this._parent = NullParent;
 
-      this._dom_el = $('<div style="width: 100%; height: 100px; min-height: 300px"></div>');
+      this._dom_el = $('<div style="width: 100%; height: 100%; min-height: 300px; min-width: 300px;"></div>');
       dom_parent_element.append(this._dom_el);
 
       this._name = ("" + Math.random()).slice(2);
