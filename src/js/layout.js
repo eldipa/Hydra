@@ -465,7 +465,7 @@ define(['jquery', 'w2ui'], function ($, w2ui) {
 
       this._name = id;
       this._$tabs_handler = $('<div id="'+id+'"></div>');
-      this._headers = $('<ul class="nav nav-pills"></ul>');
+      this._headers = $('<ul></ul>');
       this._tabs = [];
 
       this._$tabs_handler.append(this._headers);
