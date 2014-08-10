@@ -12,6 +12,8 @@ requirejs.config({
       w2ui: 'external/w2ui',
       ctxmenu: 'external/ctxmenu',
       jqueryui: 'external/jquery-ui-1.11.0',
+      jqueryui_tabsoverflow: 'external/jquery-ui-tabs-overflow',
+      splitter: 'external/splitter'
    },
 
    shim: {
@@ -27,13 +29,88 @@ requirejs.config({
 
 });
 
-requirejs(['w2ui', 'code_view', 'jquery', 'export_console', 'layout', 'layout_examples', 'jqueryui'], function (w2ui, code_view, $, export_console, layout, layout_examples, _) {
+requirejs(['w2ui', 'code_view', 'jquery', 'export_console', 'layout', 'layout_examples', 'jqueryui', 'ctxmenu', 'splitter'], function (w2ui, code_view, $, export_console, layout, layout_examples, _, ctxmenu, _) {
    var js_console_server = export_console.init();
    var fs = require('fs');
 
-   //$( "#tabs" ).tabs();
+   ctxmenu.init({
+          fadeSpeed: 100,
+          filter: function ($obj){},
+          above: 'auto',
+          preventDoubleContext: true,
+          compress: false
+   });
 
-   layout_examples.init();
+   ctxmenu.attachDynamic('body', undefined);
+
+   var update_vertical_bar_and_split = function (event, ui) {
+      var $container = $(this).parent().parent();
+      var new_bar_position = $(ui.helper).position();
+
+      var container_position = $container.position();
+
+      var rel_offset_x = (new_bar_position.left - container_position.left) / $container.width();
+
+      if(rel_offset_x < 0.0001 || rel_offset_x > 0.9999) {
+         console.log("Too far: " + new_bar_position.left + " " + container_position.left);
+      }
+      else {
+         var left_width_percentage = (rel_offset_x * 100);
+         $container.find(".left_panel_of_splitted").width(left_width_percentage + "%");
+         $container.find(".right_side_panel_and_bar_of_splitted").width((100-left_width_percentage) + "%");
+      }
+   };  
+
+   var update_horizontal_bar_and_split = function (event, ui) {
+      var $container = $(this).parent().parent();
+      var new_bar_position = $(ui.helper).position();
+
+      var container_position = $container.position();
+
+      var rel_offset_y = (new_bar_position.top - container_position.top) / $container.height();
+
+      if(rel_offset_y < 0.0001 || rel_offset_y > 0.9999) {
+         console.log("Too far: " + new_bar_position.top + " " + container_position.top);
+      }
+      else {
+         var top_height_percentage = (rel_offset_y * 100);
+         $container.find(".top_panel_of_splitted").height(top_height_percentage + "%");
+         $container.find(".bottom_side_panel_and_bar_of_splitted").height((100-top_height_percentage) + "%");
+      }
+   };  
+
+   var fix_height = function (event, ui) {
+      var height = $(this).height();
+      $(ui.helper).height(height);
+   };
+
+   var fix_width = function (event, ui) {
+      var width = $(this).width();
+      $(ui.helper).width(width);
+   };
+
+   var Options_for_vertical_bar = { 
+      axis: "x", 
+      opacity: 0.7, 
+      helper: "clone",
+      stop: update_vertical_bar_and_split,
+      start: fix_height
+   };
+
+   $(".vertical_bar_splitting").draggable(Options_for_vertical_bar);
+
+
+   var Options_for_horizontal_bar = { 
+      axis: "y", 
+      opacity: 0.7, 
+      helper: "clone",
+      stop: update_horizontal_bar_and_split,
+      start: fix_width
+   };
+
+   $(".horizontal_bar_splitting").draggable(Options_for_horizontal_bar);
+
+   //layout_examples.init();
 
    /*var event_handler = new event_handler.EventHandler();
    event_handler.init();

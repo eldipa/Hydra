@@ -1,0 +1,189 @@
+
+/* 
+ * Vertical split
+ * ==============
+ *
+ * Variables:
+ *    - width of left_panel_of_splitted and right_side_panel_and_bar_of_splitted
+ *    - width of vertical_bar_splitting
+ *    - background-color of vertical_bar_splitting
+ *
+ * Usage:
+ * ------
+ *
+ 
+              <div class="splitted_container">
+                 <div class="left_panel_of_splitted">
+                       <p>This is the left side of the vertical splitter.</p>
+                    </div>
+                 </div>
+
+                 <div class="right_side_panel_and_bar_of_splitted">
+                    <div class="vertical_bar_splitting"></div>
+                    <div class="right_panel_of_splitted">
+                       <p>This is the right side of the vertical splitter.</p>
+                    </div>
+                 </div>
+              </div>
+
+ *
+ **/
+
+.left_panel_of_splitted {
+   width: 70%;
+   height: 100%;
+   display: inline-block;
+   float: left;
+   overflow: auto;
+}
+
+.right_side_panel_and_bar_of_splitted {
+   width: 30%;
+   height: 100%;
+   display: inline-block;
+   float: left;
+}
+
+.right_panel_of_splitted {
+   height: 100%;
+   overflow: auto;
+}
+
+.vertical_bar_splitting {
+   width: 6px;
+   height: 100%;
+   display: inline-block;
+   float: left;
+   background-color: #000000;
+   overflow: hidden;
+}
+
+/*
+ * Horizontal split
+ * =================
+ *
+ * Usage:
+ * ------
+ *
+           <div class="splitted_container">
+              <div class="top_panel_of_splitted">
+                 <p>This is the Top side of the horizontal splitter.</p>
+              </div>
+              <div class="bottom_side_panel_and_bar_of_splitted">
+                 <div class="horizontal_bar_splitting"></div>
+                 <div class="bottom_panel_of_splitted">
+                    <p>This is the Bottom side of the horizontal splitter.</p>
+                 </div>
+              </div>
+           </div>
+
+ *
+ *
+ * */
+.top_panel_of_splitted {
+   height: 30%;
+   width: 100%;
+   display: inline-block;
+   float: left;
+   overflow: auto;
+}
+
+.bottom_side_panel_and_bar_of_splitted {
+   height: 70%;
+   width: 100%;
+   display: inline-block;
+   float: left;
+}
+
+.bottom_panel_of_splitted {
+   height: 100%;
+   width: 100%;
+   overflow: auto;
+}
+
+.horizontal_bar_splitting {
+   height: 6px;
+   width: 100%;
+   display: inline-block;
+   float: left;
+   background-color: #000000;
+   overflow: hidden;
+}
+
+/*
+ * Common container
+ * ================
+ *
+ * */
+.splitted_container {
+   background-color: #6666aa;
+   min-width: 10px;
+   min-height: 10px;
+   height: 100%;
+   overflow: hidden;
+}
+
+/*
+ * Nested example:
+ * ---------------
+ *
+ *
+     <div class="splitted_container">
+        <div class="left_panel_of_splitted">
+           <div class="splitted_container">
+              <div class="top_panel_of_splitted">
+                 <div class="splitted_container">
+                    <div class="top_panel_of_splitted">
+                       <p>This is the Top-TOP side. Typically you might use this side for button bar.</p>
+                    </div>
+                    <div class="bottom_side_panel_and_bar_of_splitted">
+                       <div class="horizontal_bar_splitting"></div>
+                       <div class="bottom_panel_of_splitted">
+                          <p>This is the Bottom-of-TOP side
+                          <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse vel vestibulum lectus. Morbi in elit porta, hendrerit massa sit amet, laoreet velit. Fusce in mi sit amet nulla congue congue. In hac habitasse platea dictumst. Ut blandit magna ut eleifend euismod. Donec non nulla sit amet enim porta rhoncus. Nam sed porttitor felis, ac porta turpis. Proin nec diam ac lacus malesuada pharetra. Fusce sodales commodo mauris. Nullam dapibus lectus ac massa tincidunt dictum.</p>
+                       </div>
+                    </div>
+                 </div>
+              </div>
+              <div class="bottom_side_panel_and_bar_of_splitted">
+                 <div class="horizontal_bar_splitting"></div>
+                 <div class="bottom_panel_of_splitted">
+                    <div class="splitted_container">
+                       <div class="left_panel_of_splitted">
+                          <div class="splitted_container">
+                             <div class="top_panel_of_splitted">
+                                <p>This is the left-bottom-left side.</p>
+                                <p>Ut bibendum leo in magna eleifend, sit amet mattis enim convallis. Ut quis sagittis lorem.</p>
+                             </div>
+                             <div class="bottom_side_panel_and_bar_of_splitted">
+                                <div class="horizontal_bar_splitting"></div>
+                                <div class="bottom_panel_of_splitted">
+                                   <p>Vivamus dapibus iaculis dolor ut ullamcorper. Sed quam dolor, blandit ac tellus ut, elementum placerat turpis.</p> 
+                                   <p>Nullam pellentesque sapien ut dolor volutpat, eu blandit elit pellentesque. Nulla eleifend ligula massa, sit amet aliquam elit commodo et. Vivamus ut nulla ac lacus pharetra mollis eu eget quam. Nam fermentum nibh sit amet consectetur iaculis. Maecenas tellus nunc, posuere eu quam ut, pretium venenatis neque. Mauris aliquam sem nisl, eget hendrerit leo bibendum in. Proin nibh risus, hendrerit ut lobortis a, faucibus nec risus. Praesent laoreet faucibus lorem, non volutpat elit viverra non. Maecenas vitae arcu et dui convallis adipiscing sed sed dolor. Vivamus ullamcorper mattis lacus, at auctor libero posuere ac. Maecenas ac elit arcu.</p>
+                                   <p>Vivamus faucibus molestie purus eu gravida. Curabitur at purus in magna euismod bibendum. <p>
+                                   <p>Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Cras ipsum tortor, viverra a nisl et, egestas dignissim enim. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut vulputate convallis lectus non dignissim. Nulla et massa vitae dolor eleifend ornare at vel nisi.</p>
+                                </div>
+                             </div>
+                          </div>
+                       </div>
+                       <div class="right_side_panel_and_bar_of_splitted">
+                          <div class="vertical_bar_splitting"></div>
+                          <div class="right_panel_of_splitted">
+                             <p>This is the left-bottom-right side of the vertical splitter. </p>
+                          </div>
+                       </div>
+                    </div>
+                 </div>
+              </div>
+           </div>
+        </div>
+        <div class="right_side_panel_and_bar_of_splitted">
+           <div class="vertical_bar_splitting"></div>
+           <div class="right_panel_of_splitted">
+              <p>Donec vitae metus in sapien posuere tincidunt ut et enim. Integer sit amet risus sodales, tincidunt magna a, posuere nibh. Nulla facilisi. Aliquam iaculis lorem fermentum imperdiet vestibulum. </p>
+           </div>
+        </div>
+     </div>
+
+ *
+ * */
