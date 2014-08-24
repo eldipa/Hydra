@@ -43,41 +43,46 @@ requirejs(['w2ui', 'code_view', 'jquery', 'export_console', 'layout', 'layout_ex
 
    ctxmenu.attachDynamic('body', undefined);
 
-   var update_vertical_bar_and_split = function (event, ui) {
-      var $container = $(this).parent().parent();
-      var new_bar_position = $(ui.helper).position();
+   var update_bar_and_split_for = function (position_name, dimension_name) {
+      if (! ((position_name === 'left' && dimension_name === 'width') ||
+             (position_name === 'top'  && dimension_name === 'height')) ) {
+                throw new Error("The position/dimension names are invalid. Accepted 'left-width' and 'top-height' but received '"+position_name+"-"+dimension_name+"'.");
+             }
 
-      var container_position = $container.position();
+      var opposite_position_name = {
+         left: 'right',
+         top : 'bottom',
+      }[position_name]
 
-      var rel_offset_x = (new_bar_position.left - container_position.left) / $container.width();
+      return function (event, ui) {
+         var $container = $(this).parent().parent();
+         var new_bar_position = $(ui.helper).position();
 
-      if(rel_offset_x < 0.0001 || rel_offset_x > 0.9999) {
-         console.log("Too far: " + new_bar_position.left + " " + container_position.left);
-      }
-      else {
-         var left_width_percentage = (rel_offset_x * 100);
-         $container.find(".left_panel_of_splitted").width(left_width_percentage + "%");
-         $container.find(".right_side_panel_and_bar_of_splitted").width((100-left_width_percentage) + "%");
-      }
+         var container_position = $container.position();
+
+         var rel_offset = (new_bar_position[position_name] - container_position[position_name]) / $container[dimension_name]();
+
+         if(rel_offset < 0.0001 || rel_offset > 0.9999) {
+            console.log("The bar is moving "+position_name+"--"+opposite_position_name+" too far: Bar new position " + new_bar_position[position_name] + " Container position " + container_position[position_name]);
+         }
+         else {
+            var percentage = (rel_offset * 100);
+            $container.children("."+position_name+"_panel_of_splitted")[dimension_name](percentage + "%");
+            $container.children("."+opposite_position_name+"_side_panel_and_bar_of_splitted")[dimension_name]((100-percentage) + "%");
+         }
+      };
    };  
 
-   var update_horizontal_bar_and_split = function (event, ui) {
-      var $container = $(this).parent().parent();
-      var new_bar_position = $(ui.helper).position();
-
-      var container_position = $container.position();
-
-      var rel_offset_y = (new_bar_position.top - container_position.top) / $container.height();
-
-      if(rel_offset_y < 0.0001 || rel_offset_y > 0.9999) {
-         console.log("Too far: " + new_bar_position.top + " " + container_position.top);
+   var fix_for_dimension_at_start_bug_for = function (dimension_name) {
+      if (! (dimension_name === 'width' || dimension_name === 'height') ) {
+         throw new Error("Incorrect dimension name. Accepted width or height but received '"+dimension_name+"'.");
       }
-      else {
-         var top_height_percentage = (rel_offset_y * 100);
-         $container.find(".top_panel_of_splitted").height(top_height_percentage + "%");
-         $container.find(".bottom_side_panel_and_bar_of_splitted").height((100-top_height_percentage) + "%");
-      }
-   };  
+
+      return function (event, ui) {
+         var correct_value_at_start = $(this)[dimension_name]();
+         $(ui.helper)[dimension_name](correct_value_at_start);
+      };
+   };
 
    var fix_height = function (event, ui) {
       var height = $(this).height();
@@ -93,8 +98,8 @@ requirejs(['w2ui', 'code_view', 'jquery', 'export_console', 'layout', 'layout_ex
       axis: "x", 
       opacity: 0.7, 
       helper: "clone",
-      stop: update_vertical_bar_and_split,
-      start: fix_height
+      stop: update_bar_and_split_for('left', 'width'),
+      start: fix_for_dimension_at_start_bug_for('height')
    };
 
    $(".vertical_bar_splitting").draggable(Options_for_vertical_bar);
@@ -104,8 +109,8 @@ requirejs(['w2ui', 'code_view', 'jquery', 'export_console', 'layout', 'layout_ex
       axis: "y", 
       opacity: 0.7, 
       helper: "clone",
-      stop: update_horizontal_bar_and_split,
-      start: fix_width
+      stop: update_bar_and_split_for('top', 'height'),
+      start: fix_for_dimension_at_start_bug_for('width')
    };
 
    $(".horizontal_bar_splitting").draggable(Options_for_horizontal_bar);
