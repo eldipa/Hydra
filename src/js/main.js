@@ -84,36 +84,33 @@ requirejs(['w2ui', 'code_view', 'jquery', 'export_console', 'layout', 'layout_ex
       };
    };
 
-   var fix_height = function (event, ui) {
-      var height = $(this).height();
-      $(ui.helper).height(height);
+   var options_for_draggable_bar = function (type) {
+      if (! (type === 'vertical' || type === 'horizontal') ) {
+         throw new Error("You cannot create a '"+type+"' draggable bar. Only 'vertical' or 'horizontal' draggable bars are allowed.");
+      }
+      
+      if (type === 'vertical') {
+         return { 
+            axis: "x", 
+            opacity: 0.7, 
+            helper: "clone",
+            stop: update_bar_and_split_for('left', 'width'),
+            start: fix_for_dimension_at_start_bug_for('height')
+         };
+      }
+      else {
+         return { 
+            axis: "y", 
+            opacity: 0.7, 
+            helper: "clone",
+            stop: update_bar_and_split_for('top', 'height'),
+            start: fix_for_dimension_at_start_bug_for('width')
+         };
+      }
    };
 
-   var fix_width = function (event, ui) {
-      var width = $(this).width();
-      $(ui.helper).width(width);
-   };
-
-   var Options_for_vertical_bar = { 
-      axis: "x", 
-      opacity: 0.7, 
-      helper: "clone",
-      stop: update_bar_and_split_for('left', 'width'),
-      start: fix_for_dimension_at_start_bug_for('height')
-   };
-
-   $(".vertical_bar_splitting").draggable(Options_for_vertical_bar);
-
-
-   var Options_for_horizontal_bar = { 
-      axis: "y", 
-      opacity: 0.7, 
-      helper: "clone",
-      stop: update_bar_and_split_for('top', 'height'),
-      start: fix_for_dimension_at_start_bug_for('width')
-   };
-
-   $(".horizontal_bar_splitting").draggable(Options_for_horizontal_bar);
+   $(".vertical_bar_splitting").draggable(options_for_draggable_bar('vertical'));
+   $(".horizontal_bar_splitting").draggable(options_for_draggable_bar('horizontal'));
 
    //layout_examples.init();
 
