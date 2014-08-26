@@ -112,7 +112,7 @@ requirejs(['w2ui', 'code_view', 'jquery', 'export_console', 'layout', 'layout_ex
    $(".vertical_bar_splitting").draggable(options_for_draggable_bar('vertical'));
    $(".horizontal_bar_splitting").draggable(options_for_draggable_bar('horizontal'));
 
-   //layout_examples.init();
+   layout_examples.init();
 
    /*var event_handler = new event_handler.EventHandler();
    event_handler.init();

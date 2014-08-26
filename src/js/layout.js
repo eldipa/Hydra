@@ -1,7 +1,7 @@
 define(['jquery', 'w2ui', 'jqueryui_tabsoverflow'], function ($, w2ui, _) {
    var NullParent = {};
 
-   NullParent.refresh = function () {};
+   //NullParent.refresh = NullParent.refresh_child = function () {};
    NullParent._add_child = NullParent._remove_child = NullParent._replace_child = function () {};
    NullParent.toString = function () {
       return "[NullParent]";
@@ -75,7 +75,7 @@ define(['jquery', 'w2ui', 'jqueryui_tabsoverflow'], function ($, w2ui, _) {
 
    var new_tmp_panel = function () {
       var tmp = new Panel("tmp");
-      tmp.render = function () {};
+      tmp.render = tmp.unlink = function () {};
       return tmp;
    };
    
@@ -111,9 +111,9 @@ define(['jquery', 'w2ui', 'jqueryui_tabsoverflow'], function ($, w2ui, _) {
       root.add_child(this, 'main');
    };
 
-   Panel.prototype.refresh = function () {
-      this._parent.refresh();
-   };
+   /*Panel.prototype.refresh = function () { //TODO rename 'refresh' to 'request_to_be_render'
+      this._parent.refresh_child(this);
+   };*/
 
    Panel.prototype.render = function () {
       throw new Error("Not implemented error: The 'render' method of '"+this+"' was not implemented!. It should be to render something meaningful in the box '"+this.box+"'.");
@@ -162,7 +162,11 @@ define(['jquery', 'w2ui', 'jqueryui_tabsoverflow'], function ($, w2ui, _) {
 
       ancestry.push(parent);
       return ancestry;
-   }
+   };
+
+   Panel.prototype.unlink = function () {
+      throw new Error("Not implemented error: The 'unlink' method of '"+this+"' was not implemented!. It should unlink its stuff from the DOM. This no necessary means to remove-and-delete any element, you just need to remove it from the DOM.");
+   };
 
    var Parent = function () { //TODO, se podria obviar usar el prototipo de Parent y usar una unica instancia de Parent (como se hace con NullParent)
    };
@@ -185,6 +189,8 @@ define(['jquery', 'w2ui', 'jqueryui_tabsoverflow'], function ($, w2ui, _) {
          throw new Error("Precondition: The panel '"+panel+"' must be a child of my.");
       }
 
+      panel.unlink();
+
       this._remove_child(panel);
       panel.parent(NullParent);
    };
@@ -197,7 +203,9 @@ define(['jquery', 'w2ui', 'jqueryui_tabsoverflow'], function ($, w2ui, _) {
       if (other_panel.parent() !== NullParent) {
          throw new Error("Precondition: The panel to be my child '"+other_panel+"' replacing my child '"+my_panel+"' must not have another parent.");
       }
-      
+
+      my_panel.unlink();
+
       this._replace_child(my_panel, other_panel);
       other_panel.parent(this);
       my_panel.parent(NullParent);
@@ -246,18 +254,11 @@ define(['jquery', 'w2ui', 'jqueryui_tabsoverflow'], function ($, w2ui, _) {
    var Root = function (dom_parent_element) {
       this._parent = NullParent;
 
-      this._dom_el = $('<div style="width: 100%; height: 100%; min-height: 300px; min-width: 300px;"></div>');
-      dom_parent_element.append(this._dom_el);
+      this._$anchor_element = $(dom_parent_element);
 
       this._name = ("" + Math.random()).slice(2);
-
-      var pstyle = 'border: 2px solid #000000; padding: 0px;'; 
-      this._subpanel_layout = $(this._dom_el).w2layout({
-         name: this._name,
-         panels: [
-            {type: 'main', style: pstyle, content: ''}
-         ]
-      });
+      
+      this._child = null;
    };
 
    Root.prototype.__proto__ = Parent.prototype;
@@ -267,47 +268,51 @@ define(['jquery', 'w2ui', 'jqueryui_tabsoverflow'], function ($, w2ui, _) {
          throw new Error("Precondition: Invalid position '"+position+"' of the panel '"+panel+"'. It should be 'main'.");
       }
       
-      var previous = this._subpanel_layout.content('main');
+      var previous = this._child;
       if(previous) {
          throw new Error("Precondition: The position '"+position+"' of the panel '"+panel+"' is already in use by the panel '"+previous+"'.");
       }
 
-      this._subpanel_layout.content('main', panel);
+      this._child = panel;
    };
 
    Root.prototype._remove_child = function (panel) {
-      var previous = this._subpanel_layout.content('main');
+      var previous = this._child;
       if(previous !== panel) {
          throw new Error("Inconsistency: The previous panel '"+previous+"' is not '"+panel+"'.");
       }
 
-      delete panel.box;
-
       this._parent.remove_child(this);
       
-      $(this._dom_el).remove();
-      this._subpanel_layout.content('main', '');
+      $(this._$anchor_element).empty();
+      this._child = null;
    };
    
    Root.prototype._replace_child = function (panel, other_panel) {
-      var previous = this._subpanel_layout.content('main');
+      var previous = this._child;
       if(previous !== panel) {
          throw new Error("Inconsistency: I can't replace a panel '"+panel+"' that i can't find.");
       }
 
-      this._subpanel_layout.content('main', other_panel);
+      this._child = other_panel;
    };
 
-   Root.prototype.refresh = function () {
+   /*Root.prototype.refresh = function () {
       this._subpanel_layout.refresh();
-   };
+   };*/
+
+   /*Root.prototype.refresh_child = function (panel) {
+      this._child.render(this._$anchor_element);   //TODO check if panel is child me
+   };*/
    
    Root.prototype.toString = function () {
       return "[root ("+this._name.slice(0,6)+") Root]";
    };
 
    Root.prototype.render = function () {
-      this._subpanel_layout.render(this.box);
+      //XXX ignore $box
+      this._child.box = this._$anchor_element;
+      this._child.render(this._$anchor_element);
    };
 
    var Splitted = function (splitted_direction) {
@@ -320,55 +325,107 @@ define(['jquery', 'w2ui', 'jqueryui_tabsoverflow'], function ($, w2ui, _) {
       this._splitted_direction = splitted_direction;
 
       this._name = ("" + Math.random()).slice(2);
-      var pstyle = 'border: 1px none #000000; padding: 0px;'; 
+      
+      var update_bar_and_split_for = function (position_name, dimension_name) {
+         if (! ((position_name === 'left' && dimension_name === 'width') ||
+                (position_name === 'top'  && dimension_name === 'height')) ) {
+                   throw new Error("The position/dimension names are invalid. Accepted 'left-width' and 'top-height' but received '"+position_name+"-"+dimension_name+"'.");
+                }
 
-      this._common_style_for_all_positions = pstyle;
-      this._extra_style_per_position = {
-         'top':      'border-bottom-style: solid;',
-         'bottom':   'border-top-style: solid;',
-         'left':     'border-right-style: solid;',
-         'right':    'border-left-style: solid;',
+         var opposite_position_name = {
+            left: 'right',
+            top : 'bottom',
+         }[position_name]
+
+         return function (event, ui) {
+            var $container = $(this).parent().parent();
+            var new_bar_position = $(ui.helper).position();
+
+            var container_position = $container.position();
+
+            var rel_offset = (new_bar_position[position_name] - container_position[position_name]) / $container[dimension_name]();
+
+            if(rel_offset < 0.0001 || rel_offset > 0.9999) {
+               console.log("The bar is moving "+position_name+"--"+opposite_position_name+" too far: Bar new position " + new_bar_position[position_name] + " Container position " + container_position[position_name]);
+            }
+            else {
+               var percentage = (rel_offset * 100);
+               $container.children("."+position_name+"_panel_of_splitted")[dimension_name](percentage + "%");
+               $container.children("."+opposite_position_name+"_side_panel_and_bar_of_splitted")[dimension_name]((100-percentage) + "%");
+            }
+         };
+      };  
+
+      var fix_for_dimension_at_start_bug_for = function (dimension_name) {
+         if (! (dimension_name === 'width' || dimension_name === 'height') ) {
+            throw new Error("Incorrect dimension name. Accepted width or height but received '"+dimension_name+"'.");
+         }
+
+         return function (event, ui) {
+            var correct_value_at_start = $(this)[dimension_name]();
+            $(ui.helper)[dimension_name](correct_value_at_start);
+         };
       };
 
-      if(this._splitted_direction === 'vertically') {
-         this._main_position_is_mapping_to = 'right';
-         this._subpanels_layout = $().w2layout({ 
-            name: this._name,
-            padding: 3,
-            panels: [
-               {type: 'main', style: pstyle + this._extra_style_per_position['right'], content: ''},
-               {type: 'left', style: pstyle + this._extra_style_per_position['left'], size: '50%', resizable: true, content: ''},
-            ],
-            onResize: function (ev) {
-               var that = this;
-               setTimeout(function () {
-                  that.refresh('main');
-                  that.refresh('left');
-               }, 200);
-            }
-         });
+      var options_for_draggable_bar = function (type) {
+         if (! (type === 'vertical' || type === 'horizontal') ) {
+            throw new Error("You cannot create a '"+type+"' draggable bar. Only 'vertical' or 'horizontal' draggable bars are allowed.");
+         }
+         
+         if (type === 'vertical') {
+            return { 
+               axis: "x", 
+               opacity: 0.7, 
+               helper: "clone",
+               stop: update_bar_and_split_for('left', 'width'),
+               start: fix_for_dimension_at_start_bug_for('height')
+            };
+         }
+         else {
+            return { 
+               axis: "y", 
+               opacity: 0.7, 
+               helper: "clone",
+               stop: update_bar_and_split_for('top', 'height'),
+               start: fix_for_dimension_at_start_bug_for('width')
+            };
+         }
+      };
+
+      if (this._splitted_direction === 'horizontally') {
+         this._$container = $(
+            '<div class="splitted_container">' +
+               '<div class="top_panel_of_splitted"></div>' +
+               '<div class="bottom_side_panel_and_bar_of_splitted">' +
+                  '<div class="horizontal_bar_splitting"></div>' +
+                  '<div class="bottom_panel_of_splitted"></div>' +
+               '</div>' +
+            '</div>');
+         this._$container.find('.horizontal_bar_splitting').draggable(options_for_draggable_bar('horizontal'));
       }
       else {
-         this._main_position_is_mapping_to = 'bottom';
-         this._subpanels_layout = $().w2layout({ 
-            name: this._name,
-            padding: 3,
-            panels: [
-               {type: 'main', style: pstyle + this._extra_style_per_position['bottom'], content: ''},
-               {type: 'top', style: pstyle + this._extra_style_per_position['top'], size: '50%', resizable: true, content: ''}
-            ],
-            onResize: function (ev) {
-               var that = this;
-               setTimeout(function () {
-                  that.refresh('main');
-                  that.refresh('top');
-               }, 200);
-            }
-         });
+         this._$container = $(
+            '<div class="splitted_container">' +
+               '<div class="left_panel_of_splitted"></div>' +
+               '<div class="right_side_panel_and_bar_of_splitted">' +
+                  '<div class="vertical_bar_splitting"></div>' +
+                  '<div class="right_panel_of_splitted"></div>' +
+               '</div>' +
+            '</div>');
+         this._$container.find('.vertical_bar_splitting').draggable(options_for_draggable_bar('vertical'));
       }
+
+      this._children = {};
+
+      this._$out_of_dom = this._$container;
    };
 
+
    Splitted.prototype.__proto__ = Parent.prototype;
+
+   Splitted.prototype._get_class_for_child = function (position) {
+      return '.'+position+'_panel_of_splitted';
+   };
 
    Splitted.prototype.menu = function () {
       return [
@@ -396,28 +453,24 @@ define(['jquery', 'w2ui', 'jqueryui_tabsoverflow'], function ($, w2ui, _) {
          }
       }
 
-      var real_position = position;
-      if (position === 'right' || position === 'bottom') {
-         real_position = 'main';
-      }
-
-      var previous = this._subpanels_layout.content(real_position);
+      var previous = this._children[position];
       if(previous) {
          throw new Error("Precondition: The position '"+position+"' of the panel '"+panel+"' is already in use by the panel '"+previous+"'.");
       }
 
-      this._subpanels_layout.content(real_position, panel);
+      this._children[position] = panel;
+
+      //draw?
    };
 
    Splitted.prototype._remove_child = function (panel) {
       var position = null;
       var the_other_position = null;
-      var positions = {'top':0, 'left':0, 'main':0};
-      for (var pos in positions) {
-         if (this._subpanels_layout.content(pos) === panel) {
+      for (var pos in this._children) {
+         if (this._children[pos] === panel) {
             position = pos;
          }
-         else if (this._subpanels_layout.content(pos)) {
+         else if (this._children[pos]) {
             the_other_position = pos;
          }
       }
@@ -430,23 +483,21 @@ define(['jquery', 'w2ui', 'jqueryui_tabsoverflow'], function ($, w2ui, _) {
          throw new Error("Inconsistency: I found the panel '"+panel+"' to be removed but i can't find the other panel!");
       }
 
-      var the_other_panel = this._subpanels_layout.content(the_other_position);
+      var the_other_panel = this._children[the_other_position];
 
       var tmp = new_tmp_panel();
       this.swap(tmp);
       tmp.swap(the_other_panel);
 
       this._parent.remove_child(this);
-      
-      this._subpanels_layout.content(position, '');
-      this._subpanels_layout.content(the_other_position, '');
+      this._children = {};
+      // clean up the draw?
    };
 
    Splitted.prototype._replace_child = function (panel, other_panel) {
       var position = null;
-      var positions = {'top':0, 'left':0, 'main':0};
-      for (var pos in positions) {
-         if (this._subpanels_layout.content(pos) === panel) {
+      for (var pos in this._children) {
+         if (this._children[pos] === panel) {
             position = pos;
             break;
          }
@@ -456,20 +507,39 @@ define(['jquery', 'w2ui', 'jqueryui_tabsoverflow'], function ($, w2ui, _) {
          throw new Error("Inconsistency: I can't replace a panel '"+panel+"' that i can't find.");
       }
 
-      this._subpanels_layout.content(position, other_panel);
+      this._children[position] = other_panel;
+
+      //redraw?
    };
 
-   Splitted.prototype.refresh = function () {
+   /*Splitted.prototype.refresh = function () {
       this._subpanels_layout.refresh();
-   };
+   };*/
    
    Splitted.prototype.toString = function () {
       return "[split "+this._splitted_direction+" ("+this._name.slice(0,6)+") Splitted]";
    };
    
    Splitted.prototype.render = function () {
-      $(this.box).data('controller', this);
-      this._subpanels_layout.render(this.box);
+      if (this._$out_of_dom) {   //XXX ver esta parte junto con unlink. Puede que sea un patron reutilizable.
+         this._$out_of_dom.appendTo(this.box);
+         this._$out_of_dom = null;
+      }
+      for (var pos in this._children) {
+         if (pos === 'left' || pos === 'top') {
+            this._children[pos].box = this._$container.children(this._get_class_for_child(pos));
+         }
+         else {
+            this._children[pos].box = this._$container.children('.'+pos+'_side_panel_and_bar_of_splitted').children(this._get_class_for_child(pos));
+         }
+         this._children[pos].render();
+      }
+   };
+
+   Splitted.prototype.unlink = function () {
+      if (!this._$out_of_dom) {
+         this._$out_of_dom = this._$container.detach(); //"container" is "in_the_dom"
+      }
    };
 
    var Tabbed = function () {
@@ -484,6 +554,13 @@ define(['jquery', 'w2ui', 'jqueryui_tabsoverflow'], function ($, w2ui, _) {
 
       this._$tabs_handler.append(this._headers);
       this._active_on_next_refresh = null;
+
+      $(this._$tabs_handler).tabs({
+         overflowTabs: true
+      });
+
+
+      console.log("Init: " + $(this._$tabs_handler).tabs("instance"));
    };
 
    Tabbed.prototype.__proto__ = Parent.prototype;
@@ -578,14 +655,17 @@ define(['jquery', 'w2ui', 'jqueryui_tabsoverflow'], function ($, w2ui, _) {
    Tabbed.prototype.render = function () {
       var box = this.box;
 
+      $(this._$tabs_handler).appendTo($(box));
+      console.log("Init: " + $(this._$tabs_handler).tabs("instance"));
+      
       // TODO que pasa si no hay tabs para mostrar???
-      if ($('#' + this._name).length === 0) {
+      /*if ($('#' + this._name).length === 0) {
          $(box).contents().remove();
          $(box).append(this._$tabs_handler);
          $('#' + this._name).tabs({
             overflowTabs: true
          });
-      }
+      }*/
 
       for(var i = 0; i < this._tabs.length; i++) {
          var tab = this._tabs[i];
@@ -609,6 +689,10 @@ define(['jquery', 'w2ui', 'jqueryui_tabsoverflow'], function ($, w2ui, _) {
 
    Tabbed.prototype.display = function(tab_index) {
       this._active_on_next_refresh = tab_index;
+   };
+
+   Tabbed.prototype.unlink = function () {
+      this._$tabs_handler = $(this._$tabs_handler).detach();
    };
 
    return {

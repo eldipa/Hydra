@@ -14,28 +14,41 @@ define(['jquery', 'layout'], function ($, layout) {
       
       var hello_msg = new Panel("hello msg");
  
-      hello_msg.msg = 'hello world';     
+      hello_msg.msg = 'hello world';
       hello_msg.render = function () {
-         $(this.box).data('controller', this);
-         $(this.box).html(this.msg);
+         this._rendered_in = $(this.box);
+         this._rendered_in.html(this.msg);
       };
+
+      hello_msg.unlink = function () {
+         if (this._rendered_in) {
+            this._rendered_in.empty();
+            this._rendered_in = null;
+         }
+      };
+
+      /*
+       * El metodo 'render' es el encargado de dibujar algo en la pantalla.
+       * Cada panel puede renderizar cualquier cosa dentra del DIV 'box' que
+       * representa 'el lienzo' donde dibujar.
+       *
+       * Asi como el metodo 'render' agrega elementos al DOM, el metodo 'unlink'
+       * debe removerlos. Esto quiere decir sacarlos del DOM, no necesariamente 
+       * borrarlos.
+       * 
+       * */
 
       /* --------- XXX Expected Result: Nada es mostrado ------------- */
 
       /* 
-       * Como se puede ver, el unico requerimiento es que el panel defina un
-       * metodo llamado 'render' para que renderize en el DOM.
-       * 
-       * La property 'box' contiene un objeto que representa un objeto DIV
-       * en el DOM donde se puede renderizar.
-       *
        * Aun asi, nuestro panel no se dibuja en la pantalla hasta que sea
        * insertado en el DOM de la aplicacion.
        *
        * Para esto tenemos quee attacharlo a algun objeto del DOM que exista.
        * */
 
-      hello_msg.attach($('body'));
+      hello_msg.attach($('body'));     //XXX que ventaja da tener un Root?
+      hello_msg.parent().render();
 
       /* --------- XXX Expected Result: Un panel que contiene el mensaje
        *
@@ -51,10 +64,14 @@ define(['jquery', 'layout'], function ($, layout) {
        *
        * Para que el cambio surja efecto, debemos refrescar el panel.
        *
+       *
        * */
+      /*
 
       hello_msg.msg = hello_msg.msg + '<br />hello world!!!';
       hello_msg.refresh();
+      return;
+      */
       
       /* --------- XXX Expected Result: Un panel que contiene el nuevo mensaje 
        *
@@ -68,8 +85,9 @@ define(['jquery', 'layout'], function ($, layout) {
       var bye_bye_msg = new Panel("bye bye msg");
       bye_bye_msg.msg = 'Bye Bye Bye';
       bye_bye_msg.render = hello_msg.render;
+      bye_bye_msg.unlink = hello_msg.unlink;
 
-      bye_bye_msg.refresh();
+      // XXX bye_bye_msg.refresh();
       /* --------- XXX Expected Result: 
        *
        *    H
@@ -82,6 +100,7 @@ define(['jquery', 'layout'], function ($, layout) {
        * */
 
       hello_msg.swap(bye_bye_msg);
+      bye_bye_msg.parent().render();
       /* --------- XXX Expected Result: 
        *
        *    B
@@ -94,6 +113,7 @@ define(['jquery', 'layout'], function ($, layout) {
        * */
 
       hello_msg.swap(bye_bye_msg);
+      hello_msg.parent().render();
       /* --------- XXX Expected Result: 
        *
        *    H
@@ -106,8 +126,9 @@ define(['jquery', 'layout'], function ($, layout) {
        * Todo panel puede dividirse en 2, ya sea horizontal o verticalmente
        * agregando otro panel mas a la escena.
        * */
-
+      
       hello_msg.split(bye_bye_msg, 'left');
+      hello_msg.parent().parent().render();
 
       /* --------- XXX Expected Result: Un panel que contiene 2 subpanels,
        * el de la izquierda (left) tiene el mensaje bye-bye mientras
@@ -116,6 +137,7 @@ define(['jquery', 'layout'], function ($, layout) {
        *    B | H
        *
        * ------------- */
+      return;
 
       /* No hay limite en la cantidad de divisiones que se pueden hacer.
        * Cambiemos los mensajes de los panels actuales y creemos otro panel
@@ -436,6 +458,8 @@ define(['jquery', 'layout'], function ($, layout) {
        * y el resto esta en background.
        * */
 
+      hello_msg.split(more_bye_msg, 'left');
+
       var tabs = new Tabbed();
 
       tabs.swap(hello_msg);
@@ -484,7 +508,7 @@ define(['jquery', 'layout'], function ($, layout) {
        * Esto es, splittear un panel dentro de un tab es igual a splittear al tab mismo.
        * */
 
-      tabs.split(more_bye_msg, 'left');
+      //tabs.split(more_bye_msg, 'left');
       
       /* --------- XXX Expected Result: 
        *
@@ -493,8 +517,9 @@ define(['jquery', 'layout'], function ($, layout) {
        *      |
        *
        * ------------- */
-
-      lorem_ipsum_msg.split(foo_msg, 'top');
+      console.log("--------------------");
+      //lorem_ipsum_msg.split(foo_msg, 'top');
+      //lorem_ipsum_msg.refresh();
       
       /* --------- XXX Expected Result: 
        *
@@ -504,7 +529,7 @@ define(['jquery', 'layout'], function ($, layout) {
        *
        * ------------- */
 
-      bye_bye_msg.split(bar_msg, 'right');
+      //bye_bye_msg.split(bar_msg, 'right');
       
       /* --------- XXX Expected Result: 
        *
@@ -514,7 +539,7 @@ define(['jquery', 'layout'], function ($, layout) {
        *
        * ------------- */
 
-      hello_msg.swap(more_bye_msg);
+      //hello_msg.swap(more_bye_msg);
       
       /* --------- XXX Expected Result: 
        *
@@ -524,8 +549,13 @@ define(['jquery', 'layout'], function ($, layout) {
        *
        * ------------- */
 
-      foo_msg.remove();
+      more_bye_msg.split(foo_msg, 'top');
+      //foo_msg.remove();
+      console.log("------------------------");
+      return;
 
+      console.log("------------------------");
+      //bar_msg.remove(); //TODO remove this
       var tabs2 = new Tabbed();
 
       tabs2.swap(hello_msg);
@@ -542,6 +572,15 @@ define(['jquery', 'layout'], function ($, layout) {
        *          |          |
        *
        * ------------- */
+
+
+      tabs.refresh();
+      tabs2.refresh();
+      return;
+      /*setInterval(function () {
+         tabs.refresh();
+         tabs2.refresh();
+      }, 5000);*/
 
       bar_msg.remove();
       more_bye_msg.refresh(); //TODO why?
@@ -672,6 +711,9 @@ define(['jquery', 'layout'], function ($, layout) {
        *
        * ------------- */
 
+      var r = layout.as_tree([hello_msg, bye_bye_msg, more_bye_msg, lorem_ipsum_msg, foo_msg, bar_msg, zaz_msg]);
+      r.toString();
+      console.log("" + r.toString());
       return
 
    }
