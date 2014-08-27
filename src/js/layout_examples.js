@@ -476,7 +476,6 @@ define(['jquery', 'layout'], function ($, layout) {
        *     
        *
        * ------------- */
-      return;
 
       /*
        * En un mismo lugar pueden convivir varios paneles usando una vista basada
@@ -484,13 +483,14 @@ define(['jquery', 'layout'], function ($, layout) {
        * y el resto esta en background.
        * */
 
-      hello_msg.split(more_bye_msg, 'left');
+      //hello_msg.split(more_bye_msg, 'left');
 
       var tabs = new Tabbed();
 
       tabs.swap(hello_msg);
       tabs.add_child(hello_msg, 'intab');
       tabs.add_child(lorem_ipsum_msg, 'intab');
+      tabs.parent().render();
 
       /* --------- XXX Expected Result: 
        *
@@ -506,7 +506,7 @@ define(['jquery', 'layout'], function ($, layout) {
        * */
 
       tabs.display(0);
-      tabs.refresh();
+      tabs.parent().render();
 
       /* --------- XXX Expected Result: 
        *
@@ -517,6 +517,7 @@ define(['jquery', 'layout'], function ($, layout) {
        * ------------- */
 
       tabs.add_child(bye_bye_msg, 'intab');
+      tabs.parent().render();
       
       /* --------- XXX Expected Result: 
        *
@@ -534,7 +535,8 @@ define(['jquery', 'layout'], function ($, layout) {
        * Esto es, splittear un panel dentro de un tab es igual a splittear al tab mismo.
        * */
 
-      //tabs.split(more_bye_msg, 'left');
+      tabs.split(more_bye_msg, 'left');
+      tabs.parent().parent().render();
       
       /* --------- XXX Expected Result: 
        *
@@ -543,7 +545,8 @@ define(['jquery', 'layout'], function ($, layout) {
        *      |
        *
        * ------------- */
-      console.log("--------------------");
+      return;
+
       //lorem_ipsum_msg.split(foo_msg, 'top');
       //lorem_ipsum_msg.refresh();
       

@@ -539,6 +539,7 @@ define(['jquery', 'w2ui', 'jqueryui_tabsoverflow'], function ($, w2ui, _) {
    Splitted.prototype.unlink = function () {
       if (!this._$out_of_dom) {
          this._$out_of_dom = this._$container.detach(); //"container" is "in_the_dom"
+         //TODO unlink hay que unlinkear los  sub panels?
       }
    };
 
@@ -548,19 +549,20 @@ define(['jquery', 'w2ui', 'jqueryui_tabsoverflow'], function ($, w2ui, _) {
       var id = ("" + Math.random()).slice(2);
 
       this._name = id;
-      this._$tabs_handler = $('<div id="'+id+'"></div>');
-      this._headers = $('<ul></ul>');
+      this._$container = $('<div id="'+id+'"></div>');
+      this._$headers = $('<ul></ul>');
       this._tabs = [];
 
-      this._$tabs_handler.append(this._headers);
+      this._$container.append(this._$headers);
       this._active_on_next_refresh = null;
 
-      $(this._$tabs_handler).tabs({
+      $(this._$container).tabs({
          overflowTabs: true
       });
 
 
-      console.log("Init: " + $(this._$tabs_handler).tabs("instance"));
+      //console.log("Init: " + $(this._$container).tabs("instance"));
+      this._$out_of_dom = this._$container;
    };
 
    Tabbed.prototype.__proto__ = Parent.prototype;
@@ -578,16 +580,18 @@ define(['jquery', 'w2ui', 'jqueryui_tabsoverflow'], function ($, w2ui, _) {
       tab.header = $('<li><a id="header_'+tab.id+'" href="#'+tab.id+'">'+(panel.name()||"tab")+'</a></li>');
       tab.container = $('<div id="'+tab.id+'"></div>');
 
-      this._headers.append(tab.header);
-      this._$tabs_handler.append(tab.container);
+      this._$headers.append(tab.header);
+      this._$container.append(tab.container);
       this._tabs.push(tab);
    };
 
+   /* refresh related
    Tabbed.prototype.add_child = function (panel, position) {
       var result = Tabbed.prototype.__proto__.add_child.apply(this, [panel, position]);
       this.refresh();
       return result;
-   }
+   };
+   */
 
    Tabbed.prototype._remove_child = function (panel) {
       var index = null;
@@ -614,11 +618,14 @@ define(['jquery', 'w2ui', 'jqueryui_tabsoverflow'], function ($, w2ui, _) {
       //this._parent.remove_child(this);
    };
 
+   /*
+    * refresh related
    Tabbed.prototype.remove_child = function (panel) {
       var result = Tabbed.prototype.__proto__.remove_child.apply(this, [panel]);
       this.refresh();
       return result;
-   }
+   };
+   */
 
 
    Tabbed.prototype._replace_child = function (panel, other_panel) {
@@ -637,31 +644,38 @@ define(['jquery', 'w2ui', 'jqueryui_tabsoverflow'], function ($, w2ui, _) {
       this._tabs[index].panel = other_panel;
    };
    
+   /* refresh related
    Tabbed.prototype.replace_child = function (panel, other_panel) {
       var result = Tabbed.prototype.__proto__.replace_child.apply(this, [panel, other_panel]);
       this.refresh();
       return result;
-   }
+   };
+   */
 
-
+   /*
    Tabbed.prototype.refresh = function () {
       this._parent.refresh();
    };
+   */
    
    Tabbed.prototype.toString = function () {
       return "[tabs ("+this._name.slice(0,6)+") Tabbed]";
    };
 
    Tabbed.prototype.render = function () {
+      if (this._$out_of_dom) {   //XXX ver esta parte junto con unlink. Puede que sea un patron reutilizable.
+         this._$out_of_dom.appendTo(this.box);
+         this._$out_of_dom = null;
+      }
+
       var box = this.box;
 
-      $(this._$tabs_handler).appendTo($(box));
-      console.log("Init: " + $(this._$tabs_handler).tabs("instance"));
+      //console.log("Init: " + $(this._$container).tabs("instance"));
       
       // TODO que pasa si no hay tabs para mostrar???
       /*if ($('#' + this._name).length === 0) {
          $(box).contents().remove();
-         $(box).append(this._$tabs_handler);
+         $(box).append(this._$container);
          $('#' + this._name).tabs({
             overflowTabs: true
          });
@@ -692,7 +706,10 @@ define(['jquery', 'w2ui', 'jqueryui_tabsoverflow'], function ($, w2ui, _) {
    };
 
    Tabbed.prototype.unlink = function () {
-      this._$tabs_handler = $(this._$tabs_handler).detach();
+      if (!this._$out_of_dom) {
+         this._$out_of_dom = this._$container.detach(); //"container" is "in_the_dom"
+         //TODO unlink hay que unlinkear los  sub panels?
+      }
    };
 
    return {
