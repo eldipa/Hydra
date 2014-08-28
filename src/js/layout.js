@@ -557,8 +557,15 @@ define(['jquery', 'w2ui', 'jqueryui_tabsoverflow'], function ($, w2ui, _) {
       this._active_on_next_refresh = null;
 
       $(this._$container).tabs({
-         overflowTabs: true
+         overflowTabs: false
       });
+
+      this._$headers.css({
+          'list-style-type':'none',
+          'white-space':'nowrap',
+          'overflow-x':'auto',
+          'overflow-y': 'hidden',
+       });
 
 
       //console.log("Init: " + $(this._$container).tabs("instance"));
@@ -577,7 +584,7 @@ define(['jquery', 'w2ui', 'jqueryui_tabsoverflow'], function ($, w2ui, _) {
          panel: panel
       };
 
-      tab.header = $('<li><a id="header_'+tab.id+'" href="#'+tab.id+'">'+(panel.name()||"tab")+'</a></li>');
+      tab.header = $('<li style="display: inline; float: none;"><a style="float: none;" id="header_'+tab.id+'" href="#'+tab.id+'">'+(panel.name()||"tab")+'</a></li>');
       tab.container = $('<div id="'+tab.id+'"></div>');
 
       this._$headers.append(tab.header);

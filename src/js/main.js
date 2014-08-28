@@ -12,8 +12,7 @@ requirejs.config({
       w2ui: 'external/w2ui',
       ctxmenu: 'external/ctxmenu',
       jqueryui: 'external/jquery-ui-1.11.0',
-      jqueryui_tabsoverflow: 'external/jquery-ui-tabs-overflow',
-      splitter: 'external/splitter'
+      jqueryui_tabsoverflow: 'external/jquery-ui-tabs-overflow'
    },
 
    shim: {
@@ -29,7 +28,7 @@ requirejs.config({
 
 });
 
-requirejs(['w2ui', 'code_view', 'jquery', 'export_console', 'layout', 'layout_examples', 'jqueryui', 'ctxmenu', 'splitter'], function (w2ui, code_view, $, export_console, layout, layout_examples, _, ctxmenu, _) {
+requirejs(['w2ui', 'code_view', 'jquery', 'export_console', 'layout', 'layout_examples', 'jqueryui', 'ctxmenu'], function (w2ui, code_view, $, export_console, layout, layout_examples, _, ctxmenu) {
    var js_console_server = export_console.init();
    var fs = require('fs');
 
@@ -42,76 +41,7 @@ requirejs(['w2ui', 'code_view', 'jquery', 'export_console', 'layout', 'layout_ex
    });
 
    ctxmenu.attachDynamic('body', undefined);
-
-   var update_bar_and_split_for = function (position_name, dimension_name) {
-      if (! ((position_name === 'left' && dimension_name === 'width') ||
-             (position_name === 'top'  && dimension_name === 'height')) ) {
-                throw new Error("The position/dimension names are invalid. Accepted 'left-width' and 'top-height' but received '"+position_name+"-"+dimension_name+"'.");
-             }
-
-      var opposite_position_name = {
-         left: 'right',
-         top : 'bottom',
-      }[position_name]
-
-      return function (event, ui) {
-         var $container = $(this).parent().parent();
-         var new_bar_position = $(ui.helper).position();
-
-         var container_position = $container.position();
-
-         var rel_offset = (new_bar_position[position_name] - container_position[position_name]) / $container[dimension_name]();
-
-         if(rel_offset < 0.0001 || rel_offset > 0.9999) {
-            console.log("The bar is moving "+position_name+"--"+opposite_position_name+" too far: Bar new position " + new_bar_position[position_name] + " Container position " + container_position[position_name]);
-         }
-         else {
-            var percentage = (rel_offset * 100);
-            $container.children("."+position_name+"_panel_of_splitted")[dimension_name](percentage + "%");
-            $container.children("."+opposite_position_name+"_side_panel_and_bar_of_splitted")[dimension_name]((100-percentage) + "%");
-         }
-      };
-   };  
-
-   var fix_for_dimension_at_start_bug_for = function (dimension_name) {
-      if (! (dimension_name === 'width' || dimension_name === 'height') ) {
-         throw new Error("Incorrect dimension name. Accepted width or height but received '"+dimension_name+"'.");
-      }
-
-      return function (event, ui) {
-         var correct_value_at_start = $(this)[dimension_name]();
-         $(ui.helper)[dimension_name](correct_value_at_start);
-      };
-   };
-
-   var options_for_draggable_bar = function (type) {
-      if (! (type === 'vertical' || type === 'horizontal') ) {
-         throw new Error("You cannot create a '"+type+"' draggable bar. Only 'vertical' or 'horizontal' draggable bars are allowed.");
-      }
-      
-      if (type === 'vertical') {
-         return { 
-            axis: "x", 
-            opacity: 0.7, 
-            helper: "clone",
-            stop: update_bar_and_split_for('left', 'width'),
-            start: fix_for_dimension_at_start_bug_for('height')
-         };
-      }
-      else {
-         return { 
-            axis: "y", 
-            opacity: 0.7, 
-            helper: "clone",
-            stop: update_bar_and_split_for('top', 'height'),
-            start: fix_for_dimension_at_start_bug_for('width')
-         };
-      }
-   };
-
-   $(".vertical_bar_splitting").draggable(options_for_draggable_bar('vertical'));
-   $(".horizontal_bar_splitting").draggable(options_for_draggable_bar('horizontal'));
-
+  
    layout_examples.init();
 
    /*var event_handler = new event_handler.EventHandler();
