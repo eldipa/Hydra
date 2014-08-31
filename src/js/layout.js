@@ -1,7 +1,6 @@
 define(['jquery', 'w2ui'], function ($, w2ui) {
    var NullParent = {};
 
-   //NullParent.refresh = NullParent.refresh_child = function () {};
    NullParent._add_child = NullParent._remove_child = NullParent._replace_child = function () {};
    NullParent.toString = function () {
       return "[NullParent]";
@@ -111,9 +110,6 @@ define(['jquery', 'w2ui'], function ($, w2ui) {
       root.add_child(this, 'main');
    };
 
-   /*Panel.prototype.refresh = function () { //TODO rename 'refresh' to 'request_to_be_render'
-      this._parent.refresh_child(this);
-   };*/
 
    Panel.prototype.render = function () {
       throw new Error("Not implemented error: The 'render' method of '"+this+"' was not implemented!. It should be to render something meaningful in the box '"+this.box+"'.");
@@ -244,7 +240,7 @@ define(['jquery', 'w2ui'], function ($, w2ui) {
       var e1 = new_tmp_panel()
       var e2 = new_tmp_panel()
 
-      splitted.add_child(e1, my_position); //TODO el problema aca es que esto (debido a la implementacion de w2layout) va a generar un refresh y un re-renderizado. Esto por cada add_child y swap lo que lo hace ineficiente en una construccion.
+      splitted.add_child(e1, my_position);
       splitted.add_child(e2, position);
 
       e1.swap(my_panel);
@@ -297,14 +293,6 @@ define(['jquery', 'w2ui'], function ($, w2ui) {
       this._child = other_panel;
    };
 
-   /*Root.prototype.refresh = function () {
-      this._subpanel_layout.refresh();
-   };*/
-
-   /*Root.prototype.refresh_child = function (panel) {
-      this._child.render(this._$anchor_element);   //TODO check if panel is child me
-   };*/
-   
    Root.prototype.toString = function () {
       return "[root ("+this._name.slice(0,6)+") Root]";
    };
@@ -512,9 +500,6 @@ define(['jquery', 'w2ui'], function ($, w2ui) {
       //redraw?
    };
 
-   /*Splitted.prototype.refresh = function () {
-      this._subpanels_layout.refresh();
-   };*/
    
    Splitted.prototype.toString = function () {
       return "[split "+this._splitted_direction+" ("+this._name.slice(0,6)+") Splitted]";
@@ -660,8 +645,6 @@ define(['jquery', 'w2ui'], function ($, w2ui) {
           'overflow-y': 'hidden',
        });
 
-
-      //console.log("Init: " + $(this._$container).tabs("instance"));
       this._$out_of_dom = this._$container;
    };
 
@@ -684,14 +667,6 @@ define(['jquery', 'w2ui'], function ($, w2ui) {
       this._$container.append(tab.container);
       this._tabs.push(tab);
    };
-
-   /* refresh related
-   Tabbed.prototype.add_child = function (panel, position) {
-      var result = Tabbed.prototype.__proto__.add_child.apply(this, [panel, position]);
-      this.refresh();
-      return result;
-   };
-   */
 
    Tabbed.prototype.get_panel = function (tab_id) {
       for (var i = 0; i < this._tabs.length; ++i) {
@@ -729,15 +704,6 @@ define(['jquery', 'w2ui'], function ($, w2ui) {
       //this._parent.remove_child(this);
    };
 
-   /*
-    * refresh related
-   Tabbed.prototype.remove_child = function (panel) {
-      var result = Tabbed.prototype.__proto__.remove_child.apply(this, [panel]);
-      this.refresh();
-      return result;
-   };
-   */
-
 
    Tabbed.prototype._replace_child = function (panel, other_panel) {
       var index = null;
@@ -755,20 +721,6 @@ define(['jquery', 'w2ui'], function ($, w2ui) {
       this._tabs[index].panel = other_panel;
    };
    
-   /* refresh related
-   Tabbed.prototype.replace_child = function (panel, other_panel) {
-      var result = Tabbed.prototype.__proto__.replace_child.apply(this, [panel, other_panel]);
-      this.refresh();
-      return result;
-   };
-   */
-
-   /*
-   Tabbed.prototype.refresh = function () {
-      this._parent.refresh();
-   };
-   */
-   
    Tabbed.prototype.toString = function () {
       return "[tabs ("+this._name.slice(0,6)+") Tabbed]";
    };
@@ -780,17 +732,6 @@ define(['jquery', 'w2ui'], function ($, w2ui) {
       }
 
       var box = this.box;
-
-      //console.log("Init: " + $(this._$container).tabs("instance"));
-      
-      // TODO que pasa si no hay tabs para mostrar???
-      /*if ($('#' + this._name).length === 0) {
-         $(box).contents().remove();
-         $(box).append(this._$container);
-         $('#' + this._name).tabs({
-            overflowTabs: true
-         });
-      }*/
 
       for(var i = 0; i < this._tabs.length; i++) {
          var tab = this._tabs[i];
