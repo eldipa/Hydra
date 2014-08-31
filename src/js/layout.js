@@ -550,8 +550,10 @@ define(['jquery', 'w2ui'], function ($, w2ui) {
 
       this._name = id;
       this._$container = $('<div id="'+id+'"></div>');
-      this._$headers = $('<ul></ul>');
+      this._$headers = $('<ul class="panel_tabbed"></ul>');
       this._tabs = [];
+
+      this._$container.data("panel", this); //XXX
 
       this._$container.append(this._$headers);
       this._active_on_next_refresh = null;
@@ -566,6 +568,7 @@ define(['jquery', 'w2ui'], function ($, w2ui) {
          revert: 180,   // add an animation to move the dragged tab to its final position
          tolerance: "pointer",
          forcePlaceholderSize: true,
+         connectWith: ".panel_tabbed", // all the lists 'ul' will be able to share its tabs using a drag and drop feature
          start: function(ev, ui) {
             // fix: add those styles and append a dummy element so the placeholder
             // (a special tab used to mark the drop zone) can be positioned correctly
@@ -586,13 +589,65 @@ define(['jquery', 'w2ui'], function ($, w2ui) {
                'background-image': 'none',
             });
 
+            // with this, the helper tab is attached to the body and can be moved
+            // around the page.
+            // this alse require to fix its position (the point of reference is the 
+            // 'body' now)
+            var offset = ui.helper.offset(); 
+            ui.helper.appendTo(document.body);
+            ui.helper.offset(offset);
+            tabs.find( ".ui-tabs-nav" ).sortable( "refreshPositions" );
          },
          sort: function(ev, ui) {
             $headers.scrollTop(0); // fix this bug: the headers (tabs) are moved to the top of the container which is ugly
             $(ui.helper).scrollTop(0); // fix this bug: the helper (the tab dragged) is moved to the top, again, ugly
          },
-         stop: function() {
+         beforeStop: function(ev, ui) {
+            // now, we restore the correct position of the helper tab, attaching it to
+            // its container (we are using the ui.placeholder 'dummy' tab to mark the
+            // correct position between all the tabs of the container).
+            ui.helper.insertBefore(ui.placeholder);
+         },
+         stop: function(ev, ui) {
             $headers.scrollTop(0); //fix a bug
+         },
+         receive: function (ev, ui) {
+            //This will be called only if one tab is dragged form one Tabbed
+            //and dropped to other Tabbed.
+
+
+            //First, mark the final position of the tab
+            var marker = $('<li></li>');
+            marker.insertBefore(ui.item);
+
+            //Then, the 'beforeStop' put the tab in the destination, 
+            //we need to rollback that movement.
+            ui.item.appendTo(ui.sender);
+
+            //lookup for the Tabbed sender (the old owener of the tab)
+            var sender_tabbed = ui.sender.parent().data('panel');
+
+            //get the panel to be moved
+            //XXX this is the only code that assume that the 'sender' object
+            //is a Tabbed. Changing this, will enable us to drag and drop other
+            //objects between Tabbeds and non-Tabbeds.
+            var tab_id = ui.item.children('a')[0].href.split(/#/).slice(1).join("#")
+            var panel = sender_tabbed.get_panel(tab_id);
+
+            //move the tab with the high-level "Tabbed" interface
+            //(this will put the new tab at the end)
+            //with this, "ui.item" is not valid any more
+            sender_tabbed.remove_child(panel);
+            self.add_child(panel, 'intab');
+
+            //update the position of the tab to its real position (drop)
+            var tab = $headers.children('li').last();
+            tab.insertBefore(marker);
+            marker.remove();
+
+            //Finally, update both Tabbeds
+            sender_tabbed.render();
+            self.render();
          }
       });
 
@@ -637,6 +692,17 @@ define(['jquery', 'w2ui'], function ($, w2ui) {
       return result;
    };
    */
+
+   Tabbed.prototype.get_panel = function (tab_id) {
+      for (var i = 0; i < this._tabs.length; ++i) {
+         var tab = this._tabs[i];
+         if (tab.id === tab_id) {
+            return tab.panel;
+         }
+      }
+
+      return null;
+   };
 
    Tabbed.prototype._remove_child = function (panel) {
       var index = null;
