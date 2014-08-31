@@ -24,6 +24,7 @@ class Gdb:
         self.eventHandler = publish_subscribe.eventHandler.EventHandler()
         if (comandos):
             self.gdbInput.write('python execfile("./py/gdb/Commands/pointerPrinter.py")' + '\n')
+            self.gdbInput.write('python execfile("./py/gdb/Commands/breakHandler.py")' + '\n')
         
     def getSessionId(self):
         return self.gdb.pid

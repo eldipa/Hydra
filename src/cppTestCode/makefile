@@ -1,6 +1,6 @@
 .PHONY: multiple_files
 
-all: Prueba testExe testVariables write_one_char_at_time multiplesPunteros multiple_files
+all: Prueba testExe testVariables write_one_char_at_time multiplesPunteros multiple_files ipcDetection
 
 defines= -D espera
 
@@ -18,6 +18,9 @@ testVariables: testVariables.cpp
 
 multiplesPunteros: multiplesPunteros.cpp
 	g++ -g -o multiplesPunteros multiplesPunteros.cpp
+	
+ipcDetection: ipcDetection.cpp
+	g++ -g -o ipcDetection ipcDetection.cpp
 	
 multiple_files:
 	$(MAKE) --no-print-directory -C ./multiple_files
