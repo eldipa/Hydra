@@ -1,4 +1,4 @@
-define(['jquery', 'w2ui', 'jqueryui_tabsoverflow'], function ($, w2ui, _) {
+define(['jquery', 'w2ui'], function ($, w2ui) {
    var NullParent = {};
 
    //NullParent.refresh = NullParent.refresh_child = function () {};
@@ -556,9 +556,47 @@ define(['jquery', 'w2ui', 'jqueryui_tabsoverflow'], function ($, w2ui, _) {
       this._$container.append(this._$headers);
       this._active_on_next_refresh = null;
 
-      $(this._$container).tabs({
-         overflowTabs: false
+      var tabs = $(this._$container).tabs({
       });
+
+      var $headers = this._$headers;
+      var self = this;
+      tabs.find( ".ui-tabs-nav" ).sortable({
+         scroll: true,
+         revert: 180,   // add an animation to move the dragged tab to its final position
+         tolerance: "pointer",
+         forcePlaceholderSize: true,
+         start: function(ev, ui) {
+            // fix: add those styles and append a dummy element so the placeholder
+            // (a special tab used to mark the drop zone) can be positioned correctly
+            var placeholder = $(ui.placeholder);
+            placeholder.css('display', 'inline');
+            placeholder.css('float', 'none');
+            var txt = ui.helper[0].firstChild.text;
+            placeholder.append($('<a class="ui-tabs-anchor" style="float: none; visibility: hidden;">'+ txt +'</a>'));
+
+            // add more style to the placeholder. DON'T USE the 'placeholder' option of 'sortable'.
+            placeholder.addClass('ui-state-highlight');
+            placeholder.css({
+               'visibility': 'visible',
+               'border-style': 'solid',
+               'border-width': '3px',
+               'border-bottom-style': 'none',
+               'background-color': 'transparent', //TODO esto podria cambiarse
+               'background-image': 'none',
+            });
+
+         },
+         sort: function(ev, ui) {
+            $headers.scrollTop(0); // fix this bug: the headers (tabs) are moved to the top of the container which is ugly
+            $(ui.helper).scrollTop(0); // fix this bug: the helper (the tab dragged) is moved to the top, again, ugly
+         },
+         stop: function() {
+            $headers.scrollTop(0); //fix a bug
+         }
+      });
+
+      tabs.disableSelection();
 
       this._$headers.css({
           'list-style-type':'none',

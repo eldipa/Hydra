@@ -11,8 +11,7 @@ requirejs.config({
       w2ui_internals: 'external/w2ui-1.3.2',
       w2ui: 'external/w2ui',
       ctxmenu: 'external/ctxmenu',
-      jqueryui: 'external/jquery-ui-1.11.0',
-      jqueryui_tabsoverflow: 'external/jquery-ui-tabs-overflow'
+      jqueryui: 'external/jquery-ui-1.11.0'
    },
 
    shim: {

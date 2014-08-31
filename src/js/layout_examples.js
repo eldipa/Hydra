@@ -545,10 +545,9 @@ define(['jquery', 'layout'], function ($, layout) {
        *      |
        *
        * ------------- */
-      return;
 
-      //lorem_ipsum_msg.split(foo_msg, 'top');
-      //lorem_ipsum_msg.refresh();
+      lorem_ipsum_msg.split(foo_msg, 'top');
+      tabs.parent().parent().parent().render();
       
       /* --------- XXX Expected Result: 
        *
@@ -558,7 +557,8 @@ define(['jquery', 'layout'], function ($, layout) {
        *
        * ------------- */
 
-      //bye_bye_msg.split(bar_msg, 'right');
+      bye_bye_msg.split(bar_msg, 'right');
+      tabs.parent().parent().parent().parent().render();
       
       /* --------- XXX Expected Result: 
        *
@@ -568,7 +568,8 @@ define(['jquery', 'layout'], function ($, layout) {
        *
        * ------------- */
 
-      //hello_msg.swap(more_bye_msg);
+      hello_msg.swap(more_bye_msg);
+      tabs.parent().parent().parent().parent().render();
       
       /* --------- XXX Expected Result: 
        *
@@ -578,12 +579,9 @@ define(['jquery', 'layout'], function ($, layout) {
        *
        * ------------- */
 
-      more_bye_msg.split(foo_msg, 'top');
-      //foo_msg.remove();
-      console.log("------------------------");
-      return;
+      //more_bye_msg.split(foo_msg, 'top');
+      foo_msg.remove();
 
-      console.log("------------------------");
       //bar_msg.remove(); //TODO remove this
       var tabs2 = new Tabbed();
 
@@ -591,8 +589,8 @@ define(['jquery', 'layout'], function ($, layout) {
       tabs2.add_child(hello_msg, 'intab');
       tabs2.add_child(foo_msg, 'intab');
 
-      tabs2.display(-1);
-      tabs2.refresh();
+      tabs2.display(1); //TODO el display "no anda"
+      tabs.parent().parent().parent().render();
       
       /* --------- XXX Expected Result: 
        *
@@ -602,17 +600,8 @@ define(['jquery', 'layout'], function ($, layout) {
        *
        * ------------- */
 
-
-      tabs.refresh();
-      tabs2.refresh();
-      return;
-      /*setInterval(function () {
-         tabs.refresh();
-         tabs2.refresh();
-      }, 5000);*/
-
       bar_msg.remove();
-      more_bye_msg.refresh(); //TODO why?
+      tabs.parent().parent().render();
       
       /* --------- XXX Expected Result: 
        *
@@ -621,6 +610,7 @@ define(['jquery', 'layout'], function ($, layout) {
        *          |     
        *
        * ------------- */
+      return;
 
       bye_bye_msg.remove();
 
