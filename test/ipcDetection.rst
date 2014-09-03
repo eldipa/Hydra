@@ -58,7 +58,7 @@ imprimio el cartel "Se hizo Pipe":
    ...   shared_lock.acquire() 
    ...   shared_list.append(data) 
    ...   shared_lock.release() 
-   >>> eventHandler.subscribe("gdb." + str(gdbPid) + ".type.Console", add_sync) 
+   >>> eventHandler.subscribe("gdb." + str(gdbPid) , add_sync) #+ ".type.Console"
    
 ::
    >>> eventHandler.publish(str(gdbPid) + ".run", "")
