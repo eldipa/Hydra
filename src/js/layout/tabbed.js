@@ -1,4 +1,4 @@
-define(['jquery', 'layout/panel'], function ($, P) {
+define(['jquery', 'layout/panel', 'jqueryui'], function ($, P, _) {
    var NullParent = P.NullParent;
    var Parent = P.Parent;
 
