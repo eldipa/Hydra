@@ -2,6 +2,9 @@ define(['jquery', 'layout/panel', 'jqueryui'], function ($, P, _) {
    var NullParent = P.NullParent;
    var Parent = P.Parent;
 
+   /*
+    * A Tabbed panel is a compound of 0, 1, 2 or more panels. Only one of them
+    * is shown at the same time, organizing them into tabs. */
    var Tabbed = function () {
       this._parent = NullParent;
 

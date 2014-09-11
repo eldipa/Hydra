@@ -3,6 +3,11 @@ define(['jquery', 'layout/panel', 'jqueryui'], function ($, P, _) {
    var Parent = P.Parent;
    var Panel = P.Panel;
 
+   /*
+    * A Root object is attached to the DOM. The rest of the panels should be
+    * children of this (direct or indirect).
+    *
+    * You can have multiple Root attached.*/
    var Root = function (dom_parent_element) {
       this._parent = NullParent;
 
@@ -59,6 +64,7 @@ define(['jquery', 'layout/panel', 'jqueryui'], function ($, P, _) {
       this._child.render(this._$anchor_element);
    };
 
+   // Implement the method of Panel. See panel.js
    Panel.prototype.attach = function (dom_parent_element) {
       if (this.parent() !== NullParent) {
          throw new Error("I can't attach me '"+this+"'because i have a parent '"+this._parent+"'.");

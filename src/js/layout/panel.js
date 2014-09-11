@@ -1,4 +1,9 @@
 define([], function () {
+   /* The NullParent is an unique object (singleton) which is a Parent with
+    * all of its methods implemented as no-ops.
+    *
+    * All panels that don't have a parent should have the NullParent as its parent.
+    * */
    var NullParent = {};
 
    NullParent._add_child = NullParent._remove_child = NullParent._replace_child = function () {};
@@ -6,6 +11,41 @@ define([], function () {
       return "[NullParent]";
    };
    
+   /*
+    * Generate a tree starting from a NullParent as the root, follows
+    * all the panels that have the NullParent as its parent.
+    * Then, follows the panels that have the previous panels as its parents and so on.
+    *
+    * The panels used to build this tree came from the 'panels' parameter (with the
+    * exception of NullParent which is always present).
+    *
+    * The nodes of this tree are of the form:
+    *    {
+    *       panel: < a panel >,
+    *       children: < a list of nodes >,
+    *       toString: < a method to stringnify the node >
+    *    }
+    *
+    * The toString method will return panel.toString() + "\n" + the string returned by
+    * its children (with a space added at the begin used to indent).
+    *
+    * Printing the root node will give something like (an example):
+         [NullParent]
+           [panel (hello ms) Panel]
+           [root (939452) Root]
+             [split vertically (126589) Splitted]
+               [tabs (518413) Tabbed]
+                 [panel (bye bye ) Panel]
+                 [panel (more bye) Panel]
+                 [panel (lorem ms) Panel]
+               [tabs (407880) Tabbed]
+                 [panel (foo msg) Panel]
+           [panel (bar msg) Panel]
+           [panel (zaz msg) Panel]
+    *
+    *
+    * This method returns the root node.
+    * */
    var as_tree = function (panels) {
       var lineage = [];
 
@@ -67,11 +107,16 @@ define([], function () {
       return root;
    };
 
+   /*
+    * Base object. You can inherit from it.
+    * If you do so, you need to implement some methods.
+    * */
    var Panel = function (name) {
       this._parent = NullParent;
       this._name = name || "panel";
    };
 
+   /* Build a dummy-temporary panel */
    var new_tmp_panel = function () {
       var tmp = new Panel("tmp");
       tmp.render = tmp.unlink = function () {};
@@ -86,10 +131,13 @@ define([], function () {
       return this._parent;
    };
 
+   /* Split the panel in two panel, with the new 'panel' put in 'position'. 
+    * This will create a Splitted parent panel.*/
    Panel.prototype.split = function (panel, position) {
       this._parent.split_child(this, panel, position);
    };
 
+   /* Swap this panel by the other */
    Panel.prototype.swap = function (panel) {
       var my_parent = this.parent();
       var your_parent = panel.parent();
@@ -101,6 +149,9 @@ define([], function () {
       my_parent.replace_child(tmp, panel);
    };
 
+   /* 
+    * The method will do the rendering. This method may be called more than once, so
+    * the code should be prepared for these cases (like adding something twice).*/
    Panel.prototype.render = function () {
       throw new Error("Not implemented error: The 'render' method of '"+this+"' was not implemented!. It should be to render something meaningful in the box '"+this.box+"'.");
    };
@@ -109,6 +160,9 @@ define([], function () {
       return "[panel ("+this._name.slice(0,8)+") Panel]";
    };
 
+   /*
+    * Remove the panel from its group, this will set the parent to NullParent. 
+    * */
    Panel.prototype.remove = function () {
       this._parent.remove_child(this);
    };
@@ -137,6 +191,9 @@ define([], function () {
       ]
    };
 
+   /*
+    * Returns a list with panels starting from self, then its parent, then its
+    * grandparent and so on until the last parent in the chain, the NullParent (included). */
    Panel.prototype.ancestry = function () {
       var parent = this.parent();
 
@@ -150,10 +207,16 @@ define([], function () {
       return ancestry;
    };
 
+   /*
+    * This method should clean and undo all the stuff done in the render method.
+    * Again, this method may be called more than once so be prepared. */
    Panel.prototype.unlink = function () {
       throw new Error("Not implemented error: The 'unlink' method of '"+this+"' was not implemented!. It should unlink its stuff from the DOM. This no necessary means to remove-and-delete any element, you just need to remove it from the DOM.");
    };
 
+   /*
+    * Parent object.
+    * */
    var Parent = function () { //TODO, se podria obviar usar el prototipo de Parent y usar una unica instancia de Parent (como se hace con NullParent)
    };
 
@@ -161,6 +224,9 @@ define([], function () {
    Parent.prototype.__proto__ = Panel.prototype;
    NullParent.__proto__ = Parent.prototype;
 
+   /*
+    * Add-Remove-Replace child interface.
+    * */
    Parent.prototype.add_child = function (panel, position) {
       if (panel.parent() !== NullParent) {
          throw new Error("Precondition: The panel to be my child '"+panel+"' in '"+position+"' must not have another parent ('"+panel.parent()+"').");

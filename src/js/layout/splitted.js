@@ -3,6 +3,11 @@ define(['jquery', 'layout/panel', 'jqueryui'], function ($, P, _) {
    var Parent = P.Parent;
    var new_tmp_panel = P.new_tmp_panel;
 
+   /*
+    * A Splitted panel represent a compound of two panels joined by a vertical u
+    * horizontal bar.
+    * The bar can be moved, resizing the width or height of both panels.
+    * */
    var Splitted = function (splitted_direction) {
       this._parent = NullParent;
 
@@ -229,6 +234,7 @@ define(['jquery', 'layout/panel', 'jqueryui'], function ($, P, _) {
    };
 
 
+   // Implement the method of Parent. See panel.js
    Parent.prototype.split_child = function (my_panel, panel, position) {
       var splitted_direction = null;
       var my_position = null;
