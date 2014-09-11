@@ -127,6 +127,92 @@ define(['jquery'], function ($) {
                            }
                    });
            }
+ 
+
+           var old_dynamic_context_id = null;
+
+           function addDynamicContext(selector, controller_selector) {
+                   $(document).on('contextmenu', selector, function (e) {
+                      e.preventDefault();
+                      e.stopPropagation();
+                     
+                      var $target = $(e.target);
+                      var $parents = $target.parents(); 
+
+                      var controllers = [];
+                      var $target_controller = $target; 
+                      if($target_controller.length === 1) {
+                         var controller = $target_controller.data('controller');
+                         if (controller) { 
+                            controllers.push(controller);
+                         }
+                      }
+
+                      $parents.each(function () {
+                         var controller = $(this).data('controller');
+                         if (controller) { 
+                            controllers.push(controller);
+                         }
+                      });
+
+                      var menu_data = [];
+                      for(var i = 0; i < controllers.length; i++) {
+                         var controller = controllers[i];
+                         var submenu = controller.menu();
+                         menu_data = menu_data.concat(submenu);
+                      }
+
+                      if(menu_data.length === 0) {
+                         return;
+                      }
+
+                      var d = new Date();
+                      var id = d.getTime();
+                      var $menu = buildMenu(menu_data, id);
+
+                      $('body').append($menu);
+                      $('.dropdown-context:not(.dropdown-context-sub)').hide();
+
+                      if (old_dynamic_context_id !== null) {
+                         var $old = $('#dropdown-' + old_dynamic_context_id);
+                         $old.remove();
+                      }
+
+                      old_dynamic_context_id = id;
+                           
+                           $dd = $('#dropdown-' + id);
+                           if (typeof options.above == 'boolean' && options.above) {
+                                   $dd.addClass('dropdown-context-up').css({
+                                           top: e.pageY - 20 - $('#dropdown-' + id).height(),
+                                           left: e.pageX - 13
+                                   }).fadeIn(options.fadeSpeed);
+                           } else if (typeof options.above == 'string' && options.above == 'auto') {
+                                   $dd.removeClass('dropdown-context-up');
+                                   var autoH = $dd.height() + 12;
+
+                                   /* Fix a bug: if the menu is at the right of the page
+                                    * and the page doesn't allow overflow, the menu will
+                                    * be trucated. */
+                                   var autoW = $dd.width() + 10;
+                                   if ((e.pageX + autoW) < $('html').width()) {
+                                      autoW = 0; //dont move.
+                                   }
+                                   /* ***** */
+
+                                   if ((e.pageY + autoH) > $('html').height()) {
+                                           $dd.addClass('dropdown-context-up').css({
+                                                   top: e.pageY - 20 - autoH,
+                                                   left: e.pageX - 13 - autoW
+                                           }).fadeIn(options.fadeSpeed);
+                                   } else {
+                                           $dd.css({
+                                                   top: e.pageY + 10,
+                                                   left: e.pageX - 13 - autoW
+                                           }).fadeIn(options.fadeSpeed);
+                                   }
+                           }
+                   });
+           }
            
            function destroyContext(selector) {
                    $(document).off('contextmenu', selector).off('click', '.context-event');
@@ -136,7 +222,8 @@ define(['jquery'], function ($) {
                    init: initialize,
                    settings: updateOptions,
                    attach: addContext,
-                   destroy: destroyContext
+                   destroy: destroyContext,
+                   attachDynamic: addDynamicContext
            };
    })();
 });
