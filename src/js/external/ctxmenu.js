@@ -132,6 +132,7 @@ define(['jquery'], function ($) {
            var old_dynamic_context_id = null;
 
            function addDynamicContext(selector, controller_selector) {
+                   var ctxmenu_attrname = 'ctxmenu_controller';
                    $(document).on('contextmenu', selector, function (e) {
                       e.preventDefault();
                       e.stopPropagation();
@@ -140,25 +141,31 @@ define(['jquery'], function ($) {
                       var $parents = $target.parents(); 
 
                       var controllers = [];
-                      var $target_controller = $target; 
-                      if($target_controller.length === 1) {
-                         var controller = $target_controller.data('controller');
-                         if (controller) { 
-                            controllers.push(controller);
+                      if($target.length === 1) {
+                         var subctxmenu = $target.data(ctxmenu_attrname);
+                         if (subctxmenu) { 
+                            controllers.push({
+                               element: $target[0],
+                               subctxmenu: subctxmenu 
+                            });
                          }
                       }
 
                       $parents.each(function () {
-                         var controller = $(this).data('controller');
-                         if (controller) { 
-                            controllers.push(controller);
+                         var subctxmenu = $(this).data(ctxmenu_attrname);
+                         if (subctxmenu) { 
+                            controllers.push({
+                               element: $(this)[0],
+                               subctxmenu: subctxmenu
+                            });
                          }
                       });
 
                       var menu_data = [];
                       for(var i = 0; i < controllers.length; i++) {
-                         var controller = controllers[i];
-                         var submenu = controller.menu();
+                         var dom_element = controllers[i].element;
+                         var submenu = controllers[i].subctxmenu;
+
                          menu_data = menu_data.concat(submenu);
                       }
 

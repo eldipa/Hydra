@@ -140,9 +140,31 @@ define(['jquery', 'layout/panel', 'jqueryui'], function ($, P, _) {
       tab.header = $('<li style="display: inline; float: none;"><a style="float: none;" id="header_'+tab.id+'" href="#'+tab.id+'">'+(panel.name()||"tab")+'</a></li>');
       tab.container = $('<div id="'+tab.id+'"></div>');
 
+      this._create_ctxmenu_for_panel(tab.header, panel);
+
       this._$headers.append(tab.header);
       this._$container.append(tab.container);
       this._tabs.push(tab);
+   };
+
+   Tabbed.prototype._create_ctxmenu_for_panel = function (header, panel) {
+      var self = this;
+      header.data('ctxmenu_controller', [
+            {
+               text: 'Close tab',
+               action: function (e) {
+                  e.preventDefault();
+                  self.remove_child(panel);
+               }
+            },
+            {
+               text: 'Close others tabs',
+               action: function (e) {
+                  e.preventDefault();
+                  self.remove_all_tabs_except_one(panel);
+               }
+            }
+      ]);
    };
 
    Tabbed.prototype.get_panel = function (tab_id) {
@@ -181,6 +203,27 @@ define(['jquery', 'layout/panel', 'jqueryui'], function ($, P, _) {
       //this._parent.remove_child(this);
    };
 
+   Tabbed.prototype.remove_all_tabs_except_one = function (panel) {
+      var index = null;
+      for (var i = 0; i < this._tabs.length; i++) {
+         if (panel === this._tabs[i].panel) {
+            index = i;
+            break;
+         }
+      }
+
+      if (index === null) {
+         throw new Error("The panel '"+panel+"' is not in one of my tabs '"+this+"'.");
+      }
+
+      var others = this._tabs.slice(); //copy
+      others.splice(index, 1);
+
+      for (var i = 0; i < others.length; i++) {
+         this.remove_child(others[i].panel);
+      }
+   };
+
 
    Tabbed.prototype._replace_child = function (panel, other_panel) {
       var index = null;
@@ -195,6 +238,7 @@ define(['jquery', 'layout/panel', 'jqueryui'], function ($, P, _) {
          throw new Error("I can't replace a panel '"+panel+"' that i can't find ('"+this+"').");
       }
 
+      this._create_ctxmenu_for_panel(this._tabs[index].header, other_panel); //recreate the menu for the new panel
       this._tabs[index].panel = other_panel;
    };
    

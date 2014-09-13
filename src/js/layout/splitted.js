@@ -120,20 +120,6 @@ define(['jquery', 'layout/panel', 'jqueryui'], function ($, P, _) {
       return '.'+position+'_panel_of_splitted';
    };
 
-   Splitted.prototype.menu = function () {
-      return [
-      {
-         header: this.toString()
-      },
-      {
-         text: 'split hello',
-         action: function(e){
-            e.preventDefault();
-            alert('split hello');
-         }
-      }
-      ]
-   };
    Splitted.prototype._add_child = function (panel, position) {
       if(this._splitted_direction === 'vertically') {
          if(position !== 'left' && position !== 'right') {
