@@ -64,6 +64,10 @@ define(['jquery', 'layout/panel', 'jqueryui'], function ($, P, _) {
       this._child.render(this._$anchor_element);
    };
 
+   Root.prototype.unlink = function () {
+      this._child.unlink();
+   };
+
    // Implement the method of Panel. See panel.js
    Panel.prototype.attach = function (dom_parent_element) {
       if (this.parent() !== NullParent) {
