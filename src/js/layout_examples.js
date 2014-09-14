@@ -1,4 +1,4 @@
-define(['jquery', 'layout'], function ($, layout) {
+define(['jquery', 'layout', 'widgets/switch_theme'], function ($, layout, switch_theme_widget) {
    function init() {
       $('body').find('div').remove();
 
@@ -64,14 +64,10 @@ define(['jquery', 'layout'], function ($, layout) {
        *
        * Para que el cambio surja efecto, debemos refrescar el panel.
        *
-       *
        * */
-      /*
 
-      hello_msg.msg = hello_msg.msg + '<br />hello world!!!';
-      hello_msg.refresh();
-      return;
-      */
+      hello_msg.msg = hello_msg.msg + '!!!';
+      hello_msg.parent().render();
       
       /* --------- XXX Expected Result: Un panel que contiene el nuevo mensaje 
        *
@@ -87,7 +83,7 @@ define(['jquery', 'layout'], function ($, layout) {
       bye_bye_msg.render = hello_msg.render;
       bye_bye_msg.unlink = hello_msg.unlink;
 
-      // XXX bye_bye_msg.refresh();
+      // XXX bye_bye_msg.refresh();    //TODO
       /* --------- XXX Expected Result: 
        *
        *    H
@@ -145,7 +141,6 @@ define(['jquery', 'layout'], function ($, layout) {
        * */
 
       bye_bye_msg.msg = bye_bye_msg.msg + '<br />Bye Bye';
-      hello_msg.msg = hello_msg.msg + '<br />!!!';
 
       var more_bye_msg = new Panel("more bye msg");
       more_bye_msg.msg = "More ... Bye!";
@@ -224,7 +219,6 @@ define(['jquery', 'layout'], function ($, layout) {
        * Intentarlo deberia lanzar una exception
        * */
 
-      /* TODO
       try {
          foo_msg.attach($('body'));
          throw new Error("TEST FAIL");
@@ -233,7 +227,6 @@ define(['jquery', 'layout'], function ($, layout) {
          if(("" + e).indexOf("TEST FAIL") !== -1)
             throw e;
       }
-      */
 
       /*
        * Para que nuestra nueva division Foo/Bar sea renderizada podemos attachar su padre
@@ -256,7 +249,8 @@ define(['jquery', 'layout'], function ($, layout) {
       /* 
        * Ahora, el 'lorem_ipsum_msg' dejo de pertenecer al DOM.
        *
-       * Podemos volver para atras aplicando la misma operacion de swappeo.
+       * Podemos volver para atras aplicando la misma operacion de swappeo, 
+       * swappeando 'lorem_ipsum_msg' por el split (de foo y bar)
        * */
 
       foo_msg.parent().swap(lorem_ipsum_msg);
@@ -323,32 +317,13 @@ define(['jquery', 'layout'], function ($, layout) {
        *
        * ------------- */
 
-      /* TODO
+      /* 
        * Hasta ahora hemos siempre agregado nuevos paneles pero que pasa si
        * queremos agregar 2 veces el mismo panel?
        *
-       * Esto hace que el panel se mueva de donde esta y se vaya a otro lugar
+       * El resultado es indefinido.
        * */
 
-      //lorem_ipsum_msg.split(hello_msg, 'top');
-      
-      /* --------- XXX Expected Result: 
-       *
-       *    | | M | H |
-       *   Z|F|---|---| Ba
-       *    | | B | L |
-       *
-       * ------------- */
-
-      //TODO
-      //zaz_msg.parent().split(hello_msg, 'bottom');
-      /* --------- XXX Expected Result: 
-       *
-       *   Z|F| M |   |
-       *   ---|---| L | Ba
-       *    H | B |   |
-       *
-       * ------------- */
 
       /*
        * Asi como podemos agregar paneles podemos removerlos.
@@ -414,8 +389,6 @@ define(['jquery', 'layout'], function ($, layout) {
        *
        * ------------- */
 
-      //TODO implement the root's unlink
-      lorem_ipsum_msg.parent().unlink = function () {};
       lorem_ipsum_msg.remove();
 
       /* --------- XXX Expected Result: 
@@ -432,7 +405,7 @@ define(['jquery', 'layout'], function ($, layout) {
        * volver a repetir ese paso.
        *
        * */
-      hello_msg.remove();
+      hello_msg.remove(); //si quedo unido a otro panel, lo sacamos de ahi.
       hello_msg.attach($('body'));
 
       hello_msg.split(bye_bye_msg, 'right');
@@ -466,8 +439,6 @@ define(['jquery', 'layout'], function ($, layout) {
       lorem_ipsum_msg.remove();
       hello_msg.parent().render();
 
-
-
       /* --------- XXX Expected Result: 
        *
        *    
@@ -482,8 +453,6 @@ define(['jquery', 'layout'], function ($, layout) {
        * en tabs. A diferencia de un split, solo uno de los paneles es mostrado
        * y el resto esta en background.
        * */
-
-      //hello_msg.split(more_bye_msg, 'left');
 
       var tabs = new Tabbed();
 
@@ -579,17 +548,16 @@ define(['jquery', 'layout'], function ($, layout) {
        *
        * ------------- */
 
-      //more_bye_msg.split(foo_msg, 'top');
       foo_msg.remove();
 
-      //bar_msg.remove(); //TODO remove this
       var tabs2 = new Tabbed();
 
       tabs2.swap(hello_msg);
       tabs2.add_child(hello_msg, 'intab');
       tabs2.add_child(foo_msg, 'intab');
 
-      tabs2.display(1); //TODO el display "no anda"
+      tabs.parent().parent().parent().render();
+      tabs2.display(-1); //TODO el display "anda" solo si ese tab (ese panel) fue renderizado al menos una vez
       tabs.parent().parent().parent().render();
       
       /* --------- XXX Expected Result: 
@@ -610,9 +578,9 @@ define(['jquery', 'layout'], function ($, layout) {
        *          |     
        *
        * ------------- */
-      return;
 
       bye_bye_msg.remove();
+      tabs.parent().parent().render();
 
       /* --------- XXX Expected Result: 
        *
@@ -623,6 +591,7 @@ define(['jquery', 'layout'], function ($, layout) {
        * ------------- */
 
       hello_msg.swap(more_bye_msg);
+      tabs.parent().parent().render();
 
       /* --------- XXX Expected Result: 
        *
@@ -633,16 +602,8 @@ define(['jquery', 'layout'], function ($, layout) {
        * ------------- */
 
       hello_msg.swap(lorem_ipsum_msg);
-
-      /* --------- XXX Expected Result: 
-       *
-       *          |          
-       *    M,[F] | [L],H
-       *          |     
-       *
-       * ------------- */
-
       hello_msg.swap(foo_msg);
+      tabs.parent().parent().render();
 
       /* --------- XXX Expected Result: 
        *
@@ -653,6 +614,7 @@ define(['jquery', 'layout'], function ($, layout) {
        * ------------- */
 
       lorem_ipsum_msg.remove();
+      tabs.parent().parent().render();
 
       /* --------- XXX Expected Result: 
        *
@@ -662,10 +624,14 @@ define(['jquery', 'layout'], function ($, layout) {
        *
        * ------------- */
 
-      foo_msg.remove();
-      tabs.refresh();
+      /*
+       * A diferencia de un Splitted, si un Tabbed se queda sin tabs, este no desaparece.
+       * Esto permite que otros paneles sean movidos al el por el usuario (drag & drop)
+       * */
 
-      //TODO mostrar algo cuando no hay tabs
+      foo_msg.remove();
+      tabs.parent().parent().render(); //TODO mostrar algo cuando no hay tabs (?)
+
       /* --------- XXX Expected Result: 
        *
        *          |          
@@ -676,7 +642,7 @@ define(['jquery', 'layout'], function ($, layout) {
 
       tabs.add_child(lorem_ipsum_msg, 'intab');
       tabs.display(1);
-      tabs.refresh();
+      tabs.parent().parent().render();
 
       /* --------- XXX Expected Result: 
        *
@@ -686,21 +652,11 @@ define(['jquery', 'layout'], function ($, layout) {
        *
        * ------------- */
 
-      tabs.display(0);
-      tabs.refresh();
-
-      /* --------- XXX Expected Result: 
-       *
-       *          |          
-       *    M,[H] | [L]
-       *          |     
-       *
-       * ------------- */
-
       tabs.add_child(foo_msg, 'intab');
       tabs.add_child(bar_msg, 'intab');
+      tabs.parent().parent().render();
       tabs.display(2);
-      tabs.refresh();
+      tabs.parent().parent().render();
 
       /* --------- XXX Expected Result: 
        *
@@ -711,6 +667,7 @@ define(['jquery', 'layout'], function ($, layout) {
        * ------------- */
 
       bar_msg.remove();
+      tabs.parent().parent().render();
 
       /* --------- XXX Expected Result: 
        *
@@ -720,21 +677,43 @@ define(['jquery', 'layout'], function ($, layout) {
        *
        * ------------- */
 
-      lorem_ipsum_msg.remove();
+      /*
+       * Solo por diversion, creamos otro tab y ademas creamos un panel
+       * que tiene un switch para cambiar el estilo de la UI (theme)
+       * */
+      var tabs3 = new Tabbed();
+      tabs3.add_child(bye_bye_msg, 'intab');
+
+      lorem_ipsum_msg.split(tabs3, 'bottom');
+
+      var theme_switch = new Panel("theme_switch");
+      var _switch = switch_theme_widget.theme_switch;
+
+      theme_switch.render = function () {
+         this._rendered_in = $(this.box);
+         _switch.box = this._rendered_in;
+         _switch.render();
+      };
+
+      theme_switch.unlink = function () {
+         if (this._rendered_in) {
+            _switch.unlink();
+            this._rendered_in.empty();
+            this._rendered_in = null;
+         }
+      }
+
+      hello_msg.swap(theme_switch);
+      tabs.parent().parent().parent().render();
 
       /* --------- XXX Expected Result: 
        *
-       *          |          
-       *    M,[H] | [F]
-       *          |     
+       *          | L,[F]    
+       *    M,[H] |-------
+       *          | [],B
        *
        * ------------- */
-
-      var r = layout.as_tree([hello_msg, bye_bye_msg, more_bye_msg, lorem_ipsum_msg, foo_msg, bar_msg, zaz_msg]);
-      r.toString();
-      console.log("" + r.toString());
-      return
-
+      return;
    }
 
    return {init: init};
