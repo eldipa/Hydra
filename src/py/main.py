@@ -30,7 +30,7 @@ try:
 
 finally:
     
-    spawmer.eliminarCola()
+    spawmer.shutdown()
     
     os.system("python py/publish_subscribe/notifier.py stop")
  

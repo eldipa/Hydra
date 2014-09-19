@@ -1,6 +1,6 @@
 .PHONY: multiple_files
 
-all: Prueba testExe testVariables write_one_char_at_time multiplesPunteros multiple_files
+all: Prueba testExe testVariables write_one_char_at_time multiplesPunteros multiple_files outputTest
 
 defines= -D espera
 
@@ -21,7 +21,10 @@ multiplesPunteros: multiplesPunteros.cpp
 	
 multiple_files:
 	$(MAKE) --no-print-directory -C ./multiple_files
+	
+outputTest:
+	g++ -g -o outputTest outputTest.cpp
 
 clean:
-	rm Prueba testExe testVariables write_one_char_at_time multiplesPunteros
+	rm Prueba testExe testVariables write_one_char_at_time multiplesPunteros outputTest
 	$(MAKE) --no-print-directory -C ./multiple_files clean

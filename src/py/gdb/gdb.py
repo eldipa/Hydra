@@ -5,6 +5,7 @@ from multiprocessing import Queue
 
 import outputReader
 import publish_subscribe.eventHandler
+import tempfile
 
 HACK_PATH = "/shared/hack.so"
 
@@ -13,7 +14,6 @@ class Gdb:
 
     # crea un nuevo proceso gdb vacio
     def __init__(self, comandos = False):
-        self.targetPid = 0
         self.comandos = comandos;
         self.queue = Queue()
         self.gdb = subprocess.Popen(["gdb", "-interpreter=mi", "-quiet"], stdin=PIPE, stdout=PIPE, stderr=PIPE)
@@ -27,9 +27,6 @@ class Gdb:
         
     def getSessionId(self):
         return self.gdb.pid
-    
-    def getTargetPid(self):
-        return self.targetPid
         
     def subscribe(self):
         self.eventHandler.subscribe(str(self.gdb.pid) + ".run", self.run)
@@ -64,7 +61,9 @@ class Gdb:
     
     # Ejecuta al target desde el comienzo
     def run(self, data=""):
-        self.gdbInput.write("run > Salida.txt" + '\n')  ########## redirigir bien la stdout
+        file = tempfile.NamedTemporaryFile()
+        self.eventHandler.publish("debugger.new-output", [self.gdb.pid, file.name])
+        self.gdbInput.write("run > " + file.name + '\n')
        
     
     # Ejecuta al target desde el punto donde se encontraba

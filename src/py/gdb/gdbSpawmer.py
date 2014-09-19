@@ -1,6 +1,7 @@
 
 from gdb import Gdb
 import forkDetector 
+import outputLogger
 from multiprocessing import Lock
 import publish_subscribe.eventHandler
 
@@ -23,6 +24,8 @@ class GdbSpawmer:
         self.listaGdb = {}
         self.forkDetector = forkDetector.ForkDetector(self)
         self.forkDetector.start()
+        self.logger = outputLogger.OutputLogger()
+        self.logger.start()
         self.eventHandler = publish_subscribe.eventHandler.EventHandler()
         self.subscribe()
         
@@ -79,4 +82,5 @@ class GdbSpawmer:
     def shutdown(self):
         self.eliminarCola()
         self.exit('all')
+        self.logger.finalizar()
     

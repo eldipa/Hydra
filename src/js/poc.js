@@ -193,7 +193,7 @@ define(['w2ui', 'code_view', 'event_handler', 'ctxmenu', 'jquery','varViewer'], 
 
    });
 
-   event_handler.publish("debugger.load", "cppTestCode/testVariables");
+   event_handler.publish("debugger.load", "cppTestCode/outputTest");
 
    return {};
 });
