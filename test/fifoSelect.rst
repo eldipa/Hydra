@@ -12,11 +12,11 @@ Defino las funciones que van a utilizar a los fifos:
 
 :: 
    >>> import time
-   >>> def escritor(path):
+   >>> def escritor(path, numero):
    ...  fifo = open(path,'w')
    ...  for i in range(3):
    ...     time.sleep(1)
-   ...     fifo.write("linea " + str(i))
+   ...     fifo.write(str(numero) + ": linea " + str(i) + '\n')
    
 Defino al lector:
 
@@ -30,25 +30,27 @@ Defino al lector:
    ...   salir1 = False
    ...   salir2 = False
    ...   overflowProtector = 30
+   ...   fifos = [fifo1,fifo2]
    ...   while ((not salir1) or (not salir2)) and overflowProtector > 0:
    ...      overflowProtector -= 1
-   ...      [paraLeer, paraEscribir, otros] = select.select([fifo1,fifo2],[],[])
+   ...      [paraLeer, paraEscribir, otros] = select.select(fifos,[],[])
    ...      for fifo in paraLeer:
    ...         linea = fifo.read()
    ...         salidas.append(linea)
-   ...         if (linea == "linea 10"):
-   ...            if (fifo == fifo1):
-   ...                salir1 = True
-   ...            elif (fifo == fifo2): 
-   ...                salir2 = True
+   ...         if ("1: linea 2" in linea):
+   ...            salir1 = True
+   ...            fifos.remove(fifo1)
+   ...         if ("2: linea 2" in linea): 
+   ...            salir2 = True
+   ...            fifos.remove(fifo2)
 
 Ejecutamos primero el lector, luego los dos escritores:
 
 
 ::
    >>> import threading
-   >>> t_escritor1 = threading.Thread(target = escritor, args = [fifoPath + '1'])
-   >>> t_escritor2 = threading.Thread(target = escritor, args = [fifoPath + '2'])
+   >>> t_escritor1 = threading.Thread(target = escritor, args = [fifoPath + '1', 1])
+   >>> t_escritor2 = threading.Thread(target = escritor, args = [fifoPath + '2', 2])
    >>> t_lector = threading.Thread(target= lector, args = ())
    >>> t_lector.start()
    >>> t_escritor1.start()
