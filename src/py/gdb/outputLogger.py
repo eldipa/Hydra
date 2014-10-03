@@ -5,7 +5,7 @@ import datetime
 import tempfile
 from multiprocessing import Lock
 import os
-import uuid
+
 
 class OutputLogger(threading.Thread):
     
@@ -13,12 +13,14 @@ class OutputLogger(threading.Thread):
         threading.Thread.__init__(self)
         self.eventHandler = publish_subscribe.eventHandler.EventHandler()
         self.outputsFd = []
+        self.openFiles = {}
         self.originPid = {}
-        fifo = "/tmp/" + str(uuid.uuid4())
-        os.mkfifo(fifo)
-        self.myFd = open(fifo, 'r+')
-        self.outputsFd.append(self.myFd)
-        self.originPid[self.myFd] = "internal"
+        fifoPath = tempfile.mktemp()
+        os.mkfifo(fifoPath)
+        self.myFifo = open(fifoPath, 'r+')
+        self.outputsFd.append(self.myFifo.fileno())
+        self.openFiles[self.myFifo.fileno()] = self.myFifo
+        self.originPid[self.myFifo.fileno()] = "internal"
         self.lock = Lock()
         self.file = open("/tmp/Salida.txt", "a")  # TODO poner en otro lugar
         self.eventHandler.subscribe("debugger.new-output", self.newFd)
@@ -26,30 +28,42 @@ class OutputLogger(threading.Thread):
     def run(self):
         salir = False
         while not salir:
+            print "salidas originales: " + str(self.outputsFd)
             [paraLeer, paraEscribir, otro] = select.select(self.outputsFd, [], [])
+            print "para leer: " + str(paraLeer)
             for salida in paraLeer:
-                leido = salida.read()
-                print "la salida es " + leido + " de " + str(salida.fileno())
+                leido = self.openFile[salida].read()
+                print "la salida es " + leido + " de " + str(salida)
                 
-                if salida == self.myFd:
+                if leido == "":
+                    print "sacando: " +str(salida)
+                    self.outputsFd.remove(salida)
+                    self.openFile[salida].close()
+                    self.openFiles.pop(salida)
+                    
+                
+                if salida == self.myFifo.fileno:
                     if leido == "nuevo":
                         continue
                     elif leido == "salir":
                         salir = True
                 
-                log = str(datetime.datetime.now()) + " " + self.originPid[salida] + " " + leido
+                log = str(datetime.datetime.now()) + " " + str(self.originPid[salida]) + " " + leido
                 self.file.write(log + '\n')
             
     
     def newFd(self, data):
+        print "nuevo fifo: " + str(data)
         file = open(data[1], "r")
-        self.outputsFd.append(file)
-        self.originPid[file] = data[0]
+        self.outputsFd.append(file.fileno())
+        self.originPid[file.fileno()] = data[0]
+        self.openFiles[file.fileno()] = file
         self.lock.acquire()
-        self.myFd.write("nuevo")
+        self.myFifo.write("nuevo")
         self.lock.release()
+        print "agregado, nuevo fd: " + str(self.outputsFd)
         
     def finalizar(self):
         self.lock.acquire()
-        self.myFd.write("salir")
+        self.myFifo.write("salir")
         self.lock.release()
