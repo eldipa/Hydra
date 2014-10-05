@@ -11,16 +11,66 @@
 
     <!-- Bootstrap core CSS -->
     <link href="resources/css/bootstrap.css" rel="stylesheet">
-    <link href="resources/css/w2ui-1.3.2.css" rel="stylesheet">
 
+    <link href="resources/css/jquery-ui.structure.css" rel="stylesheet">
+    
 
+    <link title="uidark"  href="resources/css/theme/uidark/jquery-ui.theme.css"  rel="stylesheet">
+    <link title="blitzer" href="resources/css/theme/blitzer/jquery-ui.theme.css" rel="alternate stylesheet">
+    <link title="le_frog" href="resources/css/theme/le_frog/jquery-ui.theme.css" rel="alternate stylesheet">
+    <link title="oldos"   href="resources/css/theme/oldos/jquery-ui.theme.css"   rel="alternate stylesheet">
+
+    <link href="resources/css/splitted.css" rel="stylesheet">
     <style>
-       .main-container{
-          padding-top: 40px;
-       }
-
+       /* The selections of ACE require this */
        .fixed-position {
           position: absolute;
+       }
+
+       /* enable 'full fill' of the web page */
+       html, body {
+          height: 100%;
+          overflow: hidden;
+       }
+
+       .overflow-selector {
+          position: absolute;
+          top: 12px;
+          right: 10px;
+       }
+
+       /* Let's get this party started */ 
+       ::-webkit-scrollbar { 
+          width: 12px; 
+       } 
+       
+       /* Track */ 
+       ::-webkit-scrollbar-track { 
+          -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3); 
+          -webkit-border-radius: 10px; 
+          border-radius: 10px;
+       } 
+       
+       /* Handle */ 
+       ::-webkit-scrollbar-thumb { 
+          -webkit-border-radius: 10px; 
+          border-radius: 10px; 
+          background: rgba(255,0,0,0.8); 
+          -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.5); 
+       } 
+       
+       ::-webkit-scrollbar-thumb:window-inactive { 
+          background: rgba(255,0,0,0.4); 
+       }
+       
+       /* if both the vertical and the horizontal bars appear, then perhaps the right bottom corner also needs to be styled */
+       ::-webkit-scrollbar-corner {
+          background-color: black;
+       } 
+
+
+       ul.ui-tabs-nav::-webkit-scrollbar-thumb { 
+          background: rgba(255,255,0,0.4); 
        }
 
     </style>

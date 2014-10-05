@@ -11,21 +11,38 @@ requirejs.config({
       w2ui_internals: 'external/w2ui-1.3.2',
       w2ui: 'external/w2ui',
       ctxmenu: 'external/ctxmenu',
-      varViewer: 'varViewer'
+      varViewer: 'varViewer',
+      jqueryui: 'external/jquery-ui-1.11.1'
    },
 
    shim: {
       "w2ui_internals": {
          deps: ['jquery'],
          exports: "w2ui"
+      },
+      "jqueryui": {
+         exports: "$",
+         deps: ['jquery']
       }
    }
 
 });
 
-requirejs(['w2ui', 'code_view', 'jquery', 'event_handler', 'export_console', 'poc'], function (w2ui, code_view, $, event_handler, export_console, poc) {
+requirejs(['w2ui', 'code_view', 'jquery', 'export_console', 'layout', 'layout_examples', 'jqueryui', 'ctxmenu'], function (w2ui, code_view, $, export_console, layout, layout_examples, _, ctxmenu) {
    var js_console_server = export_console.init();
    var fs = require('fs');
+
+   ctxmenu.init({
+          fadeSpeed: 100,
+          above: 'auto',
+          preventDoubleContext: true,
+          compress: false
+   });
+
+   ctxmenu.attachDynamic('body', undefined);
+  
+   layout_examples.init();
+
    /*var event_handler = new event_handler.EventHandler();
    event_handler.init();
    */
