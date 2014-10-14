@@ -175,19 +175,16 @@ define([], function () {
       return this._name;
    };
 
-   Panel.prototype.menu = function () {
-      var myself = this;
+   Panel.prototype._context_menu_items_for_panel_actions = function () {
+      var self = this;
       return [
       {
-         header: this.toString()
-      },
-      {
-         text: 'remove',
+         text: 'Remove',
          action: function(e){
             e.preventDefault();
-            myself.remove();
+            self.remove();
          }
-      }
+      },
       ]
    };
 

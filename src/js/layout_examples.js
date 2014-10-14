@@ -713,30 +713,12 @@ define(['jquery', 'layout', 'widgets/switch_theme', 'code_view', 'process_graph'
        *          | [],B
        *
        * ------------- */
-      var cv = new code_view.CodeView();
-      
-      var cv_panel = new Panel("Code View");
-      cv_panel._$container = cv.view_dom;
-
-      cv_panel.render = function () {
-         if (this._$out_of_dom) {
-            this._$out_of_dom.appendTo(this.box);
-            this._$out_of_dom = null;
-         }
-
-         cv.viewer.resize();
-      };
-
-      cv_panel.unlink = function () {
-         if (!this._$out_of_dom) {
-            this._$out_of_dom = this._$container.detach();
-         }
-      }
-
       var root = tabs.parent().parent().parent();
+      var cv_panel = new code_view.CodeView();
+      
       cv_panel.swap(foo_msg);
-      //cv.load_file('/home/martin/Codigo/ConcuDebug/src/cppTestCode/testVariables.cpp');
-      cv.load_file('/home/martin/Codigo/ConcuDebug/src/cppTestCode/simplified_unix_tools/echo.c');
+      //cv_panel.load_file('/home/martin/Codigo/ConcuDebug/src/cppTestCode/testVariables.cpp');
+      cv_panel.load_file('/home/martin/Codigo/ConcuDebug/src/cppTestCode/simplified_unix_tools/echo.c');
 
       cv_panel.parent().parent().parent().set_percentage(50);
 
