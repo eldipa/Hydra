@@ -11,7 +11,7 @@ define(['jquery', 'layout/panel', 'jqueryui'], function ($, P, _) {
       var id = ("" + Math.random()).slice(2);
 
       this._name = id;
-      this._$container = $('<div id="'+id+'"></div>');
+      this._$container = $('<div id="'+id+'" style="height: 100%;"></div>');
       this._$headers = $('<ul class="panel_tabbed"></ul>');
       this._tabs = [];
 
@@ -21,6 +21,7 @@ define(['jquery', 'layout/panel', 'jqueryui'], function ($, P, _) {
       this._active_on_next_refresh = null;
 
       var tabs = $(this._$container).tabs({
+         heightStyle: "fill"
       });
 
       var $headers = this._$headers;
@@ -138,7 +139,7 @@ define(['jquery', 'layout/panel', 'jqueryui'], function ($, P, _) {
       };
 
       tab.header = $('<li style="display: inline; float: none;"><a style="float: none;" id="header_'+tab.id+'" href="#'+tab.id+'">'+(panel.name()||"tab")+'</a></li>');
-      tab.container = $('<div id="'+tab.id+'"></div>');
+      tab.container = $('<div id="'+tab.id+'" style="padding: 0px;"></div>');
 
       this._create_ctxmenu_for_panel(tab.header, panel);
 
@@ -254,6 +255,12 @@ define(['jquery', 'layout/panel', 'jqueryui'], function ($, P, _) {
 
       var box = this.box;
 
+      if(this._active_on_next_refresh !== null) {
+         $('#' + this._name).tabs({active: this._active_on_next_refresh});
+         this._active_on_next_refresh = null;
+      }
+      $('#' + this._name).tabs( "refresh" );
+
       for(var i = 0; i < this._tabs.length; i++) {
          var tab = this._tabs[i];
          tab.panel.box = $('#' + tab.id);
@@ -261,12 +268,6 @@ define(['jquery', 'layout/panel', 'jqueryui'], function ($, P, _) {
 
          $('#header_' + tab.id).text(tab.panel.name() || "tab");
       }
-
-      if(this._active_on_next_refresh !== null) {
-         $('#' + this._name).tabs({active: this._active_on_next_refresh});
-         this._active_on_next_refresh = null;
-      }
-      $('#' + this._name).tabs( "refresh" );
 
    };
 

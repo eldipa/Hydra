@@ -19,7 +19,6 @@ define(['ace', 'jquery'], function (ace, $) {
          session = new ace.EditSession("");
 
          session.setMode("ace/mode/c_cpp");
-         session.setUseWrapMode(true);
 
          this.viewer.setSession(session);
          this.saved_session_by_filename[filename] = this.viewer.getSession();
