@@ -25,14 +25,14 @@ define(['d3'], function (d3) {
             "locked":'#00f',
             "waiting":'#00f'
          };
+
+         this._$container = $('<div style="width: 100%; height: 100%; min-width: '+this.width+'px; min-height: '+this.height+'px"></div>');
+         this._create_graph(this._$container);
+         this.enabled = false; 
       }
 
-      ProcessGraph.prototype.enable = function (container_to_attach) {
-         if (typeof this.svg !== 'undefined') {
-            this.disable();
-         }
-
-         this.svg = container_to_attach.append("svg")
+      ProcessGraph.prototype._create_graph = function (container_to_attach) {
+         this.svg = d3.select($(container_to_attach).get()[0]).append("svg")
             .attr("width", this.width)
             .attr("height", this.height);
 
@@ -46,15 +46,7 @@ define(['d3'], function (d3) {
             return self.update_graph_one_round(); });
       };
 
-      ProcessGraph.prototype.disable = function () {
-         if (typeof this.svg !== 'undefined') {
-            this.svg.remove();
-            delete this.svg;
-         }
-      };
-
       ProcessGraph.prototype.update_graph_one_round = function () {
-         console.log('tick');
          if (this.graph.alpha() < this.stop_update_graph_on_level) {
             this.graph.alpha(0);
          }
@@ -87,6 +79,16 @@ define(['d3'], function (d3) {
          nodes.exit()
             .remove()
 
+         var links = this.svg.selectAll('.link').data(this.graph.links());
+
+         links.enter()
+            .append('line')
+            .attr('class', 'link')
+            .attr('stroke', '#999');
+
+         links.exit()
+            .remove();
+
          var gnodes = nodes.enter()
             .append('g')
             .attr('class', 'node');
@@ -97,16 +99,6 @@ define(['d3'], function (d3) {
             .call(this.graph.drag);
          gnodes.append('text')
             .attr('class', 'node_text');
-
-         var links = this.svg.selectAll('.link').data(this.graph.links());
-
-         links.enter()
-            .append('line')
-            .attr('class', 'link')
-            .attr('stroke', '#999');
-
-         links.exit()
-            .remove();
 
          if (restart) {
             this.graph.start();
@@ -246,7 +238,7 @@ define(['d3'], function (d3) {
       };
 
       ProcessGraph.prototype.update = function (processes, relations) {
-         if (this.svg) {
+         if (this.enabled) {
             var changed_graph_or_link_count = this.update_graph_data(processes, relations);
             this.update_graph_view(changed_graph_or_link_count);
          }
