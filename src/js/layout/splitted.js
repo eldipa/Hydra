@@ -18,7 +18,8 @@ define(['jquery', 'layout/panel', 'jqueryui'], function ($, P, _) {
       this._splitted_direction = splitted_direction;
 
       this._name = ("" + Math.random()).slice(2);
-      
+      var self = this;
+
       var update_bar_and_split_for = function (position_name, dimension_name) {
          if (! ((position_name === 'left' && dimension_name === 'width') ||
                 (position_name === 'top'  && dimension_name === 'height')) ) {
@@ -43,8 +44,7 @@ define(['jquery', 'layout/panel', 'jqueryui'], function ($, P, _) {
             }
             else {
                var percentage = (rel_offset * 100);
-               $container.children("."+position_name+"_panel_of_splitted")[dimension_name](percentage + "%");
-               $container.children("."+opposite_position_name+"_side_panel_and_bar_of_splitted")[dimension_name]((100-percentage) + "%");
+               self.set_percentage(percentage);
             }
          };
       };  
@@ -95,6 +95,8 @@ define(['jquery', 'layout/panel', 'jqueryui'], function ($, P, _) {
                '</div>' +
             '</div>');
          this._$container.find('.horizontal_bar_splitting').draggable(options_for_draggable_bar('horizontal'));
+         this._position_name = 'top';
+         this._dimension_name = 'height';
       }
       else {
          this._$container = $(
@@ -106,6 +108,8 @@ define(['jquery', 'layout/panel', 'jqueryui'], function ($, P, _) {
                '</div>' +
             '</div>');
          this._$container.find('.vertical_bar_splitting').draggable(options_for_draggable_bar('vertical'));
+         this._position_name = 'left';
+         this._dimension_name = 'width';
       }
 
       this._children = {};
@@ -115,6 +119,17 @@ define(['jquery', 'layout/panel', 'jqueryui'], function ($, P, _) {
 
 
    Splitted.prototype.__proto__ = Parent.prototype;
+
+   Splitted.prototype.set_percentage = function (percentage) {
+      var opposite_position_name = {
+            left: 'right',
+            top : 'bottom',
+         }[this._position_name]
+      this._$container.children("."+this._position_name+"_panel_of_splitted")[this._dimension_name](percentage + "%");
+      this._$container.children("."+opposite_position_name+"_side_panel_and_bar_of_splitted")[this._dimension_name]((100-percentage) + "%");
+
+      this.render();
+   }
 
    Splitted.prototype._get_class_for_child = function (position) {
       return '.'+position+'_panel_of_splitted';
