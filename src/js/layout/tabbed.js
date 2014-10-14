@@ -15,7 +15,7 @@ define(['jquery', 'layout/panel', 'jqueryui'], function ($, P, _) {
       this._$headers = $('<ul class="panel_tabbed"></ul>');
       this._tabs = [];
 
-      this._$container.data("panel", this); //XXX
+      this._$container.data("panel", this); //XXX - used in the drag & drop functionality
 
       this._$container.append(this._$headers);
       this._active_on_next_refresh = null;
