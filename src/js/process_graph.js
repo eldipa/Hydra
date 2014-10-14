@@ -116,9 +116,9 @@ define(['d3'], function (d3) {
 
          // remove old processes
          var to_remove = [];
-         this.graph.nodes().forEach(function (n) {
-            if(n.p && pids.indexOf(n.p.pid) < 0) {
-               to_remove.push(n.i);
+         this.graph.nodes().forEach(function (gp, i) {
+            if(gp && pids.indexOf(gp.pid) < 0) {
+               to_remove.push(i);
             }
          }, this);
 
@@ -131,10 +131,7 @@ define(['d3'], function (d3) {
          
          // update processes
          processes.forEach(function (p) {
-            this.graph.nodes().every(function (n) {
-               var gp = n.p;
-               var i = n.i;
-
+            this.graph.nodes().every(function (gp, i) {
                if (gp.pid === p.pid) {
                   for (attr in p) {
                      this.graph.nodes()[i][attr] = p[attr];
@@ -163,13 +160,11 @@ define(['d3'], function (d3) {
          
          // remove old links
          var to_remove = [];
-         this.graph.links().forEach(function(link) {
-            var l = link.l;
-            var i = link.i;
+         this.graph.links().forEach(function(link, i) {
             var found = false;
 
             relations.every(function (rel) {
-               if(l.source.pid === processes[rel[o]].pid && l.target.pid === processes[rel[1]].pid) {
+               if(link.source.pid === processes[rel[0]].pid && link.target.pid === processes[rel[1]].pid) {
                   found = true;
                   return false;
                }
@@ -195,8 +190,8 @@ define(['d3'], function (d3) {
          var to_add = [];
          relations.forEach(function (rel) {
             var found = false;
-            this.graph.links().every(function (l) {
-               if (l.source.pid === processes[rel[0]].pid && l.target.pid === processes[rel[1]].pid) {
+            this.graph.links().every(function (link) {
+               if (link.source.pid === processes[rel[0]].pid && link.target.pid === processes[rel[1]].pid) {
                   found = true;
                   return false;
                }
@@ -207,13 +202,13 @@ define(['d3'], function (d3) {
                var source = null;
                var target = null;
 
-               this.graph.nodes().every(function (p) {
-                  if(p){
-                     if(p.pid === processes[rel[0]].pid) {
-                        source = p;
+               this.graph.nodes().every(function (gp) {
+                  if(gp){
+                     if(gp.pid === processes[rel[0]].pid) {
+                        source = gp;
                      }
-                     else if(p.pid === processes[rel[1]].pid) {
-                        target = p;
+                     else if(gp.pid === processes[rel[1]].pid) {
+                        target = gp;
                      }
                      
                      if(source !== null && target !== null) {
@@ -230,8 +225,8 @@ define(['d3'], function (d3) {
          if (to_add.length) {
             graph_modified = true;
          }
-         to_add.forEach(function (l) {
-            this.graph.links().push(l);
+         to_add.forEach(function (link) {
+            this.graph.links().push(link);
          }, this);
 
          return graph_modified;
