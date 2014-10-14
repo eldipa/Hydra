@@ -1,4 +1,4 @@
-define(['jquery', 'layout', 'widgets/switch_theme'], function ($, layout, switch_theme_widget) {
+define(['jquery', 'layout', 'widgets/switch_theme', 'code_view', 'process_graph'], function ($, layout, switch_theme_widget, code_view, pgraph) {
    function init() {
       $('body').find('div').remove();
 
@@ -709,10 +709,86 @@ define(['jquery', 'layout', 'widgets/switch_theme'], function ($, layout, switch
       /* --------- XXX Expected Result: 
        *
        *          | L,[F]    
-       *    M,[H] |-------
+       *    M,[T] |-------
        *          | [],B
        *
        * ------------- */
+      var cv = new code_view.CodeView();
+      
+      var cv_panel = new Panel("Code View");
+      cv_panel._$container = cv.view_dom;
+
+      cv_panel.render = function () {
+         if (this._$out_of_dom) {
+            this._$out_of_dom.appendTo(this.box);
+            this._$out_of_dom = null;
+         }
+
+         cv.viewer.resize();
+      };
+
+      cv_panel.unlink = function () {
+         if (!this._$out_of_dom) {
+            this._$out_of_dom = this._$container.detach();
+         }
+      }
+
+      var root = tabs.parent().parent().parent();
+      cv_panel.swap(foo_msg);
+      //cv.load_file('/home/martin/Codigo/ConcuDebug/src/cppTestCode/testVariables.cpp');
+      cv.load_file('/home/martin/Codigo/ConcuDebug/src/cppTestCode/simplified_unix_tools/echo.c');
+
+      cv_panel.parent().parent().parent().set_percentage(50);
+
+      tabs3.swap(hello_msg);
+      
+      var pg  = new pgraph.ProcessGraph();
+      var pg_data = { processes: [
+            {
+               pid: 1, 
+               name: 'A',
+               status: 'running'
+            },
+            {
+               pid: 2, 
+               name: 'B',
+               status: 'running'
+            },
+            {
+               pid: 3, 
+               name: 'C',
+               status: 'running'
+            }
+            ],
+
+            relations: [
+            [0, 1],
+            [0, 2]
+               ]};
+
+      var pg_panel = new Panel("Process Graph");
+      pg_panel._$container = pg._$container;
+
+      pg_panel.render = function () {
+         if (this._$out_of_dom) {
+            this._$out_of_dom.appendTo(this.box);
+            this._$out_of_dom = null;
+            pg.enabled = true;
+
+            pg.update(pg_data.processes, pg_data.relations);
+         }
+      };
+
+      pg_panel.unlink = function () {
+         if (!this._$out_of_dom) {
+            this._$out_of_dom = this._$container.detach();
+            pg.enabled = false;
+         }
+      }
+      
+      more_bye_msg.swap(pg_panel);
+      root.render();
+
       return;
    }
 
