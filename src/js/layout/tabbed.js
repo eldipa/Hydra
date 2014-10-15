@@ -74,7 +74,7 @@ define(['jquery', 'layout/panel', 'jqueryui'], function ($, P, _) {
             $headers.scrollTop(0); //fix a bug
          },
          receive: function (ev, ui) {
-            //This will be called only if one tab is dragged form one Tabbed
+            //This will be called only if one tab is dragged from one Tabbed
             //and dropped to other Tabbed.
 
 
@@ -86,7 +86,7 @@ define(['jquery', 'layout/panel', 'jqueryui'], function ($, P, _) {
             //we need to rollback that movement.
             ui.item.appendTo(ui.sender);
 
-            //lookup for the Tabbed sender (the old owener of the tab)
+            //lookup for the Tabbed sender (the old owner of the tab)
             var sender_tabbed = ui.sender.parent().data('panel');
 
             //get the panel to be moved
