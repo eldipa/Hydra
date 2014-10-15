@@ -6,11 +6,10 @@ define(['jquery', 'layout/panel', 'jqueryui'], function ($, P, _) {
     * A Tabbed panel is a compound of 0, 1, 2 or more panels. Only one of them
     * is shown at the same time, organizing them into tabs. */
    var Tabbed = function () {
-      this._parent = NullParent;
-
       var id = ("" + Math.random()).slice(2);
 
-      this._name = id;
+      this.super(id);
+
       this._$container = $('<div id="'+id+'" style="height: 100%;"></div>');
       this._$headers = $('<ul class="panel_tabbed"></ul>');
       this._tabs = [];

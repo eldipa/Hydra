@@ -1,7 +1,6 @@
 define(['ace', 'jquery', 'layout'], function (ace, $, layout) {
    function CodeView() {
-      this._parent = layout.NullParent;
-      this._name = "Code View";
+      this.super("Code View");
 
       this._$container = $('<div style="width: 100%; height: 100%; min-width: 100px; min-height: 100px"></div>');
       this.create_ace_viewer();

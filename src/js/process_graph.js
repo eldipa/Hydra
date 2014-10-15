@@ -1,8 +1,7 @@
 define(['d3', 'layout'], function (d3, layout) {
    var ProcessGraph = function () {
       function ProcessGraph(width, height) {
-         this._parent = layout.NullParent;
-         this._name = "Process Graph";
+         this.super("Process Graph");
 
          this.width = (typeof width === 'undefined') ? 600 : width;
          this.height = (typeof height === 'undefined') ? 400 : height;

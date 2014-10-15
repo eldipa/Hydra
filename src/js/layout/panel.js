@@ -112,6 +112,10 @@ define([], function () {
     * If you do so, you need to implement some methods.
     * */
    var Panel = function (name) {
+      this.super(name);
+   };
+
+   Panel.prototype.super = function (name) {
       this._parent = NullParent;
       this._name = name || "panel";
    };

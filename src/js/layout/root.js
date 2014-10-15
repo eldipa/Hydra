@@ -9,12 +9,9 @@ define(['jquery', 'layout/panel', 'jqueryui'], function ($, P, _) {
     *
     * You can have multiple Root attached.*/
    var Root = function (dom_parent_element) {
-      this._parent = NullParent;
+      this.super(("" + Math.random()).slice(2));
 
       this._$anchor_element = $(dom_parent_element);
-
-      this._name = ("" + Math.random()).slice(2);
-      
       this._child = null;
    };
 

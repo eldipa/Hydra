@@ -9,7 +9,7 @@ define(['jquery', 'layout/panel', 'jqueryui'], function ($, P, _) {
     * The bar can be moved, resizing the width or height of both panels.
     * */
    var Splitted = function (splitted_direction) {
-      this._parent = NullParent;
+      this.super(("" + Math.random()).slice(2));
 
       if(splitted_direction !== 'vertically' && splitted_direction !== 'horizontally') {
          throw new Error("Precondition: The split direction must be 'vertically' or 'horizontally', the direction '"+splitted_direction+"' was used.");
@@ -17,7 +17,6 @@ define(['jquery', 'layout/panel', 'jqueryui'], function ($, P, _) {
 
       this._splitted_direction = splitted_direction;
 
-      this._name = ("" + Math.random()).slice(2);
       var self = this;
 
       var update_bar_and_split_for = function (position_name, dimension_name) {
