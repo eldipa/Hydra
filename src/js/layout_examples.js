@@ -724,7 +724,6 @@ define(['jquery', 'layout', 'widgets/switch_theme', 'code_view', 'process_graph'
 
       tabs3.swap(hello_msg);
       
-      var pg  = new pgraph.ProcessGraph();
       var pg_data = { processes: [
             {
                pid: 1, 
@@ -748,25 +747,8 @@ define(['jquery', 'layout', 'widgets/switch_theme', 'code_view', 'process_graph'
             [0, 2]
                ]};
 
-      var pg_panel = new Panel("Process Graph");
-      pg_panel._$container = pg._$container;
-
-      pg_panel.render = function () {
-         if (this._$out_of_dom) {
-            this._$out_of_dom.appendTo(this.box);
-            this._$out_of_dom = null;
-            pg.enabled = true;
-
-            pg.update(pg_data.processes, pg_data.relations);
-         }
-      };
-
-      pg_panel.unlink = function () {
-         if (!this._$out_of_dom) {
-            this._$out_of_dom = this._$container.detach();
-            pg.enabled = false;
-         }
-      }
+      var pg_panel  = new pgraph.ProcessGraph();
+      pg_panel.update(pg_data.processes, pg_data.relations);
       
       more_bye_msg.swap(pg_panel);
       root.render();

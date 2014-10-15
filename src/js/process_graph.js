@@ -1,6 +1,9 @@
-define(['d3'], function (d3) {
+define(['d3', 'layout'], function (d3, layout) {
    var ProcessGraph = function () {
       function ProcessGraph(width, height) {
+         this._parent = layout.NullParent;
+         this._name = "Process Graph";
+
          this.width = (typeof width === 'undefined') ? 600 : width;
          this.height = (typeof height === 'undefined') ? 400 : height;
 
@@ -26,10 +29,16 @@ define(['d3'], function (d3) {
             "waiting":'#00f'
          };
 
+         this._data = {processes: [], relations: []};
+
          this._$container = $('<div style="width: 100%; height: 100%; min-width: '+this.width+'px; min-height: '+this.height+'px"></div>');
          this._create_graph(this._$container);
          this.enabled = false; 
+
+         this._$out_of_dom = this._$container;
       }
+
+      ProcessGraph.prototype.__proto__ = layout.Panel.prototype;
 
       ProcessGraph.prototype._create_graph = function (container_to_attach) {
          this.svg = d3.select($(container_to_attach).get()[0]).append("svg")
@@ -233,11 +242,31 @@ define(['d3'], function (d3) {
       };
 
       ProcessGraph.prototype.update = function (processes, relations) {
+         this._data = {processes: processes, relations: relations};
+         
          if (this.enabled) {
             var changed_graph_or_link_count = this.update_graph_data(processes, relations);
             this.update_graph_view(changed_graph_or_link_count);
          }
       };
+      
+      /* Render */
+      ProcessGraph.prototype.render = function () {
+         if (this._$out_of_dom) {
+            this._$out_of_dom.appendTo(this.box);
+            this._$out_of_dom = null;
+            this.enabled = true;
+
+            this.update(this._data.processes, this._data.relations);
+         }
+      };
+
+      ProcessGraph.prototype.unlink = function () {
+         if (!this._$out_of_dom) {
+            this._$out_of_dom = this._$container.detach();
+            this.enabled = false;
+         }
+      }
 
       return ProcessGraph;
    }();
