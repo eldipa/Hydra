@@ -1,6 +1,18 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
+    <script>
+      var splash_window = require('nw.gui').Window.open("splash.html", {
+            frame: false,
+            toolbar: false,
+            show: true,
+            width: 260,
+            height: 233,
+            position: "center",
+            resizable: false,
+            "always-on-top": true
+         });
+    </script>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">

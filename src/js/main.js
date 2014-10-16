@@ -28,6 +28,15 @@ requirejs.config({
 
 });
 
+var __modules_loaded_count = 0;
+requirejs.onResourceLoad = function(context, map, depArray) {
+   __modules_loaded_count += 1;
+   try {
+      window.splash_window.window.document.getElementById("status").innerHTML = "["+__modules_loaded_count+"] " + map.id + "";
+   } catch (e) {
+   }
+};
+
 requirejs(['w2ui', 'code_view', 'jquery', 'export_console', 'layout', 'layout_examples', 'jqueryui', 'ctxmenu'], function (w2ui, code_view, $, export_console, layout, layout_examples, _, ctxmenu) {
    var js_console_server = export_console.init();
    var fs = require('fs');
@@ -179,7 +188,10 @@ requirejs(['w2ui', 'code_view', 'jquery', 'export_console', 'layout', 'layout_ex
          [0, 1],
          [0, 2]
             ]);*/
-
+   // Hide and close the splash window and show this one
+   window.splash_window.hide();
+   require('nw.gui').Window.get().show();
+   window.splash_window.close();
 },
 function (err) {
    alert("Error during the import (" + err.requireType + ").\nFailed modules: " + err.requireModules + "\n");
