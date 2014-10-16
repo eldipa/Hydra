@@ -275,6 +275,7 @@ define([], function () {
       as_tree: as_tree,
       Panel: Panel,
       new_tmp_panel: new_tmp_panel,
+      new_empty_panel: new_tmp_panel, //alias
       Parent: Parent
    };
 });

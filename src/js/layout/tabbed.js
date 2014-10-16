@@ -7,11 +7,20 @@ define(['jquery', 'layout/panel', 'jqueryui'], function ($, P, _) {
     * is shown at the same time, organizing them into tabs. */
    var Tabbed = function () {
       var id = ("" + Math.random()).slice(2);
+      var self = this;
 
       this.super(id);
 
       this._$container = $('<div id="'+id+'" style="height: 100%;"></div>');
       this._$headers = $('<ul class="panel_tabbed"></ul>');
+
+      var add_new_tab_button = $('<span style="float: right;">+</span>');
+      add_new_tab_button.click(function () {
+         self.add_child(P.new_empty_panel(), "intab");
+         self.render();
+      });
+
+      this._$headers.append(add_new_tab_button);
       this._tabs = [];
 
       this._$container.data("panel", this); //XXX - used in the drag & drop functionality
@@ -24,8 +33,8 @@ define(['jquery', 'layout/panel', 'jqueryui'], function ($, P, _) {
       });
 
       var $headers = this._$headers;
-      var self = this;
       tabs.find( ".ui-tabs-nav" ).sortable({
+         items: "li",
          scroll: true,
          revert: 180,   // add an animation to move the dragged tab to its final position
          tolerance: "pointer",
