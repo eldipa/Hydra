@@ -56,6 +56,8 @@
    float: left;
    background-color: #000000;
    overflow: hidden;
+   cursor: ew-resize;
+   z-index: 999;
 }
 
 /*
@@ -108,6 +110,8 @@
    float: left;
    background-color: #000000;
    overflow: hidden;
+   cursor: ns-resize;
+   z-index: 999;
 }
 
 /*

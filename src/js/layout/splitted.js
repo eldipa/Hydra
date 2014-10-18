@@ -18,8 +18,9 @@ define(['jquery', 'layout/panel', 'jqueryui'], function ($, P, _) {
       this._splitted_direction = splitted_direction;
 
       var self = this;
+      this.__original_cursor_style = null; // used to try to force a consistent look and feel of the mouse when it is dragging the bar of the splitted.
 
-      var update_bar_and_split_for = function (position_name, dimension_name) {
+      var restore_cursor_style_and_update_bar_and_split_for = function (position_name, dimension_name) {
          if (! ((position_name === 'left' && dimension_name === 'width') ||
                 (position_name === 'top'  && dimension_name === 'height')) ) {
                    throw new Error("The position/dimension names are invalid. Accepted 'left-width' and 'top-height' but received '"+position_name+"-"+dimension_name+"'.");
@@ -31,6 +32,8 @@ define(['jquery', 'layout/panel', 'jqueryui'], function ($, P, _) {
          }[position_name]
 
          return function (event, ui) {
+            $('body').css({'cursor': self.__original_cursor_style});
+
             var $container = $(this).parent().parent();
             var new_bar_position = $(ui.helper).position();
 
@@ -48,12 +51,16 @@ define(['jquery', 'layout/panel', 'jqueryui'], function ($, P, _) {
          };
       };  
 
-      var fix_for_dimension_at_start_bug_for = function (dimension_name) {
+      var set_cursor_style_and_fix_for_dimension_at_start_bug_for = function (dimension_name, cursor_style) {
          if (! (dimension_name === 'width' || dimension_name === 'height') ) {
             throw new Error("Incorrect dimension name. Accepted width or height but received '"+dimension_name+"'.");
          }
 
          return function (event, ui) {
+            var body = $('body');
+            self.__original_cursor_style = body.css('cursor');
+            body.css({'cursor': cursor_style});
+
             var correct_value_at_start = $(this)[dimension_name]();
             $(ui.helper)[dimension_name](correct_value_at_start);
          };
@@ -69,8 +76,8 @@ define(['jquery', 'layout/panel', 'jqueryui'], function ($, P, _) {
                axis: "x", 
                opacity: 0.7, 
                helper: "clone",
-               stop: update_bar_and_split_for('left', 'width'),
-               start: fix_for_dimension_at_start_bug_for('height')
+               stop: restore_cursor_style_and_update_bar_and_split_for('left', 'width'),
+               start: set_cursor_style_and_fix_for_dimension_at_start_bug_for('height', 'ew-resize')
             };
          }
          else {
@@ -78,8 +85,8 @@ define(['jquery', 'layout/panel', 'jqueryui'], function ($, P, _) {
                axis: "y", 
                opacity: 0.7, 
                helper: "clone",
-               stop: update_bar_and_split_for('top', 'height'),
-               start: fix_for_dimension_at_start_bug_for('width')
+               stop: restore_cursor_style_and_update_bar_and_split_for('top', 'height'),
+               start: set_cursor_style_and_fix_for_dimension_at_start_bug_for('width', 'ns-resize')
             };
          }
       };
