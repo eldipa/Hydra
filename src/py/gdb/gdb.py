@@ -25,7 +25,11 @@ class Gdb:
         self.reader.start()
         self.eventHandler = publish_subscribe.eventHandler.EventHandler()
         if (comandos):
-            self.gdbInput.write('python execfile("./py/gdb/Commands/pointerPrinter.py")' + '\n')
+            files = []
+            for (dirpath, dirnames, filenames) in os.walk("./py/gdb/Plugins"):
+                files = files + filenames
+            for plugin in files:
+                self.gdbInput.write('python execfile("./py/gdb/Plugins/' + plugin + '")' + '\n')
         if(log):
             self.fifoPath = tempfile.mktemp()
             os.mkfifo(self.fifoPath)
