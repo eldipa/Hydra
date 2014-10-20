@@ -65,6 +65,7 @@ class Gdb:
         self.gdbInput.write("-gdb-set " + "exec-wrapper env LD_PRELOAD=" + HACK_PATH + '\n')
 #         self.setBreakPoint("main")
 #         self.run()
+        self.gdbInput.write('\n')
         self.subscribe()
 
     
@@ -72,7 +73,8 @@ class Gdb:
     def run(self, data=""):
         if(self.log):
             self.eventHandler.publish("debugger.new-output", [self.gdb.pid, self.fifoPath])
-            self.gdbInput.write("run > " + self.fifoPath + '\n')
+            self.gdbInput.write("output-redirect " + self.fifoPath + '\n')
+            self.gdbInput.write("run" + '\n')
         else:
             self.gdbInput.write("run > " + "/tmp/SalidaAux.txt" + '\n')
     
