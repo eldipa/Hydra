@@ -1,10 +1,11 @@
-define([ 'event_handler' ], function(event_handler) {
+define([ 'event_handler', 'layout' ], function(event_handler, layout) {
 
 	function VarViewer() {
-		this.ui = null;
+		this.super("Var View");
 
 		this.variables = {};
 		this.session_id = null;
+		this.log = "";
 
 		this.eventHandler = new event_handler.EventHandler();
 		this.eventHandler.init();
@@ -32,20 +33,28 @@ define([ 'event_handler' ], function(event_handler) {
 					my_self.variables = data.results.variables;
 					var mostrar = JSON.stringify(my_self.variables);
 					mostrar = mostrar.replace(/},/g, "} <br/>");
-					my_self.ui.content("right", mostrar);
+					my_self.log = mostrar;
+                                        my_self.render();
 				}
 
 			});
 
 		});
 	}
+	VarViewer.prototype.render = function () {
+		this._$rendered_in = $(this.box);
+		this._$rendered_in.html(this.log);
+	};
 
-	VarViewer.prototype = {
-		setUI : function(ui) {
-			this.ui = ui;
+	VarViewer.prototype.unlink = function () {
+		if (this._$rendered_in) {
+			this._$rendered_in.empty();
+			this._$rendered_in = null;
 		}
 	};
 
+	VarViewer.prototype.__proto__ = layout.Panel.prototype;
+	
 	return {
 		VarViewer : VarViewer
 	};
