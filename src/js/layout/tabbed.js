@@ -14,7 +14,7 @@ define(['jquery', 'layout/panel', 'jqueryui'], function ($, P, _) {
       this._$container = $('<div id="'+id+'" style="height: 100%;"></div>');
       this._$headers = $('<ul class="panel_tabbed"></ul>');
 
-      var add_new_tab_button = $('<span style="float: right;">+</span>');
+      var add_new_tab_button = $('<span style="float: right; cursor: pointer">+</span>');
       add_new_tab_button.click(function () {
          self.add_child(P.new_empty_panel(), "intab");
          self.render();
