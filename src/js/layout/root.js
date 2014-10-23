@@ -90,6 +90,8 @@ define(['jquery', 'layout/panel', 'jqueryui'], function ($, P, _) {
 
       var root = new Root(dom_parent_element);
       root.add_child(this, 'main');
+
+      return root;
    };
 
 
