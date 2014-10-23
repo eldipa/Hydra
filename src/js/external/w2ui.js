@@ -1,5 +1,6 @@
 define(["w2ui_internals", "jquery"], function (_, $) {
    w2obj.layout.prototype.old_content_function = w2obj.layout.prototype.content;
+   console.log("WARNING-DEPRECATED: the dependency 'w2ui' is deprecated.");
 
    function content(panel, data, transition) {
       var self = this;
