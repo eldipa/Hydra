@@ -7,11 +7,15 @@ define(['ace', 'jquery', 'layout'], function (ace, $, layout) {
       this.saved_session_by_filename = {};
       this.filename = null;
 
-      this._$container.data('ctxmenu_controller', this._context_menu_items_for_panel_actions());
       this._$out_of_dom = this._$container;
    }
 
    CodeView.prototype.__proto__ = layout.Panel.prototype;
+
+   CodeView.prototype.attach_menu = function (menu) {
+      this._$container.data('ctxmenu_controller', menu);
+   };
+
 
    /* 
     * Load a file only if the file wasn't loaded already.
