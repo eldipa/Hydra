@@ -1,4 +1,4 @@
-define(['jquery', 'layout', 'code_view', 'event_handler', 'varViewer'], function ($, layout, code_view, EH, varViewer) {
+define(['jquery', 'layout', 'code_view', 'event_handler', 'varViewer', 'widgets/buttons'], function ($, layout, code_view, EH, varViewer, buttons) {
    var Panel = layout.Panel;
    var Tabbed = layout.Tabbed;
 
@@ -32,7 +32,6 @@ define(['jquery', 'layout', 'code_view', 'event_handler', 'varViewer'], function
       };
 
       log.feed = function (line) {
-         console.log(line);
          this.log = this.log + "<br />" + line;
       };
 
@@ -70,6 +69,7 @@ define(['jquery', 'layout', 'code_view', 'event_handler', 'varViewer'], function
          event_handler.subscribe('debugger.new-target', function (data) {
             var received_session = data.gdbPid - 0;
             if (received_session !== session_id) {
+               //TODO hacer un sistema de loggeo por UI y no por consola (tooltips o algo asi)
                console.log("ERROR: actual session '"+session_id+"' != the received session '"+received_session+"' in the new-target event!");
             }
 
@@ -85,6 +85,7 @@ define(['jquery', 'layout', 'code_view', 'event_handler', 'varViewer'], function
 
                   // and line
                   var line = data.results.frame.line - 0;
+                  //TODO hacer que la linea actual sea mas llamativa
                   view.setCurrentLine(line);
                   view.gotoLine(line);
                }
@@ -106,6 +107,7 @@ define(['jquery', 'layout', 'code_view', 'event_handler', 'varViewer'], function
          // por linea. De igual manera hay que mantener un registro.
          event_handler.subscribe("gdb."+session_id+".type.Notify.klass.breakpoint-created", function (data) {
                //TODO ver los breakpoints de "ace"
+               //TODO hacer que las lineas de breakpoint sean mas llamativas
                var bkpt = data.results.bkpt;
                view.setBreakpoint(bkpt.line-0);
          });
@@ -153,58 +155,77 @@ define(['jquery', 'layout', 'code_view', 'event_handler', 'varViewer'], function
                         event_handler.publish(session_id + ".direct-command", "b " + line);
                      }
                   },
-                  {
-                     header: 'On this session'
-                  },
-                  {
-                     text: "run",
-                     action: function (ev) {
-                        ev.preventDefault();
-                        event_handler.publish(session_id + ".run", "");
-                     }
-                  },
-                  {
-                     text: "continue",
-                     action: function (ev) {
-                        ev.preventDefault();
-                        //TODO importante, "-exec-continue" NO es equivalente a "c" (continue)
-                        //esto quiere decir que no existe una equivalencia 1 a 1.
-                        //Por ejemplo, "c" hara que ciertos logs (Console) se emitan pero
-                        //el evento de stopped tenga un "reason" vacio.
-                        //En cambio, "-exec-continue" hara que no haya logs
-                        //y que el stopped tenga un reason parecido a uno de los logs.
-                        event_handler.publish(session_id + ".direct-command", "-exec-continue");
-                     }
-                  },
-                  {
-                     text: "next",
-                     action: function (ev) {
-                        ev.preventDefault();
-                        event_handler.publish(session_id + ".direct-command", "n");
-                     }
-                  },
-                  {
-                     text: "step",
-                     action: function (ev) {
-                        ev.preventDefault();
-                        event_handler.publish(session_id + ".direct-command", "s");
-                     }
-                  },
-                  {
-                     text: "quit",
-                     action: function (ev) {
-                        ev.preventDefault();
-                        event_handler.publish("debugger.exit", session_id);
-                     }
-                  },
-                  {
-                     text: "quit-all",
-                     action: function (ev) {
-                        ev.preventDefault();
-                        event_handler.publish("debugger.exit", "all");
-                     }
-                  },
       ]);
+
+      // TODO cuando se hace un click en un boton, este queda seleccionado
+      // y no es desmarcado hasta que se hace click en otro lado!
+      var main_button_bar = new buttons.Buttons([
+            {
+               label: "Run",
+               text: false,
+               icons: {primary: 'ui-icon-power'},
+               action: function (ev) {
+                  ev.preventDefault();
+                  event_handler.publish(session_id + ".run", "");
+               },
+            },
+            {
+               label: "Continue",
+               text: false,
+               icons: {primary: 'ui-icon-play'},
+               action: function (ev) {
+                  ev.preventDefault();
+                  //TODO importante, "-exec-continue" NO es equivalente a "c" (continue)
+                  //esto quiere decir que no existe una equivalencia 1 a 1.
+                  //Por ejemplo, "c" hara que ciertos logs (Console) se emitan pero
+                  //el evento de stopped tenga un "reason" vacio.
+                  //En cambio, "-exec-continue" hara que no haya logs
+                  //y que el stopped tenga un reason parecido a uno de los logs.
+                  event_handler.publish(session_id + ".direct-command", "-exec-continue");
+               },
+            }, 
+            {
+               label: "Next",
+               text: false,
+               icons: {primary: 'ui-icon-arrowthick-1-e'},
+               action: function (ev) {
+                  ev.preventDefault();
+                  event_handler.publish(session_id + ".direct-command", "n");
+               },
+            }, 
+            {
+               label: "Step",
+               text: false,
+               icons: {primary: 'ui-icon-arrowreturnthick-1-s'},
+               action: function (ev) {
+                  ev.preventDefault();
+                  event_handler.publish(session_id + ".direct-command", "s");
+               },
+            }, 
+            {
+               label: "Quit",
+               text: false,
+               icons: {primary: 'ui-icon-circle-minus'},
+               action: function (ev) {
+                  ev.preventDefault();
+                  event_handler.publish("debugger.exit", session_id);
+               },
+            }, 
+            {
+               label: "Quit-All",
+               text: false,
+               icons: {primary: 'ui-icon-circle-close'},
+               action: function (ev) {
+                  ev.preventDefault();
+                  event_handler.publish("debugger.exit", "all");
+               },
+            }], true);
+
+      // TODO hacer un "Splitted" con size fijo: la barra de botonoes no deberia ser resizable
+      // TODO hacer que las lineas de separacion del split sean mas finas y que se engrosen
+      // mientras este el mouse encima de ellas.
+      view.split(main_button_bar, "top");
+      root.render();
 
       event_handler.publish("debugger.load", "cppTestCode/testVariables");
 
