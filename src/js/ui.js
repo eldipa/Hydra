@@ -17,10 +17,10 @@ define(['jquery', 'layout', 'code_view', 'event_handler', 'varViewer', 'widgets/
 
       
       // Panel to render the log
-      var log = new Panel("Log");   //TODO se necesita una vista menos cabeza que esta. un LogViewer mas formal:
+      var log = new Panel("Log");   //TODO (issue #32) se necesita una vista menos cabeza que esta. un LogViewer mas formal:
       log.log = "";                 //como hacer que siempre se muestre lo ultimo? esto es un tema
       log.render = function () {    //del scroll. (idealmente deberia ser como el scroll del wireshark.
-         this._$rendered_in = $(this.box); //TODO creo que layout.Panel deberia tener un flag de si esta o no en el DOM para decidir si se debe o no ejecutar esto.
+         this._$rendered_in = $(this.box); //TODO (issue #60) creo que layout.Panel deberia tener un flag de si esta o no en el DOM para decidir si se debe o no ejecutar esto.
          this._$rendered_in.html(this.log);
       };
 
@@ -42,10 +42,10 @@ define(['jquery', 'layout', 'code_view', 'event_handler', 'varViewer', 'widgets/
 
       // Now we attach and build the final layout
       var root = view.attach($('body'));
-      view.split(log, "bottom");    // TODO poner esto en tabs y ademas hacer un metodo en layout.Panel que sea on_own_tab() para tomar un panel y reemplarlo por un Tabbed con un unico tab (el).
+      view.split(log, "bottom");    // TODO (issue #61) poner esto en tabs y ademas hacer un metodo en layout.Panel que sea on_own_tab() para tomar un panel y reemplarlo por un Tabbed con un unico tab (el).
 
       root.render();
-      view.parent().set_percentage(80); //TODO por que hay que hacer un render() antes de un set_percentage()?
+      view.parent().set_percentage(80); //TODO (issue #62) por que hay que hacer un render() antes de un set_percentage()?
 
       view.parent().split(visor, "right");
       root.render();
@@ -60,21 +60,20 @@ define(['jquery', 'layout', 'code_view', 'event_handler', 'varViewer', 'widgets/
       var session_id = null;
       var target_id = null;
 
-      // TODO, ok, pero esto deberia ser wrappeado a un objeto mas coherente
+      // TODO (issue #70), ok, pero esto deberia ser wrappeado a un objeto mas coherente
       // Session tal vez? ... hay que meditarlo.
       event_handler.subscribe('debugger.new-session', function (data) {
          session_id = data - 0;
 
-         // TODO: pregunta: este evento no deberia ser algo como "pid.GDBID.new_target"?
          event_handler.subscribe('debugger.new-target', function (data) {
             var received_session = data.gdbPid - 0;
             if (received_session !== session_id) {
-               //TODO hacer un sistema de loggeo por UI y no por consola (tooltips o algo asi)
+               //TODO (issue #63) hacer un sistema de loggeo por UI y no por consola (tooltips o algo asi)
                console.log("ERROR: actual session '"+session_id+"' != the received session '"+received_session+"' in the new-target event!");
             }
 
             target_id = data.targetPid - 0;
-            //TODO mostrar el target id.
+            //TODO (issue #70) mostrar el target id.
          });
 
 
@@ -85,14 +84,14 @@ define(['jquery', 'layout', 'code_view', 'event_handler', 'varViewer', 'widgets/
 
                   // and line
                   var line = data.results.frame.line - 0;
-                  //TODO hacer que la linea actual sea mas llamativa
+                  //TODO (issue #64) hacer que la linea actual sea mas llamativa
                   view.setCurrentLine(line);
                   view.gotoLine(line);
                }
          });
 
          event_handler.subscribe("gdb."+session_id+".type.Notify.klass.thread-group-exited", function (data) {
-               // TODO end
+               // TODO (issue #70) end
                view.cleanCurrentLine();
          });
 
@@ -102,18 +101,19 @@ define(['jquery', 'layout', 'code_view', 'event_handler', 'varViewer', 'widgets/
                log.render();
          });
 
-         // TODO, poner un breakpoint es relativamente facil, pero eliminarlos no.
+         // TODO (issue #36), poner un breakpoint es relativamente facil, pero eliminarlos no.
          // ya que se hace a traves de un "breakpoint id" o bien, un "clear all breakpoints"
          // por linea. De igual manera hay que mantener un registro.
          event_handler.subscribe("gdb."+session_id+".type.Notify.klass.breakpoint-created", function (data) {
-               //TODO ver los breakpoints de "ace"
-               //TODO hacer que las lineas de breakpoint sean mas llamativas
+               //TODO (issue #65) ver los breakpoints de "ace"
+               //TODO (issue #64) hacer que las lineas de breakpoint sean mas llamativas
+               //TODO (issue #65) click derecho en el numero de linea (gluter) muestra el menu contextual pero NO cambia la linea actual (current), haciendo que el breakpoint se ponga en otro lado.
                var bkpt = data.results.bkpt;
                view.setBreakpoint(bkpt.line-0);
          });
 
 
-         // TODO esto viene de a "pares", una suscripcion que espera un evento sync con
+         // TODO (issue #66) esto viene de a "pares", una suscripcion que espera un evento sync con
          // un "TOKEN" especial. Cuando lo recibe, hace una accion y luego se desuscribe.
          // Inmediatamente despues de la suscripcion se envia el evento que triggeara
          // dicho evento y por ende dicha callback.
@@ -157,7 +157,7 @@ define(['jquery', 'layout', 'code_view', 'event_handler', 'varViewer', 'widgets/
                   },
       ]);
 
-      // TODO cuando se hace un click en un boton, este queda seleccionado
+      // TODO (issue #67) cuando se hace un click en un boton, este queda seleccionado
       // y no es desmarcado hasta que se hace click en otro lado!
       var main_button_bar = new buttons.Buttons([
             {
@@ -175,7 +175,7 @@ define(['jquery', 'layout', 'code_view', 'event_handler', 'varViewer', 'widgets/
                icons: {primary: 'ui-icon-play'},
                action: function (ev) {
                   ev.preventDefault();
-                  //TODO importante, "-exec-continue" NO es equivalente a "c" (continue)
+                  //TODO (issue #31) aimportante, "-exec-continue" NO es equivalente a "c" (continue)
                   //esto quiere decir que no existe una equivalencia 1 a 1.
                   //Por ejemplo, "c" hara que ciertos logs (Console) se emitan pero
                   //el evento de stopped tenga un "reason" vacio.
@@ -221,8 +221,8 @@ define(['jquery', 'layout', 'code_view', 'event_handler', 'varViewer', 'widgets/
                },
             }], true);
 
-      // TODO hacer un "Splitted" con size fijo: la barra de botonoes no deberia ser resizable
-      // TODO hacer que las lineas de separacion del split sean mas finas y que se engrosen
+      // TODO (issue #68) hacer un "Splitted" con size fijo: la barra de botones no deberia ser resizable
+      // TODO (issue #69) hacer que las lineas de separacion del split sean mas finas y que se engrosen
       // mientras este el mouse encima de ellas.
       view.split(main_button_bar, "top");
       root.render();
