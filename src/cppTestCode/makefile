@@ -1,6 +1,6 @@
-.PHONY: multiple_files
+.PHONY: multiple_files simplified_unix_tools
 
-all: Prueba testExe testVariables write_one_char_at_time multiplesPunteros multiple_files
+all: Prueba testExe testVariables write_one_char_at_time multiplesPunteros multiple_files simplified_unix_tools
 
 defines= -D espera
 
@@ -22,6 +22,10 @@ multiplesPunteros: multiplesPunteros.cpp
 multiple_files:
 	$(MAKE) --no-print-directory -C ./multiple_files
 
+simplified_unix_tools:
+	$(MAKE) --no-print-directory -C ./simplified_unix_tools
+
 clean:
 	rm Prueba testExe testVariables write_one_char_at_time multiplesPunteros
 	$(MAKE) --no-print-directory -C ./multiple_files clean
+	$(MAKE) --no-print-directory -C ./simplified_unix_tools clean
