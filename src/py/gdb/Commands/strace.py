@@ -22,7 +22,12 @@ import sys
 sys.path.append("/home/martin/Downloads/python-ptrace-0.8/")
 #--------
 
-import ptrace
+try:
+    import ptrace
+except ImportError as e:
+    raise ImportError("External lib 'ptrace' not found (formaly, python-ptrace, version 0.8 or higher)!: %s" % str(e))
+
+
 import ptrace.debugger
 import ptrace.syscall
 
@@ -30,8 +35,9 @@ from ptrace.syscall.ptrace_syscall import PtraceSyscall
 from ptrace.debugger.process import PtraceProcess
 from ptrace.six import b
 
-from ptrace.cpu_info import CPU_X86_64, CPU_POWERPC, CPU_I386, CPU_64BITS
+from ptrace.cpu_info import CPU_X86_64, CPU_POWERPC, CPU_I386, CPU_64BITS, CPU_WORD_SIZE
 from ptrace.os_tools import RUNNING_LINUX, RUNNING_BSD, RUNNING_OPENBSD
+from ptrace.syscall import SYSCALL_NAMES
 
 # from ptrace/binding/func.py   (python-ptrace)
 if RUNNING_OPENBSD:
@@ -42,10 +48,9 @@ elif RUNNING_BSD:
 
 elif RUNNING_LINUX:
     from ptrace.binding.linux_struct import user_regs_struct as ptrace_registers_t
-    IGNORE_REGS = set(['__cs', '__ds', '__es', '__fs', '__gs', '__ss', 'orig_eax'])
 
 else:
-    raise NotImplementedError("Unknown OS!")
+    raise NotImplementedError("Unknown OS!: Unsupported OS or supported but it wasn't detected correctly.")
 
 
 class ProcessUnderGDB(PtraceProcess):
@@ -68,7 +73,7 @@ class ProcessUnderGDB(PtraceProcess):
         return self._inferior.read_memory(address, size).tobytes() #TODO tobytes?
 
     def readWord(self, address):
-        return self.readBytes(address, 4) #TODO 4?
+        return self.readBytes(address, CPU_WORD_SIZE)
 
     #TODO
     # bug en readCString. El codigo original define como truncated
@@ -87,7 +92,7 @@ class ProcessUnderGDB(PtraceProcess):
             if pos != -1:
                 done = True
                 data = data[:pos]
-            if max_size <= size+len(data):      #TODO aca esta el fix!
+            if max_size <= size+len(data):      #XXX aca esta el fix!
                 data = data[:(max_size-size)]
                 string.append(data)
                 truncated = True
@@ -115,32 +120,32 @@ class ProcessUnderGDB(PtraceProcess):
             for n in field_names:
                 if n.startswith("__"): #__cs, __ds, __es, __fs, __gs, __ss
                     v = names_and_values[n[2:]] # TODO use the value of xx for __xx?
-                elif n == 'orig_eax': #TODO wow, no all the registers are shown in "info registers"
+                elif n == 'orig_eax': #beware! no all the registers are shown in "info registers"
                     v = hex(int(gdb.execute("print $orig_eax", False, True).split("=")[1]))
                 else:
                     v = names_and_values[n]
 
                 setattr(regs_struct, n, int(v, 16)) # gdb returns the values in hex
         else:
-            raise NotImplementedError("Not yet!")
+            raise NotImplementedError("Not implemented yet!: The get registers may be supported for other architectures in the future.")
 
         return regs_struct
 
-    def getreg(self, name):
-        regs = self.getregs()
-        return getattr(regs, name) #TODO handle sub registers (see ptrace/debugger/process.py line 420)
+    #def getreg(self, name):
+    #    regs = self.getregs()
+    #    return getattr(regs, name) #TODO handle sub registers (see ptrace/debugger/process.py line 420)
         
 
     # BSD
     def getStackPointer(self):
-        raise NotImplementedError("Not yet!")
+        raise NotImplementedError("Not implemented yet!: The get stack pointer may be implemented in the future.")
 
     def detach(self):
-        pass
+        pass # we didn't an attach with this lib, so we don't detach
 
     def _remove_implementation_of_methods(self):
         def not_implememented_error(*args, **kargs):
-            raise NotImplementedError("Not yet!")
+            raise NotImplementedError("Not implemented yet!: It was expected that this method wasn't called never.")
 
         for method in ('attach', 'ptraceEvent', 'setregs', 'singleStep', 'syscall',
                 'getsiginfo', 'writeBytes', 'writeWord', 'cont', 'setoptions',):
@@ -148,20 +153,25 @@ class ProcessUnderGDB(PtraceProcess):
 
 
 # TODO options?
+# see strace.py, method parseOptions, line 34
 class Opts:
     D = {
-            'string_max_length': 300,
-            'array_count': 20,
+            'string_max_length': 300,    # String max length
+            'array_count': 20,           # Maximum number of array items
             'ignore_regexp': None,
+            'write_types': False,          # Display arguments type and result type
+            'write_argname': False,        # Display argument name
+            'replace_socketcall': True,     # Raw socketcall form
+            'write_address': False,         # Display structure addressl
             }
 
     def __getattr__(self, name):
-        return Opts.D.get(name, False)
+        return Opts.D.get(name, False)  # other options, set them to False
 
 out = open("OUT", "w")
 
-def show_syscall(syscall_tracer):
-    global out
+def show_syscall(syscall_tracer, out):
+    ''' Write to the out object the syscall name, arguments and result. '''
 
     name = syscall_tracer.name
     text = syscall_tracer.format()
@@ -186,6 +196,8 @@ tracer_in_syscall_by_inferior = {}
 def syscall_trace():
     global tracer_in_syscall_by_inferior
     global process
+    global out
+
     tracer_in_syscall = tracer_in_syscall_by_inferior.get(gdb.selected_inferior(), None)
 
     leaving = tracer_in_syscall != None
@@ -201,7 +213,7 @@ def syscall_trace():
         syscall_tracer.enter(regs)
         tracer_in_syscall_by_inferior[gdb.selected_inferior()] = syscall_tracer
 
-    show_syscall(syscall_tracer)
+    show_syscall(syscall_tracer, out)
 
 
 catch_syscall_break_id = 1          #TODO esto es un parametro
