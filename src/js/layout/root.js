@@ -9,13 +9,23 @@ define(['jquery', 'layout/panel', 'jqueryui'], function ($, P, _) {
     *
     * You can have multiple Root attached.*/
    var Root = function (dom_parent_element) {
-      this._parent = NullParent;
+      this.super(("" + Math.random()).slice(2));
 
       this._$anchor_element = $(dom_parent_element);
-
-      this._name = ("" + Math.random()).slice(2);
-      
       this._child = null;
+
+      var self = this;
+      var last_resize_render = null;
+      $(window).resize(function () {
+         if (last_resize_render) {
+            clearTimeout(last_resize_render);
+         }
+
+         last_resize_render = setTimeout(function () {
+            self.render();
+            last_resize_render = null;
+         }, 100);
+      });
    };
 
    Root.prototype.__proto__ = Parent.prototype;
@@ -60,12 +70,16 @@ define(['jquery', 'layout/panel', 'jqueryui'], function ($, P, _) {
 
    Root.prototype.render = function () {
       //XXX ignore $box
-      this._child.box = this._$anchor_element;
-      this._child.render(this._$anchor_element);
+      if(this._child) {
+         this._child.box = this._$anchor_element;
+         this._child.render(this._$anchor_element);
+      }
    };
 
    Root.prototype.unlink = function () {
-      this._child.unlink();
+      if(this._child) {
+         this._child.unlink();
+      }
    };
 
    // Implement the method of Panel. See panel.js
@@ -76,6 +90,8 @@ define(['jquery', 'layout/panel', 'jqueryui'], function ($, P, _) {
 
       var root = new Root(dom_parent_element);
       root.add_child(this, 'main');
+
+      return root;
    };
 
 

@@ -8,15 +8,15 @@ requirejs.config({
       ko: 'external/knockout-3.0.0',
       ace_internals: 'external/ace/ace',
       ace: 'external/ace',
-      w2ui_internals: 'external/w2ui-1.3.2',
-      w2ui: 'external/w2ui',
+      w2ui_internals: 'external/w2ui-1.3.2', //TODO Deprecated
+      w2ui: 'external/w2ui',                 //TODO Deprecated
       ctxmenu: 'external/ctxmenu',
       varViewer: 'varViewer',
       jqueryui: 'external/jquery-ui-1.11.1'
    },
 
    shim: {
-      "w2ui_internals": {
+      "w2ui_internals": {     //TODO Deprecated 
          deps: ['jquery'],
          exports: "w2ui"
       },
@@ -28,7 +28,16 @@ requirejs.config({
 
 });
 
-requirejs(['w2ui', 'code_view', 'jquery', 'export_console', 'layout', 'layout_examples', 'jqueryui', 'ctxmenu'], function (w2ui, code_view, $, export_console, layout, layout_examples, _, ctxmenu) {
+var __modules_loaded_count = 0;
+requirejs.onResourceLoad = function(context, map, depArray) {
+   __modules_loaded_count += 1;
+   try {
+      window.splash_window.window.document.getElementById("status").innerHTML = "["+__modules_loaded_count+"] " + map.id + "";
+   } catch (e) {
+   }
+};
+
+requirejs(['ui', 'code_view', 'jquery', 'export_console', 'layout', 'layout_examples', 'jqueryui', 'ctxmenu'], function (ui, code_view, $, export_console, layout, layout_examples, _, ctxmenu) {
    var js_console_server = export_console.init();
    var fs = require('fs');
 
@@ -41,47 +50,9 @@ requirejs(['w2ui', 'code_view', 'jquery', 'export_console', 'layout', 'layout_ex
 
    ctxmenu.attachDynamic('body', undefined);
   
-   layout_examples.init();
+   //layout_examples.init();
+   ui.init();
 
-   /*var event_handler = new event_handler.EventHandler();
-   event_handler.init();
-   */
-
-   //var view = new code_view.CodeView();
-
-   /*
-   event_handler.subscribe('source', function (data) {
-      view.load_code_from_file(data.filename);
-      //view.highlightLine(data.line_num, 'info');
-      view.gotoLine(data.line_num);
-   });
-   */
-
-   /*
-   var socket = require('net').Socket();
-   socket.connect(5555, '');
-   socket.setEncoding('ascii');
-      
-   socket.write("new,/home/martin/a.out\n");
-   //socket.write("step-into,9061\n");
-   socket.on('data', function (chunk) {
-      var items = chunk.trim().split(',');
-      view.load_code_from_file("/home/martin/" + items[2]);
-      view.gotoLine(items[3] * 1);
-   });
-
-   var pstyle = 'border: 1px solid #dfdfdf; padding: 5px;';
-   $('#layout').w2layout({
-      name: 'layout',
-      panels: [
-         { type: 'main', style: pstyle, content: "main" },
-         { type: 'bottom', size: 50, resizable: true, style: pstyle, content: 'bottom' }
-      ]
-   });
-
-   w2ui.objects['layout'].content("main", view.view_dom);
-   */
-   
    //process_view.start();
    //require('nw.gui').Window.get().reload(3);
    /*
@@ -179,7 +150,10 @@ requirejs(['w2ui', 'code_view', 'jquery', 'export_console', 'layout', 'layout_ex
          [0, 1],
          [0, 2]
             ]);*/
-
+   // Hide and close the splash window and show this one
+   window.splash_window.hide();
+   require('nw.gui').Window.get().show();
+   window.splash_window.close();
 },
 function (err) {
    alert("Error during the import (" + err.requireType + ").\nFailed modules: " + err.requireModules + "\n");

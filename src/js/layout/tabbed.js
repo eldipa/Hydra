@@ -6,26 +6,35 @@ define(['jquery', 'layout/panel', 'jqueryui'], function ($, P, _) {
     * A Tabbed panel is a compound of 0, 1, 2 or more panels. Only one of them
     * is shown at the same time, organizing them into tabs. */
    var Tabbed = function () {
-      this._parent = NullParent;
-
       var id = ("" + Math.random()).slice(2);
+      var self = this;
 
-      this._name = id;
-      this._$container = $('<div id="'+id+'"></div>');
+      this.super(id);
+
+      this._$container = $('<div id="'+id+'" style="height: 100%;"></div>');
       this._$headers = $('<ul class="panel_tabbed"></ul>');
+
+      var add_new_tab_button = $('<span style="float: right; cursor: pointer">+</span>');
+      add_new_tab_button.click(function () {
+         self.add_child(P.new_empty_panel(), "intab");
+         self.render();
+      });
+
+      this._$headers.append(add_new_tab_button);
       this._tabs = [];
 
-      this._$container.data("panel", this); //XXX
+      this._$container.data("panel", this); //XXX - used in the drag & drop functionality
 
       this._$container.append(this._$headers);
       this._active_on_next_refresh = null;
 
       var tabs = $(this._$container).tabs({
+         heightStyle: "fill"
       });
 
       var $headers = this._$headers;
-      var self = this;
       tabs.find( ".ui-tabs-nav" ).sortable({
+         items: "li",
          scroll: true,
          revert: 180,   // add an animation to move the dragged tab to its final position
          tolerance: "pointer",
@@ -51,6 +60,9 @@ define(['jquery', 'layout/panel', 'jqueryui'], function ($, P, _) {
                'background-image': 'none',
             });
 
+            // add the id of this tabbed to the dragged tab
+            ui.helper.attr("from_panel_tabbed", ""+id);
+
             // with this, the helper tab is attached to the body and can be moved
             // around the page.
             // this alse require to fix its position (the point of reference is the 
@@ -74,7 +86,7 @@ define(['jquery', 'layout/panel', 'jqueryui'], function ($, P, _) {
             $headers.scrollTop(0); //fix a bug
          },
          receive: function (ev, ui) {
-            //This will be called only if one tab is dragged form one Tabbed
+            //This will be called only if one tab is dragged from one Tabbed
             //and dropped to other Tabbed.
 
 
@@ -86,7 +98,7 @@ define(['jquery', 'layout/panel', 'jqueryui'], function ($, P, _) {
             //we need to rollback that movement.
             ui.item.appendTo(ui.sender);
 
-            //lookup for the Tabbed sender (the old owener of the tab)
+            //lookup for the Tabbed sender (the old owner of the tab)
             var sender_tabbed = ui.sender.parent().data('panel');
 
             //get the panel to be moved
@@ -137,8 +149,8 @@ define(['jquery', 'layout/panel', 'jqueryui'], function ($, P, _) {
          panel: panel
       };
 
-      tab.header = $('<li style="display: inline; float: none;"><a style="float: none;" id="header_'+tab.id+'" href="#'+tab.id+'">'+(panel.name()||"tab")+'</a></li>');
-      tab.container = $('<div id="'+tab.id+'"></div>');
+      tab.header = $('<li class="tab_in_panel_tabbed" style="display: inline; float: none;"><a style="float: none;" id="header_'+tab.id+'" href="#'+tab.id+'">'+(panel.name()||"tab")+'</a></li>');
+      tab.container = $('<div id="'+tab.id+'" style="padding: 0px;"></div>');
 
       this._create_ctxmenu_for_panel(tab.header, panel);
 
@@ -254,6 +266,12 @@ define(['jquery', 'layout/panel', 'jqueryui'], function ($, P, _) {
 
       var box = this.box;
 
+      if(this._active_on_next_refresh !== null) {
+         $('#' + this._name).tabs({active: this._active_on_next_refresh});
+         this._active_on_next_refresh = null;
+      }
+      $('#' + this._name).tabs( "refresh" );
+
       for(var i = 0; i < this._tabs.length; i++) {
          var tab = this._tabs[i];
          tab.panel.box = $('#' + tab.id);
@@ -261,12 +279,6 @@ define(['jquery', 'layout/panel', 'jqueryui'], function ($, P, _) {
 
          $('#header_' + tab.id).text(tab.panel.name() || "tab");
       }
-
-      if(this._active_on_next_refresh !== null) {
-         $('#' + this._name).tabs({active: this._active_on_next_refresh});
-         this._active_on_next_refresh = null;
-      }
-      $('#' + this._name).tabs( "refresh" );
 
    };
 

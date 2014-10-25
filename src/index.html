@@ -1,6 +1,18 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
+    <script>
+      var splash_window = require('nw.gui').Window.open("splash.html", {
+            frame: false,
+            toolbar: false,
+            show: true,
+            width: 260,
+            height: 233,
+            position: "center",
+            resizable: false,
+            "always-on-top": true
+         });
+    </script>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -39,19 +51,20 @@
           right: 10px;
        }
 
-       /* Let's get this party started */ 
+       /* The scrollbar */ 
        ::-webkit-scrollbar { 
-          width: 12px; 
+          width: 8px; 
+          height: 8px;
        } 
        
-       /* Track */ 
+       /* The space where the thumb is moved */ 
        ::-webkit-scrollbar-track { 
-          -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3); 
+          -webkit-box-shadow: inset 0 0 6px rgba(0,255,0,0.3); 
           -webkit-border-radius: 10px; 
           border-radius: 10px;
        } 
        
-       /* Handle */ 
+       /* Handle which you move */ 
        ::-webkit-scrollbar-thumb { 
           -webkit-border-radius: 10px; 
           border-radius: 10px; 
@@ -59,6 +72,7 @@
           -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.5); 
        } 
        
+       /* Handle in second plane */
        ::-webkit-scrollbar-thumb:window-inactive { 
           background: rgba(255,0,0,0.4); 
        }
@@ -68,9 +82,20 @@
           background-color: black;
        } 
 
-
+       /* Handle when it's inside a tab-nav */
        ul.ui-tabs-nav::-webkit-scrollbar-thumb { 
           background: rgba(255,255,0,0.4); 
+       }
+
+       /* Dock side */
+       div.dock_side {
+          position: absolute;
+          display: block;
+          right: 0px;
+          bottom: 0px;
+          background-color: rgba(188, 213, 230, 0.5);
+          text-align: center;
+          z-index: 999;
        }
 
     </style>
@@ -78,7 +103,6 @@
   </head>
 
   <body>
-     <div id="layout"  style="width: 100%; height: 100%; min-height: 400px"></div>
 
 
     <!-- Bootstrap core JavaScript

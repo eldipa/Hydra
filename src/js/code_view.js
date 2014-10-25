@@ -1,10 +1,21 @@
-define(['ace', 'jquery'], function (ace, $) {
+define(['ace', 'jquery', 'layout'], function (ace, $, layout) {
    function CodeView() {
-      this.view_dom = $('<div style="width: 100%; height: 100%; min-width: 100px; min-height: 100px"></div>');
+      this.super("Code View");
+
+      this._$container = $('<div style="width: 100%; height: 100%; min-width: 100px; min-height: 100px"></div>');
       this.create_ace_viewer();
       this.saved_session_by_filename = {};
       this.filename = null;
+
+      this._$out_of_dom = this._$container;
    }
+
+   CodeView.prototype.__proto__ = layout.Panel.prototype;
+
+   CodeView.prototype.attach_menu = function (menu) {
+      this._$container.data('ctxmenu_controller', menu);
+   };
+
 
    /* 
     * Load a file only if the file wasn't loaded already.
@@ -19,7 +30,6 @@ define(['ace', 'jquery'], function (ace, $) {
          session = new ace.EditSession("");
 
          session.setMode("ace/mode/c_cpp");
-         session.setUseWrapMode(true);
 
          this.viewer.setSession(session);
          this.saved_session_by_filename[filename] = this.viewer.getSession();
@@ -77,13 +87,30 @@ define(['ace', 'jquery'], function (ace, $) {
       this.viewer.gotoLine(line_num);
    }
 
+   /* Render */
+   CodeView.prototype.render = function () {
+      if (this._$out_of_dom) {
+         this._$out_of_dom.appendTo(this.box);
+         this._$out_of_dom = null;
+      }
+
+      this.viewer.resize();
+   };
+
+   CodeView.prototype.unlink = function () {
+      if (!this._$out_of_dom) {
+         this._$out_of_dom = this._$container.detach();
+      }
+   }
+
+
    /*
     * Internal.
     * Create an Ace editor and put in the DOM.
     * Set some properties like the font size or the editor's theme.
     * */
    CodeView.prototype.create_ace_viewer = function () {
-      this.viewer = ace.ace.edit(this.view_dom.get()[0]);
+      this.viewer = ace.ace.edit(this._$container.get()[0]);
       
       this.viewer.setFontSize(14);
       this.viewer.setTheme("ace/theme/xcode");

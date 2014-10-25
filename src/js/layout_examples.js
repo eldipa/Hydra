@@ -1,4 +1,4 @@
-define(['jquery', 'layout', 'widgets/switch_theme'], function ($, layout, switch_theme_widget) {
+define(['jquery', 'layout', 'widgets/switch_theme', 'code_view', 'process_graph'], function ($, layout, switch_theme_widget, code_view, pgraph) {
    function init() {
       $('body').find('div').remove();
 
@@ -709,10 +709,50 @@ define(['jquery', 'layout', 'widgets/switch_theme'], function ($, layout, switch
       /* --------- XXX Expected Result: 
        *
        *          | L,[F]    
-       *    M,[H] |-------
+       *    M,[T] |-------
        *          | [],B
        *
        * ------------- */
+      var root = tabs.parent().parent().parent();
+      var cv_panel = new code_view.CodeView();
+      
+      cv_panel.swap(foo_msg);
+      //cv_panel.load_file('/home/martin/Codigo/ConcuDebug/src/cppTestCode/testVariables.cpp');
+      cv_panel.load_file('/home/martin/Codigo/ConcuDebug/src/cppTestCode/simplified_unix_tools/echo.c');
+
+      cv_panel.parent().parent().parent().set_percentage(50);
+
+      tabs3.swap(hello_msg);
+      
+      var pg_data = { processes: [
+            {
+               pid: 1, 
+               name: 'A',
+               status: 'running'
+            },
+            {
+               pid: 2, 
+               name: 'B',
+               status: 'running'
+            },
+            {
+               pid: 3, 
+               name: 'C',
+               status: 'running'
+            }
+            ],
+
+            relations: [
+            [0, 1],
+            [0, 2]
+               ]};
+
+      var pg_panel  = new pgraph.ProcessGraph();
+      pg_panel.update(pg_data.processes, pg_data.relations);
+      
+      more_bye_msg.swap(pg_panel);
+      root.render();
+
       return;
    }
 

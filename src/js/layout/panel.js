@@ -112,6 +112,10 @@ define([], function () {
     * If you do so, you need to implement some methods.
     * */
    var Panel = function (name) {
+      this.super(name);
+   };
+
+   Panel.prototype.super = function (name) {
       this._parent = NullParent;
       this._name = name || "panel";
    };
@@ -175,19 +179,16 @@ define([], function () {
       return this._name;
    };
 
-   Panel.prototype.menu = function () {
-      var myself = this;
+   Panel.prototype._context_menu_items_for_panel_actions = function () {
+      var self = this;
       return [
       {
-         header: this.toString()
-      },
-      {
-         text: 'remove',
+         text: 'Remove',
          action: function(e){
             e.preventDefault();
-            myself.remove();
+            self.remove();
          }
-      }
+      },
       ]
    };
 
@@ -274,6 +275,7 @@ define([], function () {
       as_tree: as_tree,
       Panel: Panel,
       new_tmp_panel: new_tmp_panel,
+      new_empty_panel: new_tmp_panel, //alias
       Parent: Parent
    };
 });

@@ -9,7 +9,7 @@ define(['jquery', 'layout/panel', 'jqueryui'], function ($, P, _) {
     * The bar can be moved, resizing the width or height of both panels.
     * */
    var Splitted = function (splitted_direction) {
-      this._parent = NullParent;
+      this.super(("" + Math.random()).slice(2));
 
       if(splitted_direction !== 'vertically' && splitted_direction !== 'horizontally') {
          throw new Error("Precondition: The split direction must be 'vertically' or 'horizontally', the direction '"+splitted_direction+"' was used.");
@@ -17,9 +17,10 @@ define(['jquery', 'layout/panel', 'jqueryui'], function ($, P, _) {
 
       this._splitted_direction = splitted_direction;
 
-      this._name = ("" + Math.random()).slice(2);
-      
-      var update_bar_and_split_for = function (position_name, dimension_name) {
+      var self = this;
+      this.__original_cursor_style = null; // used to try to force a consistent look and feel of the mouse when it is dragging the bar of the splitted.
+
+      var restore_cursor_style_and_update_bar_and_split_for = function (position_name, dimension_name) {
          if (! ((position_name === 'left' && dimension_name === 'width') ||
                 (position_name === 'top'  && dimension_name === 'height')) ) {
                    throw new Error("The position/dimension names are invalid. Accepted 'left-width' and 'top-height' but received '"+position_name+"-"+dimension_name+"'.");
@@ -31,6 +32,8 @@ define(['jquery', 'layout/panel', 'jqueryui'], function ($, P, _) {
          }[position_name]
 
          return function (event, ui) {
+            $('body').css({'cursor': self.__original_cursor_style});
+
             var $container = $(this).parent().parent();
             var new_bar_position = $(ui.helper).position();
 
@@ -43,18 +46,21 @@ define(['jquery', 'layout/panel', 'jqueryui'], function ($, P, _) {
             }
             else {
                var percentage = (rel_offset * 100);
-               $container.children("."+position_name+"_panel_of_splitted")[dimension_name](percentage + "%");
-               $container.children("."+opposite_position_name+"_side_panel_and_bar_of_splitted")[dimension_name]((100-percentage) + "%");
+               self.set_percentage(percentage);
             }
          };
       };  
 
-      var fix_for_dimension_at_start_bug_for = function (dimension_name) {
+      var set_cursor_style_and_fix_for_dimension_at_start_bug_for = function (dimension_name, cursor_style) {
          if (! (dimension_name === 'width' || dimension_name === 'height') ) {
             throw new Error("Incorrect dimension name. Accepted width or height but received '"+dimension_name+"'.");
          }
 
          return function (event, ui) {
+            var body = $('body');
+            self.__original_cursor_style = body.css('cursor');
+            body.css({'cursor': cursor_style});
+
             var correct_value_at_start = $(this)[dimension_name]();
             $(ui.helper)[dimension_name](correct_value_at_start);
          };
@@ -70,8 +76,8 @@ define(['jquery', 'layout/panel', 'jqueryui'], function ($, P, _) {
                axis: "x", 
                opacity: 0.7, 
                helper: "clone",
-               stop: update_bar_and_split_for('left', 'width'),
-               start: fix_for_dimension_at_start_bug_for('height')
+               stop: restore_cursor_style_and_update_bar_and_split_for('left', 'width'),
+               start: set_cursor_style_and_fix_for_dimension_at_start_bug_for('height', 'ew-resize')
             };
          }
          else {
@@ -79,8 +85,8 @@ define(['jquery', 'layout/panel', 'jqueryui'], function ($, P, _) {
                axis: "y", 
                opacity: 0.7, 
                helper: "clone",
-               stop: update_bar_and_split_for('top', 'height'),
-               start: fix_for_dimension_at_start_bug_for('width')
+               stop: restore_cursor_style_and_update_bar_and_split_for('top', 'height'),
+               start: set_cursor_style_and_fix_for_dimension_at_start_bug_for('width', 'ns-resize')
             };
          }
       };
@@ -95,6 +101,8 @@ define(['jquery', 'layout/panel', 'jqueryui'], function ($, P, _) {
                '</div>' +
             '</div>');
          this._$container.find('.horizontal_bar_splitting').draggable(options_for_draggable_bar('horizontal'));
+         this._position_name = 'top';
+         this._dimension_name = 'height';
       }
       else {
          this._$container = $(
@@ -106,6 +114,8 @@ define(['jquery', 'layout/panel', 'jqueryui'], function ($, P, _) {
                '</div>' +
             '</div>');
          this._$container.find('.vertical_bar_splitting').draggable(options_for_draggable_bar('vertical'));
+         this._position_name = 'left';
+         this._dimension_name = 'width';
       }
 
       this._children = {};
@@ -115,6 +125,17 @@ define(['jquery', 'layout/panel', 'jqueryui'], function ($, P, _) {
 
 
    Splitted.prototype.__proto__ = Parent.prototype;
+
+   Splitted.prototype.set_percentage = function (percentage) {
+      var opposite_position_name = {
+            left: 'right',
+            top : 'bottom',
+         }[this._position_name]
+      this._$container.children("."+this._position_name+"_panel_of_splitted")[this._dimension_name](percentage + "%");
+      this._$container.children("."+opposite_position_name+"_side_panel_and_bar_of_splitted")[this._dimension_name]((100-percentage) + "%");
+
+      this.render();
+   }
 
    Splitted.prototype._get_class_for_child = function (position) {
       return '.'+position+'_panel_of_splitted';

@@ -2,7 +2,9 @@
    "name": "concu-debug",
    "main": "index.html",
    "window":{
-      "toolbar":true
+      "toolbar":true,
+      "frame":true,
+      "show":false
    }
 }
 

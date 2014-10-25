@@ -131,7 +131,18 @@ define(['jquery'], function ($) {
 
            var old_dynamic_context_id = null;
 
-           function addDynamicContext(selector, controller_selector) {
+           /* For the dom-element-target clicked, if he has a ctxmenu_attrname; 
+            * and for its parents, from the closer parent to the more
+            * far ancester, and only if they have a ctxmenu_attrname:
+            *     - collect the content of their ctxmenu_attrname which
+            *     should be an array of dictionaries with the description
+            *     of the context menu (see the help of this lib)
+            *     - then, build a context menu with the concatenation of the 
+            *     submenus collected
+            *
+            * See addContext
+            **/
+           function addDynamicContext(selector) {
                    var ctxmenu_attrname = 'ctxmenu_controller';
                    $(document).on('contextmenu', selector, function (e) {
                       e.preventDefault();

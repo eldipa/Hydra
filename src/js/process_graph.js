@@ -1,6 +1,8 @@
-define(['d3'], function (d3) {
+define(['d3', 'layout'], function (d3, layout) {
    var ProcessGraph = function () {
       function ProcessGraph(width, height) {
+         this.super("Process Graph");
+
          this.width = (typeof width === 'undefined') ? 600 : width;
          this.height = (typeof height === 'undefined') ? 400 : height;
 
@@ -25,14 +27,20 @@ define(['d3'], function (d3) {
             "locked":'#00f',
             "waiting":'#00f'
          };
+
+         this._data = {processes: [], relations: []};
+
+         this._$container = $('<div style="width: 100%; height: 100%; min-width: '+this.width+'px; min-height: '+this.height+'px"></div>');
+         this._create_graph(this._$container);
+         this.enabled = false; 
+
+         this._$out_of_dom = this._$container;
       }
 
-      ProcessGraph.prototype.enable = function (container_to_attach) {
-         if (typeof this.svg !== 'undefined') {
-            this.disable();
-         }
+      ProcessGraph.prototype.__proto__ = layout.Panel.prototype;
 
-         this.svg = container_to_attach.append("svg")
+      ProcessGraph.prototype._create_graph = function (container_to_attach) {
+         this.svg = d3.select($(container_to_attach).get()[0]).append("svg")
             .attr("width", this.width)
             .attr("height", this.height);
 
@@ -46,15 +54,7 @@ define(['d3'], function (d3) {
             return self.update_graph_one_round(); });
       };
 
-      ProcessGraph.prototype.disable = function () {
-         if (typeof this.svg !== 'undefined') {
-            this.svg.remove();
-            delete this.svg;
-         }
-      };
-
       ProcessGraph.prototype.update_graph_one_round = function () {
-         console.log('tick');
          if (this.graph.alpha() < this.stop_update_graph_on_level) {
             this.graph.alpha(0);
          }
@@ -87,6 +87,16 @@ define(['d3'], function (d3) {
          nodes.exit()
             .remove()
 
+         var links = this.svg.selectAll('.link').data(this.graph.links());
+
+         links.enter()
+            .append('line')
+            .attr('class', 'link')
+            .attr('stroke', '#999');
+
+         links.exit()
+            .remove();
+
          var gnodes = nodes.enter()
             .append('g')
             .attr('class', 'node');
@@ -97,16 +107,6 @@ define(['d3'], function (d3) {
             .call(this.graph.drag);
          gnodes.append('text')
             .attr('class', 'node_text');
-
-         var links = this.svg.selectAll('.link').data(this.graph.links());
-
-         links.enter()
-            .append('line')
-            .attr('class', 'link')
-            .attr('stroke', '#999');
-
-         links.exit()
-            .remove();
 
          if (restart) {
             this.graph.start();
@@ -124,9 +124,9 @@ define(['d3'], function (d3) {
 
          // remove old processes
          var to_remove = [];
-         this.graph.nodes().forEach(function (n) {
-            if(n.p && pids.indexOf(n.p.pid) < 0) {
-               to_remove.push(n.i);
+         this.graph.nodes().forEach(function (gp, i) {
+            if(gp && pids.indexOf(gp.pid) < 0) {
+               to_remove.push(i);
             }
          }, this);
 
@@ -139,10 +139,7 @@ define(['d3'], function (d3) {
          
          // update processes
          processes.forEach(function (p) {
-            this.graph.nodes().every(function (n) {
-               var gp = n.p;
-               var i = n.i;
-
+            this.graph.nodes().every(function (gp, i) {
                if (gp.pid === p.pid) {
                   for (attr in p) {
                      this.graph.nodes()[i][attr] = p[attr];
@@ -171,13 +168,11 @@ define(['d3'], function (d3) {
          
          // remove old links
          var to_remove = [];
-         this.graph.links().forEach(function(link) {
-            var l = link.l;
-            var i = link.i;
+         this.graph.links().forEach(function(link, i) {
             var found = false;
 
             relations.every(function (rel) {
-               if(l.source.pid === processes[rel[o]].pid && l.target.pid === processes[rel[1]].pid) {
+               if(link.source.pid === processes[rel[0]].pid && link.target.pid === processes[rel[1]].pid) {
                   found = true;
                   return false;
                }
@@ -203,8 +198,8 @@ define(['d3'], function (d3) {
          var to_add = [];
          relations.forEach(function (rel) {
             var found = false;
-            this.graph.links().every(function (l) {
-               if (l.source.pid === processes[rel[0]].pid && l.target.pid === processes[rel[1]].pid) {
+            this.graph.links().every(function (link) {
+               if (link.source.pid === processes[rel[0]].pid && link.target.pid === processes[rel[1]].pid) {
                   found = true;
                   return false;
                }
@@ -215,13 +210,13 @@ define(['d3'], function (d3) {
                var source = null;
                var target = null;
 
-               this.graph.nodes().every(function (p) {
-                  if(p){
-                     if(p.pid === processes[rel[0]].pid) {
-                        source = p;
+               this.graph.nodes().every(function (gp) {
+                  if(gp){
+                     if(gp.pid === processes[rel[0]].pid) {
+                        source = gp;
                      }
-                     else if(p.pid === processes[rel[1]].pid) {
-                        target = p;
+                     else if(gp.pid === processes[rel[1]].pid) {
+                        target = gp;
                      }
                      
                      if(source !== null && target !== null) {
@@ -238,19 +233,39 @@ define(['d3'], function (d3) {
          if (to_add.length) {
             graph_modified = true;
          }
-         to_add.forEach(function (l) {
-            this.graph.links().push(l);
+         to_add.forEach(function (link) {
+            this.graph.links().push(link);
          }, this);
 
          return graph_modified;
       };
 
       ProcessGraph.prototype.update = function (processes, relations) {
-         if (this.svg) {
+         this._data = {processes: processes, relations: relations};
+         
+         if (this.enabled) {
             var changed_graph_or_link_count = this.update_graph_data(processes, relations);
             this.update_graph_view(changed_graph_or_link_count);
          }
       };
+      
+      /* Render */
+      ProcessGraph.prototype.render = function () {
+         if (this._$out_of_dom) {
+            this._$out_of_dom.appendTo(this.box);
+            this._$out_of_dom = null;
+            this.enabled = true;
+
+            this.update(this._data.processes, this._data.relations);
+         }
+      };
+
+      ProcessGraph.prototype.unlink = function () {
+         if (!this._$out_of_dom) {
+            this._$out_of_dom = this._$container.detach();
+            this.enabled = false;
+         }
+      }
 
       return ProcessGraph;
    }();
