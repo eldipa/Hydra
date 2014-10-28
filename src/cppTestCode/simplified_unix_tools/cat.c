@@ -9,6 +9,13 @@
 
 #define BUF_SIZE 512
 
+/*
+ * Usage:
+ *    cat input1 [ input2 [ input3 [ ... ] ] ]
+ *
+ * Reads the files named in its command line and writes its content to stdout.
+ * */
+
 int main(int argc, char *argv[]) {
    int infd = -1;
    int outfd = fileno(stdout);
