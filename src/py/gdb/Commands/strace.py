@@ -58,6 +58,7 @@ class ProcessUnderGDB(PtraceProcess):
         PtraceProcess.__init__(self, None, None, True, None)
         self._inferior = None
         self._remove_implementation_of_methods()
+        self.orig_eax = None
 
     def set_inferior(self, inferior):
        self._inferior = inferior
@@ -121,7 +122,10 @@ class ProcessUnderGDB(PtraceProcess):
                 if n.startswith("__"): #__cs, __ds, __es, __fs, __gs, __ss
                     v = names_and_values[n[2:]] # TODO use the value of xx for __xx?
                 elif n == 'orig_eax': #beware! no all the registers are shown in "info registers"
-                    v = hex(int(gdb.execute("print $orig_eax", False, True).split("=")[1]))
+                    if self.orig_eax is None:
+                       v = hex(int(gdb.execute("print $orig_eax", False, True).split("=")[1]))
+                    else:
+                       v = hex(self.orig_eax)
                 else:
                     v = names_and_values[n]
 
@@ -131,10 +135,10 @@ class ProcessUnderGDB(PtraceProcess):
 
         return regs_struct
 
-    #def getreg(self, name):
-    #    regs = self.getregs()
-    #    return getattr(regs, name) #TODO handle sub registers (see ptrace/debugger/process.py line 420)
-        
+    def getreg(self, name):
+        regs = self.getregs()
+        return getattr(regs, name) #TODO handle sub registers (see ptrace/debugger/process.py line 420)
+ 
 
     # BSD
     def getStackPointer(self):
@@ -168,10 +172,11 @@ class Opts:
     def __getattr__(self, name):
         return Opts.D.get(name, False)  # other options, set them to False
 
+#out = sys.stdout 
 out = open("OUT", "w")
 
 def show_syscall(syscall_tracer, out):
-    ''' Write to the out object the syscall name, arguments and result. '''
+    ''' Write to the out object the syscall's name, arguments and result. '''
 
     name = syscall_tracer.name
     text = syscall_tracer.format()
@@ -187,7 +192,6 @@ def show_syscall(syscall_tracer, out):
     else:
         #remove the ) at the end
         print(text[:-1], end='', file=out, flush=True) 
-        #pass
 
 #TODO reiniciar estas variables cada vez que se lanza de nuevo la aplicacion
 process = ProcessUnderGDB()
@@ -215,42 +219,73 @@ def syscall_trace():
 
     show_syscall(syscall_tracer, out)
 
-
-catch_syscall_break_id = 1          #TODO esto es un parametro
-hit_count = 0
-
-# TODO this code should support multiple inferiors!!
-def syscall_trace_on_stop(stop_event):
-    global catch_syscall_break_id
-    global hit_count
-
-    # See https://sourceware.org/gdb/onlinedocs/gdb/Events-In-Python.html
-    # The 'catch' breakpoints aren't of a specific type of StopEvent, so
-    # we cannot know if a stop is because a catch or something else.
-    if isinstance(stop_event, (gdb.BreakpointEvent, gdb.SignalEvent)):
-        return
-
-    # Best effort. If the counter of hits changed, we are in the correct stop event
-    info = gdb.execute("info breakpoints %i" % catch_syscall_break_id, False, True)
-    match = re.search("catchpoint already hit (\d+) times", info)
-    if match:
-        current_hit_count = int(match.groups()[0])
-    else:
-        current_hit_count = 0
-
-    # The counter didn't change, skip this stop
-    if hit_count == current_hit_count:
-        return
-
-    if hit_count > current_hit_count:
-        raise NotImplementedError("The hit counter was reset?")
-    
-    hit_count = current_hit_count
-
-    #gdb.execute('continue')
-    #return
-    syscall_trace()
+class SyscallBreakpoint(gdb.Breakpoint):
+    def __init__(self, spec, in_the_start_of_syscall, end_breakpoint):
+        gdb.Breakpoint.__init__(self, spec, gdb.BP_BREAKPOINT, 0, False, False)
+        self.silent = True
+        self.in_the_start_of_syscall = in_the_start_of_syscall
+        self.end_breakpoint = end_breakpoint
 
 
-#gdb.events.stop.connect(syscall_trace_on_stop)
+    def stop(self):
+        if self.in_the_start_of_syscall:
+           # get the current eax and save it in the next breakpoint
+           orig_eax = process.getreg("eax")
+           self.end_breakpoint.orig_eax = orig_eax 
+           
+        else:
+           # set the orig_eax as the value of eax read by the previous breakpoint
+           # then, trace the syscall and delete the orig_eax for sanity.
+           process.orig_eax = self.orig_eax
+           try:
+              syscall_trace()
+              syscall_trace()   
+           finally:
+              process.orig_eax = None
 
+        return False
+
+class KernelVSyscallBreakpoint(gdb.Breakpoint):
+    def __init__(self):
+        gdb.Breakpoint.__init__(self, '__kernel_vsyscall', gdb.BP_BREAKPOINT, 0, False, True)
+        #self.silent = True
+        self.breakpoint_hit = False
+
+    def stop(self):
+        if self.breakpoint_hit:
+            return False
+
+        self.breakpoint_hit = True
+        disass_text = gdb.execute("disass", False, True)
+
+        # get the source code (assemby)
+        source_lines = list(filter(None, map(lambda line: line.strip(), disass_text.split("\n"))))
+
+        index_of_last_edx = None
+        index_of_interrupt_call = None
+        for i, line in enumerate(source_lines):
+            if "int " in line and "0x80" in line:
+               index_of_interrupt_call = i
+               break
+
+            if "edx" in line:
+               index_of_last_edx = i
+
+        if index_of_last_edx is None:
+            index_of_last_edx = 1
+
+        if index_of_last_edx is None or index_of_interrupt_call is None or index_of_last_edx == index_of_interrupt_call:
+            raise Exception("Parsing byte code failed. Index of last edx usage: %s (%s). Index of interrupt call: %s (%s)." % (
+                     str(index_of_last_edx), source_lines[index_of_last_edx] if index_of_last_edx is not None else "",
+                     str(index_of_interrupt_call), source_lines[index_of_interrupt_call] if index_of_interrupt_call is not None else ""))
+
+
+        address_of_start_syscall_breakpoint = int(source_lines[index_of_last_edx+1].split(":")[0].strip().split(" ")[0].strip(), 16)
+        address_of_end_syscall_breakpoint = int(source_lines[index_of_interrupt_call+1].split(":")[0].strip().split(" ")[0].strip(), 16)
+
+        end_bp = SyscallBreakpoint("*"+hex(address_of_end_syscall_breakpoint), False, None)
+        start_bp = SyscallBreakpoint("*"+hex(address_of_start_syscall_breakpoint), True, end_bp)
+
+        return False
+
+b = KernelVSyscallBreakpoint()
