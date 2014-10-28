@@ -172,8 +172,8 @@ class Opts:
     def __getattr__(self, name):
         return Opts.D.get(name, False)  # other options, set them to False
 
-#out = sys.stdout 
-out = open("OUT", "w")
+out = sys.stdout 
+#out = open("OUT", "w")
 
 def show_syscall(syscall_tracer, out):
     ''' Write to the out object the syscall's name, arguments and result. '''
@@ -288,4 +288,4 @@ class KernelVSyscallBreakpoint(gdb.Breakpoint):
 
         return False
 
-b = KernelVSyscallBreakpoint()
+bp_on_kernel_vsyscall = KernelVSyscallBreakpoint()
