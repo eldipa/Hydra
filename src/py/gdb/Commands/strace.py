@@ -233,12 +233,17 @@ class SyscallBreakpoint(gdb.Breakpoint):
            orig_eax = process.getreg("eax")
            self.end_breakpoint.orig_eax = orig_eax 
            
+           process.orig_eax = orig_eax
+           try:
+              syscall_trace()   
+           finally:
+              process.orig_eax = None
+           
         else:
            # set the orig_eax as the value of eax read by the previous breakpoint
            # then, trace the syscall and delete the orig_eax for sanity.
            process.orig_eax = self.orig_eax
            try:
-              syscall_trace()
               syscall_trace()   
            finally:
               process.orig_eax = None
@@ -259,28 +264,39 @@ class KernelVSyscallBreakpoint(gdb.Breakpoint):
         disass_text = gdb.execute("disass", False, True)
 
         # get the source code (assemby)
-        source_lines = list(filter(None, map(lambda line: line.strip(), disass_text.split("\n"))))
+        # TODO algunas veces el commando "disass" viene en formato MI arruinando el parseo.
+        source_lines = []
+        for line in disass_text.split("\n"):
+            line = line.strip()
+            if line.startswith("=>"):
+               line = line.replace("=>", "").strip()
 
-        index_of_last_edx = None
+            if not line.startswith("0x"):
+               continue
+
+            source_lines.append(line)
+
+        index_of_sysenter = None
         index_of_interrupt_call = None
         for i, line in enumerate(source_lines):
             if "int " in line and "0x80" in line:
                index_of_interrupt_call = i
                break
 
-            if "edx" in line:
-               index_of_last_edx = i
+            if "sysenter" in line:
+               index_of_sysenter = i
 
-        if index_of_last_edx is None:
-            index_of_last_edx = 1
+        if index_of_sysenter is None:
+            index_of_sysenter = (index_of_interrupt_call - 1) if index_of_interrupt_call is not None else None
 
-        if index_of_last_edx is None or index_of_interrupt_call is None or index_of_last_edx == index_of_interrupt_call:
-            raise Exception("Parsing byte code failed. Index of last edx usage: %s (%s). Index of interrupt call: %s (%s)." % (
-                     str(index_of_last_edx), source_lines[index_of_last_edx] if index_of_last_edx is not None else "",
-                     str(index_of_interrupt_call), source_lines[index_of_interrupt_call] if index_of_interrupt_call is not None else ""))
+        if index_of_sysenter is None or index_of_interrupt_call is None or index_of_sysenter == index_of_interrupt_call:
+            raise Exception("Parsing byte code failed. Index of last edx usage: %s (%s). Index of interrupt call: %s (%s). Original assembly dump: %s" % (
+                     str(index_of_sysenter), source_lines[index_of_sysenter] if index_of_sysenter is not None else "",
+                     str(index_of_interrupt_call), source_lines[index_of_interrupt_call] if index_of_interrupt_call is not None else "",
+                     disass_text))
 
 
-        address_of_start_syscall_breakpoint = int(source_lines[index_of_last_edx+1].split(":")[0].strip().split(" ")[0].strip(), 16)
+        address_of_start_syscall_breakpoint = int(source_lines[index_of_sysenter].split(":")[0].strip().split(" ")[0].strip(), 16)
         address_of_end_syscall_breakpoint = int(source_lines[index_of_interrupt_call+1].split(":")[0].strip().split(" ")[0].strip(), 16)
 
         end_bp = SyscallBreakpoint("*"+hex(address_of_end_syscall_breakpoint), False, None)
