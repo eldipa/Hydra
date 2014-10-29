@@ -1,27 +1,6 @@
 import gdb
 import re
 
-# python exec(open('my2.py').read())
-# catch syscall
-# commands
-# silent
-# python syscall_trace()
-# continue
-# end
-
-# El problema es como "continuar" luego de una syscall. Si no hay un breakpoint, 
-# el continue seguira hasta el final del programa.
-# No parece tan mal, pero, si se esta sobre un printf y se hace un next, uno 
-# esperaria que la siguiente linea sea la siguiente. Sin embargo dado que printf
-# llama a una syscall el commando asociado a ese breakpoint se ejecuta  y si este
-# llama a continue, la siguiente linea NO va a ser lo que uno esperaria!!!
-
-
-#TODO ---
-import sys
-sys.path.append("/home/martin/Downloads/python-ptrace-0.8/")
-#--------
-
 try:
     import ptrace
 except ImportError as e:
@@ -156,7 +135,6 @@ class ProcessUnderGDB(PtraceProcess):
             setattr(self, method, not_implememented_error)
 
 
-# TODO options?
 # see strace.py, method parseOptions, line 34
 class Opts:
     D = {
