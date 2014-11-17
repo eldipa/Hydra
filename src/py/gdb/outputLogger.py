@@ -32,21 +32,24 @@ class OutputLogger(threading.Thread):
             [paraLeer, paraEscribir, otro] = select.select(self.outputsFd, [], [])
             print "para leer: " + str(paraLeer)
             for salida in paraLeer:
-                leido = self.openFile[salida].read()
+#                 leido = self.openFiles[salida].read() #bloquea.... buffer??
+                leido = os.read(salida, 10000)
                 print "la salida es " + leido + " de " + str(salida)
                 
                 if leido == "":
                     print "sacando: " +str(salida)
                     self.outputsFd.remove(salida)
-                    self.openFile[salida].close()
+                    self.openFiles[salida].close()
                     self.openFiles.pop(salida)
+                    continue
                     
                 
-                if salida == self.myFifo.fileno:
+                if salida == self.myFifo.fileno():
                     if leido == "nuevo":
                         continue
                     elif leido == "salir":
                         salir = True
+                        continue
                 
                 log = str(datetime.datetime.now()) + " " + str(self.originPid[salida]) + " " + leido
                 self.file.write(log + '\n')
@@ -59,11 +62,12 @@ class OutputLogger(threading.Thread):
         self.originPid[file.fileno()] = data[0]
         self.openFiles[file.fileno()] = file
         self.lock.acquire()
-        self.myFifo.write("nuevo")
+#         self.myFifo.write("nuevo")
+        os.write(self.myFifo.fileno(), "nuevo")
         self.lock.release()
         print "agregado, nuevo fd: " + str(self.outputsFd)
         
     def finalizar(self):
         self.lock.acquire()
-        self.myFifo.write("salir")
+        os.write(self.myFifo.fileno(), "salir")
         self.lock.release()

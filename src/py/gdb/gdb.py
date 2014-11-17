@@ -33,6 +33,7 @@ class Gdb:
         if(log):
             self.fifoPath = tempfile.mktemp()
             os.mkfifo(self.fifoPath)
+            self.gdbInput.write("fifo-register " + self.fifoPath + '\n')
         
     def getSessionId(self):
         return self.gdb.pid
@@ -55,7 +56,9 @@ class Gdb:
     # -Gdb realiza un attach al proceso especificado
     def attach(self, pid):
         self.gdbInput.write("-target-attach " + str(pid) + '\n')
+        self.gdbInput.write("output-redirect " + self.fifoPath + '\n')
         self.subscribe()
+        self.eventHandler.publish("debugger.new-output", [self.gdb.pid, self.fifoPath])
     
     # -Gdb coloca como proceso target un nuevo proceso del codigo 'file'
     # -Modifica el entorno (ld_preload)
@@ -73,7 +76,6 @@ class Gdb:
     def run(self, data=""):
         if(self.log):
             self.eventHandler.publish("debugger.new-output", [self.gdb.pid, self.fifoPath])
-            self.gdbInput.write("output-redirect " + self.fifoPath + '\n')
             self.gdbInput.write("run" + '\n')
         else:
             self.gdbInput.write("run > " + "/tmp/SalidaAux.txt" + '\n')

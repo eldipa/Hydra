@@ -79,4 +79,5 @@ class GdbSpawmer:
         self.eliminarCola()
         self.exit('all')
         self.logger.finalizar()
+        self.logger.join()
     
