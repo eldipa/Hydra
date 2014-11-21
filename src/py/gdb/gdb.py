@@ -5,6 +5,8 @@ from multiprocessing import Queue
 
 import outputReader
 import publish_subscribe.eventHandler
+import tempfile
+import os
 
 HACK_PATH = "/shared/hack.so"
 
@@ -12,9 +14,9 @@ class Gdb:
                            
 
     # crea un nuevo proceso gdb vacio
-    def __init__(self, comandos = False):
-        self.targetPid = 0
+    def __init__(self, comandos = False, log =False):
         self.comandos = comandos;
+        self.log = log
         self.queue = Queue()
         self.gdb = subprocess.Popen(["gdb", "-interpreter=mi", "-quiet"], stdin=PIPE, stdout=PIPE, stderr=PIPE)
         self.gdbInput = self.gdb.stdin
@@ -23,13 +25,18 @@ class Gdb:
         self.reader.start()
         self.eventHandler = publish_subscribe.eventHandler.EventHandler()
         if (comandos):
-            self.gdbInput.write('python execfile("./py/gdb/Commands/pointerPrinter.py")' + '\n')
+            files = []
+            for (dirpath, dirnames, filenames) in os.walk("./py/gdb/Plugins"):
+                files = files + filenames
+            for plugin in files:
+                self.gdbInput.write('python execfile("./py/gdb/Plugins/' + plugin + '")' + '\n')
+        if(log):
+            self.fifoPath = tempfile.mktemp()
+            os.mkfifo(self.fifoPath)
+            self.gdbInput.write("fifo-register " + self.fifoPath + '\n')
         
     def getSessionId(self):
         return self.gdb.pid
-    
-    def getTargetPid(self):
-        return self.targetPid
         
     def subscribe(self):
         self.eventHandler.subscribe(str(self.gdb.pid) + ".run", self.run)
@@ -49,7 +56,9 @@ class Gdb:
     # -Gdb realiza un attach al proceso especificado
     def attach(self, pid):
         self.gdbInput.write("-target-attach " + str(pid) + '\n')
+        self.gdbInput.write("output-redirect " + self.fifoPath + '\n')
         self.subscribe()
+        self.eventHandler.publish("debugger.new-output", [self.gdb.pid, self.fifoPath])
     
     # -Gdb coloca como proceso target un nuevo proceso del codigo 'file'
     # -Modifica el entorno (ld_preload)
@@ -59,13 +68,17 @@ class Gdb:
         self.gdbInput.write("-gdb-set " + "exec-wrapper env LD_PRELOAD=" + HACK_PATH + '\n')
 #         self.setBreakPoint("main")
 #         self.run()
+        self.gdbInput.write('\n')
         self.subscribe()
 
     
     # Ejecuta al target desde el comienzo
     def run(self, data=""):
-        self.gdbInput.write("run > Salida.txt" + '\n')  ########## redirigir bien la stdout
-       
+        if(self.log):
+            self.eventHandler.publish("debugger.new-output", [self.gdb.pid, self.fifoPath])
+            self.gdbInput.write("run" + '\n')
+        else:
+            self.gdbInput.write("run > " + "/tmp/SalidaAux.txt" + '\n')
     
     # Ejecuta al target desde el punto donde se encontraba
     def continueExec(self, data=""):

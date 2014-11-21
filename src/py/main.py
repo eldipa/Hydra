@@ -22,7 +22,7 @@ try:
 
     os.system("python py/publish_subscribe/notifier.py start")
 
-    spawmer = gdb.gdbSpawmer.GdbSpawmer(comandos=True)
+    spawmer = gdb.gdbSpawmer.GdbSpawmer(comandos=True, log =True)
 
     # esperar quit
     while(stdin.readline() not in ["quit\n","q\n"]):
@@ -30,10 +30,12 @@ try:
 
 finally:
     
-    spawmer.eliminarCola()
+    
     
     os.system("python py/publish_subscribe/notifier.py stop")
  
     if ui_process:
         os.system("killall nw")  # XXX this is too much
+        
+    spawmer.shutdown()
 

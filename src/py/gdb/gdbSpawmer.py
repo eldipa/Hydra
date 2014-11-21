@@ -1,6 +1,7 @@
 
 from gdb import Gdb
 import forkDetector 
+import outputLogger
 from multiprocessing import Lock
 import publish_subscribe.eventHandler
 
@@ -17,12 +18,16 @@ def Locker(func):
 
 class GdbSpawmer:
     
-    def __init__(self, comandos=False):
+    def __init__(self, comandos=False, log = False):
         self.comandos = comandos;
+        self.log = log
         self.lock = Lock()
         self.listaGdb = {}
         self.forkDetector = forkDetector.ForkDetector(self)
         self.forkDetector.start()
+        if(log):
+            self.logger = outputLogger.OutputLogger()
+            self.logger.start()
         self.eventHandler = publish_subscribe.eventHandler.EventHandler()
         self.subscribe()
         
@@ -33,10 +38,7 @@ class GdbSpawmer:
     
     @Locker
     def attachAGdb(self, pid):
-        if (self.comandos):
-            gdb = Gdb(comandos=True)
-        else:
-            gdb = Gdb()
+        gdb = Gdb(comandos=self.comandos, log = self.log)
         gdb.attach(pid)
         self.listaGdb[gdb.getSessionId()] = gdb
         self.eventHandler.publish("debugger.attached", pid)
@@ -45,10 +47,7 @@ class GdbSpawmer:
         
     @Locker
     def startNewProcessWithGdb(self, path):
-        if (self.comandos):
-            gdb = Gdb(comandos=True)
-        else:
-            gdb = Gdb()
+        gdb = Gdb(comandos=self.comandos, log = self.log)
         gdb.file(path)
         self.listaGdb[gdb.getSessionId()] = gdb
         return gdb.getSessionId()
@@ -79,4 +78,6 @@ class GdbSpawmer:
     def shutdown(self):
         self.eliminarCola()
         self.exit('all')
+        self.logger.finalizar()
+        self.logger.join()
     
