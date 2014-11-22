@@ -51,9 +51,11 @@ class OutputLogger(threading.Thread):
                         salir = True
                         continue
                 
-                log = str(datetime.datetime.now()) + " " + str(self.originPid[salida]) + " " + leido
+                timestamp = datetime.datetime.now()
+                log = str(timestamp) + " " + str(self.originPid[salida]) + " " + leido
                 self.file.write(log + '\n')
-                self.eventHandler.publish("outputlog.%i" % self.originPid[salida], log)
+                event = { "timestamp" : str(timestamp),  "pid" : self.originPid[salida], "output": leido }
+                self.eventHandler.publish("outputlog.%i" % self.originPid[salida], event)
             
     
     def newFd(self, data):
