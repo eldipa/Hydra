@@ -227,7 +227,7 @@ define(['jquery', 'layout', 'code_view', 'event_handler', 'varViewer', 'widgets/
       view.split(main_button_bar, "top");
       root.render();
 
-      event_handler.publish("debugger.load", "cppTestCode/testVariables");
+      event_handler.publish("debugger.load", "cppTestCode/outputTest");
 
    };
 

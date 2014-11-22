@@ -37,7 +37,7 @@ class OutputLogger(threading.Thread):
                 print "la salida es " + leido + " de " + str(salida)
                 
                 if leido == "":
-                    print "sacando: " +str(salida)
+                    print "sacando: " + str(salida)
                     self.outputsFd.remove(salida)
                     self.openFiles[salida].close()
                     self.openFiles.pop(salida)
@@ -53,6 +53,7 @@ class OutputLogger(threading.Thread):
                 
                 log = str(datetime.datetime.now()) + " " + str(self.originPid[salida]) + " " + leido
                 self.file.write(log + '\n')
+                self.eventHandler.publish("outputlog.%i" % self.originPid[salida], log)
             
     
     def newFd(self, data):
