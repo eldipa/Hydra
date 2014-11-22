@@ -35,6 +35,25 @@ define(['jquery', 'layout', 'code_view', 'event_handler', 'varViewer', 'widgets/
          this.log = this.log + "<br />" + line;
       };
 
+      // Panel to render the stdout
+      var stdoutlog = new Panel("Stdout");  //TODO Ver todos los comentarios anteriores 
+      stdoutlog.log = "";                 
+      stdoutlog.render = function () {    
+         this._$rendered_in = $(this.box); 
+         this._$rendered_in.html(this.log);
+      };
+
+      stdoutlog.unlink = function () {
+         if (this._$rendered_in) {
+            this._$rendered_in.empty();
+            this._$rendered_in = null;
+         }
+      };
+
+      stdoutlog.feed = function (data) {
+         var line = "["+data.timestamp+"]@["+data.pid+"]: "+data.output+"";
+         this.log = this.log + "<br />" + line;
+      };
 
       // then, the VarViewer
       var visor = new varViewer.VarViewer();
@@ -48,6 +67,9 @@ define(['jquery', 'layout', 'code_view', 'event_handler', 'varViewer', 'widgets/
       view.parent().set_percentage(80); //TODO (issue #62) por que hay que hacer un render() antes de un set_percentage()?
 
       view.parent().split(visor, "right");
+      root.render();
+
+      view.parent().split(stdoutlog, "bottom");
       root.render();
            
 
@@ -99,6 +121,12 @@ define(['jquery', 'layout', 'code_view', 'event_handler', 'varViewer', 'widgets/
          event_handler.subscribe("gdb."+session_id+".type.Console", function (data) {
                log.feed(data.stream);
                log.render();
+         });
+         
+         // Loggeamos lo que se capturo del stdout del target
+         event_handler.subscribe("outputlog", function (data) {
+               stdoutlog.feed(data);
+               stdoutlog.render();
          });
 
          // TODO (issue #36), poner un breakpoint es relativamente facil, pero eliminarlos no.

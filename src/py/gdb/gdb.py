@@ -29,7 +29,7 @@ class Gdb:
             for (dirpath, dirnames, filenames) in os.walk("./py/gdb/Plugins"):
                 files = files + filenames
             for plugin in files:
-                self.gdbInput.write('python execfile("./py/gdb/Plugins/' + plugin + '")' + '\n')
+                self.gdbInput.write('python exec(open("./py/gdb/Plugins/' + plugin + '").read())' + '\n')
         if(log):
             self.fifoPath = tempfile.mktemp()
             os.mkfifo(self.fifoPath)
