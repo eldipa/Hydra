@@ -47,9 +47,13 @@ define(["jquery"], function ($) {
       this.$buffer.appendTo(this.$container);
       this.$white_bottom_space.appendTo(this.$container);
 
+      this.notify_resize();
+
       var self = this;
-      this.onScroll = function () { self.notify_scroll(); }
+      this.onScroll = function () { self.notify_scroll(); };
+      this.onResize = function () { self.notify_resize(); };
       this.$container.on('scroll', this.onScroll);
+      $(window).on('resize', this.onResize);
    };
 
    ListView.prototype.detach = function () {
@@ -57,12 +61,13 @@ define(["jquery"], function ($) {
          throw new Error("No attached!");
       }
 
+      $(window).off('resize', this.onResize);
       this.$container.off('scroll', this.onScroll);
       this.$white_bottom_space.detach();
       this.$buffer.detach();
       this.$white_top_space.detach();
 
-      this.$container = this.onScroll = undefined;
+      this.$container = this.onScroll = this.onResize = undefined;
    };
 
    ListView.prototype.append = function (dom_element, height) {
@@ -90,6 +95,10 @@ define(["jquery"], function ($) {
    };
 
    ListView.prototype._update_buffer = function (scrollTop) {
+      if (this.data.length === 0) {
+         return;
+      }
+
       this.current_scroll_top = scrollTop;
 
       var result = this._get_element_and_index(Math.max(scrollTop-this.top_buffer_height, 0), true);
@@ -117,6 +126,11 @@ define(["jquery"], function ($) {
    ListView.prototype._update_buffer_and_white_space = function (scrollTop) {
       this._update_buffer(scrollTop);
       this._update_white_space();
+   };
+
+   ListView.prototype.notify_resize = function () {
+      this.view_height = this.$container.height();
+      this._update_buffer_and_white_space(this.current_scroll_top);
    };
 
    ListView.prototype.notify_scroll = function () {
