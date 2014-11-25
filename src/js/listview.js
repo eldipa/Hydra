@@ -1,4 +1,4 @@
-define(["jquery"], function ($) {
+define(["jquery", "underscore"], function ($, _) {
    /*
                        the buffer (elements in the DOM)
                       /---------------------------------\
@@ -53,8 +53,8 @@ define(["jquery"], function ($) {
       this.notify_resize();
 
       var self = this;
-      this.onScroll = function () { self.notify_scroll(); };
-      this.onResize = function () { self.notify_resize(); };
+      this.onScroll = _.throttle(function () { self.notify_scroll(); }, 100);
+      this.onResize = _.throttle(function () { self.notify_resize(); }, 100);
       this.$container.on('scroll', this.onScroll);
       $(window).on('resize', this.onResize);
    };
