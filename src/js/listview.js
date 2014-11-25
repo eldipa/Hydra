@@ -28,6 +28,7 @@ define(["jquery"], function ($) {
 
       this.data = [];
       this.dom_elements = [];
+      this.filtered = [];
 
       //var common_style = "border: 1px solid black; margin: 0px; padding: 0px;";
       var common_style = "border: 0px; margin: 0px; padding: 0px;";
@@ -179,6 +180,83 @@ define(["jquery"], function ($) {
 
       this.data.pop();
       throw new Error("None element was found in the position "+position+" (searched in "+this.data.length+" elements).");
+   };
+
+   ListView.prototype.filter = function (cb) {
+      if (this.filtered) {
+         this.quit_filter(true);
+      }
+
+      this.data.push({top: this.virtual_height});
+
+      var current_scroll_top = this.current_scroll_top;
+      var adjusted_scroll_top = false;
+      var offset = 0;
+   
+      for (var i = 0; i < this.data.length-1; i++) {
+         var pass = cb(this.dom_elements[i], i);
+         var obj = this.data[i];
+         var next = this.data[i+1];
+
+         if (!adjusted_scroll_top && obj.top > current_scroll_top) {
+            current_scroll_top -= offset;
+            adjusted_scroll_top = true;
+         }
+
+         if (pass) {
+            obj.top -= offset;
+            continue;
+         }
+
+         var height = next.top - obj.top;
+         offset += height;
+         
+         this.filtered.push({original_index: i, top: obj.top, height: height, dom_element: this.dom_elements[i]});
+         this.data[i] = this.dom_elements[i] = null;
+      }
+
+      this.virtual_height -= offset;
+      this.data.pop();
+
+      this.data = this.data.filter(function (v) { return v !== null; });
+      this.dom_elements = this.dom_elements.filter(function (v) { return v !== null; });
+
+      this._update_buffer_and_white_space(current_scroll_top);
+      //set the scroll of the browser TODO
+   };
+
+   ListView.prototype.quit_filter = function (skip_update) {
+      this.filtered.push({original_index: this.data.length+this.filtered.length-1});
+      var offset = 0;
+      var current_scroll_top = this.current_scroll_top;
+      var adjusted_scroll_top = false;
+
+      for (var i = 0; i < this.filtered.length-1; i++) {
+         var obj = this.filtered[i];
+         var next = this.filtered[i+1];
+
+         this.data.splice(obj.original_index, 0, {top: obj.top});
+         this.dom_elements.splice(obj.original_index, 0, obj.dom_element);
+
+         offset += obj.height;
+
+         for (var j = obj.original_index+1; j < next.original_index; j++) {
+            if (!adjusted_scroll_top && current_scroll_top < this.data[j].top) {
+               current_scroll_top += offset;
+               adjusted_scroll_top = true;
+            }
+
+            this.data[j].top += offset;
+         }
+      }
+
+      this.filtered = [];
+      this.virtual_height += offset;
+
+      if (!skip_update) {
+         this._update_buffer_and_white_space(current_scroll_top);
+         //set the scroll of the browser TODO
+      }
    };
 
    return {ListView:ListView};
