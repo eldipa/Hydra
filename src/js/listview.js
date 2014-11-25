@@ -222,7 +222,7 @@ define(["jquery"], function ($) {
       this.dom_elements = this.dom_elements.filter(function (v) { return v !== null; });
 
       this._update_buffer_and_white_space(current_scroll_top);
-      //set the scroll of the browser TODO
+      this.$container.scrollTop(current_scroll_top);
    };
 
    ListView.prototype.quit_filter = function (skip_update) {
@@ -255,7 +255,7 @@ define(["jquery"], function ($) {
 
       if (!skip_update) {
          this._update_buffer_and_white_space(current_scroll_top);
-         //set the scroll of the browser TODO
+         this.$container.scrollTop(current_scroll_top);
       }
    };
 
