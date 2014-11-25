@@ -36,6 +36,8 @@ define(["jquery"], function ($) {
       this.$buffer = $('<div style="'+common_style+'"></div>');
       this.$white_top_space = $('<div style="'+common_style+' height: 0px"></div>');
       this.$white_bottom_space = $('<div style="'+common_style+' height: 0px"></div>');
+
+      this.if_at_bottom_stay_there = true;
    };
 
    ListView.prototype.attach = function (dom_element) {
@@ -79,12 +81,25 @@ define(["jquery"], function ($) {
       if (!height || height <= 0) {
          throw new Error("Invalid height for the dom element "+dom_element+": "+height+"");
       }
+      
+      if (this.if_at_bottom_stay_there && this._is_at_bottom()) {
+         var force_to_be_at_bottom = true;
+      }
+      else {
+         var force_to_be_at_bottom = false;
+      }
+      
 
       var position_of_new_element = this.virtual_height;
 
       this.data.push({top: position_of_new_element});
       this.dom_elements.push(dom_element);
       this.virtual_height += height;
+
+      if (force_to_be_at_bottom) {
+         var new_scroll_top = Math.max(this.virtual_height-this.view_height, this.current_scroll_top);
+         this.current_scroll_top = new_scroll_top;
+      }
 
       if (this._is_position_in_buffer(position_of_new_element)) {
          this._update_buffer_and_white_space(this.current_scroll_top);
@@ -93,13 +108,16 @@ define(["jquery"], function ($) {
          this._update_white_space();
       }
 
+      if (force_to_be_at_bottom) {
+         this.$container.scrollTop(new_scroll_top);
+      }
    };
 
    ListView.prototype._update_buffer = function (scrollTop) {
       if (this.data.length === 0) {
          return;
       }
-
+      
       this.current_scroll_top = scrollTop;
 
       var result = this._get_element_and_index(Math.max(scrollTop-this.top_buffer_height, 0), true);
@@ -117,6 +135,11 @@ define(["jquery"], function ($) {
       var new_elements_in_buffer = this.dom_elements.slice(roof_element_index, floor_element_index+1);
       this.$buffer.children().detach();
       this.$buffer.append(new_elements_in_buffer);
+   };
+
+   ListView.prototype._is_at_bottom = function () {
+      var tol = 2;
+      return (this.current_scroll_top + this.view_height) >= (this.virtual_height - tol);
    };
 
    ListView.prototype._update_white_space = function () {
@@ -139,6 +162,7 @@ define(["jquery"], function ($) {
 
       if (this.buffer_position <= new_scroll_top && (new_scroll_top+this.view_height) < (Math.min(this.current_scroll_top+this.view_height+this.bottom_buffer_height, this.virtual_height))) {
          // ok, still inside the buffer
+         this.current_scroll_top = new_scroll_top;
       }
       else {
          this._update_buffer_and_white_space(new_scroll_top);
