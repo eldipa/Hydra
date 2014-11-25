@@ -16,6 +16,10 @@ def redirectOutput(fifoPath):
 
     gdb.execute("call setlinebuf(stdout)")
     
+    global eventHandler
+    
+    eventHandler.publish("redirigido.a", str(fdFifo))
+    
 
 class StartAndBreak (gdb.Breakpoint):
         
