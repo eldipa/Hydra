@@ -17,9 +17,13 @@ define(["jquery", "underscore"], function ($, _) {
                                     virtual_height
    */
          
-   var ListView = function () {
+   var ListView = function (buffer_height_factor) {
       this.view_height = 300;
-      this.buffer_height_factor = 1.2;
+      this.buffer_height_factor = buffer_height_factor || 1.3;
+
+      if (buffer_height_factor < 1) {
+         throw new Error("The buffer height factor must be greater than 1 ("+buffer_height_factor+" was found).");
+      }
 
       this.buffer_position = 0;
       this.current_scroll_top = 0;
@@ -37,6 +41,10 @@ define(["jquery", "underscore"], function ($, _) {
       this.$white_bottom_space = $('<div style="'+common_style+' height: 0px"></div>');
 
       this.if_at_bottom_stay_there = false;
+   };
+
+   ListView.prototype.autoscroll = function (enable) {
+      this.if_at_bottom_stay_there = !!enable;
    };
 
    ListView.prototype.attach = function (dom_element) {
@@ -72,7 +80,7 @@ define(["jquery", "underscore"], function ($, _) {
       this.$container = this.onScroll = this.onResize = undefined;
    };
 
-   ListView.prototype.append = function (dom_element, height) {
+   ListView.prototype.push = function (dom_element, height) {
       if (!height) {
          height = $(dom_element).outerHeight(true);
       }
@@ -288,7 +296,7 @@ define(["jquery", "underscore"], function ($, _) {
    };
 
    ListView.prototype.get_extra_height_in_buffer = function () {
-      return Math.floor((1-this.buffer_height_factor)*this.view_height);
+      return Math.floor((this.buffer_height_factor-1)*this.view_height);
    };
 
    return {ListView:ListView};
