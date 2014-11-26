@@ -2,25 +2,24 @@ define(["jquery", "underscore"], function ($, _) {
    /*
                        the buffer (elements in the DOM)
                       /---------------------------------\
-                     /                                   \
-                     | /-- buffer_position               |
-                     |/             view_height          |
-         0px         V        /--------------------/     V
+                     /  /-- buffer_position              \
+                     | /      /-- current_scroll_top     |
+                     |/       |     view_height          |
+         0px         V        V/-------------------/     V
          .. .. .. .. |--------|--------------------|-----|.. .. .. .. ..
          :  white    | hi     |                    |hi   |    white    :
          :   top     |   dd   |      visible       | dd  |    bottom   :
          :  space    |     en |                    |   en|    space    :
          .. .. .. .. |--------|--------------------|-----|.. .. .. .. ..
-         \           \---------\                   \------\             \
-          \           top_buffer_height             bottom_buffer_height \
+         \           \------------------------------------\             \
+          \                      buffer_height                           \
            \--------------------------------------------------------------\
                                     virtual_height
    */
          
    var ListView = function () {
       this.view_height = 300;
-      this.top_buffer_height = 200;
-      this.bottom_buffer_height = 200;
+      this.buffer_height_factor = 1.2;
 
       this.buffer_position = 0;
       this.current_scroll_top = 0;
@@ -37,7 +36,7 @@ define(["jquery", "underscore"], function ($, _) {
       this.$white_top_space = $('<div style="'+common_style+' height: 0px"></div>');
       this.$white_bottom_space = $('<div style="'+common_style+' height: 0px"></div>');
 
-      this.if_at_bottom_stay_there = true;
+      this.if_at_bottom_stay_there = false;
    };
 
    ListView.prototype.attach = function (dom_element) {
@@ -53,8 +52,8 @@ define(["jquery", "underscore"], function ($, _) {
       this.notify_resize();
 
       var self = this;
-      this.onScroll = _.throttle(function () { self.notify_scroll(); }, 100);
-      this.onResize = _.throttle(function () { self.notify_resize(); }, 100);
+      this.onScroll = _.throttle(function () { self.notify_scroll(); }, 100, {leading: false});
+      this.onResize = _.throttle(function () { self.notify_resize(); }, 100, {leading: false});
       this.$container.on('scroll', this.onScroll);
       $(window).on('resize', this.onResize);
    };
@@ -82,13 +81,10 @@ define(["jquery", "underscore"], function ($, _) {
          throw new Error("Invalid height for the dom element "+dom_element+": "+height+"");
       }
       
+      var force_to_be_at_bottom = false;
       if (this.if_at_bottom_stay_there && this._is_at_bottom()) {
-         var force_to_be_at_bottom = true;
+         force_to_be_at_bottom = true;
       }
-      else {
-         var force_to_be_at_bottom = false;
-      }
-      
 
       var position_of_new_element = this.virtual_height;
 
@@ -120,17 +116,16 @@ define(["jquery", "underscore"], function ($, _) {
       
       this.current_scroll_top = scrollTop;
 
-      var result = this._get_element_and_index(Math.max(scrollTop-this.top_buffer_height, 0), true);
+      var result = this._get_element_and_index(Math.max(scrollTop-(this.get_extra_height_in_buffer()/2), 0), true);
       
       var roof_element       = result.element;
       var roof_element_index = result.index;
+      this.buffer_position = roof_element.top;
 
-      var result = this._get_element_and_index(Math.min(scrollTop+this.view_height+this.bottom_buffer_height, this.virtual_height), false);
+      var result = this._get_element_and_index(Math.min(this.buffer_position+this.get_buffer_height()-(this.get_extra_height_in_buffer()/2), this.virtual_height), false);
 
       var floor_element       = result.element;
       var floor_element_index = result.index;
-
-      this.buffer_position = roof_element.top;
 
       var new_elements_in_buffer = this.dom_elements.slice(roof_element_index, floor_element_index+1);
       this.$buffer.children().detach();
@@ -144,7 +139,7 @@ define(["jquery", "underscore"], function ($, _) {
 
    ListView.prototype._update_white_space = function () {
       this.$white_top_space.height(this.buffer_position);
-      this.$white_bottom_space.height(Math.max(this.virtual_height-this.current_scroll_top-this.view_height-this.bottom_buffer_height, 0));
+      this.$white_bottom_space.height(Math.max(this.virtual_height-this.buffer_position-this.get_buffer_height(), 0));
    };
 
    ListView.prototype._update_buffer_and_white_space = function (scrollTop) {
@@ -157,10 +152,11 @@ define(["jquery", "underscore"], function ($, _) {
       this._update_buffer_and_white_space(this.current_scroll_top);
    };
 
+
    ListView.prototype.notify_scroll = function () {
       var new_scroll_top = this.$container.scrollTop();
 
-      if (this.buffer_position <= new_scroll_top && (new_scroll_top+this.view_height) < (Math.min(this.current_scroll_top+this.view_height+this.bottom_buffer_height, this.virtual_height))) {
+      if (this.buffer_position <= new_scroll_top && (new_scroll_top+this.view_height) < this.buffer_position+this.get_buffer_height()) {
          // ok, still inside the buffer
          this.current_scroll_top = new_scroll_top;
       }
@@ -170,7 +166,7 @@ define(["jquery", "underscore"], function ($, _) {
    };
 
    ListView.prototype._is_position_in_buffer = function (position) {
-      return (this.buffer_position <= position && position <= (Math.min(this.current_scroll_top+this.view_height+this.bottom_buffer_height, this.virtual_height)));
+      return (this.buffer_position <= position && position <= this.buffer_position+this.get_buffer_height());
    };
 
    ListView.prototype._get_element_and_index = function (position, round_to_roof) {
@@ -187,7 +183,7 @@ define(["jquery", "underscore"], function ($, _) {
 
          if (found.top <= position && position < next.top) {
             this.data.pop();
-            if (!round_to_roof && middle < this.data.length) {
+            if (!round_to_roof && middle+1 < this.data.length) {
                found = next;
                middle = middle+1;
             }
@@ -281,6 +277,18 @@ define(["jquery", "underscore"], function ($, _) {
          this._update_buffer_and_white_space(current_scroll_top);
          this.$container.scrollTop(current_scroll_top);
       }
+   };
+
+   ListView.prototype._show_coordinates_and_sizes = function () {
+      console.log("BufPos: "+this.buffer_position+" BufHeight: "+this.get_buffer_height()+" View: "+this.view_height+" CurrScroll: "+this.current_scroll_top+" VHeight: "+this.virtual_height+"");
+   };
+   
+   ListView.prototype.get_buffer_height = function () {
+      return Math.floor(this.buffer_height_factor*this.view_height)+1;
+   };
+
+   ListView.prototype.get_extra_height_in_buffer = function () {
+      return Math.floor((1-this.buffer_height_factor)*this.view_height);
    };
 
    return {ListView:ListView};
