@@ -17,9 +17,10 @@ define(["jquery", "underscore"], function ($, _) {
                                     virtual_height
    */
          
-   var ListView = function (buffer_height_factor) {
+   var ListView = function () {
       this.view_height = 300;
-      this.buffer_height_factor = buffer_height_factor || 1.3;
+      this.buffer_height_factor = 1.3;
+      this.recalculate_heights_on_resize = true;
 
       if (buffer_height_factor < 1) {
          throw new Error("The buffer height factor must be greater than 1 ("+buffer_height_factor+" was found).");
@@ -94,6 +95,8 @@ define(["jquery", "underscore"], function ($, _) {
          force_to_be_at_bottom = true;
       }
 
+      //TODO filter this!!!
+
       var position_of_new_element = this.virtual_height;
 
       this.data.push({top: position_of_new_element});
@@ -140,6 +143,42 @@ define(["jquery", "underscore"], function ($, _) {
       this.$buffer.append(new_elements_in_buffer);
    };
 
+   ListView.prototype._recalculate_heights = function () {
+      if (this.data.length === 0) {
+         return;
+      }
+
+      var result = this._get_element_and_index(this.current_scroll_top, true);
+      var roof_element_index = result.index;
+
+      var offset = 0;
+      for (var i = 0; i < this.dom_elements.length; i+=30) {
+         var j = Math.min(i + 30, this.dom_elements.length);
+      
+         var new_elements_in_buffer = this.dom_elements.slice(i, j);
+         this.$buffer.children().detach();
+         this.$buffer.append(new_elements_in_buffer);
+
+         for (var k = i; k < j; k++) { 
+            this.data[k].top = offset;
+
+            offset += this.dom_elements[k].outerHeight(true);
+         }
+      }
+
+      this.$buffer.children().detach();
+      this.virtual_height = offset;
+      this.view_height = this.$container.height();
+
+      this.current_scroll_top = Math.min(this.data[roof_element_index].top, this.virtual_height-this.view_height);
+      
+      // set the buffer and the white space to the correct value and
+      // then set the scroll top, only in this point the divs have their correct
+      // heights and only here we can set the correct scroll top safety
+      this._update_buffer_and_white_space(this.current_scroll_top);
+      this.$container.scrollTop(this.current_scroll_top); //this will trigger notify_scroll and it will reconstruct the buffer again
+   };
+
    ListView.prototype._is_at_bottom = function () {
       var tol = 2;
       return (this.current_scroll_top + this.view_height) >= (this.virtual_height - tol);
@@ -156,8 +195,13 @@ define(["jquery", "underscore"], function ($, _) {
    };
 
    ListView.prototype.notify_resize = function () {
-      this.view_height = this.$container.height();
-      this._update_buffer_and_white_space(this.current_scroll_top);
+      if (this.recalculate_heights_on_resize) {
+         this._recalculate_heights();
+      }
+      else {
+         this.view_height = this.$container.height();
+         this._update_buffer_and_white_space(this.current_scroll_top);
+      }
    };
 
 
