@@ -119,12 +119,12 @@ define(["jquery", "underscore"], function ($, _) {
       this.virtual_height += height;
 
       if (force_to_be_at_bottom) {
-         var new_scroll_top = Math.max(this.virtual_height-this.view_height, this.current_scroll_top);
+         var new_scroll_top = Math.max(Math.max(this.virtual_height-this.view_height, this.current_scroll_top), 0);
          this.current_scroll_top = new_scroll_top;
       }
 
       if (this._is_position_in_buffer(position_of_new_element)) {
-         this._update_buffer_and_white_space(this.current_scroll_top);
+         this._update_buffer_and_white_space(Math.max(this.current_scroll_top, 0));
       }
       else {
          this._update_white_space();
@@ -163,7 +163,7 @@ define(["jquery", "underscore"], function ($, _) {
          return;
       }
 
-      var result = this._get_element_and_index(this.current_scroll_top, true);
+      var result = this._get_element_and_index(Math.max(this.current_scroll_top, 0), true);
       var roof_element_index = result.index;
 
       var offset = 0;
@@ -185,7 +185,7 @@ define(["jquery", "underscore"], function ($, _) {
       this.virtual_height = offset;
       this.view_height = this.$container.height();
 
-      this.current_scroll_top = Math.min(this.data[roof_element_index].top, this.virtual_height-this.view_height);
+      this.current_scroll_top = Math.max(Math.min(this.data[roof_element_index].top, this.virtual_height-this.view_height), 0);
       
       // set the buffer and the white space to the correct value and
       // then set the scroll top, only in this point the divs have their correct
@@ -196,7 +196,7 @@ define(["jquery", "underscore"], function ($, _) {
 
    ListView.prototype._is_at_bottom = function () {
       var tol = 2;
-      return (this.current_scroll_top + this.view_height) >= (this.virtual_height - tol);
+      return (Math.max(this.current_scroll_top, 0) + this.view_height) >= (this.virtual_height - tol);
    };
 
    ListView.prototype._update_white_space = function () {
@@ -215,7 +215,7 @@ define(["jquery", "underscore"], function ($, _) {
       }
       else {
          this.view_height = this.$container.height();
-         this._update_buffer_and_white_space(this.current_scroll_top);
+         this._update_buffer_and_white_space(Math.max(this.current_scroll_top, 0));
       }
    };
 
@@ -278,7 +278,7 @@ define(["jquery", "underscore"], function ($, _) {
 
       this.data.push({top: this.virtual_height});
 
-      var current_scroll_top = this.current_scroll_top;
+      var current_scroll_top = Math.max(this.current_scroll_top, 0);
       var adjusted_scroll_top = false;
       var offset = 0;
    
@@ -318,7 +318,7 @@ define(["jquery", "underscore"], function ($, _) {
       this.filter_func = null;
       this.filtered.push({original_index: this.data.length+this.filtered.length-1});
       var offset = 0;
-      var current_scroll_top = this.current_scroll_top;
+      var current_scroll_top = Math.max(this.current_scroll_top, 0);
       var adjusted_scroll_top = false;
 
       for (var i = 0; i < this.filtered.length-1; i++) {
