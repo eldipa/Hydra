@@ -22,8 +22,8 @@ define(["jquery", "underscore"], function ($, _) {
       this.buffer_height_factor = 1.3;
       this.recalculate_heights_on_resize = true;
 
-      if (buffer_height_factor < 1) {
-         throw new Error("The buffer height factor must be greater than 1 ("+buffer_height_factor+" was found).");
+      if (this.buffer_height_factor < 1) {
+         throw new Error("The buffer height factor must be greater than 1 ("+this.buffer_height_factor+" was found).");
       }
 
       this.buffer_position = 0;
@@ -33,6 +33,7 @@ define(["jquery", "underscore"], function ($, _) {
       this.data = [];
       this.dom_elements = [];
       this.filtered = [];
+      this.filter_func = null;
 
       //var common_style = "border: 1px solid black; margin: 0px; padding: 0px;";
       var common_style = "border: 0px; margin: 0px; padding: 0px;";
@@ -95,9 +96,23 @@ define(["jquery", "underscore"], function ($, _) {
          force_to_be_at_bottom = true;
       }
 
-      //TODO filter this!!!
-
       var position_of_new_element = this.virtual_height;
+
+      if (this.filter_func !== null) {
+         var index_of_the_new_element = this.filtered.length + this.dom_elements.length;
+         var pass = this.filter_func(dom_element, index_of_the_new_element);
+
+         if (!pass) {
+            this.filtered.push({
+                     original_index: index_of_the_new_element, 
+                     top: position_of_new_element, 
+                     height: height, 
+                     dom_element: dom_element
+            });
+
+            return;  // done, we don't need to update the buffer or the view
+         }
+      }
 
       this.data.push({top: position_of_new_element});
       this.dom_elements.push(dom_element);
@@ -259,6 +274,8 @@ define(["jquery", "underscore"], function ($, _) {
          this.quit_filter(true);
       }
 
+      this.filter_func = cb;
+
       this.data.push({top: this.virtual_height});
 
       var current_scroll_top = this.current_scroll_top;
@@ -298,6 +315,7 @@ define(["jquery", "underscore"], function ($, _) {
    };
 
    ListView.prototype.quit_filter = function (skip_update) {
+      this.filter_func = null;
       this.filtered.push({original_index: this.data.length+this.filtered.length-1});
       var offset = 0;
       var current_scroll_top = this.current_scroll_top;
