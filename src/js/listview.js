@@ -84,7 +84,11 @@ define(["jquery", "underscore"], function ($, _) {
 
    ListView.prototype.push = function (dom_element, height) {
       if (!height) {
-         height = $(dom_element).outerHeight(true);
+         var tmp = $(dom_element)
+         tmp.appendTo(this.$white_bottom_space);
+         height = tmp.outerHeight(true);
+
+         tmp.detach();
       }
    
       if (!height || height <= 0) {
@@ -118,21 +122,21 @@ define(["jquery", "underscore"], function ($, _) {
       this.dom_elements.push(dom_element);
       this.virtual_height += height;
 
-      if (force_to_be_at_bottom) {
-         var new_scroll_top = Math.max(Math.max(this.virtual_height-this.view_height, this.current_scroll_top), 0);
+      if (force_to_be_at_bottom) { 
+         var new_scroll_top = Math.max(this.virtual_height-this.view_height, 0);
          this.current_scroll_top = new_scroll_top;
-      }
-
-      if (this._is_position_in_buffer(position_of_new_element)) {
-         this._update_buffer_and_white_space(Math.max(this.current_scroll_top, 0));
-      }
-      else {
-         this._update_white_space();
-      }
-
-      if (force_to_be_at_bottom) {
+         this._update_buffer_and_white_space(new_scroll_top);
          this.$container.scrollTop(new_scroll_top);
       }
+      else {
+         if (this._is_position_in_buffer(position_of_new_element)) {
+            this._update_buffer_and_white_space(Math.max(this.current_scroll_top, 0));
+         }
+         else {
+            this._update_white_space();
+         }
+      }
+
    };
 
    ListView.prototype._update_buffer = function (scrollTop) {
@@ -162,6 +166,11 @@ define(["jquery", "underscore"], function ($, _) {
       if (this.data.length === 0) {
          return;
       }
+      
+      var force_to_be_at_bottom = false;
+      if (this.if_at_bottom_stay_there && this._is_at_bottom()) {
+         force_to_be_at_bottom = true;
+      }
 
       var result = this._get_element_and_index(Math.max(this.current_scroll_top, 0), true);
       var roof_element_index = result.index;
@@ -187,16 +196,22 @@ define(["jquery", "underscore"], function ($, _) {
 
       this.current_scroll_top = Math.max(Math.min(this.data[roof_element_index].top, this.virtual_height-this.view_height), 0);
       
-      // set the buffer and the white space to the correct value and
-      // then set the scroll top, only in this point the divs have their correct
-      // heights and only here we can set the correct scroll top safety
       this._update_buffer_and_white_space(this.current_scroll_top);
-      this.$container.scrollTop(this.current_scroll_top); //this will trigger notify_scroll and it will reconstruct the buffer again
+      
+      if (force_to_be_at_bottom) { 
+         var new_scroll_top = Math.max(this.virtual_height-this.view_height, 0);
+         this.current_scroll_top = new_scroll_top;
+         this._update_buffer_and_white_space(new_scroll_top);
+         this.$container.scrollTop(new_scroll_top);
+      }
+      else {
+         this.$container.scrollTop(this.current_scroll_top);
+      }
    };
 
    ListView.prototype._is_at_bottom = function () {
       var tol = 2;
-      return (Math.max(this.current_scroll_top, 0) + this.view_height) >= (this.virtual_height - tol);
+      return (this.virtual_height <= this.view_height) || (Math.max(this.current_scroll_top, 0) + this.view_height) >= (this.virtual_height - tol);
    };
 
    ListView.prototype._update_white_space = function () {
