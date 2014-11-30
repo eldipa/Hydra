@@ -285,8 +285,9 @@ define(["jquery", "underscore"], function ($, _) {
 
          for (var k = i; k < j; k++) { 
             this.data[k].top = offset;
-
-            offset += this.dom_elements[k].outerHeight(true);
+            
+            var $el = this.dom_elements[k];
+            offset += ($el.css("display") === "none")? 0 : $el.outerHeight(true);
          }
       }
 
@@ -389,7 +390,7 @@ define(["jquery", "underscore"], function ($, _) {
       var new_scroll_top = this.$container.scrollTop();
       this._set_current_scroll_top_property(new_scroll_top);
 
-      if (this.buffer_position <= this.current_scroll_top && (this.current_scroll_top+this.view_height) < this.buffer_position+this.get_max_buffer_height()) {
+      if (this.buffer_position <= this.current_scroll_top && (this.current_scroll_top+this.view_height) < this.buffer_position+(this.get_max_buffer_height()/2)) {
          // ok, still inside the buffer: all the elements visible by the user are in the
          // buffer (in the DOM) so we don't need to update the buffer.
       }
@@ -438,8 +439,34 @@ define(["jquery", "underscore"], function ($, _) {
             if (!round_to_roof && middle+1 < this.data.length) {
                found = next;
                middle = middle+1;
+               for(var i = middle+1; i < this.data.length; i++) { //optimizar!!
+                  if (this.data[i].top === found.top) {
+                     found = this.data[i];
+                     middle = i;
+                  }
+                  else {
+                     break;
+                  }
+               }
+
+               if (middle+1 < this.data.length) {
+                  found = this.data[i];
+                  middle = middle+1;
+               }
+               return {element: found, index: middle};
             }
-            return {element: found, index: middle};
+            else {
+               for(var i = middle+1; i < this.data.length; i++) { 
+                  if (this.data[i].top === found.top) {
+                     found = this.data[i];
+                     middle = i;
+                  }
+                  else {
+                     break;
+                  }
+               }
+               return {element: found, index: middle};
+            }
          }
 
          if (position < found.top) {
@@ -452,6 +479,15 @@ define(["jquery", "underscore"], function ($, _) {
 
       this.data.pop();
       throw new Error("None element was found in the position "+position+" (searched in "+this.data.length+" elements).");
+   };
+
+   ListView.prototype.apply = function (cb, recalculate_heights, context) {
+      recalculate_heights = recalculate_heights || false;
+      
+      _.each(this.dom_elements, cb, context);
+      if (recalculate_heights) {
+         this.notify_resize();
+      }
    };
 
    ListView.prototype.filter = function (cb) {
