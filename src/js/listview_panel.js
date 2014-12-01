@@ -7,7 +7,7 @@ define(['jquery', 'layout', 'listview'], function ($, layout, listview) {
 
       this.id = id;
       
-      this._$container = $('<div id="'+id+'" style="height: 100%; overflow: auto"></div>');
+      this._$container = $('<div id="'+id+'" style="height: 100%; overflow: scroll"></div>');
       this._$out_of_dom = this._$container;
       
       this.listView = new listview.ListView();
