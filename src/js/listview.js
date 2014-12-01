@@ -32,8 +32,6 @@ define(["jquery", "underscore"], function ($, _) {
 
       this.data = [];
       this.dom_elements = [];
-      this.filtered = [];
-      this.filter_func = null;
 
       //var common_style = "border: 1px solid black; margin: 0px; padding: 0px;";
       var common_style = "border: 0px; margin: 0px; padding: 0px;";
@@ -153,22 +151,6 @@ define(["jquery", "underscore"], function ($, _) {
       var force_to_be_at_bottom = this._should_be_at_bottom();
 
       var position_of_new_element = this.virtual_height;
-
-      if (this.filter_func !== null) {
-         var index_of_the_new_element = this.filtered.length + this.dom_elements.length;
-         var pass = this.filter_func(dom_element, index_of_the_new_element);
-
-         if (!pass) {
-            this.filtered.push({
-                     original_index: index_of_the_new_element, 
-                     top: position_of_new_element, 
-                     height: height, 
-                     dom_element: dom_element
-            });
-
-            return;  // done, we don't need to update the buffer or the view
-         }
-      }
 
       // update the data
       this.data.push({top: position_of_new_element});
@@ -491,88 +473,6 @@ define(["jquery", "underscore"], function ($, _) {
       _.each(this.dom_elements, cb, context);
       if (recalculate_heights) {
          this.notify_resize();
-      }
-   };
-
-   ListView.prototype.filter = function (cb) {
-      if (this.filtered) {
-         this.quit_filter(true);
-      }
-
-      this.filter_func = cb;
-
-      this.data.push({top: this.virtual_height});
-
-      var current_scroll_top = Math.max(this.current_scroll_top, 0);
-      var adjusted_scroll_top = false;
-      var offset = 0;
-   
-      for (var i = 0; i < this.data.length-1; i++) {
-         var pass = cb(this.dom_elements[i], i);
-         var obj = this.data[i];
-         var next = this.data[i+1];
-
-         if (!adjusted_scroll_top && obj.top > current_scroll_top) {
-            current_scroll_top -= offset;
-            adjusted_scroll_top = true;
-         }
-
-         if (pass) {
-            obj.top -= offset;
-            continue;
-         }
-
-         var height = next.top - obj.top;
-         offset += height;
-         
-         this.filtered.push({original_index: i, top: obj.top, height: height, dom_element: this.dom_elements[i]});
-         this.data[i] = this.dom_elements[i] = null;
-      }
-
-      this.virtual_height -= offset;
-      this.data.pop();
-
-      this.data = this.data.filter(function (v) { return v !== null; });
-      this.dom_elements = this.dom_elements.filter(function (v) { return v !== null; });
-
-      this.current_scroll_top = current_scroll_top;
-      this._update_buffer_and_white_space();
-      this.$container.scrollTop(current_scroll_top);
-   };
-
-   ListView.prototype.quit_filter = function (skip_update) {
-      this.filter_func = null;
-      this.filtered.push({original_index: this.data.length+this.filtered.length-1});
-      var offset = 0;
-      var current_scroll_top = Math.max(this.current_scroll_top, 0);
-      var adjusted_scroll_top = false;
-
-      for (var i = 0; i < this.filtered.length-1; i++) {
-         var obj = this.filtered[i];
-         var next = this.filtered[i+1];
-
-         this.data.splice(obj.original_index, 0, {top: obj.top});
-         this.dom_elements.splice(obj.original_index, 0, obj.dom_element);
-
-         offset += obj.height;
-
-         for (var j = obj.original_index+1; j < next.original_index; j++) {
-            if (!adjusted_scroll_top && current_scroll_top < this.data[j].top) {
-               current_scroll_top += offset;
-               adjusted_scroll_top = true;
-            }
-
-            this.data[j].top += offset;
-         }
-      }
-
-      this.filtered = [];
-      this.virtual_height += offset;
-
-      if (!skip_update) {
-         this.current_scroll_top = current_scroll_top;
-         this._update_buffer_and_white_space();
-         this.$container.scrollTop(current_scroll_top);
       }
    };
 
