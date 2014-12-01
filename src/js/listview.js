@@ -422,11 +422,11 @@ define(["jquery", "underscore"], function ($, _) {
       return (this.buffer_position <= position && position <= this.buffer_position+this.get_max_buffer_height());
    };
 
-   ListView.prototype._get_element_and_index = function (position, round_to_roof) {
+   ListView.prototype._get_element_and_index = function (position, round_to_roof, start, end) {
       this.data.push({top: Number.POSITIVE_INFINITY});
 
-      var left = 0;
-      var right = this.data.length-2; // dont count the dummy node
+      var left  = (start==null)? 0 : start;
+      var right = (end==null)? this.data.length-2 : end; // dont count the dummy node
 
       while (left <= right) {
          var middle = Math.floor((left+right) / 2);
@@ -434,37 +434,41 @@ define(["jquery", "underscore"], function ($, _) {
          var found = this.data[middle];
          var next  = this.data[middle+1];
 
+         /*           /-- found.top
+                     /        /--- next.top
+                     V        V
+                     |        |
+                     | found  |  next
+                     |        |
+                    /=========/
+                        ^is position here?
+            
+            Because the condition is found.top <= position < next.top we can ensure
+            that found.top < next.top and that implies that the found element has
+            height of (next.top-found.top) which is greater than zero, so the found
+            element is not invisible.
+         */
          if (found.top <= position && position < next.top) {
             this.data.pop();
-            if (!round_to_roof && middle+1 < this.data.length) {
-               found = next;
-               middle = middle+1;
-               for(var i = middle+1; i < this.data.length; i++) { //optimizar!!
-                  if (this.data[i].top === found.top) {
-                     found = this.data[i];
-                     middle = i;
-                  }
-                  else {
-                     break;
-                  }
+            if (!round_to_roof) {
+               
+               // get the next element (we are rounding to the floor)
+               // but this "next" element can be invisible, so we need to search for the
+               // correct one.
+               if (middle + 1 < this.data.length) {
+                  // so we look for the element with the same top position 
+                  var result = this._get_element_and_index(next.top, true, middle+1);
+                  
+                  // by definition, _get_element_and_index returns elements that
+                  // are visible, so "results" has the correct data.
+                  return result;
                }
-
-               if (middle+1 < this.data.length) {
-                  found = this.data[i];
-                  middle = middle+1;
+               else {
+                  return {element: found, index: middle};
                }
-               return {element: found, index: middle};
             }
             else {
-               for(var i = middle+1; i < this.data.length; i++) { 
-                  if (this.data[i].top === found.top) {
-                     found = this.data[i];
-                     middle = i;
-                  }
-                  else {
-                     break;
-                  }
-               }
+               // found.top <= position so found.top is rounded to the roof already
                return {element: found, index: middle};
             }
          }
