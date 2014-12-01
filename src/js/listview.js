@@ -135,15 +135,16 @@ define(["jquery", "underscore"], function ($, _) {
    };
 
    ListView.prototype.push = function (dom_element, height) {
-      if (!height) {
+      if (height === undefined) {
          var tmp = $(dom_element)
          tmp.appendTo(this.$white_bottom_space);
-         height = tmp.outerHeight(true);
+
+         height = (tmp.css("display") === "none")? 0 : tmp.outerHeight(true);
 
          tmp.detach();
       }
    
-      if (!height || height <= 0) {
+      if (height < 0) {
          throw new Error("Invalid height for the dom element "+dom_element+": "+height+"");
       }
 
