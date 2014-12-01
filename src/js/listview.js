@@ -160,6 +160,11 @@ define(["jquery", "underscore"], function ($, _) {
       // update the virtual_height
       this.virtual_height += height;
 
+      // no change at all, so return quickly
+      if(height===0) {
+         return;
+      }
+
       if (force_to_be_at_bottom) { 
          // update the current_scroll_top and the buffer and the white space
          var new_scroll_top = this._get_greater_scroll_top_at_bottom();
