@@ -248,9 +248,12 @@ define(["jquery", "underscore"], function ($, _) {
       var floor_element       = result.element;
       var floor_element_index = result.index;
 
-      var new_elements_in_buffer = _.pluck(this.data.slice(roof_element_index, floor_element_index+1), 'dom_element');
+      var elements_in_buffer_range = this.data.slice(roof_element_index, floor_element_index+1);
+      var visible_elements_in_buffer_range = _.filter(elements_in_buffer_range, function (obj, i, elements) { return (i === elements.length-1 || obj.top < elements[i+1].top); });
+      var visible_dom_elements_in_buffer_range = _.pluck(visible_elements_in_buffer_range, 'dom_element')
+
       this.$buffer.children().detach();
-      this.$buffer.append(new_elements_in_buffer);
+      this.$buffer.append(visible_dom_elements_in_buffer_range);
    };
 
    /*
