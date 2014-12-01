@@ -31,7 +31,6 @@ define(["jquery", "underscore"], function ($, _) {
       this.is_at_bottom = true;
 
       this.data = [];
-      this.dom_elements = [];
 
       //var common_style = "border: 1px solid black; margin: 0px; padding: 0px;";
       var common_style = "border: 0px; margin: 0px; padding: 0px;";
@@ -134,7 +133,9 @@ define(["jquery", "underscore"], function ($, _) {
       this._recalculate_if_it_is_at_bottom();
    };
 
-   ListView.prototype.push = function (dom_element, height) {
+   ListView.prototype.push = function (obj, height) {
+      var dom_element = obj.dom_element;
+
       if (height === undefined) {
          var tmp = $(dom_element)
          tmp.appendTo(this.$white_bottom_space);
@@ -154,8 +155,8 @@ define(["jquery", "underscore"], function ($, _) {
       var position_of_new_element = this.virtual_height;
 
       // update the data
-      this.data.push({top: position_of_new_element});
-      this.dom_elements.push(dom_element);
+      obj.top = position_of_new_element;
+      this.data.push(obj);
 
       // update the virtual_height
       this.virtual_height += height;
@@ -247,7 +248,7 @@ define(["jquery", "underscore"], function ($, _) {
       var floor_element       = result.element;
       var floor_element_index = result.index;
 
-      var new_elements_in_buffer = this.dom_elements.slice(roof_element_index, floor_element_index+1);
+      var new_elements_in_buffer = _.pluck(this.data.slice(roof_element_index, floor_element_index+1), 'dom_element');
       this.$buffer.children().detach();
       this.$buffer.append(new_elements_in_buffer);
    };
@@ -264,17 +265,17 @@ define(["jquery", "underscore"], function ($, _) {
       }
          
       var offset = 0;
-      for (var i = 0; i < this.dom_elements.length; i+=30) {
-         var j = Math.min(i + 30, this.dom_elements.length);
+      for (var i = 0; i < this.data.length; i+=30) {
+         var j = Math.min(i + 30, this.data.length);
       
-         var new_elements_in_buffer = this.dom_elements.slice(i, j);
+         var new_elements_in_buffer = _.pluck(this.data.slice(i, j), 'dom_element');
          this.$buffer.children().detach();
          this.$buffer.append(new_elements_in_buffer);
 
          for (var k = i; k < j; k++) { 
             this.data[k].top = offset;
             
-            var $el = this.dom_elements[k];
+            var $el = $(this.data[k].dom_element);
             offset += ($el.css("display") === "none")? 0 : $el.outerHeight(true);
          }
       }
@@ -476,7 +477,7 @@ define(["jquery", "underscore"], function ($, _) {
    ListView.prototype.apply = function (cb, recalculate_heights, context) {
       recalculate_heights = recalculate_heights || false;
       
-      _.each(this.dom_elements, cb, context);
+      _.each(this.data, cb, context);
       if (recalculate_heights) {
          this.notify_resize();
       }

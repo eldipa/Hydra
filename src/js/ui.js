@@ -22,7 +22,7 @@ define(['jquery', 'layout', 'code_view', 'event_handler', 'varViewer', 'widgets/
       log.autoscroll(true);
       log.feed = function (line) {
          var $newContent = $('<p>'+line+'</p>');
-         this.push($newContent);
+         this.push({dom_element: $newContent});
       };
 
       // Panel to render the stdout
@@ -31,7 +31,7 @@ define(['jquery', 'layout', 'code_view', 'event_handler', 'varViewer', 'widgets/
       stdoutlog.feed = function (data) {
          var line = "["+data.timestamp+"]@["+data.pid+"]: "+data.output+"";
          var $newContent = $('<p>'+line+'</p>');
-         this.push($newContent);
+         this.push({dom_element: $newContent});
       };
 
 
