@@ -1,6 +1,7 @@
-define(['jquery', 'layout', 'code_view', 'event_handler', 'varViewer', 'widgets/buttons'], function ($, layout, code_view, EH, varViewer, buttons) {
+define(['jquery', 'layout', 'code_view', 'event_handler', 'varViewer', 'widgets/buttons', 'listview_panel'], function ($, layout, code_view, EH, varViewer, buttons, listview_panel) {
    var Panel = layout.Panel;
    var Tabbed = layout.Tabbed;
+   var ListViewPanel = listview_panel.ListViewPanel;
 
    var init = function init(dom_element) {
       // Create the UI layout:
@@ -17,43 +18,22 @@ define(['jquery', 'layout', 'code_view', 'event_handler', 'varViewer', 'widgets/
 
       
       // Panel to render the log
-      var log = new Panel("Log");   //TODO (issue #32) se necesita una vista menos cabeza que esta. un LogViewer mas formal:
-      log.log = "";                 //como hacer que siempre se muestre lo ultimo? esto es un tema
-      log.render = function () {    //del scroll. (idealmente deberia ser como el scroll del wireshark.
-         this._$rendered_in = $(this.box); //TODO (issue #60) creo que layout.Panel deberia tener un flag de si esta o no en el DOM para decidir si se debe o no ejecutar esto.
-         this._$rendered_in.html(this.log);
-      };
-
-      log.unlink = function () {
-         if (this._$rendered_in) {
-            this._$rendered_in.empty();
-            this._$rendered_in = null;
-         }
-      };
-
+      var log = new ListViewPanel();
+      log.autoscroll(true);
       log.feed = function (line) {
-         this.log = this.log + "<br />" + line;
+         var $newContent = $('<p>'+line+'</p>');
+         this.push({dom_element: $newContent});
       };
 
       // Panel to render the stdout
-      var stdoutlog = new Panel("Stdout");  //TODO Ver todos los comentarios anteriores 
-      stdoutlog.log = "";                 
-      stdoutlog.render = function () {    
-         this._$rendered_in = $(this.box); 
-         this._$rendered_in.html(this.log);
-      };
-
-      stdoutlog.unlink = function () {
-         if (this._$rendered_in) {
-            this._$rendered_in.empty();
-            this._$rendered_in = null;
-         }
-      };
-
+      var stdoutlog = new ListViewPanel();
+      stdoutlog.autoscroll(true);
       stdoutlog.feed = function (data) {
          var line = "["+data.timestamp+"]@["+data.pid+"]: "+data.output+"";
-         this.log = this.log + "<br />" + line;
+         var $newContent = $('<p>'+line+'</p>');
+         this.push({dom_element: $newContent});
       };
+
 
       // then, the VarViewer
       var visor = new varViewer.VarViewer();

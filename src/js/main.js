@@ -12,7 +12,8 @@ requirejs.config({
       w2ui: 'external/w2ui',                 //TODO Deprecated
       ctxmenu: 'external/ctxmenu',
       varViewer: 'varViewer',
-      jqueryui: 'external/jquery-ui-1.11.1'
+      jqueryui: 'external/jquery-ui-1.11.1',
+      underscore: 'external/underscore-1.7.0',
    },
 
    shim: {
@@ -23,6 +24,9 @@ requirejs.config({
       "jqueryui": {
          exports: "$",
          deps: ['jquery']
+      },
+      "underscore": {
+         exports: "_",
       }
    }
 
