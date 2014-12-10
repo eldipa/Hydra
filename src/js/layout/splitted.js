@@ -63,6 +63,8 @@ define(['jquery', 'layout/panel', 'jqueryui'], function ($, P, _) {
 
             var correct_value_at_start = $(this)[dimension_name]();
             $(ui.helper)[dimension_name](correct_value_at_start);
+
+            $(ui.helper).removeClass("ui-state-hover").addClass("ui-state-active");
          };
       };
 
@@ -93,27 +95,27 @@ define(['jquery', 'layout/panel', 'jqueryui'], function ($, P, _) {
 
       if (this._splitted_direction === 'horizontally') {
          this._$container = $(
-            '<div class="splitted_container">' +
+            '<div class="splitted_container ui-widget-content">' +
                '<div class="top_panel_of_splitted"></div>' +
                '<div class="bottom_side_panel_and_bar_of_splitted">' +
-                  '<div class="horizontal_bar_splitting"></div>' +
+                  '<div class="horizontal_bar_splitting ui-state-default"></div>' +
                   '<div class="bottom_panel_of_splitted"></div>' +
                '</div>' +
             '</div>');
-         this._$container.find('.horizontal_bar_splitting').draggable(options_for_draggable_bar('horizontal'));
+         this._$container.find('.horizontal_bar_splitting').hover(function () {$(this).toggleClass("ui-state-hover")}).draggable(options_for_draggable_bar('horizontal'));
          this._position_name = 'top';
          this._dimension_name = 'height';
       }
       else {
          this._$container = $(
-            '<div class="splitted_container">' +
+            '<div class="splitted_container ui-widget-content">' +
                '<div class="left_panel_of_splitted"></div>' +
                '<div class="right_side_panel_and_bar_of_splitted">' +
-                  '<div class="vertical_bar_splitting"></div>' +
+                  '<div class="vertical_bar_splitting ui-state-default"></div>' +
                   '<div class="right_panel_of_splitted"></div>' +
                '</div>' +
             '</div>');
-         this._$container.find('.vertical_bar_splitting').draggable(options_for_draggable_bar('vertical'));
+         this._$container.find('.vertical_bar_splitting').hover(function () {$(this).toggleClass("ui-state-hover")}).draggable(options_for_draggable_bar('vertical'));
          this._position_name = 'left';
          this._dimension_name = 'width';
       }

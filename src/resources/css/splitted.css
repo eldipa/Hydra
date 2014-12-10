@@ -50,11 +50,11 @@
 }
 
 .vertical_bar_splitting {
-   width: 6px;
+   width: 4px;
    height: 100%;
    display: inline-block;
    float: left;
-   background-color: #000000;
+   /*background-color: #000000;*/
    overflow: hidden;
    cursor: ew-resize;
    z-index: 999;
@@ -104,11 +104,11 @@
 }
 
 .horizontal_bar_splitting {
-   height: 6px;
+   height: 4px;
    width: 100%;
    display: inline-block;
    float: left;
-   background-color: #000000;
+   /*background-color: #000000;*/
    overflow: hidden;
    cursor: ns-resize;
    z-index: 999;
@@ -120,7 +120,7 @@
  *
  * */
 .splitted_container {
-   background-color: #6666aa;
+   /*background-color: #6666aa;*/
    min-width: 10px;
    min-height: 10px;
    height: 100%;
