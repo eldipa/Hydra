@@ -15,9 +15,9 @@ class OutputLogger(threading.Thread):
         self.outputsFd = []
         self.openFiles = {}
         self.originPid = {}
-        fifoPath = tempfile.mktemp()
-        os.mkfifo(fifoPath)
-        self.myFifo = open(fifoPath, 'r+')
+        self.fifoPath = tempfile.mktemp()
+        os.mkfifo(self.fifoPath)
+        self.myFifo = open(self.fifoPath, 'r+')
         self.outputsFd.append(self.myFifo.fileno())
         self.openFiles[self.myFifo.fileno()] = self.myFifo
         self.originPid[self.myFifo.fileno()] = "internal"
@@ -56,6 +56,7 @@ class OutputLogger(threading.Thread):
                 self.file.write(log + '\n')
                 event = { "timestamp" : str(timestamp),  "pid" : self.originPid[salida], "output": leido }
                 self.eventHandler.publish("outputlog.%i" % self.originPid[salida], event)
+        os.remove(self.fifoPath)
             
     
     def newFd(self, data):
