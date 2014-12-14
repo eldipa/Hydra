@@ -10,7 +10,7 @@ from threading import Lock
 import syslog, traceback
 from connection import Connection
 from topic import build_topic_chain, fail_if_topic_isnt_valid
-
+from esc import esc
 
 
 class EventHandler(threading.Thread):
@@ -35,13 +35,13 @@ class EventHandler(threading.Thread):
         try:
            if self.callbacks_by_topic.has_key(topic):
                self.callbacks_by_topic[topic].append((callback, {'id': self.next_valid_subscription_id}))
-               syslog.syslog(syslog.LOG_DEBUG, "Registered subscription locally. Subscription to the topic '%s' already sent." % (topic))
+               syslog.syslog(syslog.LOG_DEBUG, "Registered subscription locally. Subscription to the topic '%s' already sent." % esc(topic))
            else:
                self.connection.send_object({'type': 'subscribe', 'topic': topic})
                syslog.syslog(syslog.LOG_DEBUG, "Subscription sent.")
 
                self.callbacks_by_topic[topic] = [(callback, {'id': self.next_valid_subscription_id})]
-               syslog.syslog(syslog.LOG_DEBUG, "Sending subscription to the topic '%s'." % (topic))
+               syslog.syslog(syslog.LOG_DEBUG, "Sending subscription to the topic '%s'." % esc(topic))
 
            self.subscriptions_by_id[self.next_valid_subscription_id] = {
                  'callback': callback,
@@ -61,7 +61,7 @@ class EventHandler(threading.Thread):
     def publish(self, topic, data):
         fail_if_topic_isnt_valid(topic, allow_empty=False)
 
-        syslog.syslog(syslog.LOG_DEBUG, "Sending publication of an event with topic '%s'." % (topic))
+        syslog.syslog(syslog.LOG_DEBUG, "Sending publication of an event with topic '%s'." % esc(topic))
         self.connection.send_object({'type': 'publish', 'topic': topic, 'data': data})
         syslog.syslog(syslog.LOG_DEBUG, "Publication of an event sent.")
 
@@ -78,7 +78,7 @@ class EventHandler(threading.Thread):
         try:
            subscription = self.subscriptions_by_id[subscription_id]
         except KeyError:
-           raise Exception("The subscription id '%i' hasn't any callback registered to it." % subscription_id)
+           raise Exception("The subscription id '%i' hasn't any callback registered to it." % esc(subscription_id))
 
         topic = subscription['topic']
         callbackToBeRemoved = subscription['callback']
@@ -139,7 +139,7 @@ class EventHandler(threading.Thread):
                    self.dispatch(event)
                    
         except:
-           syslog.syslog(syslog.LOG_ERR, "Exception when receiving a message: %s." % traceback.format_exc())
+           syslog.syslog(syslog.LOG_ERR, "Exception when receiving a message: %s." % esc(traceback.format_exc()))
         finally:
            self.connection.close()
 
@@ -148,16 +148,16 @@ class EventHandler(threading.Thread):
 
         self.lock.acquire()
         try:
-           syslog.syslog(syslog.LOG_DEBUG, "Executing callback over the topic chain '%s'." % (", ".join(topic_chain)))
+           syslog.syslog(syslog.LOG_DEBUG, "Executing callback over the topic chain '%s'." % esc(", ".join(topic_chain))) ##TODO
            for t in topic_chain:
                callbacks = self.callbacks_by_topic.get(t, []);
-               syslog.syslog(syslog.LOG_DEBUG, "For the topic '%s' there are %i callbacks." % (t if t else "(the empty topic)", len(callbacks)))
+               syslog.syslog(syslog.LOG_DEBUG, "For the topic '%s' there are %i callbacks." % esc(t if t else "(the empty topic)", len(callbacks)))
                 
                for callback, subscription in callbacks:
                    try:
                        callback(event['data'])
                    except:
-                       syslog.syslog(syslog.LOG_ERR, "Exception in callback for the topic '%s': %s" % (t if t else "(the empty topic)", traceback.format_exc()))
+                       syslog.syslog(syslog.LOG_ERR, "Exception in callback for the topic '%s': %s" % esc(t if t else "(the empty topic)", traceback.format_exc()))
 
         finally:
            self.lock.release()

@@ -5,6 +5,8 @@ import json
 import time
 import traceback
 
+from esc import esc
+
 class Connection(object):
    def __init__(self, address_or_already_open_socket):
       self.buf = ""
@@ -37,9 +39,9 @@ class Connection(object):
          raise Exception("The communication is already close")
 
       message = json.dumps(obj)
-      syslog.syslog(syslog.LOG_DEBUG, "Sending object (%i bytes): %s." % (len(message), message))
+      syslog.syslog(syslog.LOG_DEBUG, "Sending object (%i bytes): %s." % esc(len(message), message))
       self.socket.sendall(message)
-      syslog.syslog(syslog.LOG_DEBUG, "Object sent (%i bytes)." % (len(message)))
+      syslog.syslog(syslog.LOG_DEBUG, "Object sent (%i bytes)." % esc(len(message)))
 
    def receive_objects(self):
       if self.end_of_the_communication:
@@ -62,18 +64,18 @@ class Connection(object):
       try:
          self.socket.shutdown(socket.SHUT_RDWR)
       except:
-         syslog.syslog(syslog.LOG_ERR, "Error in the shutdown: '%s'" % traceback.format_exc())
+         syslog.syslog(syslog.LOG_ERR, "Error in the shutdown: '%s'" % esc(traceback.format_exc()))
 
       try:
          self.socket.close()
       except:
-         syslog.syslog(syslog.LOG_ERR, "Error in the close: '%s'" % traceback.format_exc())
+         syslog.syslog(syslog.LOG_ERR, "Error in the close: '%s'" % esc(traceback.format_exc()))
 
     
    def _read_chunk(self):
       syslog.syslog(syslog.LOG_DEBUG, "Waiting for the next chunk of data")
       chunk = self.socket.recv(8912)
-      syslog.syslog(syslog.LOG_DEBUG, "Chunk received (%i bytes)." % len(chunk))
+      syslog.syslog(syslog.LOG_DEBUG, "Chunk received (%i bytes)." % esc(len(chunk)))
 
       return chunk
 
@@ -99,7 +101,7 @@ class Connection(object):
           
           try:
               obj = json.loads(self.buf)
-              syslog.syslog(syslog.LOG_DEBUG, "Received object from this raw string: '%s'." % (self.buf))
+              syslog.syslog(syslog.LOG_DEBUG, "Received object from this raw string: '%s'." % esc(self.buf))
           except:
               # JSON fail, so the 'object' is not complete yet
               continue
@@ -107,7 +109,7 @@ class Connection(object):
           self.buf = ''
           objects.append(obj)
       
-      syslog.syslog(syslog.LOG_DEBUG, "Received %i objects (remain %i bytes in the internal buffer)" % (len(objects), len(self.buf)))
+      syslog.syslog(syslog.LOG_DEBUG, "Received %i objects (remain %i bytes in the internal buffer)" % esc(len(objects), len(self.buf)))
       return objects
 
    def __del__(self):

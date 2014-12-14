@@ -1,3 +1,5 @@
+from esc import esc
+
 def build_topic_chain(topic):
    ''' We build the topic chain:
          if the event's topic is empty, the chain is ['']
@@ -31,14 +33,14 @@ def fail_if_topic_isnt_valid(topic, allow_empty=False):
 
    for i, c in enumerate(topic):
       if c not in VALID:
-         raise Exception("Character number %i is not a valid character '%s' in the topic '%s'." % (i+1, c, topic))
+         raise Exception("Character number %i is not a valid character '%s' in the topic '%s'." % esc(i+1, c, topic))
 
    if topic.startswith(".") or topic.endswith("."):
-      raise Exception("The topic can not start or end with a dot. The topic is '%s'." % (topic))
+      raise Exception("The topic can not start or end with a dot. The topic is '%s'." % esc(topic))
 
    if not allow_empty and not topic:
       assert " " not in topic
-      raise Exception("The topic cannot be empty: '%s'" % topic)
+      raise Exception("The topic cannot be empty: '%s'" % esc(topic))
 
    subtopics = topic.split(".")
    if len(subtopics) > 1:
