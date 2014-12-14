@@ -73,6 +73,21 @@ class EventHandler(threading.Thread):
         finally:
            self.lock.release()
 
+    def wait(self, topic):
+        flag = Lock()
+        env = {}
+        
+        def set_data_and_release_flag(data):
+            env['data'] = data
+            flag.release()
+
+        flag.acquire()
+        self.subscribe_for_once_call(topic, set_data_and_release_flag)
+        flag.acquire() # this will block us until the set_data_and_release_flag is called
+
+        flag.release() # just for clean up
+        return env['data']
+        
 
     def _unsubscribe(self, subscription_id):
         try:

@@ -344,7 +344,24 @@ The *subscribe_for_once_call* is a shortcut for that:
    >>> time.sleep(2)
    >>> received
    u'A'
-   
+
+
+Synchronous call
+----------------
+
+Sometimes you need a synchronized way to wait a particular event. (don't abuse this!)
+
+::
+   >>> def emit_event_after_a_while():
+   ...   time.sleep(1)
+   ...   pubsub.publish('sync-event', 'SYNC')
+
+   >>> emit_event_in_background = threading.Thread(None, emit_event_after_a_while)
+
+   >>> emit_event_in_background.start()
+   >>> received = pubsub.wait('sync-event') # this will block us until 'emit_event_after_a_while' is called and we receive the data
+   >>> received
+   u'SYNC'
 
 Cleanup
 -------
