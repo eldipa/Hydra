@@ -80,10 +80,10 @@ class _Endpoint(threading.Thread):
          self.is_finished = True
 
    def close(self):
-      syslog.syslog(syslog.LOG_NOTICE, "Closing the connection with the endpoint.")
+      syslog.syslog(syslog.LOG_NOTICE, "Closing the connection with the endpoint: %s." % esc(repr(self)))
       self.is_finished = True
       self.connection.close()
-      syslog.syslog(syslog.LOG_NOTICE, "Connection closed.")
+      syslog.syslog(syslog.LOG_NOTICE, "Connection closed: %s" % esc(repr(self)))
 
    def __repr__(self):
       return "%s%s" % (self.name, (" [dead]" if self.is_finished else ""))

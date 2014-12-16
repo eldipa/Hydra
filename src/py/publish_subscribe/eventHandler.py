@@ -15,8 +15,10 @@ from esc import esc
 
 class EventHandler(threading.Thread):
     
-    def __init__(self):
+    def __init__(self, as_daemon=False):
         threading.Thread.__init__(self)
+        if as_daemon:
+           self.daemon = True
 
         self.connection = Connection(self._get_address())
         self.lock = Lock()
