@@ -1,7 +1,12 @@
 import gdb
 import re
+import sys
+import atexit
 
+## TODO sys.path.append("/home/martin/Codigo/ConcuDebug/src/py/")
+import publish_subscribe.eventHandler
 try:
+    ## TODO sys.path.append('/home/martin/Downloads/python-ptrace-0.8/')
     import ptrace
 except ImportError as e:
     raise ImportError("External lib 'ptrace' not found (formaly, python-ptrace, version 0.8 or higher)!: %s" % str(e))
@@ -30,6 +35,15 @@ elif RUNNING_LINUX:
 
 else:
     raise NotImplementedError("Unknown OS!: Unsupported OS or supported but it wasn't detected correctly.")
+
+
+eventHandler = publish_subscribe.eventHandler.Publisher()
+
+def cleanup():
+   global eventHandler
+   eventHandler.close()
+
+atexit.register(cleanup)
 
 
 class ProcessUnderGDB(PtraceProcess):
@@ -108,6 +122,9 @@ class ProcessUnderGDB(PtraceProcess):
                 else:
                     v = names_and_values[n]
 
+                if v.endswith("L"):
+                   v = v[:-1]
+
                 setattr(regs_struct, n, int(v, 16)) # gdb returns the values in hex
         else:
             raise NotImplementedError("Not implemented yet!: The get registers may be supported for other architectures in the future.")
@@ -153,6 +170,7 @@ class Opts:
 out = sys.stdout 
 #out = open("OUT", "w")
 
+
 def show_syscall(syscall_tracer, out):
     ''' Write to the out object the syscall's name, arguments and result. '''
 
@@ -164,12 +182,23 @@ def show_syscall(syscall_tracer, out):
             space = " " * offset
         else:
             space = ""
-        print(")%s = %s\n" % (space, syscall_tracer.result_text),
-                end='', file=out, flush=True)
+        
+        data = {
+            'result':   syscall_tracer.result,
+            'result_text': syscall_tracer.result_text
+        }
+ 
+        eventHandler.publish("syscall-exit", data)
 
     else:
-        #remove the ) at the end
-        print(text[:-1], end='', file=out, flush=True) 
+        arguments = [arg.format() for arg in syscall_tracer.arguments]
+        data = {
+            'restype':   syscall_tracer.restype,
+            'name':      syscall_tracer.name,
+            'arguments': arguments,
+        }
+      
+        eventHandler.publish("syscall-enter", data)
 
 #TODO reiniciar estas variables cada vez que se lanza de nuevo la aplicacion
 process = ProcessUnderGDB()

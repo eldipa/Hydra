@@ -9,7 +9,11 @@ define(['jquery', 'layout', 'code_view', 'event_handler', 'varViewer', 'widgets/
       //   CodeViewer   | 
       //                | VarViewer
       // ---------------+
-      //   ConsoleLog   |
+      //   GDB Console  |
+      // ---------------+
+      //  Target Output |
+      // ---------------+
+      //   Syscall log  |
       //
       
       // we create the principal objects for the ui.
@@ -34,6 +38,22 @@ define(['jquery', 'layout', 'code_view', 'event_handler', 'varViewer', 'widgets/
          this.push({dom_element: $newContent});
       };
 
+      // Panel to render the syscall log
+      var syscalllog = new ListViewPanel();
+      syscalllog.autoscroll(true);
+      syscalllog.feed = function (data) {
+         if (data.result === undefined) { // syscall enter
+            var line = ""+data.name+"("+data.arguments.join(", ")+") : "+data.restype+"";
+            var $newContent = $('<span>'+line+'</span>');
+         }
+         else {                           // syscall exit
+            var line = " = " + data.result_text + "";
+            var $newContent = $('<span>'+line+'<br /></span>');
+         }
+         
+         this.push({dom_element: $newContent});
+      }
+
 
       // then, the VarViewer
       var visor = new varViewer.VarViewer();
@@ -50,6 +70,9 @@ define(['jquery', 'layout', 'code_view', 'event_handler', 'varViewer', 'widgets/
       root.render();
 
       view.parent().split(stdoutlog, "bottom");
+      root.render();
+
+      stdoutlog.split(syscalllog, "bottom")
       root.render();
            
 
@@ -107,6 +130,16 @@ define(['jquery', 'layout', 'code_view', 'event_handler', 'varViewer', 'widgets/
          event_handler.subscribe("outputlog", function (data) {
                stdoutlog.feed(data);
                stdoutlog.render();
+         });
+
+         // Loggeamos las syscalls (cuando se entra y se sale de una de ellas)
+         event_handler.subscribe("syscall-enter", function (data) {
+               syscalllog.feed(data);
+               syscalllog.render();
+         });
+         event_handler.subscribe("syscall-exit", function (data) {
+               syscalllog.feed(data);
+               syscalllog.render();
          });
 
          // TODO (issue #36), poner un breakpoint es relativamente facil, pero eliminarlos no.
