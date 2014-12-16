@@ -43,12 +43,12 @@ define(['jquery', 'layout', 'code_view', 'event_handler', 'varViewer', 'widgets/
       syscalllog.autoscroll(true);
       syscalllog.feed = function (data) {
          if (data.result === undefined) { // syscall enter
-            var line = ""+data.name+"("+data.arguments.join(", ")+") : "+data.restype+"";
-            var $newContent = $('<span>'+line+'</span>');
+            var line = "["+data.timestamp+"]@["+data.pid+"]: "+data.name+"("+data.arguments.join(", ")+") : "+data.restype+"";
+            var $newContent = $('<p>'+line+'</p>');
          }
          else {                           // syscall exit
-            var line = " = " + data.result_text + "";
-            var $newContent = $('<span>'+line+'<br /></span>');
+            var line = "["+data.timestamp+"]@["+data.pid+"]: result = " + data.result_text + "";
+            var $newContent = $('<p>'+line+'</p>');
          }
          
          this.push({dom_element: $newContent});
@@ -133,11 +133,7 @@ define(['jquery', 'layout', 'code_view', 'event_handler', 'varViewer', 'widgets/
          });
 
          // Loggeamos las syscalls (cuando se entra y se sale de una de ellas)
-         event_handler.subscribe("syscall-enter", function (data) {
-               syscalllog.feed(data);
-               syscalllog.render();
-         });
-         event_handler.subscribe("syscall-exit", function (data) {
+         event_handler.subscribe("syscall", function (data) {
                syscalllog.feed(data);
                syscalllog.render();
          });

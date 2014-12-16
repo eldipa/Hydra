@@ -2,6 +2,7 @@ import gdb
 import re
 import sys
 import atexit
+import time, datetime
 
 ## TODO sys.path.append("/home/martin/Codigo/ConcuDebug/src/py/")
 import publish_subscribe.eventHandler
@@ -55,6 +56,9 @@ class ProcessUnderGDB(PtraceProcess):
 
     def set_inferior(self, inferior):
        self._inferior = inferior
+
+    def get_process_id(self):
+       return self._inferior.pid
 
     # Reading
     #   - readWord(): read a memory word
@@ -167,38 +171,45 @@ class Opts:
     def __getattr__(self, name):
         return Opts.D.get(name, False)  # other options, set them to False
 
-out = sys.stdout 
-#out = open("OUT", "w")
 
+class PtraceSyscallPublisher(PtraceSyscall):
+   def __init__(self, *args, **kargs):
+      PtraceSyscall.__init__(self, *args, **kargs)
 
-def show_syscall(syscall_tracer, out):
-    ''' Write to the out object the syscall's name, arguments and result. '''
+   def publish_syscall(self):
+       ''' Publish the syscall's name, arguments and result. '''
 
-    name = syscall_tracer.name
-    text = syscall_tracer.format()
-    if syscall_tracer.result is not None:
-        offset = 40 - len(text)
-        if offset > 0:
-            space = " " * offset
-        else:
-            space = ""
-        
-        data = {
-            'result':   syscall_tracer.result,
-            'result_text': syscall_tracer.result_text
-        }
- 
-        eventHandler.publish("syscall-exit", data)
+       name = self.name
+       text = self.format()
+       pid = self.process.get_process_id()
+       timestamp = str(datetime.datetime.now())
+       if self.result is not None:
+           offset = 40 - len(text)
+           if offset > 0:
+               space = " " * offset
+           else:
+               space = ""
+           
+           data = {
+               'timestamp':   timestamp,
+               'pid':         pid,
+               'result':      self.result,
+               'result_text': self.result_text
+           }
+    
+           eventHandler.publish("syscall.exit.%i" % pid, data)
 
-    else:
-        arguments = [arg.format() for arg in syscall_tracer.arguments]
-        data = {
-            'restype':   syscall_tracer.restype,
-            'name':      syscall_tracer.name,
-            'arguments': arguments,
-        }
-      
-        eventHandler.publish("syscall-enter", data)
+       else:
+           arguments = [arg.format() for arg in self.arguments]
+           data = {
+               'timestamp':   timestamp,
+               'pid':       pid,
+               'restype':   self.restype,
+               'name':      self.name,
+               'arguments': arguments,
+           }
+         
+           eventHandler.publish("syscall.enter.%i" % pid, data)
 
 #TODO reiniciar estas variables cada vez que se lanza de nuevo la aplicacion
 process = ProcessUnderGDB()
@@ -207,7 +218,6 @@ tracer_in_syscall_by_inferior = {}
 def syscall_trace():
     global tracer_in_syscall_by_inferior
     global process
-    global out
 
     tracer_in_syscall = tracer_in_syscall_by_inferior.get(gdb.selected_inferior(), None)
 
@@ -219,14 +229,18 @@ def syscall_trace():
         tracer_in_syscall_by_inferior[gdb.selected_inferior()] = None
     else:
         regs = process.getregs()
-        syscall_tracer = PtraceSyscall(process, Opts(), regs) 
+        syscall_tracer = PtraceSyscallPublisher(process, Opts(), regs) 
         
         syscall_tracer.enter(regs)
         tracer_in_syscall_by_inferior[gdb.selected_inferior()] = syscall_tracer
 
-    show_syscall(syscall_tracer, out)
+    syscall_tracer.publish_syscall()
 
 class SyscallBreakpoint(gdb.Breakpoint):
+    ''' Special breakpoint to be set before or after a syscall. When this breakpoint
+        is hit, the target is stopped, data from it is recollected, a syscall trace
+        is created and then, the target is resumed. '''
+
     def __init__(self, spec, in_the_start_of_syscall, end_breakpoint):
         gdb.Breakpoint.__init__(self, spec, gdb.BP_BREAKPOINT, 0, False, False)
         self.silent = True
@@ -258,9 +272,15 @@ class SyscallBreakpoint(gdb.Breakpoint):
         return False
 
 class KernelVSyscallBreakpoint(gdb.Breakpoint):
+    ''' This special breakpoint will be set on the internal function __kernel_vsyscall
+        which call almost every syscall.
+        When the breakpoint is hit, this will dissamble the __kernel_vsyscall and
+        it will find the 'sysenter' instruction to set a SyscallBreakpoint before
+        and after it.
+        '''
     def __init__(self):
         gdb.Breakpoint.__init__(self, '__kernel_vsyscall', gdb.BP_BREAKPOINT, 0, False, True)
-        #self.silent = True
+        self.silent = True
         self.breakpoint_hit = False
 
     def stop(self):
