@@ -242,7 +242,7 @@ class SyscallBreakpoint(gdb.Breakpoint):
         is created and then, the target is resumed. '''
 
     def __init__(self, spec, in_the_start_of_syscall, end_breakpoint):
-        gdb.Breakpoint.__init__(self, spec, gdb.BP_BREAKPOINT, 0, False, False)
+        gdb.Breakpoint.__init__(self, spec, gdb.BP_BREAKPOINT, 0, True, False)
         self.silent = True
         self.in_the_start_of_syscall = in_the_start_of_syscall
         self.end_breakpoint = end_breakpoint
@@ -279,7 +279,7 @@ class KernelVSyscallBreakpoint(gdb.Breakpoint):
         and after it.
         '''
     def __init__(self):
-        gdb.Breakpoint.__init__(self, '__kernel_vsyscall', gdb.BP_BREAKPOINT, 0, False, True)
+        gdb.Breakpoint.__init__(self, '__kernel_vsyscall', gdb.BP_BREAKPOINT, 0, True, True)
         self.silent = True
         self.breakpoint_hit = False
 
