@@ -30,7 +30,7 @@ class OutputReader(threading.Thread):
             if isinstance(record, Record):
                 if (record.klass == "thread-group-started"):
                     self.pid = record.results["pid"]
-                    self.eventHandler.publish("debugger.new-target" , {'gdbPid': self.gdbPid, 'targetPid': self.pid})
+                    self.eventHandler.publish("debugger.new-target.%i" % self.gdbPid , {'gdbPid': self.gdbPid, 'targetPid': self.pid})
                 
             if record != "(gdb)":
                 

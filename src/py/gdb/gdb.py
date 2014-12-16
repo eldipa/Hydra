@@ -7,6 +7,7 @@ import outputReader
 import publish_subscribe.eventHandler
 import tempfile
 import os
+import 
 
 HACK_PATH = "/shared/hack.so"
 
@@ -49,7 +50,9 @@ class Gdb:
         self.eventHandler.subscribe(str(self.gdb.pid) + ".evaluate-expression", self.evaluarExpresion)
         if (self.comandos):
             self.eventHandler.subscribe(str(self.gdb.pid) + ".evaluate-multiple-pointers", self.evaluarMultiplesPunteros)
-        
+        if(self.log):
+            self.targetPid = 0
+            self.eventHandler.subscribe("debugger.new-target.%i"%self.gdb.pid, self.registerPid)
         self.eventHandler.publish("debugger.new-session", self.gdb.pid)
 
     
@@ -58,7 +61,7 @@ class Gdb:
         self.gdbInput.write("-target-attach " + str(pid) + '\n')
         self.gdbInput.write("output-redirect " + self.fifoPath + '\n')
         self.subscribe()
-        self.eventHandler.publish("debugger.new-output", [self.gdb.pid, self.fifoPath])
+        self.eventHandler.publish("debugger.new-output", [pid, self.fifoPath])
     
     # -Gdb coloca como proceso target un nuevo proceso del codigo 'file'
     # -Modifica el entorno (ld_preload)
@@ -71,12 +74,19 @@ class Gdb:
         self.gdbInput.write('\n')
         self.subscribe()
 
+    def registerPid(self, data):
+        self.targetPid = data["targetPid"]
+
     
     # Ejecuta al target desde el comienzo
     def run(self, data=""):
         if(self.log):
-            self.eventHandler.publish("debugger.new-output", [self.gdb.pid, self.fifoPath])
+            self.targetPid = 0
             self.gdbInput.write("run" + '\n')
+            pids = self.eventHandler.wait("debugger.new-target")
+            print pids
+            self.targetPid = pids["targetPid"]
+            self.eventHandler.publish("debugger.new-output", [self.targetPid, self.fifoPath])
         else:
             self.gdbInput.write("run > " + "/tmp/SalidaAux.txt" + '\n')
     
