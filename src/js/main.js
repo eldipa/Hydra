@@ -14,6 +14,7 @@ requirejs.config({
       varViewer: 'varViewer',
       jqueryui: 'external/jquery-ui-1.11.1',
       underscore: 'external/underscore-1.7.0',
+      notify: 'external/notify'
    },
 
    shim: {
@@ -27,6 +28,10 @@ requirejs.config({
       },
       "underscore": {
          exports: "_",
+      },
+      "notify": {
+         deps: ['jquery'],
+         exports: "$",
       }
    }
 
@@ -41,7 +46,7 @@ requirejs.onResourceLoad = function(context, map, depArray) {
    }
 };
 
-requirejs(['ui', 'code_view', 'jquery', 'export_console', 'layout', 'layout_examples', 'jqueryui', 'ctxmenu'], function (ui, code_view, $, export_console, layout, layout_examples, _, ctxmenu) {
+requirejs(['ui', 'code_view', 'jquery', 'export_console', 'layout', 'layout_examples', 'jqueryui', 'ctxmenu', 'notify'], function (ui, code_view, $, export_console, layout, layout_examples, _, ctxmenu, notify) {
    var js_console_server = export_console.init();
    var fs = require('fs');
 
