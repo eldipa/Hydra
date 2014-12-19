@@ -95,7 +95,7 @@ define(['jquery', 'layout/panel', 'jqueryui'], function ($, P, _) {
 
       if (this._splitted_direction === 'horizontally') {
          this._$container = $(
-            '<div class="splitted_container ui-widget-content">' +
+            '<div class="splitted_container ui-widget">' +
                '<div class="top_panel_of_splitted"></div>' +
                '<div class="bottom_side_panel_and_bar_of_splitted">' +
                   '<div class="horizontal_bar_splitting ui-state-default"></div>' +
@@ -108,7 +108,7 @@ define(['jquery', 'layout/panel', 'jqueryui'], function ($, P, _) {
       }
       else {
          this._$container = $(
-            '<div class="splitted_container ui-widget-content">' +
+            '<div class="splitted_container ui-widget">' +
                '<div class="left_panel_of_splitted"></div>' +
                '<div class="right_side_panel_and_bar_of_splitted">' +
                   '<div class="vertical_bar_splitting ui-state-default"></div>' +

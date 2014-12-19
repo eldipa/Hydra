@@ -18,10 +18,13 @@ define(['jquery', 'layout', 'widgets/switch_theme', 'code_view', 'process_graph'
       hello_msg.render = function () {
          this._rendered_in = $(this.box);
          this._rendered_in.html(this.msg);
+
+         this._rendered_in.addClass("ui-widget-content");
       };
 
       hello_msg.unlink = function () {
          if (this._rendered_in) {
+            this._rendered_in.removeClass("ui-widget-content");
             this._rendered_in.empty();
             this._rendered_in = null;
          }

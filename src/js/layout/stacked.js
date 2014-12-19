@@ -15,13 +15,13 @@ define(['jquery', 'layout/panel', 'jqueryui'], function ($, P, _) {
 
       if (this._stack_direction === 'vertically') {
          this._$container = $(
-            '<div class="vertical_stacked_container ui-widget-content">' +
+            '<div class="vertical_stacked_container ui-widget">' +
             '</div>');
          this._child_class = "vertical_panel_of_stacked";
       }
       else {
          this._$container = $(
-            '<div class="horizontal_stacked_container ui-widget-content">' +
+            '<div class="horizontal_stacked_container ui-widget">' +
             '</div>');
          this._child_class = "horizontal_panel_of_stacked";
       }
