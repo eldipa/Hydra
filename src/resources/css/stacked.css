@@ -1,0 +1,68 @@
+
+/* 
+ * Vertical/Horizontal stack
+ * =========================
+ *
+ * Usage (replace 'vertical' by 'horizontal' to change the orientation):
+ * -----
+ *
+ 
+               <div class="vertical_stacked_container">
+                 <div class="vertical_panel_of_stacked">
+                       <p>This is on the top of the vertical stack.</p>
+                 </div>
+
+                 <div class="vertical_panel_of_stacked">
+                       <p>This is in the middle of the vertical stack.</p>
+                 </div>
+                 <div class="vertical_panel_of_stacked">
+                       <p>This is at the bottom of the vertical stack.</p>
+                 </div>
+              </div>
+
+ *
+ * You cannot nest stacks!
+ **/
+
+.vertical_panel_of_stacked {
+   position: relative;
+   flex: 0 1 auto;
+   height: initial;
+   width: 100%;
+   display: inline-block;
+   float: left;
+   overflow: auto;
+}
+
+.horizontal_panel_of_stacked {
+   position: relative;
+   flex: 0 1 auto;
+   width: initial;
+   height: 100%;
+   display: inline-block;
+   float: left;
+   overflow: auto;
+}
+
+/*
+ * Common container
+ * ================
+ *
+ * */
+.vertical_stacked_container {
+   min-width: 10px;
+   min-height: 10px;
+   height: 100%;
+   overflow: hidden;
+   display: flex;
+   flex-flow: column;
+}
+.horizontal_stacked_container {
+   min-width: 10px;
+   min-height: 10px;
+   height: 100%;
+   overflow: hidden;
+   display: flex;
+   flex-flow: row;
+}
+
