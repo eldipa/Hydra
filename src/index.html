@@ -99,9 +99,15 @@
           z-index: 999;
        }
 
+       /* The bar of a Splitted should be transparent */
        .bar_of_splitted_transparent {
           background: transparent !important;
           border: 1px solid transparent !important;
+       }
+
+       /* Disallow the selection of the text */
+       * {
+          -webkit-user-select: none;
        }
     </style>
 
