@@ -2,7 +2,7 @@ define(['ace', 'jquery', 'layout'], function (ace, $, layout) {
    function CodeView() {
       this.super("Code View");
 
-      this._$container = $('<div style="width: 100%; height: 100%; min-width: 100px; min-height: 100px"></div>');
+      this._$container = $('<div style="width: 100%; height: 100%;"></div>');
       this.create_ace_viewer();
       this.saved_session_by_filename = {};
       this.filename = null;
@@ -90,6 +90,13 @@ define(['ace', 'jquery', 'layout'], function (ace, $, layout) {
    /* Render */
    CodeView.prototype.render = function () {
       if (this._$out_of_dom) {
+         if ($(this.box).css('position') === 'relative') {
+            this._$out_of_dom.css('position', 'absolute');
+         }
+         else {
+            this._$out_of_dom.css('position', '');
+         }
+
          this._$out_of_dom.appendTo(this.box);
          this._$out_of_dom = null;
       }
