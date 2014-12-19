@@ -21,7 +21,7 @@ define(['jquery', 'layout/panel', 'jqueryui'], function ($, P, _) {
       }
       else {
          this._$container = $(
-            '<div class="horizontal_stacked_container ui-widget">' +
+            '<div class="horizontal_stacked_container ui-widget ui-widget-content ui-corner-all">' +
             '</div>');
          this._child_class = "horizontal_panel_of_stacked";
       }
