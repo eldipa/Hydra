@@ -258,7 +258,6 @@ define(['jquery', 'layout', 'code_view', 'event_handler', 'varViewer', 'widgets/
                },
             }], true);
 
-      // TODO (issue #68) hacer un "Splitted" con size fijo: la barra de botones no deberia ser resizable
       // TODO (issue #69) hacer que las lineas de separacion del split sean mas finas y que se engrosen
       // mientras este el mouse encima de ellas.
       

@@ -753,6 +753,24 @@ define(['jquery', 'layout', 'widgets/switch_theme', 'code_view', 'process_graph'
       more_bye_msg.swap(pg_panel);
       root.render();
 
+      bye_bye_msg.remove();
+      more_bye_msg.remove();
+      cv_panel.remove();
+      lorem_ipsum_msg.remove();
+      
+      var S1 = new layout.Stacked("horizontally");
+      S1.add_child(more_bye_msg, {position: "left", grow: 0, shrink: 1});
+      S1.add_child(lorem_ipsum_msg, {position: "right", grow: 1, shrink: 1});
+      S1.add_child(bye_bye_msg, {position: "right", grow: 1, shrink: 1});
+      S1.add_child(cv_panel, {position: "right", grow: 1, shrink: 1});
+
+      S1.remove_child(cv_panel);
+      S1.replace_child(bye_bye_msg, cv_panel);
+      S1.remove_child(lorem_ipsum_msg);
+
+      hello_msg.swap(S1);
+      root.render();
+
       return;
    }
 
