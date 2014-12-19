@@ -261,7 +261,12 @@ define(['jquery', 'layout', 'code_view', 'event_handler', 'varViewer', 'widgets/
       // TODO (issue #68) hacer un "Splitted" con size fijo: la barra de botones no deberia ser resizable
       // TODO (issue #69) hacer que las lineas de separacion del split sean mas finas y que se engrosen
       // mientras este el mouse encima de ellas.
-      view.split(main_button_bar, "top");
+      
+      var S1 = new layout.Stacked("vertically");
+      view.swap(S1);
+      S1.add_child(main_button_bar, {position: "top", grow: 0, shrink: 0});
+      S1.add_child(view, {position: "bottom", grow: 1, shrink: 1});
+
       root.render();
 
       event_handler.publish("debugger.load", "cppTestCode/outputTest");
