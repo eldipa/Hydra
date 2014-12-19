@@ -50,11 +50,10 @@
 }
 
 .vertical_bar_splitting {
-   width: 4px;
+   width: 1px;
    height: 100%;
    display: inline-block;
    float: left;
-   /*background-color: #000000;*/
    overflow: hidden;
    cursor: ew-resize;
    z-index: 999;
@@ -104,11 +103,10 @@
 }
 
 .horizontal_bar_splitting {
-   height: 4px;
+   height: 1px;
    width: 100%;
    display: inline-block;
    float: left;
-   /*background-color: #000000;*/
    overflow: hidden;
    cursor: ns-resize;
    z-index: 999;
@@ -120,7 +118,6 @@
  *
  * */
 .splitted_container {
-   /*background-color: #6666aa;*/
    min-width: 10px;
    min-height: 10px;
    height: 100%;
