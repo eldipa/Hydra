@@ -96,10 +96,10 @@ define(['jquery', 'layout/panel', 'jqueryui'], function ($, P, _) {
       if (this._splitted_direction === 'horizontally') {
          this._$container = $(
             '<div class="splitted_container ui-widget">' +
-               '<div class="top_panel_of_splitted"></div>' +
+               '<div class="top_panel_of_splitted ui-widget-content ui-corner-all"></div>' +
                '<div class="bottom_side_panel_and_bar_of_splitted">' +
                   '<div class="horizontal_bar_splitting ui-state-default bar_of_splitted_transparent"></div>' +
-                  '<div class="bottom_panel_of_splitted"></div>' +
+                  '<div class="bottom_panel_of_splitted ui-widget-content ui-corner-all"></div>' +
                '</div>' +
             '</div>');
          this._$container.find('.horizontal_bar_splitting').hover(function () {$(this).toggleClass("ui-state-hover").toggleClass("bar_of_splitted_transparent")}).draggable(options_for_draggable_bar('horizontal'));
@@ -109,10 +109,10 @@ define(['jquery', 'layout/panel', 'jqueryui'], function ($, P, _) {
       else {
          this._$container = $(
             '<div class="splitted_container ui-widget">' +
-               '<div class="left_panel_of_splitted"></div>' +
+               '<div class="left_panel_of_splitted ui-widget-content ui-corner-all"></div>' +
                '<div class="right_side_panel_and_bar_of_splitted">' +
                   '<div class="vertical_bar_splitting ui-state-default bar_of_splitted_transparent"></div>' +
-                  '<div class="right_panel_of_splitted"></div>' +
+                  '<div class="right_panel_of_splitted ui-widget-content ui-corner-all"></div>' +
                '</div>' +
             '</div>');
          this._$container.find('.vertical_bar_splitting').hover(function () {$(this).toggleClass("ui-state-hover").toggleClass("bar_of_splitted_transparent")}).draggable(options_for_draggable_bar('vertical'));

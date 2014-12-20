@@ -15,7 +15,7 @@ define(['jquery', 'layout/panel', 'jqueryui'], function ($, P, _) {
 
       if (this._stack_direction === 'vertically') {
          this._$container = $(
-            '<div class="vertical_stacked_container ui-widget">' +
+            '<div class="vertical_stacked_container ui-widget ui-widget-content ui-corner-all">' +
             '</div>');
          this._child_class = "vertical_panel_of_stacked";
       }
