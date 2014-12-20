@@ -7,7 +7,6 @@ import outputReader
 import publish_subscribe.eventHandler
 import tempfile
 import os
-import threading
 
 HACK_PATH = "/shared/hack.so"
 
@@ -35,7 +34,6 @@ class Gdb:
             self.fifoPath = tempfile.mktemp()
             os.mkfifo(self.fifoPath)
             self.gdbInput.write("fifo-register " + self.fifoPath + '\n')
-            self.lock = threading.Lock()
         
     def getSessionId(self):
         return self.gdb.pid
