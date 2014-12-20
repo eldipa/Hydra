@@ -38,11 +38,14 @@ requirejs.config({
 });
 
 var __modules_loaded_count = 0;
+var __status_element = window.splash_window.window.document.getElementById("status");
 requirejs.onResourceLoad = function(context, map, depArray) {
    __modules_loaded_count += 1;
    try {
-      window.splash_window.window.document.getElementById("status").innerHTML = "["+__modules_loaded_count+"] " + map.id + "";
+      __status_element.innerHTML = "Loading... ["+__modules_loaded_count+" modules done].";
    } catch (e) {
+      console.error("" + e);
+      __status_element = window.splash_window.window.document.getElementById("status");
    }
 };
 
