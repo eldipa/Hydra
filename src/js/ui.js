@@ -58,7 +58,7 @@ define(['jquery', 'layout', 'code_view', 'event_handler', 'varViewer', 'widgets/
       // then, the VarViewer
       var visor = new varViewer.VarViewer();
 
-      var stdinText = new standarInput.StandarInput();
+      var stdinTextInput = new standarInput.StandarInput();
 
 
       // Now we attach and build the final layout
@@ -74,7 +74,7 @@ define(['jquery', 'layout', 'code_view', 'event_handler', 'varViewer', 'widgets/
       view.parent().split(stdoutlog, "bottom");
       root.render();
       
-      view.parent().split(stdinText, "bottom");
+      view.parent().split(stdinTextInput, "bottom");
       root.render();
 
       stdoutlog.split(syscalllog, "bottom")

@@ -60,7 +60,7 @@ class Gdb:
         self.eventHandler.subscribe(str(self.gdb.pid) + ".direct-command", self.directCommand)
         self.eventHandler.subscribe(str(self.gdb.pid) + ".get-variables", self.getVariables)
         self.eventHandler.subscribe(str(self.gdb.pid) + ".evaluate-expression", self.evaluarExpresion)
-        self.eventHandler.subscribe(str(self.gdb.pid) + "stdin", self.redirectToStdin)
+        self.eventHandler.subscribe(str(self.gdb.pid) + ".stdin", self.redirectToStdin)
         if (self.comandos):
             self.eventHandler.subscribe(str(self.gdb.pid) + ".evaluate-multiple-pointers", self.evaluarMultiplesPunteros)
         if(self.log):

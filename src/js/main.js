@@ -15,7 +15,7 @@ requirejs.config({
       jqueryui: 'external/jquery-ui-1.11.1',
       underscore: 'external/underscore-1.7.0',
       notify: 'external/notify',
-      standarInput: 'standarInput'
+      standarInput: 'standarInput',
    },
 
    shim: {
