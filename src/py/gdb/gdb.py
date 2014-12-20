@@ -7,8 +7,20 @@ import outputReader
 import publish_subscribe.eventHandler
 import tempfile
 import os
+import threading
 
 HACK_PATH = "/shared/hack.so"
+
+#Lock para utilizar en cada funcion que escriba en el stdin del gdb
+def Locker(func):
+        def newFunc(self, *args, **kwargs):
+            self.lock.acquire()
+            try:
+                result = func(self, *args, **kwargs)
+            finally:
+                self.lock.release()
+            return result
+        return newFunc
 
 class Gdb:
                            
@@ -24,6 +36,7 @@ class Gdb:
         self.reader = outputReader.OutputReader(self.gdbOutput, self.queue, self.gdb.pid)
         self.reader.start()
         self.eventHandler = publish_subscribe.eventHandler.EventHandler()
+        self.lock = threading.Lock()
         if (comandos):
             files = []
             for (dirpath, dirnames, filenames) in os.walk("./py/gdb/Plugins"):
@@ -47,6 +60,7 @@ class Gdb:
         self.eventHandler.subscribe(str(self.gdb.pid) + ".direct-command", self.directCommand)
         self.eventHandler.subscribe(str(self.gdb.pid) + ".get-variables", self.getVariables)
         self.eventHandler.subscribe(str(self.gdb.pid) + ".evaluate-expression", self.evaluarExpresion)
+        self.eventHandler.subscribe(str(self.gdb.pid) + "stdin", self.redirectToStdin)
         if (self.comandos):
             self.eventHandler.subscribe(str(self.gdb.pid) + ".evaluate-multiple-pointers", self.evaluarMultiplesPunteros)
         if(self.log):
@@ -56,6 +70,7 @@ class Gdb:
 
     
     # -Gdb realiza un attach al proceso especificado
+    @Locker
     def attach(self, pid):
         self.gdbInput.write("-target-attach " + str(pid) + '\n')
         self.gdbInput.write("output-redirect " + self.fifoPath + '\n')
@@ -65,6 +80,7 @@ class Gdb:
     # -Gdb coloca como proceso target un nuevo proceso del codigo 'file'
     # -Modifica el entorno (ld_preload)
     # -Retorna el pid del nuevo proceso
+    @Locker
     def file(self, path):
         self.gdbInput.write("-file-exec-and-symbols " + path + '\n')
         self.gdbInput.write("-gdb-set " + "exec-wrapper env LD_PRELOAD=" + HACK_PATH + '\n')
@@ -79,6 +95,7 @@ class Gdb:
 
     
     # Ejecuta al target desde el comienzo
+    @Locker
     def run(self, data=""):
         if(self.log):
             self.targetPid = 0
@@ -87,15 +104,18 @@ class Gdb:
             self.gdbInput.write("run > " + "/tmp/SalidaAux.txt" + '\n')
     
     # Ejecuta al target desde el punto donde se encontraba
+    @Locker
     def continueExec(self, data=""):
         self.gdbInput.write("-exec-continue" + '\n')
     
     # Ejecuta una sola intruccion del target
+    @Locker
     def stepInto(self, data=""):
         self.gdbInput.write("-exec-step" + '\n')
     
     
     # Finaliza el proceso gdb, junto con su target si este no hubiera finalizado
+    @Locker
     def exit(self, data=""):
         # self.gdbInput.write("kill" + '\n')
         self.gdbInput.write("-gdb-exit" + '\n')
@@ -109,22 +129,31 @@ class Gdb:
     # filename:linenum
     # filename:function
     # *address 
+    @Locker
     def setBreakPoint(self, donde):
         self.gdbInput.write("-break-insert " + donde + '\n')
 
     # Ejectua un comando arbitrario pasado como argumento
+    @Locker
     def directCommand(self, command):
         self.gdbInput.write(command + '\n')
         
     # Pide todas las variables y sus tipos 
+    @Locker
     def getVariables(self, data =""):
         self.gdbInput.write('-stack-list-variables --all-values' + '\n')
         
+    @Locker    
     def evaluarExpresion(self, data =""):
         self.gdbInput.write('-data-evaluate-expression ' + data + '\n')
-        
+      
+    @Locker  
     def evaluarMultiplesPunteros(self, data = ""):
         self.gdbInput.write('pointer-printer ' + data + '\n')
+        
+    @Locker  
+    def redirectToStdin(self, data):
+        self.gdbInput.write(data + '\n')
         
     
     

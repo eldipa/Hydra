@@ -1,4 +1,4 @@
-define(['jquery', 'layout', 'code_view', 'event_handler', 'varViewer', 'widgets/buttons', 'listview_panel'], function ($, layout, code_view, EH, varViewer, buttons, listview_panel) {
+define(['jquery', 'layout', 'code_view', 'event_handler', 'varViewer', 'widgets/buttons', 'listview_panel', 'standarInput'], function ($, layout, code_view, EH, varViewer, buttons, listview_panel, standarInput) {
    var Panel = layout.Panel;
    var Tabbed = layout.Tabbed;
    var ListViewPanel = listview_panel.ListViewPanel;
@@ -58,6 +58,8 @@ define(['jquery', 'layout', 'code_view', 'event_handler', 'varViewer', 'widgets/
       // then, the VarViewer
       var visor = new varViewer.VarViewer();
 
+      var stdinText = new standarInput.StandarInput();
+
 
       // Now we attach and build the final layout
       var root = view.attach($('body'));
@@ -70,6 +72,9 @@ define(['jquery', 'layout', 'code_view', 'event_handler', 'varViewer', 'widgets/
       root.render();
 
       view.parent().split(stdoutlog, "bottom");
+      root.render();
+      
+      view.parent().split(stdinText, "bottom");
       root.render();
 
       stdoutlog.split(syscalllog, "bottom")
