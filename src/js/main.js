@@ -14,6 +14,7 @@ requirejs.config({
       varViewer: 'varViewer',
       jqueryui: 'external/jquery-ui-1.11.1',
       underscore: 'external/underscore-1.7.0',
+      notify: 'external/notify'
    },
 
    shim: {
@@ -27,21 +28,28 @@ requirejs.config({
       },
       "underscore": {
          exports: "_",
+      },
+      "notify": {
+         deps: ['jquery'],
+         exports: "$",
       }
    }
 
 });
 
 var __modules_loaded_count = 0;
+var __status_element = window.splash_window.window.document.getElementById("status");
 requirejs.onResourceLoad = function(context, map, depArray) {
    __modules_loaded_count += 1;
    try {
-      window.splash_window.window.document.getElementById("status").innerHTML = "["+__modules_loaded_count+"] " + map.id + "";
+      __status_element.innerHTML = "Loading... ["+__modules_loaded_count+" modules done].";
    } catch (e) {
+      console.error("" + e);
+      __status_element = window.splash_window.window.document.getElementById("status");
    }
 };
 
-requirejs(['ui', 'code_view', 'jquery', 'export_console', 'layout', 'layout_examples', 'jqueryui', 'ctxmenu'], function (ui, code_view, $, export_console, layout, layout_examples, _, ctxmenu) {
+requirejs(['ui', 'code_view', 'jquery', 'export_console', 'layout', 'layout_examples', 'jqueryui', 'ctxmenu', 'notify'], function (ui, code_view, $, export_console, layout, layout_examples, _, ctxmenu, notify) {
    var js_console_server = export_console.init();
    var fs = require('fs');
 

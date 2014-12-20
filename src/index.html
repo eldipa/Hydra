@@ -33,6 +33,7 @@
     <link title="oldos"   href="resources/css/theme/oldos/jquery-ui.theme.css"   rel="alternate stylesheet">
 
     <link href="resources/css/splitted.css" rel="stylesheet">
+    <link href="resources/css/stacked.css" rel="stylesheet">
     <style>
        /* The selections of ACE require this */
        .fixed-position {
@@ -98,11 +99,21 @@
           z-index: 999;
        }
 
+       /* The bar of a Splitted should be transparent */
+       .bar_of_splitted_transparent {
+          background: transparent !important;
+          border: 1px solid transparent !important;
+       }
+
+       /* Disallow the selection of the text */
+       * {
+          -webkit-user-select: none;
+       }
     </style>
 
   </head>
 
-  <body>
+  <body class="ui-widget-content" style="border: 0px;">
 
 
     <!-- Bootstrap core JavaScript

@@ -215,6 +215,10 @@ define([], function () {
       throw new Error("Not implemented error: The 'unlink' method of '"+this+"' was not implemented!. It should unlink its stuff from the DOM. This no necessary means to remove-and-delete any element, you just need to remove it from the DOM.");
    };
 
+   Panel.prototype.is_container = function () {
+      return false;
+   };
+
    /*
     * Parent object.
     * */
@@ -262,6 +266,10 @@ define([], function () {
       this._replace_child(my_panel, other_panel);
       other_panel.parent(this);
       my_panel.parent(NullParent);
+   };
+   
+   Parent.prototype.is_container = function () {
+      return true;
    };
 
    // Placeholder, see splitted.js

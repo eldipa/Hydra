@@ -1,7 +1,13 @@
 import gdb
 import re
+import sys
+import atexit
+import time, datetime
 
+## TODO sys.path.append("/home/martin/Codigo/ConcuDebug/src/py/")
+import publish_subscribe.eventHandler
 try:
+    ## TODO sys.path.append('/home/martin/Downloads/python-ptrace-0.8/')
     import ptrace
 except ImportError as e:
     raise ImportError("External lib 'ptrace' not found (formaly, python-ptrace, version 0.8 or higher)!: %s" % str(e))
@@ -32,6 +38,15 @@ else:
     raise NotImplementedError("Unknown OS!: Unsupported OS or supported but it wasn't detected correctly.")
 
 
+eventHandler = publish_subscribe.eventHandler.Publisher()
+
+def cleanup():
+   global eventHandler
+   eventHandler.close()
+
+atexit.register(cleanup)
+
+
 class ProcessUnderGDB(PtraceProcess):
     def __init__(self):
         PtraceProcess.__init__(self, None, None, True, None)
@@ -41,6 +56,9 @@ class ProcessUnderGDB(PtraceProcess):
 
     def set_inferior(self, inferior):
        self._inferior = inferior
+
+    def get_process_id(self):
+       return self._inferior.pid
 
     # Reading
     #   - readWord(): read a memory word
@@ -108,6 +126,9 @@ class ProcessUnderGDB(PtraceProcess):
                 else:
                     v = names_and_values[n]
 
+                if v.endswith("L"):
+                   v = v[:-1]
+
                 setattr(regs_struct, n, int(v, 16)) # gdb returns the values in hex
         else:
             raise NotImplementedError("Not implemented yet!: The get registers may be supported for other architectures in the future.")
@@ -150,26 +171,45 @@ class Opts:
     def __getattr__(self, name):
         return Opts.D.get(name, False)  # other options, set them to False
 
-out = sys.stdout 
-#out = open("OUT", "w")
 
-def show_syscall(syscall_tracer, out):
-    ''' Write to the out object the syscall's name, arguments and result. '''
+class PtraceSyscallPublisher(PtraceSyscall):
+   def __init__(self, *args, **kargs):
+      PtraceSyscall.__init__(self, *args, **kargs)
 
-    name = syscall_tracer.name
-    text = syscall_tracer.format()
-    if syscall_tracer.result is not None:
-        offset = 40 - len(text)
-        if offset > 0:
-            space = " " * offset
-        else:
-            space = ""
-        print(")%s = %s\n" % (space, syscall_tracer.result_text),
-                end='', file=out, flush=True)
+   def publish_syscall(self):
+       ''' Publish the syscall's name, arguments and result. '''
 
-    else:
-        #remove the ) at the end
-        print(text[:-1], end='', file=out, flush=True) 
+       name = self.name
+       text = self.format()
+       pid = self.process.get_process_id()
+       timestamp = str(datetime.datetime.now())
+       if self.result is not None:
+           offset = 40 - len(text)
+           if offset > 0:
+               space = " " * offset
+           else:
+               space = ""
+           
+           data = {
+               'timestamp':   timestamp,
+               'pid':         pid,
+               'result':      self.result,
+               'result_text': self.result_text
+           }
+    
+           eventHandler.publish("syscall.exit.%i" % pid, data)
+
+       else:
+           arguments = [arg.format() for arg in self.arguments]
+           data = {
+               'timestamp':   timestamp,
+               'pid':       pid,
+               'restype':   self.restype,
+               'name':      self.name,
+               'arguments': arguments,
+           }
+         
+           eventHandler.publish("syscall.enter.%i" % pid, data)
 
 #TODO reiniciar estas variables cada vez que se lanza de nuevo la aplicacion
 process = ProcessUnderGDB()
@@ -178,7 +218,6 @@ tracer_in_syscall_by_inferior = {}
 def syscall_trace():
     global tracer_in_syscall_by_inferior
     global process
-    global out
 
     tracer_in_syscall = tracer_in_syscall_by_inferior.get(gdb.selected_inferior(), None)
 
@@ -190,16 +229,20 @@ def syscall_trace():
         tracer_in_syscall_by_inferior[gdb.selected_inferior()] = None
     else:
         regs = process.getregs()
-        syscall_tracer = PtraceSyscall(process, Opts(), regs) 
+        syscall_tracer = PtraceSyscallPublisher(process, Opts(), regs) 
         
         syscall_tracer.enter(regs)
         tracer_in_syscall_by_inferior[gdb.selected_inferior()] = syscall_tracer
 
-    show_syscall(syscall_tracer, out)
+    syscall_tracer.publish_syscall()
 
 class SyscallBreakpoint(gdb.Breakpoint):
+    ''' Special breakpoint to be set before or after a syscall. When this breakpoint
+        is hit, the target is stopped, data from it is recollected, a syscall trace
+        is created and then, the target is resumed. '''
+
     def __init__(self, spec, in_the_start_of_syscall, end_breakpoint):
-        gdb.Breakpoint.__init__(self, spec, gdb.BP_BREAKPOINT, 0, False, False)
+        gdb.Breakpoint.__init__(self, spec, gdb.BP_BREAKPOINT, 0, True, False)
         self.silent = True
         self.in_the_start_of_syscall = in_the_start_of_syscall
         self.end_breakpoint = end_breakpoint
@@ -229,9 +272,15 @@ class SyscallBreakpoint(gdb.Breakpoint):
         return False
 
 class KernelVSyscallBreakpoint(gdb.Breakpoint):
+    ''' This special breakpoint will be set on the internal function __kernel_vsyscall
+        which call almost every syscall.
+        When the breakpoint is hit, this will dissamble the __kernel_vsyscall and
+        it will find the 'sysenter' instruction to set a SyscallBreakpoint before
+        and after it.
+        '''
     def __init__(self):
-        gdb.Breakpoint.__init__(self, '__kernel_vsyscall', gdb.BP_BREAKPOINT, 0, False, True)
-        #self.silent = True
+        gdb.Breakpoint.__init__(self, '__kernel_vsyscall', gdb.BP_BREAKPOINT, 0, True, True)
+        self.silent = True
         self.breakpoint_hit = False
 
     def stop(self):

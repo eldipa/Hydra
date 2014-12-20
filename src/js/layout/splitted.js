@@ -64,7 +64,7 @@ define(['jquery', 'layout/panel', 'jqueryui'], function ($, P, _) {
             var correct_value_at_start = $(this)[dimension_name]();
             $(ui.helper)[dimension_name](correct_value_at_start);
 
-            $(ui.helper).removeClass("ui-state-hover").addClass("ui-state-active");
+            $(ui.helper).removeClass("ui-state-hover").removeClass("bar_of_splitted_transparent").addClass("ui-state-active");
          };
       };
 
@@ -95,27 +95,27 @@ define(['jquery', 'layout/panel', 'jqueryui'], function ($, P, _) {
 
       if (this._splitted_direction === 'horizontally') {
          this._$container = $(
-            '<div class="splitted_container ui-widget-content">' +
+            '<div class="splitted_container ui-widget">' +
                '<div class="top_panel_of_splitted"></div>' +
                '<div class="bottom_side_panel_and_bar_of_splitted">' +
-                  '<div class="horizontal_bar_splitting ui-state-default"></div>' +
+                  '<div class="horizontal_bar_splitting ui-state-default bar_of_splitted_transparent"></div>' +
                   '<div class="bottom_panel_of_splitted"></div>' +
                '</div>' +
             '</div>');
-         this._$container.find('.horizontal_bar_splitting').hover(function () {$(this).toggleClass("ui-state-hover")}).draggable(options_for_draggable_bar('horizontal'));
+         this._$container.find('.horizontal_bar_splitting').hover(function () {$(this).toggleClass("ui-state-hover").toggleClass("bar_of_splitted_transparent")}).draggable(options_for_draggable_bar('horizontal'));
          this._position_name = 'top';
          this._dimension_name = 'height';
       }
       else {
          this._$container = $(
-            '<div class="splitted_container ui-widget-content">' +
+            '<div class="splitted_container ui-widget">' +
                '<div class="left_panel_of_splitted"></div>' +
                '<div class="right_side_panel_and_bar_of_splitted">' +
-                  '<div class="vertical_bar_splitting ui-state-default"></div>' +
+                  '<div class="vertical_bar_splitting ui-state-default bar_of_splitted_transparent"></div>' +
                   '<div class="right_panel_of_splitted"></div>' +
                '</div>' +
             '</div>');
-         this._$container.find('.vertical_bar_splitting').hover(function () {$(this).toggleClass("ui-state-hover")}).draggable(options_for_draggable_bar('vertical'));
+         this._$container.find('.vertical_bar_splitting').hover(function () {$(this).toggleClass("ui-state-hover").toggleClass("bar_of_splitted_transparent")}).draggable(options_for_draggable_bar('vertical'));
          this._position_name = 'left';
          this._dimension_name = 'width';
       }
@@ -231,6 +231,14 @@ define(['jquery', 'layout/panel', 'jqueryui'], function ($, P, _) {
          else {
             this._children[pos].box = this._$container.children('.'+pos+'_side_panel_and_bar_of_splitted').children(this._get_class_for_child(pos));
          }
+
+         if (this._children[pos].is_container()) {
+            this._children[pos].box.removeClass("ui-widget-content").removeClass("ui-corner-all");
+         }
+         else {
+            this._children[pos].box.addClass("ui-widget-content").addClass("ui-corner-all");
+         }
+
          this._children[pos].render();
       }
    };

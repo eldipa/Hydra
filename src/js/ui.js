@@ -9,7 +9,11 @@ define(['jquery', 'layout', 'code_view', 'event_handler', 'varViewer', 'widgets/
       //   CodeViewer   | 
       //                | VarViewer
       // ---------------+
-      //   ConsoleLog   |
+      //   GDB Console  |
+      // ---------------+
+      //  Target Output |
+      // ---------------+
+      //   Syscall log  |
       //
       
       // we create the principal objects for the ui.
@@ -34,6 +38,22 @@ define(['jquery', 'layout', 'code_view', 'event_handler', 'varViewer', 'widgets/
          this.push({dom_element: $newContent});
       };
 
+      // Panel to render the syscall log
+      var syscalllog = new ListViewPanel();
+      syscalllog.autoscroll(true);
+      syscalllog.feed = function (data) {
+         if (data.result === undefined) { // syscall enter
+            var line = "["+data.timestamp+"]@["+data.pid+"]: "+data.name+"("+data.arguments.join(", ")+") : "+data.restype+"";
+            var $newContent = $('<p>'+line+'</p>');
+         }
+         else {                           // syscall exit
+            var line = "["+data.timestamp+"]@["+data.pid+"]: result = " + data.result_text + "";
+            var $newContent = $('<p>'+line+'</p>');
+         }
+         
+         this.push({dom_element: $newContent});
+      }
+
 
       // then, the VarViewer
       var visor = new varViewer.VarViewer();
@@ -50,6 +70,9 @@ define(['jquery', 'layout', 'code_view', 'event_handler', 'varViewer', 'widgets/
       root.render();
 
       view.parent().split(stdoutlog, "bottom");
+      root.render();
+
+      stdoutlog.split(syscalllog, "bottom")
       root.render();
            
 
@@ -107,6 +130,12 @@ define(['jquery', 'layout', 'code_view', 'event_handler', 'varViewer', 'widgets/
          event_handler.subscribe("outputlog", function (data) {
                stdoutlog.feed(data);
                stdoutlog.render();
+         });
+
+         // Loggeamos las syscalls (cuando se entra y se sale de una de ellas)
+         event_handler.subscribe("syscall", function (data) {
+               syscalllog.feed(data);
+               syscalllog.render();
          });
 
          // TODO (issue #36), poner un breakpoint es relativamente facil, pero eliminarlos no.
@@ -229,10 +258,14 @@ define(['jquery', 'layout', 'code_view', 'event_handler', 'varViewer', 'widgets/
                },
             }], true);
 
-      // TODO (issue #68) hacer un "Splitted" con size fijo: la barra de botones no deberia ser resizable
       // TODO (issue #69) hacer que las lineas de separacion del split sean mas finas y que se engrosen
       // mientras este el mouse encima de ellas.
-      view.split(main_button_bar, "top");
+      
+      var S1 = new layout.Stacked("vertically");
+      view.swap(S1);
+      S1.add_child(main_button_bar, {position: "top", grow: 0, shrink: 0});
+      S1.add_child(view, {position: "bottom", grow: 1, shrink: 1});
+
       root.render();
 
       event_handler.publish("debugger.load", "cppTestCode/outputTest");

@@ -12,13 +12,53 @@ from connection import Connection
 from topic import build_topic_chain, fail_if_topic_isnt_valid
 from esc import esc
 
-
-class EventHandler(threading.Thread):
-    
+class Publisher(object):
     def __init__(self):
-        threading.Thread.__init__(self)
-
         self.connection = Connection(self._get_address())
+        
+    def publish(self, topic, data):
+        fail_if_topic_isnt_valid(topic, allow_empty=False)
+
+        syslog.syslog(syslog.LOG_DEBUG, "Sending publication of an event with topic '%s'." % esc(topic))
+        self.connection.send_object({'type': 'publish', 'topic': topic, 'data': data})
+        syslog.syslog(syslog.LOG_DEBUG, "Publication of an event sent.")
+
+
+    def close(self):
+       self.connection.close()
+    
+    def _get_address(self):
+        import os, ConfigParser
+        script_home = os.path.abspath(os.path.dirname(__file__))
+        parent = os.path.pardir
+
+        # TODO This shouldn't be hardcoded!
+        config_file = os.path.join(script_home, parent, parent, parent, "config", "publish_subscribe.cfg")
+
+        config = ConfigParser.SafeConfigParser(defaults={
+                    'wait_on_address': "localhost",
+                    'wait_on_port': "5555",
+                     })
+
+        config.read([config_file])
+        if not config.has_section("notifier"):
+           config.add_section("notifier")
+
+
+        address = (config.get("notifier", 'wait_on_address'), config.getint("notifier", 'wait_on_port'))
+
+        return address
+
+
+class EventHandler(threading.Thread, Publisher):
+    
+    def __init__(self, as_daemon=False):
+        threading.Thread.__init__(self)
+        if as_daemon:
+           self.daemon = True
+
+        Publisher.__init__(self)
+
         self.lock = Lock()
         self.callbacks_by_topic = {}
       
@@ -58,14 +98,6 @@ class EventHandler(threading.Thread):
            self.lock.release()
 
     
-    def publish(self, topic, data):
-        fail_if_topic_isnt_valid(topic, allow_empty=False)
-
-        syslog.syslog(syslog.LOG_DEBUG, "Sending publication of an event with topic '%s'." % esc(topic))
-        self.connection.send_object({'type': 'publish', 'topic': topic, 'data': data})
-        syslog.syslog(syslog.LOG_DEBUG, "Publication of an event sent.")
-
-
     def unsubscribe(self, subscription_id):
         self.lock.acquire()
         try:
@@ -182,28 +214,6 @@ class EventHandler(threading.Thread):
        self.join()
 
     
-    def _get_address(self):
-        import os, ConfigParser
-        script_home = os.path.abspath(os.path.dirname(__file__))
-        parent = os.path.pardir
-
-        # TODO This shouldn't be hardcoded!
-        config_file = os.path.join(script_home, parent, parent, parent, "config", "publish_subscribe.cfg")
-
-        config = ConfigParser.SafeConfigParser(defaults={
-                    'wait_on_address': "localhost",
-                    'wait_on_port': "5555",
-                     })
-
-        config.read([config_file])
-        if not config.has_section("notifier"):
-           config.add_section("notifier")
-
-
-        address = (config.get("notifier", 'wait_on_address'), config.getint("notifier", 'wait_on_port'))
-
-        return address
-
 
 if __name__ == "__main__":
     
