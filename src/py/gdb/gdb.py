@@ -7,7 +7,7 @@ import outputReader
 import publish_subscribe.eventHandler
 import tempfile
 import os
-import 
+import threading
 
 HACK_PATH = "/shared/hack.so"
 
@@ -35,6 +35,7 @@ class Gdb:
             self.fifoPath = tempfile.mktemp()
             os.mkfifo(self.fifoPath)
             self.gdbInput.write("fifo-register " + self.fifoPath + '\n')
+            self.lock = threading.Lock()
         
     def getSessionId(self):
         return self.gdb.pid
@@ -52,7 +53,7 @@ class Gdb:
             self.eventHandler.subscribe(str(self.gdb.pid) + ".evaluate-multiple-pointers", self.evaluarMultiplesPunteros)
         if(self.log):
             self.targetPid = 0
-            self.eventHandler.subscribe("debugger.new-target.%i"%self.gdb.pid, self.registerPid)
+            self.eventHandler.subscribe("debugger.new-target.%i"%(self.gdb.pid), self.registerPid)
         self.eventHandler.publish("debugger.new-session", self.gdb.pid)
 
     
@@ -75,7 +76,8 @@ class Gdb:
         self.subscribe()
 
     def registerPid(self, data):
-        self.targetPid = data["targetPid"]
+        self.targetPid = int(data["targetPid"])
+        self.eventHandler.publish("debugger.new-output", [self.targetPid, self.fifoPath])
 
     
     # Ejecuta al target desde el comienzo
@@ -83,10 +85,6 @@ class Gdb:
         if(self.log):
             self.targetPid = 0
             self.gdbInput.write("run" + '\n')
-            pids = self.eventHandler.wait("debugger.new-target")
-            print pids
-            self.targetPid = pids["targetPid"]
-            self.eventHandler.publish("debugger.new-output", [self.targetPid, self.fifoPath])
         else:
             self.gdbInput.write("run > " + "/tmp/SalidaAux.txt" + '\n')
     
