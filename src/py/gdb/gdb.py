@@ -60,7 +60,6 @@ class Gdb:
         self.eventHandler.subscribe(str(self.gdb.pid) + ".direct-command", self.directCommand)
         self.eventHandler.subscribe(str(self.gdb.pid) + ".get-variables", self.getVariables)
         self.eventHandler.subscribe(str(self.gdb.pid) + ".evaluate-expression", self.evaluarExpresion)
-        self.eventHandler.subscribe(str(self.gdb.pid) + ".stdin", self.redirectToStdin)
         if (self.comandos):
             self.eventHandler.subscribe(str(self.gdb.pid) + ".evaluate-multiple-pointers", self.evaluarMultiplesPunteros)
         if(self.log):
@@ -75,6 +74,7 @@ class Gdb:
         self.gdbInput.write("-target-attach " + str(pid) + '\n')
         self.gdbInput.write("output-redirect " + self.fifoPath + '\n')
         self.subscribe()
+        self.eventHandler.subscribe(str(pid) + ".stdin", self.redirectToStdin)
         self.eventHandler.publish("debugger.new-output", [pid, self.fifoPath])
     
     # -Gdb coloca como proceso target un nuevo proceso del codigo 'file'
@@ -91,6 +91,7 @@ class Gdb:
 
     def registerPid(self, data):
         self.targetPid = int(data["targetPid"])
+        self.eventHandler.subscribe(str(self.targetPid) + ".stdin", self.redirectToStdin)
         self.eventHandler.publish("debugger.new-output", [self.targetPid, self.fifoPath])
 
     
