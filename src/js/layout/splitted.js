@@ -132,9 +132,23 @@ define(['jquery', 'layout/panel', 'jqueryui'], function ($, P, _) {
       var opposite_position_name = {
             left: 'right',
             top : 'bottom',
-         }[this._position_name]
-      this._$container.children("."+this._position_name+"_panel_of_splitted")[this._dimension_name](percentage + "%");
-      this._$container.children("."+opposite_position_name+"_side_panel_and_bar_of_splitted")[this._dimension_name]((100-percentage) + "%");
+         }[this._position_name];
+
+      // get the children
+      var one_panel = this._$container.children("."+this._position_name+"_panel_of_splitted");
+      var the_other_panel_and_bar = this._$container.children("."+opposite_position_name+"_side_panel_and_bar_of_splitted");
+
+      // remove the borders, margins and paddings because they will interfer with the width/height setting.
+      one_panel.css({border: "none", margin: "none", padding: "none"});
+      the_other_panel_and_bar.css({border: "none", margin: "none", padding: "none"});
+
+      // set the dimension
+      one_panel[this._dimension_name](percentage + "%");
+      the_other_panel_and_bar[this._dimension_name]((100-percentage) + "%");
+
+      // restore the borders, margins and paddings
+      one_panel.css({border: "", margin: "", padding: ""});
+      the_other_panel_and_bar.css({border: "", margin: "", padding: ""});
 
       this.render();
    }

@@ -1,4 +1,185 @@
 define(['jquery', 'layout', 'widgets/switch_theme', 'code_view', 'process_graph'], function ($, layout, switch_theme_widget, code_view, pgraph) {
+   var Rectangle = function (color, name, height, width) {
+      var Panel = layout.Panel;
+      var rectangle = new Panel(name);
+
+      var width = width || height;
+      
+      rectangle.$container = $('<div style="background: '+color+'; height: '+height+'px; width: '+width+'px;"></div>');
+      rectangle.$out_of_dom = rectangle.$container;
+
+      rectangle.render = function () {
+         if (this.$out_of_dom) {
+            this.$out_of_dom.appendTo(this.box);
+            this.$out_of_dom = null;
+         }
+      };
+
+      rectangle.unlink = function () {
+         if (!this.$out_of_dom) {
+            this.$out_of_dom = this.$container.detach();
+         }
+      };
+
+      return rectangle;
+   };
+   
+   var Text = function (color, name, lorem_ipsum_start, min_height, min_width) {
+      var LoremIpsum = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.";
+
+      var Panel = layout.Panel;
+      var text_rectangle = new Panel(name);
+
+      var min_height_style = "";
+      var min_width_style = "";
+
+      if (min_height) {
+         min_height_style = "min-height: "+min_height+"px;";
+      }
+
+      if (min_width) {
+         min_width_style = "min-width: "+min_width+"px;";
+      }
+
+      var lorem_ipsum_start = (lorem_ipsum_start || 0) % (LoremIpsum.length-1);
+      var text = LoremIpsum[lorem_ipsum_start].toUpperCase() + LoremIpsum.substring(lorem_ipsum_start+1);
+
+      text_rectangle.$container = $('<div style="background: '+color+'; '+min_height_style+' '+min_width_style+' ">'+text+'</div>');
+      text_rectangle.$out_of_dom = text_rectangle.$container;
+
+      text_rectangle.render = function () {
+         if (this.$out_of_dom) {
+            this.$out_of_dom.appendTo(this.box);
+            this.$out_of_dom = null;
+         }
+      };
+
+      text_rectangle.unlink = function () {
+         if (!this.$out_of_dom) {
+            this.$out_of_dom = this.$container.detach();
+         }
+      };
+
+      return text_rectangle;
+   };
+
+   var one_panel_example = function () {
+      var square = Rectangle('green', 'green-square', 120);
+
+      var root = square.attach($('body'));
+
+      root.render();
+   }; 
+
+   var two_text_panels_splitted_example = function () {
+      var on_left = Text('green', 'green-left-text', 0);
+      var on_right = Text('green', 'green-right-text', 100);
+
+      var root = on_left.attach($('body'));
+      on_left.split(on_right, 'right');
+
+      root.render();
+   };
+
+   var three_text_panels_splitted_nested_horizontally_example = function () {
+      var on_left = Text('red', 'left-text', 0);
+      var on_middle = Text('green', 'middle-text', 52);
+      var on_right = Text('blue', 'right-text', 100);
+
+      var root = on_left.attach($('body'));
+      on_left.split(on_middle, 'right');
+      on_middle.split(on_right, 'right');
+
+      root.render();
+   };
+
+   var top_left_center_panels_example = function () {
+      var on_top = Text('red', 'top-text', 150);
+      var on_left = Text('green', 'left-text', 100);
+      var on_center = Text('blue', 'center-text', 0);
+
+      var root = on_center.attach($('body'));
+      on_center.split(on_top, "top");
+      on_center.parent().split(on_left, "left");
+
+      root.render();
+      on_center.parent().parent().set_percentage(15); // 15 for on_left, 85 for on_center
+      on_center.parent().set_percentage(7); // 7 for on_top, 93 for [on_center & on_left]
+
+      root.render();
+   };
+
+   var top_left_center_panels_swapping_example = function () {
+      var on_top = Text('red', 'top-text', 150);
+      var on_left = Text('green', 'left-text', 100);
+      var on_center = Text('blue', 'center-text', 0);
+
+      var root = on_center.attach($('body'));
+      on_center.split(on_top, "top");
+      on_center.parent().split(on_left, "left");
+
+      root.render();
+      on_center.parent().parent().set_percentage(15); // 15 for on_left, 85 for on_center
+      on_center.parent().set_percentage(7); // 7 for on_top, 93 for [on_center & on_left]
+
+      root.render();
+
+      var panels = [on_top, on_left, on_center];
+      var iteration_number = 0;
+      setInterval(function () {
+         panels[iteration_number % panels.length].swap(panels[(iteration_number + 1) % panels.length]);
+         root.render();
+         iteration_number += 1;
+      }, 2000);
+   };
+
+   var splitting_and_removing_example = function () {
+      var principal_square = Rectangle('white', 'principal', 200);
+      var squares = [
+         Rectangle('red',   'square1', 150),
+         Rectangle('green', 'square2', 100),
+         Rectangle('blue',  'square3', 50),
+         Rectangle('cyan',  'square4', 25),
+      ];
+      var directions = ["left", "top", "right", "bottom"];
+
+      var root = principal_square.attach($('body'));
+      root.render();
+
+      var next = squares[0];
+      var last = null;
+
+      var direction = directions[0];
+      var last_direction_number = 0;
+      var adding = false;
+      var stack = [principal_square];
+
+      var iteration_number = 0;
+      setInterval(function () {
+         if (iteration_number % squares.length === 0) {
+            iteration_number = 0;
+            adding = !adding;
+
+            if (adding) {
+               direction = directions[last_direction_number % directions.length];
+               last_direction_number += 1;
+            }
+         }
+
+         if(adding) {
+            stack.push(squares[iteration_number]);
+            stack[stack.length-2].split(stack[stack.length-1], direction);
+         }
+         else {
+            stack[stack.length-1].remove();
+            stack.pop();
+         }
+         
+         root.render();
+         iteration_number += 1;
+      }, 2000);
+   };
+
    function init() {
       $('body').find('div').remove();
 
@@ -774,5 +955,13 @@ define(['jquery', 'layout', 'widgets/switch_theme', 'code_view', 'process_graph'
       return;
    }
 
-   return {init: init};
+   return {
+      init: init,
+      one_panel_example: one_panel_example,
+      two_text_panels_splitted_example: two_text_panels_splitted_example,
+      three_text_panels_splitted_nested_horizontally_example: three_text_panels_splitted_nested_horizontally_example,
+      top_left_center_panels_example: top_left_center_panels_example,
+      top_left_center_panels_swapping_example: top_left_center_panels_swapping_example,
+      splitting_and_removing_example: splitting_and_removing_example,
+   };
 });
