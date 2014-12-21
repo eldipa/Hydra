@@ -273,7 +273,7 @@ define(['jquery', 'layout', 'code_view', 'event_handler', 'varViewer', 'widgets/
 
       root.render();
 
-      event_handler.publish("debugger.load", "cppTestCode/outputTest");
+      event_handler.publish("debugger.load", "cppTestCode/stdinTest");
 
    };
 

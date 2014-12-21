@@ -153,6 +153,7 @@ class Gdb:
         
     @Locker  
     def redirectToStdin(self, data):
+        print "redirigiendo " + data
         self.gdbInput.write(data + '\n')
         
     
