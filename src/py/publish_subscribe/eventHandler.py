@@ -193,21 +193,24 @@ class EventHandler(threading.Thread, Publisher):
     def dispatch(self, event):
         topic_chain = build_topic_chain(event['topic'])
 
+        callbacks_collected = []
         self.lock.acquire()
         try:
            syslog.syslog(syslog.LOG_DEBUG, "Executing callback over the topic chain '%s'." % esc(", ".join(topic_chain))) ##TODO
            for t in topic_chain:
                callbacks = self.callbacks_by_topic.get(t, []);
                syslog.syslog(syslog.LOG_DEBUG, "For the topic '%s' there are %i callbacks." % esc(t if t else "(the empty topic)", len(callbacks)))
-                
-               for callback, subscription in callbacks:
-                   try:
-                       callback(event['data'])
-                   except:
-                       syslog.syslog(syslog.LOG_ERR, "Exception in callback for the topic '%s': %s" % esc(t if t else "(the empty topic)", traceback.format_exc()))
-
+               callbacks_collected.append(list(callbacks)) # get a copy!
         finally:
            self.lock.release()
+         
+        for callbacks in callbacks_collected:   
+            for callback, subscription in callbacks:
+                try:
+                    callback(event['data'])
+                except:
+                    syslog.syslog(syslog.LOG_ERR, "Exception in callback for the topic '%s': %s" % esc(t if t else "(the empty topic)", traceback.format_exc()))
+
 
     def close(self):
        self.connection.close()
