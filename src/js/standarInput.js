@@ -5,11 +5,6 @@ define([ 'event_handler', 'layout', 'jquery' ], function(event_handler, layout, 
 		
 		this.eventHandler = new event_handler.EventHandler();
 		this.eventHandler.init();
-		
-		var my_self = this;
-		
-		this.eventHandler = new event_handler.EventHandler();
-		this.eventHandler.init();
 
 		this._$container = $('<div id = recordSTDIN "></div><div id ="STDIN";"> pid@text:<input id="stdinText" type="text" value=""/> </div>');
 		
