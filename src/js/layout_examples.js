@@ -63,6 +63,9 @@ define(['jquery', 'layout', 'widgets/switch_theme', 'code_view', 'process_graph'
       return text_rectangle;
    };
 
+   /* 
+    * How to create a Panel, attach it to the DOM and render the screen.
+    */
    var one_panel_example = function () {
       var square = Rectangle('green', 'green-square', 120);
 
@@ -71,6 +74,10 @@ define(['jquery', 'layout', 'widgets/switch_theme', 'code_view', 'process_graph'
       root.render();
    }; 
 
+   /*
+    * How to create two Panels and split the space of one to put the other using
+    * a Splitted object internally.
+    */ 
    var two_text_panels_splitted_example = function () {
       var on_left = Text('green', 'green-left-text', 0);
       var on_right = Text('green', 'green-right-text', 100);
@@ -81,6 +88,9 @@ define(['jquery', 'layout', 'widgets/switch_theme', 'code_view', 'process_graph'
       root.render();
    };
 
+   /*
+    * Nested splitting, not much more.
+    */
    var three_text_panels_splitted_nested_horizontally_example = function () {
       var on_left = Text('red', 'left-text', 0);
       var on_middle = Text('green', 'middle-text', 52);
@@ -93,14 +103,27 @@ define(['jquery', 'layout', 'widgets/switch_theme', 'code_view', 'process_graph'
       root.render();
    };
 
+   /*
+    * How to split a parent. Also, how to set the percentage of the available size
+    * of a panel splitted.
+    */
    var top_left_center_panels_example = function () {
       var on_top = Text('red', 'top-text', 150);
       var on_left = Text('green', 'left-text', 100);
       var on_center = Text('blue', 'center-text', 0);
 
-      var root = on_center.attach($('body'));
-      on_center.split(on_top, "top");
-      on_center.parent().split(on_left, "left");
+      //     1) ------------> 2) ------------------------------------> 3)
+      //
+      // +-----------+     +-----------+ \                        +--+--------+
+      // |           |     |    top    | |                        |l |  top   |
+      // |  center   |     +-----------+ | center's parent        |e +--------+
+      // |           |     |   center  | |                        |f | center |
+      // |           |     |           | |                        |t |        |
+      // +-----------+     +-----------+ /                        +--+--------+
+
+      var root = on_center.attach($('body'));     // 1)
+      on_center.split(on_top, "top");             // 2)
+      on_center.parent().split(on_left, "left");  // 3)
 
       root.render();
       on_center.parent().parent().set_percentage(15); // 15 for on_left, 85 for on_center
@@ -109,6 +132,28 @@ define(['jquery', 'layout', 'widgets/switch_theme', 'code_view', 'process_graph'
       root.render();
    };
 
+   /*
+    * How to swap
+    */ 
+   var two_panels_swapping_example = function () {
+      var on_right = Text('red',  'right-text', 0);
+      var on_left = Text('green', 'left-text', 100);
+      
+      var root = on_left.attach($('body'));
+      on_left.split(on_right, "right");
+      root.render();
+      on_right.parent().set_percentage(50);
+      root.render();
+      
+      setInterval(function () {
+         on_right.swap(on_left);
+         root.render();
+      }, 2000);
+   };
+
+   /*
+    * How to swap
+    */
    var top_left_center_panels_swapping_example = function () {
       var on_top = Text('red', 'top-text', 150);
       var on_left = Text('green', 'left-text', 100);
@@ -132,7 +177,35 @@ define(['jquery', 'layout', 'widgets/switch_theme', 'code_view', 'process_graph'
          iteration_number += 1;
       }, 2000);
    };
+   
+   /*
+    * How to remove
+    */ 
+   var adding_removing_two_panels_example = function () {
+      var on_right = Text('red',  'right-text', 0);
+      var on_left = Text('green', 'left-text', 100);
+      
+      var root = on_left.attach($('body'));
+      
+      var iteration_number = 0;
+      setInterval(function () {
+         if (iteration_number % 2 === 0) {
+            on_left.split(on_right, "right");
+            root.render();
+            on_right.parent().set_percentage(50);
+            root.render();
+         }
+         else {
+            on_right.remove();
+            root.render();
+         }
+         iteration_number += 1;
+      }, 2000);
+   };
 
+   /*
+    * How to swap and remove
+    */
    var splitting_and_removing_example = function () {
       var principal_square = Rectangle('white', 'principal', 200);
       var squares = [
@@ -178,6 +251,208 @@ define(['jquery', 'layout', 'widgets/switch_theme', 'code_view', 'process_graph'
          root.render();
          iteration_number += 1;
       }, 2000);
+   };
+
+   /*
+    * How to create a Tabbed, adding and removing tabs
+    */
+   var adding_removing_tabs_example = function () {
+      var tabbed = new layout.Tabbed();
+      var root = tabbed.attach($('body'));
+      
+      var panels = [
+         Text('red',  'Text Red', 0),
+         Text('green', 'Text Green', 100),
+         Text('blue', 'Text Blue', 150),
+      ];
+
+      var iteration_number = 0;
+      var remove_mode = true;
+      setInterval(function () {
+         if (iteration_number % 3 === 0) {
+            remove_mode = !remove_mode;
+         }
+
+         if (!remove_mode) {
+            tabbed.add_child(panels[iteration_number % 3], "intab");
+            root.render();
+         }
+         else {
+            panels[iteration_number % 3].remove();
+            root.render();
+         }
+         iteration_number += 1;
+      }, 2000);
+   };
+      
+   /*
+    * How to display a tab
+    */
+   var display_tabs_example = function () {
+      var tabbed = new layout.Tabbed();
+      var root = tabbed.attach($('body'));
+      
+      tabbed.add_child(Text('red',  'Text Red', 0), "intab");
+      tabbed.add_child(Text('green', 'Text Green', 100), "intab");
+      tabbed.add_child(Text('blue', 'Text Blue', 150), "intab");
+            
+      root.render();
+
+      var iteration_number = 0;
+      setInterval(function () {
+         tabbed.display(iteration_number % 3);
+         root.render();
+         iteration_number += 1;
+      }, 2000);
+   };
+
+   /*
+    * How to split a tab...
+    * Important: splitting a panel which it is inside of a Tabbed will split the Tabbed, not the panel.
+    */
+   var two_tabbed_splitted_example = function () {
+      var tabbed_left = new layout.Tabbed();
+      var tabbed_right = new layout.Tabbed();
+      
+      var root = tabbed_left.attach($('body'));
+      tabbed_left.split(tabbed_right, 'right');
+      
+      tabbed_left.add_child(Text('red',  'Text Red', 0), "intab");
+      tabbed_left.add_child(Text('green', 'Text Green', 100), "intab");
+      tabbed_right.add_child(Text('blue', 'Text Blue', 150), "intab");
+      tabbed_right.add_child(Rectangle('magenta', 'Square Magenta', 150), "intab");
+      tabbed_right.add_child(Rectangle('white', 'Rectangle White', 150, 50), "intab");
+      tabbed_right.add_child(Rectangle('cyan', 'Rectangle Cyan', 50, 150), "intab");
+
+      root.render();
+   };
+
+   /*
+    * How to stack: because the Texts will occupy all the free space available,
+    * there will not be any free space.
+    */
+   var stack_horizontally_with_no_free_space_example = function () {
+      var stack = new layout.Stacked('horizontally');
+      
+      stack.add_child(Text('red',  'Text Red', 0), 
+         {position: "right", grow: 0, shrink: 1});
+      stack.add_child(Text('green', 'Text Green', 100), 
+         {position: "right", grow: 0, shrink: 1});
+      stack.add_child(Text('blue', 'Text Blue', 150), 
+         {position: "right", grow: 0, shrink: 1});
+
+      var root = stack.attach($('body'));
+      root.render();
+   };
+   
+   /*
+    * How to stack: because the Rectangles have fixed space, there will be free space.
+    */
+   var stack_horizontally_with_free_space_example = function () {
+      var stack = new layout.Stacked('horizontally');
+      
+      /*
+       *             available space
+       *  /-----------------------------------------\
+       * /                                           \
+       * +-------+--------+-------+
+       * |       |        |       |
+       * |       |        |       |
+       * |       |        |       |
+       * +-------+--------+-------+
+       */
+      stack.add_child(Rectangle('red',  'Red', 100), 
+         {position: "right", grow: 0, shrink: 1});
+      stack.add_child(Rectangle('green', 'Green', 100), 
+         {position: "right", grow: 0, shrink: 1});
+      stack.add_child(Rectangle('blue', 'Blue', 100), 
+         {position: "right", grow: 0, shrink: 1});
+
+      var root = stack.attach($('body'));
+      root.render();
+   };
+   
+   /*
+    * How to stack: Expand one element to fill the available free space.
+    */
+   var stack_horizontally_growing_expanding_one_to_occupy_free_space_example = function () {
+      var stack = new layout.Stacked('horizontally');
+      
+      /*
+       *             available space
+       *  /-----------------------------------------\
+       * /        /--- --- --- --- --- --- ---\      \
+       * +-------+--------+                   +-------+
+       * |       |        |                   |       |
+       * |       |        |                   |       |
+       * |       |        |                   |       |
+       * +-------+--------+                   +-------+
+       */
+      stack.add_child(Rectangle('red',  'Red', 100), 
+         {position: "right", grow: 0, shrink: 1});
+      stack.add_child(Rectangle('green', 'Green', 100), 
+         {position: "right", grow: 1, shrink: 1});       // grow 1
+      stack.add_child(Rectangle('blue', 'Blue', 100), 
+         {position: "right", grow: 0, shrink: 1});
+
+      var root = stack.attach($('body'));
+      root.render();
+   };
+
+   /*
+    * How to stack: Expand tow elements to fill the available free space.
+    */
+   var stack_horizontally_growing_expanding_two_to_occupy_free_space_example = function () {
+      var stack = new layout.Stacked('horizontally');
+      
+      /*
+       *             available space
+       *  /-----------------------------------------\
+       * /        /--- --- --- -----\/--- --- --- ---\
+       * +-------+--------+         +-------+
+       * |       |        |         |       |
+       * |       |        |         |       |
+       * |       |        |         |       |
+       * +-------+--------+         +-------+
+       */
+      stack.add_child(Rectangle('red',  'Red', 100), 
+         {position: "right", grow: 0, shrink: 1});
+      stack.add_child(Rectangle('green', 'Green', 100), 
+         {position: "right", grow: 1, shrink: 1});       // grow 1
+      stack.add_child(Rectangle('blue', 'Blue', 100), 
+         {position: "right", grow: 1, shrink: 1});       // grow 1
+
+      var root = stack.attach($('body'));
+      root.render();
+   };
+
+   /*
+    * How to split and stack
+    */
+   var stack_horizontally_growing_expanding_two_to_occupy_free_space_in_a_splitted_example = function () {
+      var stack = new layout.Stacked('horizontally');
+      
+      /*
+       *             available space
+       *  /-----------------------------------------\  ||
+       * /        /--- --- --- ----\/--- --- --- ----\ ||
+       * +-------+--------+         +-------+          ||
+       * |       |        |         |       |          ||   Right Panel here
+       * |       |        |         |       |          ||
+       * |       |        |         |       |          ||
+       * +-------+--------+         +-------+          ||
+       */
+      stack.add_child(Rectangle('red',  'Red', 100), 
+         {position: "right", grow: 0, shrink: 1});
+      stack.add_child(Rectangle('green', 'Green', 100), 
+         {position: "right", grow: 1, shrink: 1});       // grow 1
+      stack.add_child(Rectangle('blue', 'Blue', 100), 
+         {position: "right", grow: 1, shrink: 1});       // grow 1
+
+      var root = stack.attach($('body'));
+      stack.split(Text("brown", "Text", 0), 'right');
+
+      root.render();
    };
 
    function init() {
@@ -961,7 +1236,17 @@ define(['jquery', 'layout', 'widgets/switch_theme', 'code_view', 'process_graph'
       two_text_panels_splitted_example: two_text_panels_splitted_example,
       three_text_panels_splitted_nested_horizontally_example: three_text_panels_splitted_nested_horizontally_example,
       top_left_center_panels_example: top_left_center_panels_example,
+      two_panels_swapping_example: two_panels_swapping_example,
       top_left_center_panels_swapping_example: top_left_center_panels_swapping_example,
+      adding_removing_two_panels_example: adding_removing_two_panels_example,
       splitting_and_removing_example: splitting_and_removing_example,
+      adding_removing_tabs_example: adding_removing_tabs_example,
+      display_tabs_example: display_tabs_example,
+      two_tabbed_splitted_example: two_tabbed_splitted_example,
+      stack_horizontally_with_no_free_space_example: stack_horizontally_with_no_free_space_example,
+      stack_horizontally_with_free_space_example: stack_horizontally_with_free_space_example,
+      stack_horizontally_growing_expanding_one_to_occupy_free_space_example: stack_horizontally_growing_expanding_one_to_occupy_free_space_example,
+      stack_horizontally_growing_expanding_two_to_occupy_free_space_example: stack_horizontally_growing_expanding_two_to_occupy_free_space_example,
+      stack_horizontally_growing_expanding_two_to_occupy_free_space_in_a_splitted_example: stack_horizontally_growing_expanding_two_to_occupy_free_space_in_a_splitted_example,
    };
 });
