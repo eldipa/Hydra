@@ -6,32 +6,43 @@ define([ 'event_handler', 'layout', 'jquery' ], function(event_handler, layout, 
 		this.eventHandler = new event_handler.EventHandler();
 		this.eventHandler.init();
 
-		this._$container = $('<div id = recordSTDIN "></div><div id ="STDIN";"> pid@text:<input id="stdinText" type="text" value=""/> </div>');
+		this.input = $('<input type="text" value=""/>');
+		this.stdin = $('<div> pid@text: </div>');
+		this.stdin.append(this.input);
+		this.record = $('<div></div>');
 		
+		this._$container = $('<div></div>');
+		this._$container.append(this.record);
+		this._$container.append(this.stdin);
+		
+		this._$out_of_dom = this._$container;
+		
+		var my_self = this;
+		
+		$(document).ready(function () {
+			my_self.input.change(function(){
+				var text = $(this).val();
+				$(this).val('');
+				console.log(text);
+				var separado = text.split('@');
+				my_self.record.append(text + '</br>');
+				my_self.eventHandler.publish(separado[0] + ".stdin", separado[1]);
+			});
+		});
 	};
 	
 	
 	StandarInput.prototype.render = function () {
-		this._$rendered_in = $(this.box);
-		this._$rendered_in.html(this._$container);
-		
-		$('#stdinText').data("eventHandler", this.eventHandler);
-		
-		$('#stdinText').change(function(){//TODO SACAR ESTO DE ACA!!!!
-			var text = $(this).val();
-			$(this).val('');
-			console.log(text);
-			var separado = text.split('@');
-			$('#recordSTDIN').append(text + '</br>');
-			$(this).data("eventHandler").publish(separado[0] + ".stdin", separado[1]);
-		});
+		if (this._$out_of_dom) {
+	         this._$out_of_dom.appendTo(this.box);
+	         this._$out_of_dom = null;
+	      }
 	};
 
 	StandarInput.prototype.unlink = function () {
-		if (this._$rendered_in) {
-			this._$rendered_in.empty();
-			this._$rendered_in = null;
-		}
+		if (!this.$out_of_dom) {
+		     this.$out_of_dom = this._$container.detach();
+		  }
 	};
 
 	StandarInput.prototype.__proto__ = layout.Panel.prototype;
