@@ -26,7 +26,7 @@ class Gdb:
                            
 
     # crea un nuevo proceso gdb vacio
-    def __init__(self, comandos = False, log =False):
+    def __init__(self, comandos = False, log =False, inputRedirect = False):
         self.comandos = comandos;
         self.log = log
         self.queue = Queue()
@@ -44,9 +44,14 @@ class Gdb:
             for plugin in files:
                 self.gdbInput.write('python exec(open("./py/gdb/Plugins/' + plugin + '").read())' + '\n')
         if(log):
-            self.fifoPath = tempfile.mktemp()
-            os.mkfifo(self.fifoPath)
-            self.gdbInput.write("fifo-register " + self.fifoPath + '\n')
+            self.outputFifoPath = tempfile.mktemp()
+            os.mkfifo(self.outputFifoPath)
+            self.gdbInput.write("fifo-register " + self.outputFifoPath + '\n')
+            
+        #TODO hacerlo opcional??
+        self.inputFifoPath = tempfile.mktemp()
+        os.mkfifo(self.inputFifoPath)
+        self.inputFifo = open(self.inputFifoPath, 'r+')
         
     def getSessionId(self):
         return self.gdb.pid
@@ -72,10 +77,10 @@ class Gdb:
     @Locker
     def attach(self, pid):
         self.gdbInput.write("-target-attach " + str(pid) + '\n')
-        self.gdbInput.write("output-redirect " + self.fifoPath + '\n')
+        self.gdbInput.write("output-redirect " + self.outputFifoPath + '\n')
         self.subscribe()
         self.eventHandler.subscribe(str(pid) + ".stdin", self.redirectToStdin)
-        self.eventHandler.publish("debugger.new-output", [pid, self.fifoPath])
+        self.eventHandler.publish("debugger.new-output", [pid, self.outputFifoPath])
     
     # -Gdb coloca como proceso target un nuevo proceso del codigo 'file'
     # -Modifica el entorno (ld_preload)
@@ -92,7 +97,7 @@ class Gdb:
     def registerPid(self, data):
         self.targetPid = int(data["targetPid"])
         self.eventHandler.subscribe(str(self.targetPid) + ".stdin", self.redirectToStdin)
-        self.eventHandler.publish("debugger.new-output", [self.targetPid, self.fifoPath])
+        self.eventHandler.publish("debugger.new-output", [self.targetPid, self.outputFifoPath])
 
     
     # Ejecuta al target desde el comienzo
@@ -100,7 +105,7 @@ class Gdb:
     def run(self, data=""):
         if(self.log):
             self.targetPid = 0
-            self.gdbInput.write("run" + '\n')
+            self.gdbInput.write("run < " + self.inputFifoPath + '\n')
         else:
             self.gdbInput.write("run > " + "/tmp/SalidaAux.txt" + '\n')
     
@@ -118,11 +123,13 @@ class Gdb:
     # Finaliza el proceso gdb, junto con su target si este no hubiera finalizado
     @Locker
     def exit(self, data=""):
-        # self.gdbInput.write("kill" + '\n')
+        self.gdb.terminate() #Agrego para recuperar el prompt
         self.gdbInput.write("-gdb-exit" + '\n')
         self.reader.join()
         self.gdb.wait()
-        os.remove(self.fifoPath)
+        os.remove(self.outputFifoPath)
+        self.inputFifo.close()
+        os.remove(self.inputFifoPath)
     
     # Establece un nuevo breakpoint al comienzo de la funcion dada
     # donde puede ser:
@@ -155,7 +162,8 @@ class Gdb:
     @Locker  
     def redirectToStdin(self, data):
         print "redirigiendo " + data
-        self.gdbInput.write(data + '\n')
+        os.write(self.inputFifo.fileno(), data + '\n') #Creo que este \n no deberia ir
+
         
     
     
