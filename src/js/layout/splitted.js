@@ -258,9 +258,12 @@ define(['jquery', 'layout/panel', 'jqueryui'], function ($, P, _) {
    };
 
    Splitted.prototype.unlink = function () {
+      for (var pos in this._children) {
+         this._children[pos].unlink();
+      }
+
       if (!this._$out_of_dom) {
          this._$out_of_dom = this._$container.detach(); //"container" is "in_the_dom"
-         //TODO unlink hay que unlinkear los  sub panels?
       }
    };
 

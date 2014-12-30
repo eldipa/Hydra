@@ -291,9 +291,13 @@ define(['jquery', 'layout/panel', 'jqueryui'], function ($, P, _) {
    };
 
    Tabbed.prototype.unlink = function () {
+      for(var i = 0; i < this._tabs.length; i++) {
+         var tab = this._tabs[i];
+         tab.panel.unlink();
+      }
+
       if (!this._$out_of_dom) {
          this._$out_of_dom = this._$container.detach(); //"container" is "in_the_dom"
-         //TODO unlink hay que unlinkear los  sub panels?
       }
    };
 

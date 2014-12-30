@@ -117,9 +117,12 @@ define(['jquery', 'layout/panel', 'jqueryui'], function ($, P, _) {
    };
 
    Stacked.prototype.unlink = function () {
+      for (var i = 0; i < this._children.length; i++) {
+         this._children[i].unlink();
+      }
+
       if (!this._$out_of_dom) {
          this._$out_of_dom = this._$container.detach(); //"container" is "in_the_dom"
-         //TODO unlink hay que unlinkear los  sub panels?
       }
    };
 
