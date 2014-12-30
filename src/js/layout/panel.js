@@ -179,18 +179,6 @@ define([], function () {
       return this._name;
    };
 
-   Panel.prototype._context_menu_items_for_panel_actions = function () {
-      var self = this;
-      return [
-      {
-         text: 'Remove',
-         action: function(e){
-            e.preventDefault();
-            self.remove();
-         }
-      },
-      ]
-   };
 
    /*
     * Returns a list with panels starting from self, then its parent, then its
