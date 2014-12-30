@@ -49,10 +49,11 @@ requirejs.onResourceLoad = function(context, map, depArray) {
    }
 };
 
-requirejs(['ui', 'code_view', 'jquery', 'export_console', 'layout', 'layout_examples', 'jqueryui', 'ctxmenu', 'notify'], function (ui, code_view, $, export_console, layout, layout_examples, _, ctxmenu, notify) {
+requirejs(['ui', 'code_view', 'jquery', 'export_console', 'layout', 'layout_examples', 'jqueryui', 'ctxmenu', 'notify_js_console'], function (ui, code_view, $, export_console, layout, layout_examples, _, ctxmenu, notify_js_console) {
    var js_console_server = export_console.init();
    var fs = require('fs');
 
+   // Load the context menu handler.
    ctxmenu.init({
           fadeSpeed: 100,
           above: 'auto',
@@ -60,9 +61,15 @@ requirejs(['ui', 'code_view', 'jquery', 'export_console', 'layout', 'layout_exam
           compress: false
    });
 
+   // Create a dynamic context menu. On click, this will travel the DOM from the clicked
+   // element to the root, collecting special attributes from them and building 
+   // a dynamic menu from them (see the docs)
    ctxmenu.attachDynamic('body', undefined);
   
-   //layout_examples.init();
+   // Copy the messages to the "console" and shows them to the UI
+   notify_js_console.start_redirection();
+
+   //layout_examples.init_short_examples();
    ui.init();
 
    //process_view.start();
