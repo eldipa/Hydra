@@ -51,7 +51,7 @@ define(['jquery', 'layout/panel', 'jqueryui'], function ($, P, _) {
 
       this._parent.remove_child(this);
       
-      $(this._$anchor_element).empty();
+      //$(this._$anchor_element).empty();
       this._child = null;
    };
    
@@ -80,6 +80,16 @@ define(['jquery', 'layout/panel', 'jqueryui'], function ($, P, _) {
       if(this._child) {
          this._child.unlink();
       }
+   };
+
+   Root.prototype.remove = function () {
+      if (this._child) {
+         this._child.remove()
+      }
+   };
+
+   Root.prototype.is_empty = function () {
+      return this._child == null;
    };
 
    // Implement the method of Panel. See panel.js
