@@ -8,8 +8,6 @@ requirejs.config({
       ko: 'external/knockout-3.0.0',
       ace_internals: 'external/ace/ace',
       ace: 'external/ace',
-      w2ui_internals: 'external/w2ui-1.3.2', //TODO Deprecated
-      w2ui: 'external/w2ui',                 //TODO Deprecated
       ctxmenu: 'external/ctxmenu',
       varViewer: 'varViewer',
       jqueryui: 'external/jquery-ui-1.11.1',
@@ -18,10 +16,6 @@ requirejs.config({
    },
 
    shim: {
-      "w2ui_internals": {     //TODO Deprecated 
-         deps: ['jquery'],
-         exports: "w2ui"
-      },
       "jqueryui": {
          exports: "$",
          deps: ['jquery']
