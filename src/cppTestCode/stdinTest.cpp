@@ -4,10 +4,12 @@
 using namespace std;
 
 int main(int argc, char **argv) {
-	string aux;
-	for (int i = 0; i < 5; ++i) {
+	string line;
+	cout << "Ingrese un texto:" << endl;
+	while (std::getline(std::cin, line))
+	{
+		cout << "Usted ingreso: " << line << endl;
+
 		cout << "Ingrese un texto:" << endl;
-		cin >> aux;
-		cout << "Usted ingreso: " << aux << endl;
 	}
 }

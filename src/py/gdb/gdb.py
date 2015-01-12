@@ -97,6 +97,7 @@ class Gdb:
     def registerPid(self, data):
         self.targetPid = int(data["targetPid"])
         self.eventHandler.subscribe(str(self.targetPid) + ".stdin", self.redirectToStdin)
+        self.eventHandler.subscribe(str(self.targetPid) + ".stdin.eof", self.sendEOF)
         self.eventHandler.publish("debugger.new-output", [self.targetPid, self.outputFifoPath])
 
     
@@ -164,7 +165,13 @@ class Gdb:
         print "redirigiendo " + data
         os.write(self.inputFifo.fileno(), data + '\n') #Creo que este \n no deberia ir
 
-        
+    @Locker
+    def sendEOF(self, data):
+        print "Sending EOF"
+        self.inputFifo.close()
+        time.sleep(1) #ver si hay alternativa
+        self.inputFifo = open(self.inputFifoPath, 'r+')
+            
     
     
     

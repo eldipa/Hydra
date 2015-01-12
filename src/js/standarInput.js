@@ -29,8 +29,13 @@ define([ 'event_handler', 'layout', 'jquery' ], function(event_handler, layout,
 						var separado = text.split('@');
 						if (separado.length == 2) {
 							my_self.record.append(text + '</br>');
-							my_self.eventHandler.publish(
-									separado[0] + ".stdin", separado[1]);
+							if (separado[1] == "EOF") {
+								my_self.eventHandler.publish(separado[0]
+								+ ".stdin.eof", "");
+							} else {
+								my_self.eventHandler.publish(separado[0]
+										+ ".stdin", separado[1]);
+							}
 						}
 					});
 				});
