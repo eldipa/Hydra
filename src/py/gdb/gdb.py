@@ -51,7 +51,7 @@ class Gdb:
         #TODO hacerlo opcional??
         self.inputFifoPath = tempfile.mktemp()
         os.mkfifo(self.inputFifoPath)
-        self.inputFifo = open(self.inputFifoPath, 'r+')
+        self.inputFifo = None
         
     def getSessionId(self):
         return self.gdb.pid
@@ -104,6 +104,8 @@ class Gdb:
     # Ejecuta al target desde el comienzo
     @Locker
     def run(self, data=""):
+        if (not self.inputFifo):
+            self.inputFifo = open(self.inputFifoPath, 'r+')
         if(self.log):
             self.targetPid = 0
             self.gdbInput.write("run < " + self.inputFifoPath + '\n')
@@ -129,7 +131,8 @@ class Gdb:
         self.reader.join()
         self.gdb.wait()
         os.remove(self.outputFifoPath)
-        self.inputFifo.close()
+        if (self.inputFifo):
+            self.inputFifo.close()
         os.remove(self.inputFifoPath)
     
     # Establece un nuevo breakpoint al comienzo de la funcion dada
@@ -169,8 +172,7 @@ class Gdb:
     def sendEOF(self, data):
         print "Sending EOF"
         self.inputFifo.close()
-        time.sleep(1) #ver si hay alternativa
-        self.inputFifo = open(self.inputFifoPath, 'r+')
+        self.inputFifo = None
             
     
     
