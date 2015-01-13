@@ -11,7 +11,7 @@ import threading
 
 HACK_PATH = "/shared/hack.so"
 
-#Lock para utilizar en cada funcion que escriba en el stdin del gdb
+# Lock para utilizar en cada funcion que escriba en el stdin del target
 def Locker(func):
         def newFunc(self, *args, **kwargs):
             self.lock.acquire()
@@ -26,7 +26,7 @@ class Gdb:
                            
 
     # crea un nuevo proceso gdb vacio
-    def __init__(self, comandos = False, log =False, inputRedirect = False):
+    def __init__(self, comandos=False, log=False, inputRedirect=False):
         self.comandos = comandos;
         self.log = log
         self.queue = Queue()
@@ -48,7 +48,7 @@ class Gdb:
             os.mkfifo(self.outputFifoPath)
             self.gdbInput.write("fifo-register " + self.outputFifoPath + '\n')
             
-        #TODO hacerlo opcional??
+        # TODO hacerlo opcional??
         self.inputFifoPath = tempfile.mktemp()
         os.mkfifo(self.inputFifoPath)
         self.inputFifo = None
@@ -69,12 +69,11 @@ class Gdb:
             self.eventHandler.subscribe(str(self.gdb.pid) + ".evaluate-multiple-pointers", self.evaluarMultiplesPunteros)
         if(self.log):
             self.targetPid = 0
-            self.eventHandler.subscribe("debugger.new-target.%i"%(self.gdb.pid), self.registerPid)
+            self.eventHandler.subscribe("debugger.new-target.%i" % (self.gdb.pid), self.registerPid)
         self.eventHandler.publish("debugger.new-session", self.gdb.pid)
 
     
     # -Gdb realiza un attach al proceso especificado
-    @Locker
     def attach(self, pid):
         self.gdbInput.write("-target-attach " + str(pid) + '\n')
         self.gdbInput.write("output-redirect " + self.outputFifoPath + '\n')
@@ -85,7 +84,6 @@ class Gdb:
     # -Gdb coloca como proceso target un nuevo proceso del codigo 'file'
     # -Modifica el entorno (ld_preload)
     # -Retorna el pid del nuevo proceso
-    @Locker
     def file(self, path):
         self.gdbInput.write("-file-exec-and-symbols " + path + '\n')
         self.gdbInput.write("-gdb-set " + "exec-wrapper env LD_PRELOAD=" + HACK_PATH + '\n')
@@ -96,8 +94,10 @@ class Gdb:
 
     def registerPid(self, data):
         self.targetPid = int(data["targetPid"])
-        self.eventHandler.subscribe(str(self.targetPid) + ".stdin", self.redirectToStdin)
+        self.eventHandler.subscribe(str(self.targetPid) + ".stdin.txt", self.redirectToStdin)
         self.eventHandler.subscribe(str(self.targetPid) + ".stdin.eof", self.sendEOF)
+        self.eventHandler.subscribe(str(self.targetPid) + ".stdin.file", self.redirectFileToStdin)
+        self.eventHandler.subscribe(str(self.targetPid) + ".fileRedirectComplete", self.fileThreadJoiner)
         self.eventHandler.publish("debugger.new-output", [self.targetPid, self.outputFifoPath])
 
     
@@ -113,12 +113,10 @@ class Gdb:
             self.gdbInput.write("run > " + "/tmp/SalidaAux.txt" + '\n')
     
     # Ejecuta al target desde el punto donde se encontraba
-    @Locker
     def continueExec(self, data=""):
         self.gdbInput.write("-exec-continue" + '\n')
     
     # Ejecuta una sola intruccion del target
-    @Locker
     def stepInto(self, data=""):
         self.gdbInput.write("-exec-step" + '\n')
     
@@ -126,7 +124,7 @@ class Gdb:
     # Finaliza el proceso gdb, junto con su target si este no hubiera finalizado
     @Locker
     def exit(self, data=""):
-        self.gdb.terminate() #Agrego para recuperar el prompt
+        self.gdb.terminate()  # Agrego para recuperar el prompt
         self.gdbInput.write("-gdb-exit" + '\n')
         self.reader.join()
         self.gdb.wait()
@@ -141,39 +139,55 @@ class Gdb:
     # filename:linenum
     # filename:function
     # *address 
-    @Locker
     def setBreakPoint(self, donde):
         self.gdbInput.write("-break-insert " + donde + '\n')
 
     # Ejectua un comando arbitrario pasado como argumento
-    @Locker
     def directCommand(self, command):
         self.gdbInput.write(command + '\n')
         
     # Pide todas las variables y sus tipos 
-    @Locker
-    def getVariables(self, data =""):
+    def getVariables(self, data=""):
         self.gdbInput.write('-stack-list-variables --all-values' + '\n')
-        
-    @Locker    
-    def evaluarExpresion(self, data =""):
+           
+    def evaluarExpresion(self, data=""):
         self.gdbInput.write('-data-evaluate-expression ' + data + '\n')
-      
-    @Locker  
-    def evaluarMultiplesPunteros(self, data = ""):
+       
+    def evaluarMultiplesPunteros(self, data=""):
         self.gdbInput.write('pointer-printer ' + data + '\n')
         
     @Locker  
     def redirectToStdin(self, data):
         print "redirigiendo " + data
-        os.write(self.inputFifo.fileno(), data + '\n') #Creo que este \n no deberia ir
+        os.write(self.inputFifo.fileno(), data + '\n')  # Creo que este \n no deberia ir
 
     @Locker
     def sendEOF(self, data):
         print "Sending EOF"
         self.inputFifo.close()
         self.inputFifo = None
+        
+    def redirectFileToStdin(self, data):
+        def enviarArchivo(path):
+            self.lock.acquire()
             
+            file = open(path, 'r')
+            line = os.read(file.fileno(), 512)
+            while (line != ''):
+                os.write(self.inputFifo.fileno(), line)
+                line = os.read(file.fileno(), 512)
+            file.close()
+            
+            self.lock.release()
+            
+            self.eventHandler.publish(str(self.targetPid) + ".fileRedirectComplete", path)
+            
+        print "Redirigiendo archivo: " + data
+        self.t_redirector = threading.Thread(target=enviarArchivo, args=[data])
+        self.t_redirector.start()
+            
+    def fileThreadJoiner(self, data):
+        self.t_redirector.join()
     
     
     
