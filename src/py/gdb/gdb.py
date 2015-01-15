@@ -83,8 +83,8 @@ class Gdb:
         self.gdbInput.write("io-redirect stdout " + self.outputFifoPath + '\n')
         self.gdbInput.write("io-redirect stdin " + self.inputFifoPath + '\n')
         self.subscribe()
-        self.eventHandler.subscribe(str(pid) + ".stdin", self.redirectToStdin)
-        self.eventHandler.publish("debugger.new-output", [pid, self.outputFifoPath])
+#         self.eventHandler.subscribe(str(pid) + ".stdin", self.redirectToStdin)
+#         self.eventHandler.publish("debugger.new-output", [pid, self.outputFifoPath])
     
     # -Gdb coloca como proceso target un nuevo proceso del codigo 'file'
     # -Modifica el entorno (ld_preload)
