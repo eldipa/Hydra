@@ -12,4 +12,5 @@ int main(int argc, char **argv) {
 
 		cout << "Ingrese un texto:" << endl;
 	}
+	cout << "Fin" << endl;
 }

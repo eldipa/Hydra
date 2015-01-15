@@ -38,21 +38,25 @@ class Gdb:
         self.eventHandler = publish_subscribe.eventHandler.EventHandler()
         self.lock = threading.Lock()
         if (comandos):
-            files = []
-            for (dirpath, dirnames, filenames) in os.walk("./py/gdb/Plugins"):
-                files = files + filenames
-            for plugin in files:
-                self.gdbInput.write('python exec(open("./py/gdb/Plugins/' + plugin + '").read())' + '\n')
+            self.cargarPlugins()
         if(log):
             self.outputFifoPath = tempfile.mktemp()
             os.mkfifo(self.outputFifoPath)
-            self.gdbInput.write("fifo-register " + self.outputFifoPath + '\n')
+            self.gdbInput.write("fifo-register " + self.outputFifoPath + " stdout" + '\n')
             
         # TODO hacerlo opcional??
         self.inputFifoPath = tempfile.mktemp()
         os.mkfifo(self.inputFifoPath)
         self.inputFifo = None
+        self.gdbInput.write("fifo-register " + self.inputFifoPath + " stdin" + '\n')
         
+    def cargarPlugins(self):
+        files = []
+        for (dirpath, dirnames, filenames) in os.walk("./py/gdb/Plugins"):
+            files = files + filenames
+        for plugin in files:
+            self.gdbInput.write('python exec(open("./py/gdb/Plugins/' + plugin + '").read())' + '\n')
+                
     def getSessionId(self):
         return self.gdb.pid
         
@@ -76,7 +80,8 @@ class Gdb:
     # -Gdb realiza un attach al proceso especificado
     def attach(self, pid):
         self.gdbInput.write("-target-attach " + str(pid) + '\n')
-        self.gdbInput.write("output-redirect " + self.outputFifoPath + '\n')
+        self.gdbInput.write("io-redirect stdout " + self.outputFifoPath + '\n')
+        self.gdbInput.write("io-redirect stdin " + self.inputFifoPath + '\n')
         self.subscribe()
         self.eventHandler.subscribe(str(pid) + ".stdin", self.redirectToStdin)
         self.eventHandler.publish("debugger.new-output", [pid, self.outputFifoPath])
@@ -87,8 +92,6 @@ class Gdb:
     def file(self, path):
         self.gdbInput.write("-file-exec-and-symbols " + path + '\n')
         self.gdbInput.write("-gdb-set " + "exec-wrapper env LD_PRELOAD=" + HACK_PATH + '\n')
-#         self.setBreakPoint("main")
-#         self.run()
         self.gdbInput.write('\n')
         self.subscribe()
 
@@ -104,11 +107,12 @@ class Gdb:
     # Ejecuta al target desde el comienzo
     @Locker
     def run(self, data=""):
+        #Abro al fifo aca por si en la ejecucion anterior se cerro para mandar un EOF
         if (not self.inputFifo):
             self.inputFifo = open(self.inputFifoPath, 'r+')
         if(self.log):
             self.targetPid = 0
-            self.gdbInput.write("run < " + self.inputFifoPath + '\n')
+            self.gdbInput.write("run " +'\n')
         else:
             self.gdbInput.write("run > " + "/tmp/SalidaAux.txt" + '\n')
     
