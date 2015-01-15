@@ -79,6 +79,7 @@ class Gdb:
     
     # -Gdb realiza un attach al proceso especificado
     def attach(self, pid):
+        self.inputFifo = open(self.inputFifoPath, 'r+')
         self.gdbInput.write("-target-attach " + str(pid) + '\n')
         self.gdbInput.write("io-redirect stdout " + self.outputFifoPath + '\n')
         self.gdbInput.write("io-redirect stdin " + self.inputFifoPath + '\n')
