@@ -174,20 +174,26 @@ class Gdb:
         
     def redirectFileToStdin(self, data):
         def enviarArchivo(path):
-            self.lock.acquire()
+            try:
+                fileToRedirect = open(path, 'r')
+                
+                self.lock.acquire()
+                
+                line = os.read(fileToRedirect.fileno(), 512)
+                while (line != ''):
+                    os.write(self.inputFifo.fileno(), line)
+                    line = os.read(fileToRedirect.fileno(), 512)
+                fileToRedirect.close()
+                
+                self.lock.release()
+                
+                self.eventHandler.publish(str(self.targetPid) + ".fileRedirectComplete", path)
             
-            file = open(path, 'r')
-            line = os.read(file.fileno(), 512)
-            while (line != ''):
-                os.write(self.inputFifo.fileno(), line)
-                line = os.read(file.fileno(), 512)
-            file.close()
-            
-            self.lock.release()
-            
-            self.eventHandler.publish(str(self.targetPid) + ".fileRedirectComplete", path)
-            
-        print "Redirigiendo archivo: " + data
+                print "Redirigiendo archivo: " + data
+                
+            except IOError as e:
+                print "I/O error({0}): {1}".format(e.errno, e.strerror)
+                
         self.t_redirector = threading.Thread(target=enviarArchivo, args=[data])
         self.t_redirector.start()
             

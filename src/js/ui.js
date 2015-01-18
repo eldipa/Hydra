@@ -273,7 +273,22 @@ define(['jquery', 'layout', 'code_view', 'event_handler', 'varViewer', 'widgets/
 
       root.render();
 
-      event_handler.publish("debugger.load", "cppTestCode/stdinTest");
+      var fs = require('fs');
+      fs.readFile('../config/start.cfg', 'utf8', function (err,data) {
+    	  if (err) {
+    	    return console.log(err);
+    	  }
+    	  var aux = data.split(',');
+    	  if (aux.length != 2) {
+    		  aux=["load","stdinTest"];
+    	  }
+    	  if (aux[0] == "load"){
+    		  aux[1] = "cppTestCode/" + aux[1];
+    	  }
+    	  event_handler.publish("debugger." + aux[0],  aux[1]);
+    	});
+      
+      
 
    };
 

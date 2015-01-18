@@ -29,7 +29,7 @@ define([ 'event_handler', 'layout', 'jquery' ], function(event_handler, layout,
 					my_self.input.change(function() {
 						var text = $(this).val();
 						$(this).val('');
-						console.log(text);
+//						console.log(text);
 						var separado = text.split('@');
 						if (separado.length == 2) {
 							my_self.record.append(text + '</br>');
@@ -46,7 +46,7 @@ define([ 'event_handler', 'layout', 'jquery' ], function(event_handler, layout,
 					my_self.fileInput.change(function() {
 						var text = $(this).val();
 						$(this).val('');
-						console.log(text);
+//						console.log(text);
 						var separado = text.split('@');
 						if (separado.length == 2) {
 							my_self.record.append('file:' + text + '</br>');
