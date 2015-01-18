@@ -8,6 +8,7 @@ import publish_subscribe.eventHandler
 import tempfile
 import os
 import threading
+import signal
 
 HACK_PATH = "/shared/hack.so"
 
@@ -37,6 +38,7 @@ class Gdb:
         self.reader.start()
         self.eventHandler = publish_subscribe.eventHandler.EventHandler()
         self.lock = threading.Lock()
+        self.isAttached = False
         if (comandos):
             self.cargarPlugins()
         if(log):
@@ -79,6 +81,7 @@ class Gdb:
     
     # -Gdb realiza un attach al proceso especificado
     def attach(self, pid):
+        self.isAttached = True
         self.inputFifo = open(self.inputFifoPath, 'r+')
         self.gdbInput.write("-target-attach " + str(pid) + '\n')
         self.gdbInput.write("io-redirect stdout " + self.outputFifoPath + '\n')
@@ -129,7 +132,11 @@ class Gdb:
     # Finaliza el proceso gdb, junto con su target si este no hubiera finalizado
     @Locker
     def exit(self, data=""):
-        self.gdb.terminate()  # Agrego para recuperar el prompt
+#         self.gdb.terminate()  # Agrego para recuperar el prompt
+        self.gdb.send_signal(signal.SIGINT)
+        self.gdbInput.write("io-revert" + '\n')
+        if self.isAttached:
+            self.gdbInput.write("-target-detach" + '\n')
         self.gdbInput.write("-gdb-exit" + '\n')
         self.reader.join()
         self.gdb.wait()
