@@ -5,7 +5,6 @@ Created on 19/10/2014
 '''
 
 import gdb
-import atexit
 
 
 #Esto debe estar definido en algun lado.
