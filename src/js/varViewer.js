@@ -49,7 +49,7 @@ define([ 'event_handler', 'layout', 'jquery' ], function(event_handler, layout,
 
 					lista += "</ul></li></ul>";
 
-					my_self.variables[session_id].replaceWith('<div>' + lista
+					my_self.variables[session_id].html('<div>' + lista
 							+ '</div>');
 				}
 
