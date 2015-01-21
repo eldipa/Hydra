@@ -43,8 +43,16 @@ define([ 'event_handler', 'layout', 'jquery' ], function(event_handler, layout,
 					for (variable in data.results.variables) {
 						var nombre = data.results.variables[variable].name;
 						var value = data.results.variables[variable].value;
-
-						lista += "<li>" + nombre + " = " + value + "</li>";
+						if (value[0] == '{'){
+							lista+= "<li>" + nombre + "<ul>"
+							var separado = value.split(',');
+							for(variable in separado){
+								lista += "<li>" + separado[variable] + "</li>";
+							}
+							lista += "</li></ul>";
+						}else{
+							lista += "<li>" + nombre + " = " + value + "</li>";
+						}
 					}
 
 					lista += "</ul></li></ul>";
