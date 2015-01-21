@@ -18,6 +18,7 @@ define([ 'event_handler', 'layout', 'jquery' ], function(event_handler, layout,
 		// Espero una nueva session
 		this.eventHandler.subscribe('debugger.new-session', function(data) {
 			var session_id = data - 0;
+			var target_pid = 0;
 
 			my_self.variables[session_id] = $('<div></div>');
 			my_self._$container.append(my_self.variables[session_id]);
@@ -33,24 +34,39 @@ define([ 'event_handler', 'layout', 'jquery' ], function(event_handler, layout,
 
 					});
 
+			my_self.eventHandler.subscribe("debugger.new-target." + session_id,
+					function(data) {
+
+						target_pid = data.targetPid;
+
+					});
+
 			// Me suscribo al evento que da los valores de las variables
 			my_self.eventHandler.subscribe("gdb." + session_id
 					+ ".type.Sync.klass.done", function(data) {
 				if (data.results && data.results.variables) {
 
-					var lista = "<ul><li>" + session_id + "<ul>";
+					var lista = "<ul><li>" + target_pid + "<ul>";
 
 					for (variable in data.results.variables) {
 						var nombre = data.results.variables[variable].name;
 						var value = data.results.variables[variable].value;
-						if (value[0] == '{'){
-							lista+= "<li>" + nombre + "<ul>"
+						if (value[0] == '{') {
+							lista += "<li>" + nombre + "<ul>"
+
+//							var reemplazado = value.replace(/{/g, "['").replace(
+//									/}/g, "']").replace(/,/g, "','");
+
+//							var evaluado = JSON.parse(reemplazado);		
+							
+							
 							var separado = value.split(',');
-							for(variable in separado){
+//							console.log(separado);
+							for (variable in separado) {
 								lista += "<li>" + separado[variable] + "</li>";
 							}
-							lista += "</li></ul>";
-						}else{
+							lista += "</ul></li>";
+						} else {
 							lista += "<li>" + nombre + " = " + value + "</li>";
 						}
 					}
