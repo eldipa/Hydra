@@ -53,15 +53,12 @@ define([ 'event_handler', 'layout', 'jquery' ], function(event_handler, layout,
 						var value = data.results.variables[variable].value;
 						if (value[0] == '{') {
 							lista += "<li>" + nombre + "<ul>"
-
-//							var reemplazado = value.replace(/{/g, "['").replace(
-//									/}/g, "']").replace(/,/g, "','");
-
-//							var evaluado = JSON.parse(reemplazado);		
 							
-							
+							value = $('<i></i>').text(value).html();
+							console.log(value);
+
 							var separado = value.split(',');
-//							console.log(separado);
+
 							for (variable in separado) {
 								lista += "<li>" + separado[variable] + "</li>";
 							}
