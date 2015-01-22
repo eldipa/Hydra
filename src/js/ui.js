@@ -1,4 +1,4 @@
-define(['jquery', 'layout', 'code_view', 'event_handler', 'varViewer', 'widgets/buttons', 'listview_panel'], function ($, layout, code_view, EH, varViewer, buttons, listview_panel) {
+define(['jquery', 'layout', 'code_view', 'event_handler', 'varViewer', 'widgets/buttons', 'listview_panel', 'standarInput'], function ($, layout, code_view, EH, varViewer, buttons, listview_panel, standarInput) {
    var Panel = layout.Panel;
    var Tabbed = layout.Tabbed;
    var ListViewPanel = listview_panel.ListViewPanel;
@@ -58,6 +58,8 @@ define(['jquery', 'layout', 'code_view', 'event_handler', 'varViewer', 'widgets/
       // then, the VarViewer
       var visor = new varViewer.VarViewer();
 
+      var stdinTextInput = new standarInput.StandarInput();
+
 
       // Now we attach and build the final layout
       var root = view.attach($('body'));
@@ -70,6 +72,9 @@ define(['jquery', 'layout', 'code_view', 'event_handler', 'varViewer', 'widgets/
       root.render();
 
       view.parent().split(stdoutlog, "bottom");
+      root.render();
+      
+      view.parent().split(stdinTextInput, "bottom");
       root.render();
 
       stdoutlog.split(syscalllog, "bottom")
@@ -268,7 +273,22 @@ define(['jquery', 'layout', 'code_view', 'event_handler', 'varViewer', 'widgets/
 
       root.render();
 
-      event_handler.publish("debugger.load", "cppTestCode/outputTest");
+      var fs = require('fs');
+      fs.readFile('../config/start.cfg', 'utf8', function (err,data) {
+    	  if (err) {
+    	    return console.log(err);
+    	  }
+    	  var aux = data.split(',');
+    	  if (aux.length != 2) {
+    		  aux=["load","stdinTest"];
+    	  }
+    	  if (aux[0] == "load"){
+    		  aux[1] = "cppTestCode/" + aux[1];
+    	  }
+    	  event_handler.publish("debugger." + aux[0],  aux[1]);
+    	});
+      
+      
 
    };
 

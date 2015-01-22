@@ -30,12 +30,12 @@ try:
 
 finally:
     
-    
+    spawmer.shutdown()
     
     os.system("python py/publish_subscribe/notifier.py stop")
  
     if ui_process:
         os.system("killall nw")  # XXX this is too much
         
-    spawmer.shutdown()
+    
 
