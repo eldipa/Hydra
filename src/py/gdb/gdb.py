@@ -9,6 +9,7 @@ import tempfile
 import os
 import threading
 import signal
+import pluginLoader
 
 HACK_PATH = "/shared/hack.so"
 
@@ -39,8 +40,9 @@ class Gdb:
         self.eventHandler = publish_subscribe.eventHandler.EventHandler()
         self.lock = threading.Lock()
         self.isAttached = False
+        self.pluginLoader = pluginLoader.PluginLoader(self.gdbInput)
         if (comandos):
-            self.cargarPlugins()
+            self.pluginLoader.loadAll()
         if(log):
             self.outputFifoPath = tempfile.mktemp()
             os.mkfifo(self.outputFifoPath)
@@ -51,14 +53,7 @@ class Gdb:
         os.mkfifo(self.inputFifoPath)
         self.inputFifo = None
         self.gdbInput.write("fifo-register " + self.inputFifoPath + " stdin" + '\n')
-        
-    def cargarPlugins(self):
-        files = []
-        for (dirpath, dirnames, filenames) in os.walk("./py/gdb/Plugins"):
-            files = files + filenames
-        for plugin in files:
-            self.gdbInput.write('python exec(open("./py/gdb/Plugins/' + plugin + '").read())' + '\n')
-                
+           
     def getSessionId(self):
         return self.gdb.pid
         

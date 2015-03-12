@@ -48,20 +48,30 @@ define([ 'event_handler', 'layout', 'jquery' ], function(event_handler, layout,
 
 					var lista = "<ul><li>" + target_pid + "<ul>";
 
+					var divide = function(lista, value) {
+						var separado;
+						do {
+							separado = value.split(',', 1);
+							value = value.slice(separado[0].length + 1);
+							if (separado[0] != "") {
+								lista += "<li>" + separado[0] + "</li>";
+							}
+						} while (separado[0] != "");
+						
+						
+						return lista;
+					};
+
 					for (variable in data.results.variables) {
 						var nombre = data.results.variables[variable].name;
 						var value = data.results.variables[variable].value;
+						value = $('<i></i>').text(value).html();
+
 						if (value[0] == '{') {
 							lista += "<li>" + nombre + "<ul>"
-							
-							value = $('<i></i>').text(value).html();
 							console.log(value);
+							lista = divide(lista, value);
 
-							var separado = value.split(',');
-
-							for (variable in separado) {
-								lista += "<li>" + separado[variable] + "</li>";
-							}
 							lista += "</ul></li>";
 						} else {
 							lista += "<li>" + nombre + " = " + value + "</li>";
