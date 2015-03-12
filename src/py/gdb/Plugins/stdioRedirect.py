@@ -49,7 +49,7 @@ class StartAndBreak (gdb.Breakpoint):
     def stop (self):
         redirectOutput(self.stdoutPath)
         redirectInput(self.stdinPath)
-        return True
+        return False
 
 
 breakpointStartAndBreak = StartAndBreak("main", internal=True)

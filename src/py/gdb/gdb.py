@@ -28,7 +28,7 @@ class Gdb:
                            
 
     # crea un nuevo proceso gdb vacio
-    def __init__(self, comandos=False, log=False, inputRedirect=False):
+    def __init__(self, comandos=False, log=False, inputRedirect=False, debugPlugin = None):
         self.comandos = comandos;
         self.log = log
         self.queue = Queue()
@@ -43,6 +43,8 @@ class Gdb:
         self.pluginLoader = pluginLoader.PluginLoader(self.gdbInput)
         if (comandos):
             self.pluginLoader.loadAll()
+        if (debugPlugin):
+            self.pluginLoader.load(debugPlugin)
         if(log):
             self.outputFifoPath = tempfile.mktemp()
             os.mkfifo(self.outputFifoPath)
