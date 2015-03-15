@@ -16,7 +16,7 @@ class PluginLoader():
         if name in self.files:
             self.gdbInput.write('python exec(open("./py/gdb/Plugins/' + name + '").read())' + '\n')
         else:
-            print "Plugin %s no encontrado" %(name)
+            print "Plugin %s no encontrado, los detectados son %s" %(name, self.files)
         
     def loadAll(self):
         for plugin in self.files:

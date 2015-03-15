@@ -28,16 +28,16 @@ class OutputLogger(threading.Thread):
     def run(self):
         salir = False
         while not salir:
-            print "salidas originales: " + str(self.outputsFd)
+#             print "salidas originales: " + str(self.outputsFd)
             [paraLeer, paraEscribir, otro] = select.select(self.outputsFd, [], [])
-            print "para leer: " + str(paraLeer)
+#             print "para leer: " + str(paraLeer)
             for salida in paraLeer:
 #                 leido = self.openFiles[salida].read() #bloquea.... buffer??
                 leido = os.read(salida, 10000)
-                print "la salida es " + leido + " de " + str(salida)
+#                 print "la salida es " + leido + " de " + str(salida)
                 
                 if leido == "":
-                    print "sacando: " + str(salida)
+#                     print "sacando: " + str(salida)
                     self.outputsFd.remove(salida)
                     self.openFiles[salida].close()
                     self.openFiles.pop(salida)
@@ -60,7 +60,7 @@ class OutputLogger(threading.Thread):
             
     
     def newFd(self, data):
-        print "nuevo fifo: " + str(data)
+#         print "nuevo fifo: " + str(data)
         file = open(data[1], "r")
         self.outputsFd.append(file.fileno())
         self.originPid[file.fileno()] = data[0]
@@ -69,7 +69,7 @@ class OutputLogger(threading.Thread):
 #         self.myFifo.write("nuevo")
         os.write(self.myFifo.fileno(), "nuevo")
         self.lock.release()
-        print "agregado, nuevo fd: " + str(self.outputsFd)
+#         print "agregado, nuevo fd: " + str(self.outputsFd)
         
     def finalizar(self):
         self.lock.acquire()
