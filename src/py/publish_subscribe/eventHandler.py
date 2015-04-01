@@ -11,6 +11,7 @@ import syslog, traceback
 from connection import Connection
 from topic import build_topic_chain, fail_if_topic_isnt_valid
 from esc import esc
+import random
 
 class Publisher(object):
     def __init__(self):
@@ -68,9 +69,10 @@ class EventHandler(threading.Thread, Publisher):
         self.start()
         
         
-    def subscribe(self, topic, callback, return_subscription_id=False):
+    def subscribe(self, topic, callback, return_subscription_id=False, send_and_wait_echo=True):
         fail_if_topic_isnt_valid(topic, allow_empty=True)
 
+        result = None
         self.lock.acquire()
         try:
            if self.callbacks_by_topic.has_key(topic):
@@ -90,14 +92,25 @@ class EventHandler(threading.Thread, Publisher):
 
            self.next_valid_subscription_id += 1
            if return_subscription_id:
-              return self.next_valid_subscription_id - 1;
-           else:
-              return
+              result = self.next_valid_subscription_id - 1;
 
         finally:
            self.lock.release()
 
-    
+        if send_and_wait_echo:
+           cookie = "echo-%i" % int(random.getrandbits(30))
+         
+           echo_received_flag = Lock()
+           echo_received_flag.acquire()
+
+           self.subscribe_for_once_call(cookie, lambda data: echo_received_flag.release(), send_and_wait_echo=False)
+           self.publish(cookie, '')
+
+           echo_received_flag.acquire()
+
+        return result
+
+   
     def unsubscribe(self, subscription_id):
         self.lock.acquire()
         try:

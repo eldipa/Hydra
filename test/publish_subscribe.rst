@@ -72,9 +72,6 @@ The API consists of two methods:
  - one method to *subscribe* the entity to some particular event of interest
  - the other method allows to an entity to *publish* some event
 
-   Exist more methods that can be implemented like *unsubscribe*. Currently
-   only these two are implemented.
-
 Before any action, the entity must initialize the lib
 
 ::
@@ -105,7 +102,10 @@ a while, the events will be delivered correctly.
 The last semantic definition can be used to implement a premature filtering of each
 publication. So, if an event hasn't any subscriber, the publish method can drop the event.
 
-   Our implementation uses the *weak* semantic.
+   Our server implementation uses the *weak* semantic.
+   The implementation in the client can extend this:
+      - for Python, the implementation uses the *strong* semantic.
+      - for Javascript, the *weak* is used.
 
 
 To subscribe to an event, the entity must provide a callback to be executed. This
