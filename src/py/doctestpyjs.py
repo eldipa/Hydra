@@ -42,7 +42,7 @@ class JavascriptSession(object):
       # TODO this is a problem, the connection is not explicit closed
       count = 0
       self.remote_console = socket.socket()
-      self.remote_console.settimeout(5)
+      self.remote_console.settimeout(2)
       while True:
          try:
             self.remote_console.connect(self.address)
@@ -57,7 +57,7 @@ class JavascriptSession(object):
             if count > 5:
                raise JavascriptSessionError(str(e))
 
-            time.sleep(1)
+            time.sleep(0.2)
 
    def close_connection(self):
       try:
