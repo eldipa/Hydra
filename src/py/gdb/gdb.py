@@ -11,6 +11,8 @@ import threading
 import signal
 import pluginLoader
 
+import globalconfig
+
 HACK_PATH = "/shared/hack.so"
 
 # Lock para utilizar en cada funcion que escriba en el stdin del target
@@ -29,10 +31,26 @@ class Gdb:
 
     # crea un nuevo proceso gdb vacio
     def __init__(self, comandos=False, log=False, inputRedirect=False, debugPlugin = None):
-        self.comandos = comandos;
+        cfg = globalconfig.get_global_config()
+      
+        use_gdb_system = cfg.getboolean('gdb', 'use-gdb-system')
+
+        gdb_args = ["-interpreter=mi", "-quiet"]
+        if use_gdb_system:
+           gdb_path = 'gdb'
+
+        else:
+           gdb_path = cfg.get('gdb', 'gdb-executable-path')
+           gdb_data_path = cfg.get('gdb', 'gdb-data-directory')
+
+           data_directory_option = "--data-directory=%s" % gdb_data_path
+           gdb_args.append(data_directory_option)
+
+        self.comandos = comandos
         self.log = log
         self.queue = Queue()
-        self.gdb = subprocess.Popen(["gdb", "-interpreter=mi", "-quiet"], stdin=PIPE, stdout=PIPE, stderr=PIPE)
+
+        self.gdb = subprocess.Popen([gdb_path] + gdb_args, stdin=PIPE, stdout=PIPE, stderr=PIPE)
         self.gdbInput = self.gdb.stdin
         self.gdbOutput = self.gdb.stdout
         self.reader = outputReader.OutputReader(self.gdbOutput, self.queue, self.gdb.pid)
@@ -137,7 +155,8 @@ class Gdb:
         self.gdbInput.write("-gdb-exit" + '\n')
         self.reader.join()
         self.gdb.wait()
-        os.remove(self.outputFifoPath)
+        if(self.log):
+           os.remove(self.outputFifoPath)
         if (self.inputFifo):
             self.inputFifo.close()
         os.remove(self.inputFifoPath)
