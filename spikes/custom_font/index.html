@@ -14,21 +14,21 @@
 <style type="text/css" media="screen">
 @font-face {
     font-family: 'texgyreherosbold_italic';
-    src: url('fonts/texgyreheros-bolditalic-webfont.ttf') format('truetype');
+    src: url('fonts/texgyreheros/texgyreheros-bolditalic-webfont.ttf') format('truetype');
     font-weight: normal;
     font-style: normal;
 
 }
 @font-face {
     font-family: 'texgyreherosbold';
-    src: url('fonts/texgyreheros-bold-webfont.ttf') format('truetype');
+    src: url('fonts/texgyreheros/texgyreheros-bold-webfont.ttf') format('truetype');
     font-weight: normal;
     font-style: normal;
 
 }
 @font-face {
     font-family: 'texgyreherositalic';
-    src: url('fonts/texgyreheros-italic-webfont.ttf') format('truetype');
+    src: url('fonts/texgyreheros/texgyreheros-italic-webfont.ttf') format('truetype');
     font-weight: normal;
     font-style: normal;
 
@@ -36,12 +36,29 @@
 
 @font-face {
     font-family: 'texgyreherosregular';
-    src: url('fonts/texgyreheros-regular-webfont.ttf') format('truetype');
+    src: url('fonts/texgyreheros/texgyreheros-regular-webfont.ttf') format('truetype');
     font-weight: normal;
     font-style: normal;
 
 }
 
+@font-face {
+    font-family: 'monaco';
+    src: url('fonts/monaco/monaco.ttf') format('truetype');
+
+}
+
+@font-face {
+    font-family: 'inconsolata';
+    src: url('fonts/inconsolata/inconsolata.otf') format('opentype');
+
+}
+
+@font-face {
+    font-family: 'dejavusansmono';
+    src: url('fonts/dejavusansmono/DejaVuSansMono.ttf') format('truetype');
+
+}
 
 .regular {
 font-family: 'texgyreherosregular';
@@ -56,25 +73,85 @@ font-family: 'texgyreherositalic';
 font-family: 'texgyreherosbold_italic';
 }
 
+.monaco {
+font-family: 'monaco';
+}
+
+.inconsolata {
+font-family: 'inconsolata';
+}
+
+.dejavusansmono {
+font-family: 'dejavusansmono';
+}
+
 </style>
 </head>
 <body>
-<div class="regular">function foo(items) {
-    var x = "All this is syntax highlighted";
-    return x;
-}  // regular</div>
-<div class="bold">function foo(items) {
-    var x = "All this is syntax highlighted";
-    return x;
-}  // bold</div>
-<div class="italic">function foo(items) {
-    var x = "All this is syntax highlighted";
-    return x;
-}  // italic</div>
-<div class="bolditalic">function foo(items) {
-    var x = "All this is syntax highlighted";
-    return x;
-}  // bolditalic</div>
-    
+<h4>Default</h4>
+<div>ABCDEFGHIJKLMNOPQRSTUVWXYZ<br />
+     abcdefghijklmnopqrstuvwxyz<br />
+     !@#$%^&amp;*()_+-=,./?&lt;&gt;[]\{}|<br />
+     1234567890<br />
+<br />
+      "hello world!"  123 * 902<br />
+      'hello world!'  123 ^ 902<br />
+      x[y]  x(y)  x{y}  x@y  x#y<br />
+      return;  return.  return_<br />
+</div>
+<h4>Inconsolata</h4>
+<div class="inconsolata"><br />ABCDEFGHIJKLMNOPQRSTUVWXYZ<br />
+     abcdefghijklmnopqrstuvwxyz<br />
+     !@#$%^&amp;*()_+-=,./?&lt;&gt;[]\{}|<br />
+     1234567890<br />
+<br />
+      "hello world!"  123 * 902<br />
+      'hello world!'  123 ^ 902<br />
+      x[y]  x(y)  x{y}  x@y  x#y<br />
+      return;  return.  return_<br />
+</div>
+<h4>Monaco (*)</h4>
+<div class="monaco"><br />ABCDEFGHIJKLMNOPQRSTUVWXYZ<br /><!-- mi favorita -->
+     abcdefghijklmnopqrstuvwxyz<br />
+     !@#$%^&amp;*()_+-=,./?&lt;&gt;[]\{}|<br />
+     1234567890<br />
+<br />
+      "hello world!"  123 * 902<br />
+      'hello world!'  123 ^ 902<br />
+      x[y]  x(y)  x{y}  x@y  x#y<br />
+      return;  return.  return_<br />
+</div>
+<h4>DejaVuSansMono</h4>
+<div class="dejavusansmono"><br />ABCDEFGHIJKLMNOPQRSTUVWXYZ<br />
+     abcdefghijklmnopqrstuvwxyz<br />
+     !@#$%^&amp;*()_+-=,./?&lt;&gt;[]\{}|<br />
+     1234567890<br />
+<br />
+      "hello world!"  123 * 902<br />
+      'hello world!'  123 ^ 902<br />
+      x[y]  x(y)  x{y}  x@y  x#y<br />
+      return;  return.  return_<br />
+</div>
+<br />
+<h4>Default</h4>
+<div>
+All of the <b>source code</b>
+ to this product is available under licenses which are both
+ <i>free</i> and <i>open source</i>. 
+ A URL identifying the specific source code used to create this copy can be found on the
+ <b><i>build configuration page</i></b>, and you can
+ <b><i>read instructions on how to download and build the code for yourself</i></b>. 
+</div>    
+<br />
+<h4>TexGyreHeros</h4>
+<div class="regular">
+All of the <span class="bold">source code</span>
+ to this product is available under licenses which are both
+ <span class="italic">free</span> and <span class="italic">open source</span>. 
+ A URL identifying the specific source code used to create this copy can be found on the
+ <span class="bolditalic">build configuration page</span>, and you can
+ <span class="bolditalic">read instructions on how to download and build the code for yourself</span>. 
+</div>    
 </body>
 </html>
+
