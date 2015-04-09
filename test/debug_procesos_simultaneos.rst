@@ -64,7 +64,7 @@ Ahora solo esperamos un poco para que puedan ejecutar algunas lineas
 
 ::
 
-   >>> time.sleep(5)
+   >>> time.sleep(10)
 
 Bien, ahora procedemos a matar a ambos procesos y finalizar la session de gdb.
 
