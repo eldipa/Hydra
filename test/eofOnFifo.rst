@@ -14,15 +14,11 @@ Un espacio de memoria compartida para intercambiar mensajes fuera de la fifo:
 :: 
    >>> import threading, time 
    >>> shared_list = [] 
-   >>> shared_lock = threading.Lock() 
    >>>                               
    >>> def add_sync(data):
-   ...   global shared_lock 
    ...   global shared_list 
    ... 
-   ...   shared_lock.acquire() 
    ...   shared_list.append(data) 
-   ...   shared_lock.release()
 
 Defino un lector cuya funcionalidad es leer hasta un eof, al finalizar guarda un
 mensaje en el array:
@@ -44,7 +40,7 @@ Abrimos el fifo como escritura y mandamos algunos mensajes:
 
 ::
    >>> fifo = open(fifoPath,'w')  
-   >>> os.write(fifo.fileno(), "Linea 1") #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
+   >>> os.write(fifo.fileno(), "Linea 1")
    7
    >>> fifo.close()
    
@@ -53,7 +49,7 @@ compartido, luego de haer un join:
 
 :: 
    >>> t_lector.join()
-   >>> shared_list #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
+   >>> shared_list
    ['Linea 1', 'EOF']
    
 Ahora probamos de modificar al lector, para que luego del eof, siga leyendo,
@@ -81,11 +77,11 @@ Enviamos la primer linea y eof, y vemos si los mismos llegan
 :: 
 
    >>> fifo = open(fifoPath,'w')  
-   >>> os.write(fifo.fileno(), "Linea 1") #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS 
-   7 
+   >>> os.write(fifo.fileno(), "Linea 1")
+   7
    >>> fifo.close()
    >>> t_lector.join()
-   >>> shared_list #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
+   >>> shared_list
    ['Linea 1', 'EOF', 'EOF', 'EOF']
    
 Como se observa, esta vez hay 3 EOF, esto se debe a que del lado lector una vez
@@ -112,11 +108,11 @@ Repetimos el procedimiento:
 
 ::   
    >>> fifo = open(fifoPath,'w')  
-   >>> os.write(fifo.fileno(), "Linea 1") #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS 
-   7 
+   >>> os.write(fifo.fileno(), "Linea 1")
+   7
    >>> fifo.close()
    >>> time.sleep(2)
-   >>> shared_list #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
+   >>> shared_list
    ['Linea 1', 'EOF']
    
 Esta vez, solo llego un EOF, lo hacemos dos veces mas:
@@ -124,16 +120,19 @@ Esta vez, solo llego un EOF, lo hacemos dos veces mas:
 :: 
 
    >>> fifo = open(fifoPath,'w')  
-   >>> os.write(fifo.fileno(), "Linea 2") #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS 
-   7 
+   >>> os.write(fifo.fileno(), "Linea 2")
+   7
    >>> fifo.close()
+
    >>> time.sleep(2) #sin este sleep, el otro extremo no llega a darse cuenta de que hubo un EOF
+
    >>> fifo = open(fifoPath,'w')  
-   >>> os.write(fifo.fileno(), "Linea 3") #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS 
-   7 
+   >>> os.write(fifo.fileno(), "Linea 3")
+   7
    >>> fifo.close()
+
    >>> t_lector.join()
-   >>> shared_list #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
+   >>> shared_list
    ['Linea 1', 'EOF', 'Linea 2', 'EOF', 'Linea 3', 'EOF']
    
    
@@ -150,5 +149,4 @@ Limpieza:
 
 ::
    >>> os.remove(fifoPath)
-
 

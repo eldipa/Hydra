@@ -15,8 +15,9 @@ Defino las funciones que van a utilizar a los fifos:
    >>> def escritor(path, numero):
    ...  fifo = open(path,'w')
    ...  for i in range(3):
-   ...     time.sleep(1)
+   ...     time.sleep(0.5)
    ...     fifo.write(str(numero) + ": linea " + str(i) + '\n')
+   ...  fifo.close()
    
 Defino al lector:
 
@@ -37,12 +38,16 @@ Defino al lector:
    ...      for fifo in paraLeer:
    ...         linea = fifo.read()
    ...         salidas.append(linea)
-   ...         if ("1: linea 2" in linea):
+   ...         if ("1: linea 2" in linea): # "x: linea 2" es el ultimo mensaje
    ...            salir1 = True
+   ...            fifo1.close()
    ...            fifos.remove(fifo1)
    ...         if ("2: linea 2" in linea): 
    ...            salir2 = True
+   ...            fifo2.close()
    ...            fifos.remove(fifo2)
+   ...
+   ...   salidas.sort() # ordenamos esto para tener una salida deterministica
 
 Ejecutamos primero el lector, luego los dos escritores:
 
@@ -60,21 +65,18 @@ Ejecutamos primero el lector, luego los dos escritores:
 Esperamos que se ejecuten y vemos la salida:
 
 ::
-   >>> time.sleep(5)
-   >>> salidas #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS  
+   >>> t_escritor1.join()
+   >>> t_escritor2.join()
+   >>> t_lector.join()
 
-Limpieza: 
+   >>> salidas
+   ['1: linea 0\n1: linea 1\n1: linea 2\n',
+    '2: linea 0\n2: linea 1\n2: linea 2\n']
 
+Limpieza de las fifos: 
 
 ::
 
    >>> os.remove(fifoPath + '1')
    >>> os.remove(fifoPath + '2')
    
-   >>> t_escritor1.join()
-   >>> t_escritor2.join()
-   >>> t_lector.join()
-
-
-    
-

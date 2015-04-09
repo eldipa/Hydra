@@ -73,6 +73,7 @@ Pedimos las variables:
    
    >>> shared_list[0] #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS 
    {u'klass': u'done',
+   ...
    u'results': {u'variables': [{u'name': u'estructura',
                                 u'value': u'{enteroStruct = ..., 
                                              floatStruct = ...}'},
@@ -103,6 +104,7 @@ Para imprimir el valor de una expresion, en particular, de un puntero:
    
    >>> shared_list[0] #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
    {u'klass': u'done',
+    ...
     u'results': {u'value': u'0'},
     u'token': None,
     u'type': u'Sync'}
