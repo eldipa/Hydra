@@ -34,7 +34,20 @@ if __name__ == '__main__':
    working_directory = "../src"
    wiki_directory = "../../wiki"
 
-   whitelist = sys.argv[1:]
+
+   try:
+      blacklist_token_pos = sys.argv[1:].index("--")
+      
+      whitelist = set(sys.argv[1:1+blacklist_token_pos])
+      blacklist = set(sys.argv[blacklist_token_pos+2:])
+
+   except ValueError:
+      whitelist = set(sys.argv[1:])
+      blacklist = set()
+      
+
+   whitelist = list((whitelist - blacklist))
+   whitelist.sort()
 
    sources = doctests(source_dir, whitelist)
    run_doctests(sources, working_directory)
