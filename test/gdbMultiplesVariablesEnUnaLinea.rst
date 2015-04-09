@@ -73,6 +73,7 @@ Pedimos las variables:
    
    >>> shared_list[0] #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS 
    {u'klass': u'done',
+    u'last_stream_records': [...
     u'results': {u'variables': [{u'name': u'estructura',
                                  u'value': u'{enteroStruct = ..., floatStruct = ...}'},
                                 {u'name': u'entero', u'value': u'0'},
@@ -114,7 +115,7 @@ separados por espacios en vez de comas):
                                     floatStruct = ...} , 
                     argv: 0x... "..." ]\n',
      u'type': u'Console'},
-    {u'klass': u'done', u'results': {}, u'token': None, u'type': u'Sync'}]
+    {u'klass': u'done', ...]
 
 
 Limpieza:

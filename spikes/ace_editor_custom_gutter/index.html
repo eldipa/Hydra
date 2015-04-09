@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<title>ACE in Action</title>
+<style type="text/css" media="screen">
+    #editor { 
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
+    }
+</style>
+</head>
+<body>
+<div id="editor">function foo(items) {
+    var x = "All this is syntax highlighted";
+    return x;
+}</div>
+    
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.1.8/ace.js" type="text/javascript" charset="utf-8"></script>
+<script>
+    var editor = ace.edit("editor");
+    editor.setTheme("ace/theme/monokai");
+    editor.getSession().setMode("ace/mode/javascript");
+
+    /* Change the gutter to show arbitrary numbers, like addresses */
+    
+    var addresses_by_line_number = [
+                     '0x0804844d',
+                     '0x0804844e', 
+                     '0x08048450', 
+                     '0x08048453', 
+                     '0x08048459', 
+                     '0x0804845c'
+      ];
+    
+    var get_text_of_gutter_line_number_from_address = function(session, row) {
+           return addresses_by_line_number[row]; // Returns a String
+       };
+    var get_text_of_gutter_line_number_from_number = function(session, row) {
+           return "" + row; // This is the default
+       };
+
+    editor.session.gutterRenderer =  { // this is the magic: a custom gutter render
+       getWidth: function(session, lastLineNumber, config) { // I don't know, but this is a Must
+           return lastLineNumber.toString().length * config.characterWidth;
+       },
+       getText: get_text_of_gutter_line_number_from_number
+    };
+
+
+    // How to change a gutter on the fly? see the 'exec' method
+    // (to test this, we add a  shortcut 'Ctrl-M' to do the change on the fly)
+    editor.commands.addCommand({
+       name: 'myCommand',
+       bindKey: {win: 'Ctrl-M',  mac: 'Command-M'},
+       exec: function(editor) {
+         editor.renderer.setShowGutter(false); //REMOVE the gutter
+
+         // do the change on the fly
+         if (editor.session.gutterRenderer.getText === get_text_of_gutter_line_number_from_number) {
+            console.log("Change number to address");
+            editor.session.gutterRenderer.getText = get_text_of_gutter_line_number_from_address;
+         }
+         else {
+            console.log("Change address to number");
+            editor.session.gutterRenderer.getText = get_text_of_gutter_line_number_from_number;
+         }
+
+         editor.renderer.setShowGutter(true); //SHOW the gutter again
+       },
+       readOnly: true // false if this command should not apply in readOnly mode
+    }); 
+
+</script>
+</body>
+</html>

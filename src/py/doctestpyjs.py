@@ -40,24 +40,29 @@ class JavascriptSession(object):
    def connect(self):
       # Connect with the remote javascript session
       # TODO this is a problem, the connection is not explicit closed
-      count = 0
       self.remote_console = socket.socket()
-      self.remote_console.settimeout(5)
-      while True:
+      self.remote_console.settimeout(0.5)
+      retries = 5
+      connected = False
+      while retries > 0 and  not connected:
          try:
             self.remote_console.connect(self.address)
-            self.remote_console.settimeout(60*5)
-            
-            # Wait for the prompt of the remote session
-            self.test(None, discard_response=True)
-
-            return
+            connected = True
          except socket.error, e:
-            count = count + 1
-            if count > 5:
-               raise JavascriptSessionError(str(e))
+            retries = retries - 1
+            time.sleep(0.1)
+         
+      if not connected:
+         raise JavascriptSessionError(str(e))
 
-            time.sleep(1)
+      self.remote_console.settimeout(60*5)
+      try:
+         # Wait for the prompt of the remote session
+         self.test(None, discard_response=True)
+
+         return
+      except socket.error, e:
+         raise JavascriptSessionError(str(e))
 
    def close_connection(self):
       try:
@@ -212,6 +217,8 @@ def compile(source, filename, mode, flags=0, dont_inherit=0):
    else:
       raise Exception("Unknown source's type: %s" % source_type)
 
+   sys.stderr.write(".")
+   sys.stderr.flush()
    return original_compile_func(source, filename, mode, flags, dont_inherit)
 
 __builtin__.compile = compile    # patching!
@@ -225,11 +232,14 @@ def testfile(filename, module_relative=True, name=None, package=None,
              extraglobs=None, raise_on_error=False, parser=mixed_parser,
              encoding=None):
 
+   import sys
    try:
       return original_testfile_func(filename, module_relative, name, package,
             globs, verbose, report, optionflags, extraglobs, raise_on_error, parser,
             encoding)
    finally:
+      sys.stderr.write("\n")
+      sys.stderr.flush()
       mixed_parser.shutdown() # this object is VERY coupled!!
 
 doctest.testfile = testfile   # patching!

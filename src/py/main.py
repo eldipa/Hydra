@@ -15,7 +15,11 @@ if (not match(".*/src$", os.getcwd())):
     print "ESTE MAIN SE DEBE LLAMAR DESDE LA CARPETA SRC"
     sys.exit()
 
+import globalconfig
+
 try:
+
+    globalconfig.load_global_config()
 
     # lanzo nw
     ui_process = subprocess.Popen(['./scripts/run_ui.sh'], shell=True)

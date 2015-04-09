@@ -79,6 +79,7 @@ class GdbSpawmer:
     def shutdown(self):
         self.eliminarCola()
         self.exit('all')
-        self.logger.finalizar()
-        self.logger.join()
+        if self.log:
+           self.logger.finalizar()
+           self.logger.join()
     
