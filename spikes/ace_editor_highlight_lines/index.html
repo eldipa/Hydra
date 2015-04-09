@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<title>ACE in Action</title>
+<style type="text/css" media="screen">
+    #editor { 
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
+    }
+
+/* Full line */
+.errorHighlight{
+  position:absolute;
+  z-index:20;
+  background-color: #ff0000;
+}
+
+/* Gradient */
+.breakpointHighlight{
+  position:absolute;
+  z-index:20;
+  background: linear-gradient(to right, rgba(0,0,0,0) , red);
+}
+
+</style>
+</head>
+<body>
+<div id="editor">function foo(items) {
+    var x = "All this is syntax highlighted";
+    var y;
+    var undef1;
+    var undef2;
+    return x;
+}</div>
+    
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.1.8/ace.js" type="text/javascript" charset="utf-8"></script>
+<script>
+    var editor = ace.edit("editor");
+    editor.setTheme("ace/theme/monokai");
+    editor.getSession().setMode("ace/mode/javascript");
+
+    /* Hightlight one row */
+    var lineNumber = 1; //starts counting from 0
+    var Range = ace.require("ace/range").Range;
+    var markerId = editor.session.addMarker(new Range(lineNumber, 0, lineNumber, 10), "errorHighlight", "fullLine");
+
+    /* Hightlight several rows */
+    lineNumber = 3;
+    var end = 4;
+    editor.session.addMarker(new Range(lineNumber, 0, end, 10), "breakpointHighlight", "fullLine");
+
+    /* Add an event handler to hightlight the clicked row */
+    var handler = function(e){
+       var editor = e.editor;
+       
+       var pos = editor.getCursorPosition(); // returns {row, column}
+       
+       // add highlight for the clicked row
+       var range = new Range(pos.row, 0, pos.row, 100);
+       
+       editor.session.removeMarker(markerId);
+       markerId = editor.session.addMarker(range, 'errorHighlight', 'fullLine');
+    };
+    editor.on("click", handler);
+
+    /* Add an event to the gutter */
+    editor.on("guttermousedown", function(e){
+       var target = e.domEvent.target;
+       if (target.className.indexOf("ace_gutter-cell") == -1)
+           return;
+       if (!editor.isFocused())
+           return;
+       if (e.clientX > 25 + target.getBoundingClientRect().left)
+           return;
+
+       var row = e.getDocumentPosition().row;
+       console.log("Click in row " + row);
+       e.stop()
+    });
+
+</script>
+</body>
+</html>
