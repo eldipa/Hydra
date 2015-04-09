@@ -148,6 +148,20 @@ used to check each tests. These same flags can be used for both, Python and Java
    <BLANKLINE>
    world
 
+We support one additional flag more: PASS to skip the checks. This is different from
+SKIP that doesn't run the test. PASS will run the test but will always pass.
+
+::
+
+   >>> 1     # doctest: +PASS
+   2
+
+::
+
+   js> 1     // doctest: +PASS
+   2
+
+
 Checking exceptions
 -------------------
 

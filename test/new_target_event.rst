@@ -6,8 +6,7 @@ Iniciamos el server
    >>> import time
    >>> from subprocess import check_output
    
-   >>> os.system("python py/publish_subscribe/notifier.py start")
-   0
+   >>> os.system("python py/publish_subscribe/notifier.py start")    # doctest: +PASS
 
 Nos conectamos con el event_handler y lanzamos el gdbSpawner
 
@@ -70,5 +69,4 @@ Clean up
 ::
 
    >>> spawmer.shutdown()
-   >>> os.system("python py/publish_subscribe/notifier.py stop")
-   0
+   >>> os.system("python py/publish_subscribe/notifier.py stop")   # doctest: +PASS

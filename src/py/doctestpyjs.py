@@ -1,5 +1,17 @@
 import doctest, re, sys, subprocess, time, socket, traceback
 
+PASS = doctest.register_optionflag("PASS")
+
+old_OutputChecker_check_output = doctest.OutputChecker.check_output
+def _custom_check_output(self, want, got, optionflags):
+   if optionflags & PASS:
+      return True
+
+   return old_OutputChecker_check_output(self, want, got, optionflags)
+
+doctest.OutputChecker.check_output = _custom_check_output
+
+
 JS_SESSION_ADDRESS = ('', 5001)
 
 class DocTestJSParser(doctest.DocTestParser):
@@ -121,7 +133,7 @@ class DocTestMixedParser(doctest.DocTestParser):
       Then, all the tests are mixed and sorted so their order match the 
       lexical order in which the tests were found during the parsing stage.'''
 
-   def __init__(self, parsers):
+   def __init__(self):
       self.pyparser = doctest.DocTestParser()
       self.jsparser = DocTestJSParser()
 
@@ -184,7 +196,7 @@ class DocTestMixedParser(doctest.DocTestParser):
 
 
 # Create the mixed parser
-mixed_parser = DocTestMixedParser([doctest.DocTestParser(), DocTestJSParser()])
+mixed_parser = DocTestMixedParser()
 
 # This a very funny and dirty part. Because the DocTestRunner uses the built-in
 # 'compile' function to compile the source code (because he assume that it is python 

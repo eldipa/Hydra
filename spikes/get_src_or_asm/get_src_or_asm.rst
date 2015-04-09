@@ -24,7 +24,7 @@ de debugging necesarios (ademas de tener el source example.c disponible)
 
 ::
 
-   >>> _ = request(gdb, "-file-exec-and-symbols example_with_debugging_symbol")
+   >>> request(gdb, "-file-exec-and-symbols example_with_debugging_symbol") # doctest: +PASS
 
 Ahora podemos ver cual es el archivo fuente asociado (el que contiene el main) con
 solo llamar a 
@@ -43,7 +43,7 @@ Pero que pasa si tenemos el ejecutable sin la informacion necesaria para debugge
 
 ::
 
-   >>> _ = request(gdb, "-file-exec-and-symbols example_without_debugging_symbol")
+   >>> request(gdb, "-file-exec-and-symbols example_without_debugging_symbol") # doctest: +PASS
    
    >>> r = request(gdb, "-file-list-exec-source-file")
    >>> 'file' in r['results']
@@ -78,7 +78,7 @@ el entry point. La unica solucion es un comando tradicional y luego parsear.
 
 ::
 
-   >>> _ = request(gdb, "-file-exec-and-symbols example_stripped")
+   >>> request(gdb, "-file-exec-and-symbols example_stripped")   # doctest: +PASS
 
    >>> stream_records = request(gdb, "info target")['last_stream_records']
    >>> entry_point_record = filter(lambda r: "Entry point" in r['stream'], stream_records)[0]

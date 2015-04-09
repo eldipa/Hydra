@@ -26,16 +26,14 @@ Creamos primero el archivo de prueba
 
    >>> import os
    >>> import time
-   >>> os.system("touch data; > data")
-   0
+   >>> os.system("touch data; > data")                # doctest: +PASS
 
 Iniciamos el sistema publish_subscribe (por ser una dependencia de nuestro wrapper
 gdb) e instanciamos uno de esos wrapper.
 
 ::
 
-   >>> os.system("python py/publish_subscribe/notifier.py start")
-   0
+   >>> os.system("python py/publish_subscribe/notifier.py start") # doctest: +PASS
 
    >>> from gdb import gdb
    >>> gdbInstance = gdb.Gdb()
@@ -105,8 +103,7 @@ Primero borramos el archivo y lanzamos un gdb nuevo
 
 ::
 
-   ### os.system("touch data; > data")
-   0
+   ### os.system("touch data; > data")                # doctest: +PASS
 
    ### from gdb import gdb
    ### gdbInstance = gdb.Gdb()
@@ -152,7 +149,5 @@ Finalmente eliminamos el archivo y cerramos el publish subscriber
 
 ::
 
-   >>> os.system("rm data")
-   0
-   >>> os.system("python py/publish_subscribe/notifier.py stop")
-   0
+   >>> os.system("rm data")                                       # doctest: +PASS
+   >>> os.system("python py/publish_subscribe/notifier.py stop")  # doctest: +PASS
