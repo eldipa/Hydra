@@ -92,8 +92,9 @@
 .bottom_side_panel_and_bar_of_splitted {
    height: 70%;
    width: 100%;
-   display: inline-block;
+   display: flex;
    float: left;
+   flex-flow: column;
 }
 
 .bottom_panel_of_splitted {

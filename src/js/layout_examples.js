@@ -94,6 +94,24 @@ define(['jquery', 'layout', 'underscore', 'widgets/switch_theme', 'code_view', '
       root.render();
       return root;
    };
+   
+   /*
+    * Nested splitting (top-bottom)
+    */
+   var four_text_panels_splitted_nested_vertically_example = function () {
+      var on_top = Text('red', 'top-text', 0);
+      var on_middle1 = Text('green', 'middle-text', 12);
+      var on_middle2 = Text('green', 'middle-text', 12);
+      var on_bottom = Text('blue', 'bottom-text', 100);
+
+      var root = on_top.attach($('body'));
+      on_top.split(on_middle2, 'bottom');
+      on_middle2.split(on_bottom, 'bottom');
+      on_top.split(on_middle1, 'bottom');
+
+      root.render();
+      return root;
+   };
 
    /*
     * How to split a parent. Also, how to set the percentage of the available size
@@ -1557,6 +1575,7 @@ define(['jquery', 'layout', 'underscore', 'widgets/switch_theme', 'code_view', '
       one_panel_example: one_panel_example,
       two_text_panels_splitted_example: two_text_panels_splitted_example,
       three_text_panels_splitted_nested_horizontally_example: three_text_panels_splitted_nested_horizontally_example,
+      four_text_panels_splitted_nested_vertically_example: four_text_panels_splitted_nested_vertically_example,
       top_left_center_panels_example: top_left_center_panels_example,
       two_panels_swapping_example: two_panels_swapping_example,
       top_left_center_panels_swapping_example: top_left_center_panels_swapping_example,
