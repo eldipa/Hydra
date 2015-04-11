@@ -5,3 +5,4 @@
 /notifier.pyc
 /notifier.stats
 /topic.pyc
+*.pid

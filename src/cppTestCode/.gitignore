@@ -4,3 +4,9 @@
 /testVariables
 /write_one_char_at_time
 /ipcDetection
+outputTest
+simplified_unix_tools/cat
+simplified_unix_tools/echo
+simplified_unix_tools/true
+stdinTest
+
