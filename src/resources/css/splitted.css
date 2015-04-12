@@ -34,7 +34,7 @@
    height: 100%;
    display: inline-block;
    float: left;
-   overflow: auto;
+   overflow: hidden;
 }
 
 .right_side_panel_and_bar_of_splitted {
@@ -46,7 +46,7 @@
 
 .right_panel_of_splitted {
    height: 100%;
-   overflow: auto;
+   overflow: hidden;
 }
 
 .vertical_bar_splitting {
@@ -86,7 +86,7 @@
    width: 100%;
    display: inline-block;
    float: left;
-   overflow: auto;
+   overflow: hidden;
 }
 
 .bottom_side_panel_and_bar_of_splitted {
@@ -100,7 +100,7 @@
 .bottom_panel_of_splitted {
    height: 100%;
    width: 100%;
-   overflow: auto;
+   overflow: hidden;
 }
 
 .horizontal_bar_splitting {
@@ -123,6 +123,11 @@
    min-height: 10px;
    height: 100%;
    overflow: hidden;
+}
+
+.panel_of_splitted_conteiner {
+   overflow: auto;
+   height: 100%;
 }
 
 /*
