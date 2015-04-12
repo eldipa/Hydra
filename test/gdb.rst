@@ -67,7 +67,7 @@ Para instaciar un nuevo proceso gdb se debe hacer:
    >>> gdbId = gdbInstance.getSessionId()
    >>> gdbId > 0 
    True
-   >>> eventHandler.subscribe("gdb." + str(gdbId), add_sync)
+   >>> eventHandler.subscribe("result-gdb." + str(gdbId), add_sync)
    >>> time.sleep(2)
    
    >>> shared_list[0] #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS 
@@ -76,7 +76,7 @@ Para instaciar un nuevo proceso gdb se debe hacer:
     u'results': {u'id': u'...'},
     u'token': None, 
     u'type': u'Notify'}
-   
+
    
 Para cargar un nuevo ejecutable en el entorno gdb:
 
@@ -127,7 +127,7 @@ Para realizar un attach de un proceso ya andando:
    >>> gdbId = gdbInstance.getSessionId()
    >>> gdbId > 0 
    True
-   >>> eventHandler.subscribe("gdb." + str(gdbId), add_sync)
+   >>> eventHandler.subscribe("result-gdb." + str(gdbId), add_sync)
    >>> gdbInstance.attach(p.pid) 
    >>> time.sleep(2)
    
@@ -588,7 +588,7 @@ la ejecucion el *outputReader* lanzara eventos bajo el topic "gdb.1234" (siendo
    >>> gdbId = gdbInstance.getSessionId()
    >>> gdbId > 0
    True
-   >>> eventHandler.subscribe("gdb." + str(gdbId), add_sync)
+   >>> eventHandler.subscribe("result-gdb." + str(gdbId), add_sync)
    >>> time.sleep(2)
    
 Para colocar un breakpoint en una funcion:

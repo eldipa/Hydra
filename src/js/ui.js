@@ -70,7 +70,7 @@ define(['jquery', 'layout', 'code_view', 'event_handler', 'varViewer', 'widgets/
 
       view.parent().split(visor, "right");
       root.render();
-
+      
       view.parent().split(stdoutlog, "bottom");
       root.render();
       
@@ -107,7 +107,7 @@ define(['jquery', 'layout', 'code_view', 'event_handler', 'varViewer', 'widgets/
          });
 
 
-         event_handler.subscribe("gdb."+session_id+".type.Exec.klass.stopped", function (data) {
+         event_handler.subscribe("notification-gdb."+session_id+".exec.stopped", function (data) {
                if (data.results && data.results.frame && data.results.frame.line && data.results.frame.fullname) {
                   // load file
                   view.load_file(data.results.frame.fullname);
@@ -120,13 +120,13 @@ define(['jquery', 'layout', 'code_view', 'event_handler', 'varViewer', 'widgets/
                }
          });
 
-         event_handler.subscribe("gdb."+session_id+".type.Notify.klass.thread-group-exited", function (data) {
+         event_handler.subscribe("notification-gdb."+session_id+".notify.thread-group-exited", function (data) {
                // TODO (issue #70) end
                view.cleanCurrentLine();
          });
 
          // Loggeamos lo que pasa en la "consola" del gdb.
-         event_handler.subscribe("gdb."+session_id+".type.Console", function (data) {
+         event_handler.subscribe("stream-gdb."+session_id+".console", function (data) {
                log.feed(data.stream);
                log.render();
          });
@@ -146,7 +146,7 @@ define(['jquery', 'layout', 'code_view', 'event_handler', 'varViewer', 'widgets/
          // TODO (issue #36), poner un breakpoint es relativamente facil, pero eliminarlos no.
          // ya que se hace a traves de un "breakpoint id" o bien, un "clear all breakpoints"
          // por linea. De igual manera hay que mantener un registro.
-         event_handler.subscribe("gdb."+session_id+".type.Notify.klass.breakpoint-created", function (data) {
+         event_handler.subscribe("notification-gdb."+session_id+".notify.breakpoint-created", function (data) {
                //TODO (issue #65) ver los breakpoints de "ace"
                //TODO (issue #64) hacer que las lineas de breakpoint sean mas llamativas
                //TODO (issue #65) click derecho en el numero de linea (gluter) muestra el menu contextual pero NO cambia la linea actual (current), haciendo que el breakpoint se ponga en otro lado.
@@ -162,7 +162,7 @@ define(['jquery', 'layout', 'code_view', 'event_handler', 'varViewer', 'widgets/
          //
          // Es una especie de "invocacion" pseudo-sincronica.
          var TOKEN = 99;
-         var file_list_source_ID = event_handler.subscribe("gdb."+session_id+".type.Sync.klass.done", function (data) {
+         var file_list_source_ID = event_handler.subscribe("result-gdb."+session_id+"."+TOKEN+".done", function (data) {
                var token = data.token;
                // Sin token, no es para nosotros
                if (token === null || token === undefined) {

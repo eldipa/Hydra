@@ -38,6 +38,9 @@ solo llamar a
    >>> r['results']['fullname']              #doctest: +SKIP
    u'/foo/bar/example.c'
 
+   >>> r['results']['line']                  #doctest: +SKIP
+   u'1'
+
 
 Pero que pasa si tenemos el ejecutable sin la informacion necesaria para debuggear?
 

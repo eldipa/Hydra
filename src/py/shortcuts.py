@@ -60,7 +60,7 @@ def request(gdb, command):
       
    pubsub = publish_subscribe.eventHandler.EventHandler()
    subscription_id = pubsub.subscribe(
-                                 "gdb", 
+                                 "result-gdb", 
                                  _wait_and_get_response_from_gdb, 
                                  return_subscription_id = True
                         )

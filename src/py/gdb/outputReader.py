@@ -16,30 +16,37 @@ class OutputReader(threading.Thread):
         self.pid = 0
     
     def run(self):
-        salir = False
+        quit = False
 
-        while (not salir):
+        while not quit:
             line = self.gdbOutput.readline()
             
             if line == "":
-                salir = True
+                quit = True
                 continue
 
             record = self.parser.parse_line(line)
+            
+            if record == "(gdb)":
+               continue
 
             if isinstance(record, Record):
                 if (record.klass == "thread-group-started"):
                     self.pid = record.results["pid"]
                     self.eventHandler.publish("debugger.new-target.%i" % self.gdbPid , {'gdbPid': self.gdbPid, 'targetPid': self.pid})
                 
-            if record != "(gdb)":
                 
-                data = vars(record)
-                topic = "gdb." + str(self.gdbPid) + ".type." + record.type
-            
-                if isinstance(record, Record):
-                    topic += (".klass." + record.klass)
-                if isinstance(record, Stream):
-                    pass # de momento nada
-                   
-                self.eventHandler.publish(topic, data)
+            data = vars(record)
+            if record.type == "Sync":
+               token = 0 if record.token is None else record.token
+               topic = "result-gdb.%i.%i.%s" % (self.gdbPid, token, record.klass.lower())
+
+            elif record.type in ("Console", "Target", "Log"):
+               assert isinstance(record, Stream)
+               topic = "stream-gdb.%i.%s" % (self.gdbPid, record.type.lower())
+               
+            else:
+               assert record.type in ("Exec", "Status", "Notify")
+               topic = "notification-gdb.%i.%s.%s" %(self.gdbPid, record.type.lower(), record.klass.lower())
+ 
+            self.eventHandler.publish(topic, data)
