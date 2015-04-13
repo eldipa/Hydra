@@ -27,18 +27,23 @@ def stop_notifier(path):
    notifier_path = os.path.join(path, "notifier.py")
    check_call(["python", notifier_path, "stop"]) 
 
-def request(gdb, command):
-   request_topic = "%i.direct-command" % gdb.gdb.pid
-   response_topic = "gdb.%i" % gdb.gdb.pid
-
+def request(gdb, command, arguments=tuple()):
    cookie = int(random.getrandbits(30))
+   request_topic = "request-gdb.%i.%i" % (gdb.gdb.pid, cookie)
+   response_topic = "result-gdb.%i.%i" % (gdb.gdb.pid, cookie)
 
    # Build the command correctly: use always the MI interface and a cookie
    if not command.startswith("-"):
-      command = '%i-interpreter-exec console "%s"' % (cookie, command)
+      interpreter = 'console'
    else:
-      command = "%i%s" % (cookie, command)
+      interpreter = 'mi'
 
+   request_for_command = {
+         'command': command,
+         'token': cookie,
+         'arguments': arguments,
+         'interpreter': interpreter,
+   }
 
    # Create a flag acquired by default
    response_received_flag = Lock()
@@ -46,26 +51,17 @@ def request(gdb, command):
 
    ctx = {}
    def _wait_and_get_response_from_gdb(event):
-      if event == command: # this is my own event, it is the request and not the response
-         return
-
-      if 'response' in ctx: # the response was already received, discard this
-         return
-
-      if event.get('token', None) != cookie:
-         return # this is not for us
-
       ctx['response'] = event
       response_received_flag.release() # release the flag, response received!
       
    pubsub = publish_subscribe.eventHandler.EventHandler()
    subscription_id = pubsub.subscribe(
-                                 "result-gdb", 
+                                 response_topic, 
                                  _wait_and_get_response_from_gdb, 
                                  return_subscription_id = True
                         )
 
-   pubsub.publish(request_topic, command)
+   pubsub.publish(request_topic, request_for_command)
    response_received_flag.acquire() # block until the flag is release by the callback (and the respose was received)
    pubsub.unsubscribe(subscription_id)
 
