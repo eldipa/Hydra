@@ -30,7 +30,7 @@ class Gdb:
                            
 
     # crea un nuevo proceso gdb vacio
-    def __init__(self, comandos=False, log=False, inputRedirect=False, debugPlugin = None):
+    def __init__(self, comandos=False, log=False, inputRedirect=False, debugPlugin=None):
         cfg = globalconfig.get_global_config()
       
         use_gdb_system = cfg.getboolean('gdb', 'use-gdb-system')
@@ -66,13 +66,13 @@ class Gdb:
         if(log):
             self.outputFifoPath = tempfile.mktemp()
             os.mkfifo(self.outputFifoPath)
-            self.gdbInput.write("fifo-register " + self.outputFifoPath + " stdout" + '\n')
+            self.gdbInput.write("fifo-register " + "stdout " + self.outputFifoPath + '\n')
             
         # TODO hacerlo opcional??
         self.inputFifoPath = tempfile.mktemp()
         os.mkfifo(self.inputFifoPath)
         self.inputFifo = None
-        self.gdbInput.write("fifo-register " + self.inputFifoPath + " stdin" + '\n')
+        self.gdbInput.write("fifo-register " + "stdin " + self.inputFifoPath + '\n')
            
     def getSessionId(self):
         return self.gdb.pid
@@ -126,12 +126,12 @@ class Gdb:
     # Ejecuta al target desde el comienzo
     @Locker
     def run(self, data=""):
-        #Abro al fifo aca por si en la ejecucion anterior se cerro para mandar un EOF
+        # Abro al fifo aca por si en la ejecucion anterior se cerro para mandar un EOF
         if (not self.inputFifo):
             self.inputFifo = open(self.inputFifoPath, 'r+')
         if(self.log):
             self.targetPid = 0
-            self.gdbInput.write("run " +'\n')
+            self.gdbInput.write("run " + '\n')
         else:
             self.gdbInput.write("run > " + "/tmp/SalidaAux.txt" + '\n')
     

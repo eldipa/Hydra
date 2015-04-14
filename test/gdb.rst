@@ -63,7 +63,7 @@ Para instaciar un nuevo proceso gdb se debe hacer:
 
 ::
    >>> from gdb import gdb
-   >>> gdbInstance = gdb.Gdb()
+   >>> gdbInstance = gdb.Gdb(log = True, debugPlugin = "stdioRedirect.py")
    >>> gdbId = gdbInstance.getSessionId()
    >>> gdbId > 0 
    True
@@ -84,35 +84,109 @@ Para cargar un nuevo ejecutable en el entorno gdb:
    >>> gdbInstance.file("cppTestCode/testExe")
    >>> time.sleep(2)
    
-   >>> shared_list[1] #DONE debido a la carga del exe #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
-   {u'klass': u'done', 
-    u'last_stream_records': [],
-    u'results': {},
-    u'token': None, 
-    u'type': u'Sync'}
+   >>> shared_list.sort() #No se puede garantizar el orden de los eventos, por lo que se ordenan para poder mostrarlos en este test
    
-   >>> shared_list[2] #DONE debido a el set del LD_PRELOAD #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
-   {u'klass': u'done', 
-    u'last_stream_records': [],
-    u'results': {},
-    u'token': None, 
-    u'type': u'Sync'}
+   >>> shared_list[0] #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
+     {u'stream': u'\n', u'type': u'Log'}
    
+   >>> shared_list[1] #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
+     {u'stream': u'No hay tabla de s\xedmbolos cargada. Use la orden \xabfile\xbb.\n',
+      u'type': u'Log'}
+      
+   >>> shared_list[2] #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
+     {u'stream': u'fifo-register stdin /tmp/...\n', u'type': u'Log'}
+   
+   >>> shared_list[3] #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
+     {u'stream': u'fifo-register stdout /tmp/...\n', u'type': u'Log'}
+   
+   >>> shared_list[4] #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
+     {u'stream': u'python exec(open("./py/gdb/Plugins/stdioRedirect.py").read())\n',
+      u'type': u'Log'}
+   
+   >>> shared_list[5] #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
+     {u'klass': u'done',
+      u'last_stream_records': [],
+      u'results': {},
+      u'token': None,
+      u'type': u'Sync'}
+      
+   >>> shared_list[6] #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
+     {u'klass': u'done',
+      u'last_stream_records': [],
+      u'results': {},
+      u'token': None,
+      u'type': u'Sync'}
+      
+   >>> shared_list[7] #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
+     {u'klass': u'done',
+      u'last_stream_records': [{u'stream': u'\n', u'type': u'Log'}],
+      u'results': {},
+      u'token': None,
+      u'type': u'Sync'}
+      
+   >>> shared_list[8] #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
+     {u'klass': u'done',
+      u'last_stream_records': [{u'stream': u'fifo-register stdin /tmp/...\n',
+                                u'type': u'Log'}],
+      u'results': {},
+      u'token': None,
+      u'type': u'Sync'}
+      
+   >>> shared_list[9] #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
+     {u'klass': u'done',
+      u'last_stream_records': [{u'stream': u'fifo-register stdout /tmp/...\n',
+                                u'type': u'Log'}],
+      u'results': {},
+      u'token': None,
+      u'type': u'Sync'}
+      
+   >>> shared_list[10] #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
+     {u'klass': u'done',
+      u'last_stream_records': [{u'stream': u'python exec(open("./py/gdb/Plugins/stdioRedirect.py").read())\n',
+                                u'type': u'Log'},
+                               {u'stream': u'No hay tabla de s\xedmbolos cargada. Use la orden \xabfile\xbb.\n',
+                                u'type': u'Log'}],
+      u'results': {},
+      u'token': None,
+      u'type': u'Sync'}
+      
+   >>> shared_list[11] #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
+     {u'klass': u'thread-group-added',
+      u'last_stream_records': [],
+      u'results': {u'id': u'i1'},
+      u'token': None,
+      u'type': u'Notify'}
+   
+      
  
 Para salir:
 
 ::
+   >>> shared_list = []
    >>> gdbInstance.exit() 
    >>> time.sleep(2)
+   >>> shared_list.sort()
+   >>> shared_list[0]  #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
+     {u'stream': u'Quit\n', u'type': u'Log'}
+   
+   >>> shared_list[1]  #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
+     {u'stream': u'io-revert\n', u'type': u'Log'}
+   
+   >>> shared_list[2]  #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
+     {u'klass': u'done',
+      u'last_stream_records': [{u'stream': u'Quit\n', u'type': u'Log'},
+                               {u'stream': u'io-revert\n', u'type': u'Log'}],
+      u'results': {},
+      u'token': None,
+      u'type': u'Sync'}
+      
    >>> shared_list[3]  #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
-   {u'klass': u'exit', 
-    u'last_stream_records': [{u'stream': u'fifo-register /tmp/tmpqiAp2d stdin\n',
-                              u'type': u'Log'},
-                             {u'stream': u'Undefined command: "fifo-register".  Try "help".\n',
-                              u'type': u'Log'}],
-    u'results': {},
-    u'token': None, 
-    u'type': u'Sync'}
+     {u'klass': u'exit',
+      u'last_stream_records': [],
+      u'results': {},
+      u'token': None,
+      u'type': u'Sync'}
+   
    
    
 Para realizar un attach de un proceso ya andando:

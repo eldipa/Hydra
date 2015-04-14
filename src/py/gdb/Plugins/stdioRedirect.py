@@ -63,7 +63,7 @@ class CommandFifoRegister(gdb.Command):
 
     def invoke (self , args , from_tty) :            
         argv = gdb.string_to_argv(args)
-        breakpointStartAndBreak.register(argv[0], argv[1])
+        breakpointStartAndBreak.register(argv[1], argv[0])
 
 comandoFifoRegister = CommandFifoRegister()
 
