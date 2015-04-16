@@ -160,6 +160,7 @@ class Gdb:
         if (self.inputFifo):
             self.inputFifo.close()
         os.remove(self.inputFifoPath)
+        self.eventHandler.close()
     
     # Establece un nuevo breakpoint al comienzo de la funcion dada
     # donde puede ser:
