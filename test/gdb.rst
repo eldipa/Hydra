@@ -752,10 +752,10 @@ Para realizar un continue:
    >>> gdbInstance.continueExec()
    >>> time.sleep(10)
    
-   >>> shared_list #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
-   [{u'klass': u'stopped',
+   >>> shared_list[0] #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
+   {u'klass': u'stopped',
       u'last_stream_records': [],
-      u'results': {u'core': u'1',
+      u'results': {u'core': u'...',
                    u'frame': {u'addr': u'0x...',
                               u'args': [{u'name': u'argc', u'value': u'1'},
                                         {u'name': u'argv',
@@ -768,34 +768,46 @@ Para realizar un continue:
                    u'stopped-threads': u'all',
                    u'thread-id': u'1'},
       u'token': None,
-      u'type': u'Exec'},
+      u'type': u'Exec'}
+   
+   >>> shared_list[1] #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
      {u'klass': u'running',
       u'last_stream_records': [],
       u'results': {},
       u'token': None,
-      u'type': u'Sync'},
+      u'type': u'Sync'}
+   
+   >>> shared_list[2] #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
      {u'klass': u'running',
       u'last_stream_records': [],
       u'results': {u'thread-id': u'all'},
       u'token': None,
-      u'type': u'Exec'},
+      u'type': u'Exec'}
+   
+   >>> shared_list[3] #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
      {u'stream': u'[Inferior 1 (process ...) exited normally]\n',
-      u'type': u'Console'},
+      u'type': u'Console'}
+   
+   >>> shared_list[4] #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
      {u'klass': u'thread-exited',
       u'last_stream_records': [],
       u'results': {u'group-id': u'i1', u'id': u'1'},
       u'token': None,
-      u'type': u'Notify'},
+      u'type': u'Notify'}
+   
+   >>> shared_list[5] #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
      {u'klass': u'thread-group-exited',
       u'last_stream_records': [],
       u'results': {u'exit-code': u'0', u'id': u'i1'},
       u'token': None,
-      u'type': u'Notify'},
+      u'type': u'Notify'}
+   
+   >>> shared_list[6] #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
      {u'klass': u'stopped',
       u'last_stream_records': [],
       u'results': {u'reason': u'exited-normally'},
       u'token': None,
-      u'type': u'Exec'}]
+      u'type': u'Exec'}
    
    
    >>> shared_list = []
@@ -803,6 +815,7 @@ Para realizar un continue:
    
 ::
    >>> gdbInstance.exit() 
+   >>> shared_list #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
    
 Eventos
 -------
@@ -814,7 +827,7 @@ la ejecucion el *outputReader* lanzara eventos bajo el topic "gdb.1234" (siendo
 1234 el pid del proceso gdb).
 
 ::
-   >>> gdbInstance = gdb.Gdb()
+   >>> gdbInstance = gdb.Gdb(log = True, debugPlugin = "stdioRedirect.py")
    >>> gdbInstance.file("cppTestCode/testExe")
    >>> gdbId = gdbInstance.getSessionId()
    >>> gdbId > 0

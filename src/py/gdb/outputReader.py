@@ -19,7 +19,11 @@ class OutputReader(threading.Thread):
         salir = False
 
         while (not salir):
-            line = self.gdbOutput.readline()
+            line = ""
+            try:
+                line = self.gdbOutput.readline()
+            except:
+                pass
             
             if line == "":
                 salir = True
