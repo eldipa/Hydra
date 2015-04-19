@@ -51,5 +51,5 @@ if __name__ == '__main__':
 
    sources = doctests(source_dir, whitelist)
    run_doctests(sources, working_directory)
-   generate_wiki_pages(sources, wiki_directory)
+   #generate_wiki_pages(sources, wiki_directory)
 
