@@ -244,6 +244,8 @@ def testfile(filename, module_relative=True, name=None, package=None,
              extraglobs=None, raise_on_error=False, parser=mixed_parser,
              encoding=None):
 
+   optionflags = optionflags | doctest.REPORT_NDIFF # default
+
    import sys
    try:
       return original_testfile_func(filename, module_relative, name, package,
