@@ -76,6 +76,9 @@ class Gdb:
            
     def getSessionId(self):
         return self.gdb.pid
+    
+    def poll(self):
+        return self.gdb.poll()
         
     def subscribe(self):
         self.eventHandler.subscribe(str(self.gdb.pid) + ".run", self.run)
@@ -148,19 +151,29 @@ class Gdb:
     @Locker
     def exit(self, data=""):
 #         self.gdb.terminate()  # Agrego para recuperar el prompt
-        self.gdb.send_signal(signal.SIGINT)
+#         self.gdb.send_signal(signal.SIGINT)
+#         print "signal"
         self.gdbInput.write("io-revert" + '\n')
+        print "revert"
         if self.isAttached:
             self.gdbInput.write("-target-detach" + '\n')
+            print "detach"
         self.gdbInput.write("-gdb-exit" + '\n')
+        print "exit"
         self.reader.join()
+        print "join"
         self.gdb.wait()
+        print "wait"
         if(self.log):
            os.remove(self.outputFifoPath)
+           print "outfifo"
         if (self.inputFifo):
             self.inputFifo.close()
+            print "infifoclose"
         os.remove(self.inputFifoPath)
+        print "infifodelete"
         self.eventHandler.close()
+        print "handler"
     
     # Establece un nuevo breakpoint al comienzo de la funcion dada
     # donde puede ser:

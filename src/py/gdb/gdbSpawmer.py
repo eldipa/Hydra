@@ -69,6 +69,7 @@ class GdbSpawmer:
             self.listaGdb.pop(pid)
         else:
             for gdb in self.listaGdb:
+                print "exit "+ str(gdb)
                 self.listaGdb[gdb].exit() 
             self.listaGdb = {}
                 

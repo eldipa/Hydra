@@ -23,7 +23,8 @@ class OutputReader(threading.Thread):
             try:
                 line = self.gdbOutput.readline()
             except:
-                pass
+                salir = True
+                continue
             
             if line == "":
                 salir = True
@@ -44,6 +45,7 @@ class OutputReader(threading.Thread):
                 if isinstance(record, Record):
                     topic += (".klass." + record.klass)
                 if isinstance(record, Stream):
-                    pass # de momento nada
+                    pass  # de momento nada
                    
                 self.eventHandler.publish(topic, data)
+        print "saliendo reader"
