@@ -63,7 +63,8 @@ Para instaciar un nuevo proceso gdb se debe hacer:
 
 ::
    >>> from gdb import gdb
-   >>> gdbInstance = gdb.Gdb(log = True, debugPlugin = "stdioRedirect.py")
+   >>> gdbInstance = gdb.Gdb(log = False, inputRedirect = False ,debugPlugin = None)
+   >>> gdbInstance.poll() #si no retorna resultado (none) quiere decir que esta corriendo
    >>> gdbId = gdbInstance.getSessionId()
    >>> gdbId > 0 
    True
@@ -84,78 +85,29 @@ Para cargar un nuevo ejecutable en el entorno gdb:
    >>> gdbInstance.file("cppTestCode/testExe")
    >>> time.sleep(2)
    
-   >>> shared_list.sort() #No se puede garantizar el orden de los eventos, por lo que se ordenan para poder mostrarlos en este test
-   
-   >>> shared_list[0] #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
-     {u'stream': u'\n', u'type': u'Log'}
-   
-   >>> shared_list[1] #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
-     {u'stream': u'No hay tabla de s\xedmbolos cargada. Use la orden \xabfile\xbb.\n',
-      u'type': u'Log'}
-      
-   >>> shared_list[2] #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
-     {u'stream': u'fifo-register stdin /tmp/...\n', u'type': u'Log'}
-   
-   >>> shared_list[3] #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
-     {u'stream': u'fifo-register stdout /tmp/...\n', u'type': u'Log'}
-   
-   >>> shared_list[4] #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
-     {u'stream': u'python exec(open("./py/gdb/Plugins/stdioRedirect.py").read())\n',
-      u'type': u'Log'}
-   
-   >>> shared_list[5] #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
+   >>> shared_list #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
+   [{u'klass': u'thread-group-added',
+      u'last_stream_records': [],
+      u'results': {u'id': u'i1'},
+      u'token': None,
+      u'type': u'Notify'},
      {u'klass': u'done',
       u'last_stream_records': [],
       u'results': {},
       u'token': None,
-      u'type': u'Sync'}
-      
-   >>> shared_list[6] #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
+      u'type': u'Sync'},
      {u'klass': u'done',
       u'last_stream_records': [],
       u'results': {},
       u'token': None,
-      u'type': u'Sync'}
-      
-   >>> shared_list[7] #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
+      u'type': u'Sync'},
+     {u'stream': u'\n', u'type': u'Log'},
      {u'klass': u'done',
       u'last_stream_records': [{u'stream': u'\n', u'type': u'Log'}],
       u'results': {},
       u'token': None,
-      u'type': u'Sync'}
-      
-   >>> shared_list[8] #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
-     {u'klass': u'done',
-      u'last_stream_records': [{u'stream': u'fifo-register stdin /tmp/...\n',
-                                u'type': u'Log'}],
-      u'results': {},
-      u'token': None,
-      u'type': u'Sync'}
-      
-   >>> shared_list[9] #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
-     {u'klass': u'done',
-      u'last_stream_records': [{u'stream': u'fifo-register stdout /tmp/...\n',
-                                u'type': u'Log'}],
-      u'results': {},
-      u'token': None,
-      u'type': u'Sync'}
-      
-   >>> shared_list[10] #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
-     {u'klass': u'done',
-      u'last_stream_records': [{u'stream': u'python exec(open("./py/gdb/Plugins/stdioRedirect.py").read())\n',
-                                u'type': u'Log'},
-                               {u'stream': u'No hay tabla de s\xedmbolos cargada. Use la orden \xabfile\xbb.\n',
-                                u'type': u'Log'}],
-      u'results': {},
-      u'token': None,
-      u'type': u'Sync'}
-      
-   >>> shared_list[11] #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
-     {u'klass': u'thread-group-added',
-      u'last_stream_records': [],
-      u'results': {u'id': u'i1'},
-      u'token': None,
-      u'type': u'Notify'}
+      u'type': u'Sync'}]
+   
       
 Para realizar un run:
 
@@ -166,7 +118,95 @@ Para realizar un run:
    >>> gdbInstance.run()
    >>> time.sleep(8)
    >>> shared_list #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
-   [...]
+   [{u'stream': u'run > /tmp/SalidaAux.txt\n', u'type': u'Log'},
+     {u'stream': u'Starting program: .../src/cppTestCode/testExe > /tmp/SalidaAux.txt\n',
+      u'type': u'Console'},
+     {u'klass': u'thread-group-started',
+      u'last_stream_records': [],
+      u'results': {u'id': u'i1', u'pid': u'...'},
+      u'token': None,
+      u'type': u'Notify'},
+     {u'klass': u'thread-created',
+      u'last_stream_records': [],
+      u'results': {u'group-id': u'i1', u'id': u'1'},
+      u'token': None,
+      u'type': u'Notify'},
+     {u'klass': u'library-loaded',
+      u'last_stream_records': [],
+      u'results': {u'host-name': u'...',
+                   u'id': u'...',
+                   u'symbols-loaded': u'0',
+                   u'target-name': u'...',
+                   u'thread-group': u'i1'},
+      u'token': None,
+      u'type': u'Notify'},
+     {u'klass': u'running',
+      u'last_stream_records': [{u'stream': u'run > /tmp/SalidaAux.txt\n',
+                                u'type': u'Log'},
+                               {u'stream': u'Starting program: .../src/cppTestCode/testExe > /tmp/SalidaAux.txt\n',
+                                u'type': u'Console'}],
+      u'results': {},
+      u'token': None,
+      u'type': u'Sync'},
+     {u'klass': u'running',
+      u'last_stream_records': [],
+      u'results': {u'thread-id': u'all'},
+      u'token': None,
+      u'type': u'Exec'},
+     {u'klass': u'library-loaded',
+      u'last_stream_records': [],
+      u'results': {u'host-name': u'...',
+                   u'id': u'...',
+                   u'symbols-loaded': u'0',
+                   u'target-name': u'...',
+                   u'thread-group': u'i1'},
+      u'token': None,
+      u'type': u'Notify'},
+     {u'klass': u'library-loaded',
+      u'last_stream_records': [],
+      u'results': {u'host-name': u'...',
+                   u'id': u'...',
+                   u'symbols-loaded': u'0',
+                   u'target-name': u'...',
+                   u'thread-group': u'i1'},
+      u'token': None,
+      u'type': u'Notify'},
+     {u'klass': u'library-loaded',
+      u'last_stream_records': [],
+      u'results': {u'host-name': u'...',
+                   u'id': u'...',
+                   u'symbols-loaded': u'0',
+                   u'target-name': u'...',
+                   u'thread-group': u'i1'},
+      u'token': None,
+      u'type': u'Notify'},
+     {u'klass': u'library-loaded',
+      u'last_stream_records': [],
+      u'results': {u'host-name': u'...',
+                   u'id': u'...',
+                   u'symbols-loaded': u'0',
+                   u'target-name': u'...',
+                   u'thread-group': u'i1'},
+      u'token': None,
+      u'type': u'Notify'},
+     {u'stream': u'[Inferior 1 (process ...) exited normally]\n',
+      u'type': u'Console'},
+     {u'klass': u'thread-exited',
+      u'last_stream_records': [],
+      u'results': {u'group-id': u'i1', u'id': u'1'},
+      u'token': None,
+      u'type': u'Notify'},
+     {u'klass': u'thread-group-exited',
+      u'last_stream_records': [],
+      u'results': {u'exit-code': u'0', u'id': u'i1'},
+      u'token': None,
+      u'type': u'Notify'},
+     {u'klass': u'stopped',
+      u'last_stream_records': [],
+      u'results': {u'reason': u'exited-normally'},
+      u'token': None,
+      u'type': u'Exec'}]
+   
    
       
  
@@ -175,35 +215,26 @@ Para salir:
 ::
    >>> shared_list = []
    >>> gdbInstance.exit() 
-   >>> print "salio"
    >>> time.sleep(2)
    >>> shared_list.sort()
    >>> gdbInstance.poll()
    0
-   >>> shared_list[0]  #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
-     {u'stream': u'Quit\n', u'type': u'Log'}
-   
-   >>> shared_list[1]  #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
-     {u'stream': u'io-revert\n', u'type': u'Log'}
-   
-   >>> shared_list[2]  #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
-     {u'klass': u'done',
-      u'last_stream_records': [{u'stream': u'Quit\n', u'type': u'Log'},
-                               {u'stream': u'io-revert\n', u'type': u'Log'}],
-      u'results': {},
-      u'token': None,
-      u'type': u'Sync'}
-      
-   >>> shared_list[3]  #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
+   >>> shared_list  #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS   
+   [{u'stream': u'Quit\n', u'type': u'Log'},
      {u'klass': u'exit',
-      u'last_stream_records': [],
+      u'last_stream_records': [{u'stream': u'[Inferior 1 (process ...) exited normally]\n',
+                                u'type': u'Console'},
+                               {u'stream': u'Quit\n', u'type': u'Log'}],
       u'results': {},
       u'token': None,
-      u'type': u'Sync'}
+      u'type': u'Sync'}]
+   
+     
    
    
    
 ::
+   >>> eventHandler.close()
    >>> ##finalizo al server.
    >>> os.system("python py/publish_subscribe/notifier.py stop")
    0

@@ -40,7 +40,7 @@ Para realizar un attach de un proceso ya andando:
    >>> p = subprocess.Popen("cppTestCode/testExe")
    >>> p.pid > 0 
    True
-   >>> gdbInstance = gdb.Gdb(log = True, debugPlugin = "stdioRedirect.py")
+   >>> gdbInstance = gdb.Gdb(log = False, inputRedirect = False ,debugPlugin = None)
    >>> gdbId = gdbInstance.getSessionId()
    >>> gdbId > 0 
    True
@@ -48,132 +48,28 @@ Para realizar un attach de un proceso ya andando:
    >>> gdbInstance.attach(p.pid) 
    >>> time.sleep(2)
    
-   >>> shared_list.sort()
-   >>> shared_list[0] #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
-     {u'stream': u'\n', u'type': u'Console'}
-     
-   >>> shared_list[1] #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
-     {u'stream': u'\n', u'type': u'Console'}
-     
-   >>> shared_list[2] #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
-     {u'stream': u'\n', u'type': u'Console'}
-     
-   >>> shared_list[3] #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
-     {u'stream': u'\n', u'type': u'Console'}
-     
-   >>> shared_list[4] #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
-     {u'stream': u'\n', u'type': u'Console'}
-     
-   >>> shared_list[5] #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
-     {u'stream': u'$2 = ...', u'type': u'Console'}
-     
-   >>> shared_list[6] #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
-     {u'stream': u'$3 = ...', u'type': u'Console'}
-     
-   >>> shared_list[7] #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
-     {u'stream': u'$4 = ...', u'type': u'Console'}
-     
-   >>> shared_list[8] #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
-     {u'stream': u'$6 = ...', u'type': u'Console'}
-     
-   >>> shared_list[9] #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
-     {u'stream': u'$7 = ...', u'type': u'Console'}
-     
-   >>> shared_list[10] #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
-     {u'stream': u'0x... in __kernel_vsyscall ()\n', u'type': u'Console'}
-     
-   >>> shared_list[11] #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
-     {u'stream': u'No hay tabla de s\xedmbolos cargada. Use la orden \xabfile\xbb.\n',
-      u'type': u'Log'}
-      
-   >>> shared_list[12] #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
-     {u'stream': u'Redirecting stdin to new: ..., old: ...\n', u'type': u'Console'}
-     
-   >>> shared_list[13] #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
-     {u'stream': u'Redirecting stdout to new: ..., old: ...\n', u'type': u'Console'}
-     
-   >>> shared_list[14] #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
-     {u'stream': u'fifo-register stdin /tmp/...\n', u'type': u'Log'}
-     
-   >>> shared_list[15] #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
-     {u'stream': u'fifo-register stdout /tmp/...\n', u'type': u'Log'}
-     
-   >>> shared_list[16] #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
-     {u'stream': u'io-redirect stdin /tmp/...\n', u'type': u'Log'}
-     
-   >>> shared_list[17] #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
-     {u'stream': u'io-redirect stdout /tmp/...\n', u'type': u'Log'}
-     
-   >>> shared_list[18] #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
-     {u'stream': u'python exec(open("./py/gdb/Plugins/stdioRedirect.py").read())\n',
-      u'type': u'Log'}
-      
-   >>> shared_list[19] #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
+   >>> #shared_list.sort()
+   >>> shared_list #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
+    [{u'klass': u'thread-group-added',
+      u'last_stream_records': [],
+      u'results': {u'id': u'i1'},
+      u'token': None,
+      u'type': u'Notify'},
+     {u'klass': u'thread-group-started',
+      u'last_stream_records': [],
+      u'results': {u'id': u'i1', u'pid': u'...'},
+      u'token': None,
+      u'type': u'Notify'},
+     {u'klass': u'thread-created',
+      u'last_stream_records': [],
+      u'results': {u'group-id': u'i1', u'id': u'1'},
+      u'token': None,
+      u'type': u'Notify'},
      {u'klass': u'done',
       u'last_stream_records': [],
       u'results': {},
       u'token': None,
-      u'type': u'Sync'}
-      
-   >>> shared_list[20] #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
-     {u'klass': u'done',
-      u'last_stream_records': [{u'stream': u'0x... in __kernel_vsyscall ()\n',
-                                u'type': u'Console'},
-                               {u'stream': u'io-redirect stdout /tmp/...\n',
-                                u'type': u'Log'},
-                               {u'stream': u'$2 = ...', u'type': u'Console'},
-                               {u'stream': u'\n', u'type': u'Console'},
-                               {u'stream': u'$3 = ...', u'type': u'Console'},
-                               {u'stream': u'\n', u'type': u'Console'},
-                               {u'stream': u'$4 = ...', u'type': u'Console'},
-                               {u'stream': u'\n', u'type': u'Console'},
-                               {u'stream': u'Redirecting stdout to new: ..., old: ...\n',
-                                u'type': u'Console'}],
-      u'results': {},
-      u'token': None,
-      u'type': u'Sync'}
-      
-   >>> shared_list[21] #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
-     {u'klass': u'done',
-      u'last_stream_records': [{u'stream': u'fifo-register stdin /tmp/...\n',
-                                u'type': u'Log'}],
-      u'results': {},
-      u'token': None,
-      u'type': u'Sync'}
-      
-   >>> shared_list[22] #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
-     {u'klass': u'done',
-      u'last_stream_records': [{u'stream': u'fifo-register stdout /tmp/...\n',
-                                u'type': u'Log'}],
-      u'results': {},
-      u'token': None,
-      u'type': u'Sync'}
-      
-   >>> shared_list[23] #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
-     {u'klass': u'done',
-      u'last_stream_records': [{u'stream': u'io-redirect stdin /tmp/...\n',
-                                u'type': u'Log'},
-                               {u'stream': u'$6 = ...', u'type': u'Console'},
-                               {u'stream': u'\n', u'type': u'Console'},
-                               {u'stream': u'$7 = ...', u'type': u'Console'},
-                               {u'stream': u'\n', u'type': u'Console'},
-                               {u'stream': u'Redirecting stdin to new: ..., old: ...\n',
-                                u'type': u'Console'}],
-      u'results': {},
-      u'token': None,
-      u'type': u'Sync'}
-      
-   >>> shared_list[24] #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
-     {u'klass': u'done',
-      u'last_stream_records': [{u'stream': u'python exec(open("./py/gdb/Plugins/stdioRedirect.py").read())\n',
-                                u'type': u'Log'},
-                               {u'stream': u'No hay tabla de s\xedmbolos cargada. Use la orden \xabfile\xbb.\n',
-                                u'type': u'Log'}],
-      u'results': {},
-      u'token': None,
-      u'type': u'Sync'}
-      
-   >>> shared_list[25] #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
+      u'type': u'Sync'},
      {u'klass': u'library-loaded',
       u'last_stream_records': [],
       u'results': {u'host-name': u'...',
@@ -182,9 +78,7 @@ Para realizar un attach de un proceso ya andando:
                    u'target-name': u'...',
                    u'thread-group': u'i1'},
       u'token': None,
-      u'type': u'Notify'}
-      
-   >>> shared_list[26] #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
+      u'type': u'Notify'},
      {u'klass': u'library-loaded',
       u'last_stream_records': [],
       u'results': {u'host-name': u'...',
@@ -193,9 +87,7 @@ Para realizar un attach de un proceso ya andando:
                    u'target-name': u'...',
                    u'thread-group': u'i1'},
       u'token': None,
-      u'type': u'Notify'}
-      
-   >>> shared_list[27] #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
+      u'type': u'Notify'},
      {u'klass': u'library-loaded',
       u'last_stream_records': [],
       u'results': {u'host-name': u'...',
@@ -204,9 +96,7 @@ Para realizar un attach de un proceso ya andando:
                    u'target-name': u'...',
                    u'thread-group': u'i1'},
       u'token': None,
-      u'type': u'Notify'}
-      
-   >>> shared_list[28] #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
+      u'type': u'Notify'},
      {u'klass': u'library-loaded',
       u'last_stream_records': [],
       u'results': {u'host-name': u'...',
@@ -215,9 +105,7 @@ Para realizar un attach de un proceso ya andando:
                    u'target-name': u'...',
                    u'thread-group': u'i1'},
       u'token': None,
-      u'type': u'Notify'}
-      
-   >>> shared_list[29] #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
+      u'type': u'Notify'},
      {u'klass': u'library-loaded',
       u'last_stream_records': [],
       u'results': {u'host-name': u'...',
@@ -226,9 +114,8 @@ Para realizar un attach de un proceso ya andando:
                    u'target-name': u'...',
                    u'thread-group': u'i1'},
       u'token': None,
-      u'type': u'Notify'}
-      
-   >>> shared_list[30] #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
+      u'type': u'Notify'},
+     {u'stream': u'0x... in __kernel_vsyscall ()\n', u'type': u'Console'},
      {u'klass': u'stopped',
       u'last_stream_records': [],
       u'results': {u'core': u'...',
@@ -238,28 +125,8 @@ Para realizar un attach de un proceso ya andando:
                    u'stopped-threads': u'all',
                    u'thread-id': u'1'},
       u'token': None,
-      u'type': u'Exec'}
-      
-   >>> shared_list[31] #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
-     {u'klass': u'thread-created',
-      u'last_stream_records': [],
-      u'results': {u'group-id': u'i1', u'id': u'1'},
-      u'token': None,
-      u'type': u'Notify'}
-      
-   >>> shared_list[32] #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
-     {u'klass': u'thread-group-added',
-      u'last_stream_records': [],
-      u'results': {u'id': u'i1'},
-      u'token': None,
-      u'type': u'Notify'}
-      
-   >>> shared_list[33] #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
-     {u'klass': u'thread-group-started',
-      u'last_stream_records': [],
-      u'results': {u'id': u'i1', u'pid': u'...'},
-      u'token': None,
-      u'type': u'Notify'}
+      u'type': u'Exec'}]
+     
    
    
    >>> shared_list = []
@@ -269,23 +136,25 @@ Para colocar un nuevo breakpoint en una funcion:
 ::
     >>> gdbInstance.setBreakPoint("main")
     >>> time.sleep(2)
-    >>> shared_list[0] #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
-    {u'klass': u'done',
-     u'last_stream_records': [],
-     u'results': {u'bkpt': {u'addr': u'...',
-                           u'disp': u'keep',
-                           u'enabled': u'y',
-                           u'file': u'testExe.cpp',
-                           u'fullname': u'.../src/cppTestCode/testExe.cpp',
-                           u'func': u'main(int, char**)',
-                           u'line': u'10',
-                           u'number': u'1',
-                           u'original-location': u'main',
-                           u'thread-groups': [u'i1'],
-                           u'times': u'0',
-                           u'type': u'breakpoint'}},
-     u'token': None,
-     u'type': u'Sync'}
+    >>> shared_list #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
+    [{u'klass': u'done',
+      u'last_stream_records': [{u'stream': u'0x... in __kernel_vsyscall ()\n',
+                                u'type': u'Console'}],
+      u'results': {u'bkpt': {u'addr': u'0x...',
+                             u'disp': u'keep',
+                             u'enabled': u'y',
+                             u'file': u'testExe.cpp',
+                             u'fullname': u'.../src/cppTestCode/testExe.cpp',
+                             u'func': u'main(int, char**)',
+                             u'line': u'10',
+                             u'number': u'1',
+                             u'original-location': u'main',
+                             u'thread-groups': [u'i1'],
+                             u'times': u'0',
+                             u'type': u'breakpoint'}},
+      u'token': None,
+      u'type': u'Sync'}]
+    
     
     >>> shared_list = []
     
@@ -295,32 +164,22 @@ Para realizar un run:
    >>> gdbInstance.run()
    >>> time.sleep(8)
    
-   >>> shared_list[0] #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
-   {u'stream': u'run \n', u'type': u'Log'}
-   
-   >>> shared_list[1] #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
+   >>> shared_list #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
+   [{u'stream': u'run > /tmp/SalidaAux.txt\n', u'type': u'Log'},
      {u'stream': u'The program being debugged has been started already.\nStart it from the beginning? ',
-      u'type': u'Console'}
-   
-   >>> shared_list[2] #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
+      u'type': u'Console'},
      {u'stream': u'(y or n) [answered Y; input not from terminal]\n',
-      u'type': u'Console'}
-   
-   >>> shared_list[3] #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
+      u'type': u'Console'},
      {u'klass': u'thread-exited',
       u'last_stream_records': [],
       u'results': {u'group-id': u'i1', u'id': u'1'},
       u'token': None,
-      u'type': u'Notify'}
-   
-   >>> shared_list[4] #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
+      u'type': u'Notify'},
      {u'klass': u'thread-group-exited',
       u'last_stream_records': [],
       u'results': {u'id': u'i1'},
       u'token': None,
-      u'type': u'Notify'}
-   
-   >>> shared_list[5] #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
+      u'type': u'Notify'},
      {u'klass': u'library-unloaded',
       u'last_stream_records': [],
       u'results': {u'host-name': u'...',
@@ -328,9 +187,7 @@ Para realizar un run:
                    u'target-name': u'...',
                    u'thread-group': u'i1'},
       u'token': None,
-      u'type': u'Notify'}
-   
-   >>> shared_list[6] #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
+      u'type': u'Notify'},
      {u'klass': u'library-unloaded',
       u'last_stream_records': [],
       u'results': {u'host-name': u'...',
@@ -338,9 +195,7 @@ Para realizar un run:
                    u'target-name': u'...',
                    u'thread-group': u'i1'},
       u'token': None,
-      u'type': u'Notify'}
-   
-   >>> shared_list[7] #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
+      u'type': u'Notify'},
      {u'klass': u'library-unloaded',
       u'last_stream_records': [],
       u'results': {u'host-name': u'...',
@@ -348,9 +203,7 @@ Para realizar un run:
                    u'target-name': u'...',
                    u'thread-group': u'i1'},
       u'token': None,
-      u'type': u'Notify'}
-   
-   >>> shared_list[8] #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
+      u'type': u'Notify'},
      {u'klass': u'library-unloaded',
       u'last_stream_records': [],
       u'results': {u'host-name': u'...',
@@ -358,9 +211,7 @@ Para realizar un run:
                    u'target-name': u'...',
                    u'thread-group': u'i1'},
       u'token': None,
-      u'type': u'Notify'}
-   
-   >>> shared_list[9] #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
+      u'type': u'Notify'},
      {u'klass': u'library-unloaded',
       u'last_stream_records': [],
       u'results': {u'host-name': u'...',
@@ -368,27 +219,19 @@ Para realizar un run:
                    u'target-name': u'...',
                    u'thread-group': u'i1'},
       u'token': None,
-      u'type': u'Notify'}
-   
-   >>> shared_list[10] #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
-     {u'stream': u'Starting program: .../src/cppTestCode/testExe \n',
-      u'type': u'Console'}
-   
-   >>> shared_list[11] #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
+      u'type': u'Notify'},
+     {u'stream': u'Starting program: .../src/cppTestCode/testExe > /tmp/SalidaAux.txt\n',
+      u'type': u'Console'},
      {u'klass': u'thread-group-started',
       u'last_stream_records': [],
       u'results': {u'id': u'i1', u'pid': u'...'},
       u'token': None,
-      u'type': u'Notify'}
-   
-   >>> shared_list[12] #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
+      u'type': u'Notify'},
      {u'klass': u'thread-created',
       u'last_stream_records': [],
       u'results': {u'group-id': u'i1', u'id': u'1'},
       u'token': None,
-      u'type': u'Notify'}
-   
-   >>> shared_list[13] #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
+      u'type': u'Notify'},
      {u'klass': u'library-loaded',
       u'last_stream_records': [],
       u'results': {u'host-name': u'...',
@@ -397,36 +240,29 @@ Para realizar un run:
                    u'target-name': u'...',
                    u'thread-group': u'i1'},
       u'token': None,
-      u'type': u'Notify'}
-   
-   >>> shared_list[14] #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
+      u'type': u'Notify'},
      {u'klass': u'running',
-      u'last_stream_records': [{u'stream': u'run \n', u'type': u'Log'},
+      u'last_stream_records': [{u'stream': u'run > /tmp/SalidaAux.txt\n',
+                                u'type': u'Log'},
                                {u'stream': u'The program being debugged has been started already.\nStart it from the beginning? ',
                                 u'type': u'Console'},
                                {u'stream': u'(y or n) [answered Y; input not from terminal]\n',
                                 u'type': u'Console'},
-                               {u'stream': u'Starting program: .../src/cppTestCode/testExe \n',
+                               {u'stream': u'Starting program: .../src/cppTestCode/testExe > /tmp/SalidaAux.txt\n',
                                 u'type': u'Console'}],
       u'results': {},
       u'token': None,
-      u'type': u'Sync'}
-   
-   >>> shared_list[15] #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
+      u'type': u'Sync'},
      {u'klass': u'running',
       u'last_stream_records': [],
       u'results': {u'thread-id': u'all'},
       u'token': None,
-      u'type': u'Exec'}
-   
-   >>> shared_list[16] #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
+      u'type': u'Exec'},
      {u'klass': u'thread-selected',
       u'last_stream_records': [],
       u'results': {u'id': u'1'},
       u'token': None,
-      u'type': u'Notify'}
-   
-   >>> shared_list[17] #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
+      u'type': u'Notify'},
      {u'klass': u'library-loaded',
       u'last_stream_records': [],
       u'results': {u'host-name': u'...',
@@ -435,9 +271,7 @@ Para realizar un run:
                    u'target-name': u'...',
                    u'thread-group': u'i1'},
       u'token': None,
-      u'type': u'Notify'}
-   
-   >>> shared_list[18] #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
+      u'type': u'Notify'},
      {u'klass': u'library-loaded',
       u'last_stream_records': [],
       u'results': {u'host-name': u'...',
@@ -446,9 +280,7 @@ Para realizar un run:
                    u'target-name': u'...',
                    u'thread-group': u'i1'},
       u'token': None,
-      u'type': u'Notify'}
-   
-   >>> shared_list[19] #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
+      u'type': u'Notify'},
      {u'klass': u'library-loaded',
       u'last_stream_records': [],
       u'results': {u'host-name': u'...',
@@ -457,9 +289,7 @@ Para realizar un run:
                    u'target-name': u'...',
                    u'thread-group': u'i1'},
       u'token': None,
-      u'type': u'Notify'}
-   
-   >>> shared_list[20] #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
+      u'type': u'Notify'},
      {u'klass': u'library-loaded',
       u'last_stream_records': [],
       u'results': {u'host-name': u'...',
@@ -468,39 +298,7 @@ Para realizar un run:
                    u'target-name': u'...',
                    u'thread-group': u'i1'},
       u'token': None,
-      u'type': u'Notify'}
-   
-   >>> shared_list[21] #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
-     {u'stream': u'$9 = ...', u'type': u'Console'}
-   
-   >>> shared_list[22] #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
-     {u'stream': u'\n', u'type': u'Console'}
-   
-   >>> shared_list[23] #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
-     {u'stream': u'$10 = ...', u'type': u'Console'}
-   
-   >>> shared_list[24] #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
-     {u'stream': u'\n', u'type': u'Console'}
-   
-   >>> shared_list[25] #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
-     {u'stream': u'$11 = ...', u'type': u'Console'}
-   
-   >>> shared_list[26] #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
-     {u'stream': u'\n', u'type': u'Console'}
-   
-   >>> shared_list[27] #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
-     {u'stream': u'$13 = ...', u'type': u'Console'}
-   
-   >>> shared_list[28] #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
-     {u'stream': u'\n', u'type': u'Console'}
-   
-   >>> shared_list[29] #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
-     {u'stream': u'$14 = ...', u'type': u'Console'}
-   
-   >>> shared_list[30] #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
-     {u'stream': u'\n', u'type': u'Console'}
-   
-   >>> shared_list[31] #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
+      u'type': u'Notify'},
      {u'klass': u'breakpoint-modified',
       u'last_stream_records': [],
       u'results': {u'bkpt': {u'addr': u'0x...',
@@ -516,19 +314,11 @@ Para realizar un run:
                              u'times': u'1',
                              u'type': u'breakpoint'}},
       u'token': None,
-      u'type': u'Notify'}
-   
-   >>> shared_list[32] #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
-     {u'stream': u'\nBreakpoint ', u'type': u'Console'}
-   
-   >>> shared_list[33] #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
+      u'type': u'Notify'},
+     {u'stream': u'\nBreakpoint ', u'type': u'Console'},
      {u'stream': u'1, main (argc=1, argv=0x...) at testExe.cpp:10\n',
-      u'type': u'Console'}
-   
-   >>> shared_list[34] #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
-     {u'stream': u'10\t\tusleep(5000000);\n', u'type': u'Console'}
-   
-   >>> shared_list[35] #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
+      u'type': u'Console'},
+     {u'stream': u'10\t\tusleep(5000000);\n', u'type': u'Console'},
      {u'klass': u'stopped',
       u'last_stream_records': [],
       u'results': {u'bkptno': u'1',
@@ -546,7 +336,8 @@ Para realizar un run:
                    u'stopped-threads': u'all',
                    u'thread-id': u'1'},
       u'token': None,
-      u'type': u'Exec'}
+      u'type': u'Exec'}]
+   
    
      
    >>> shared_list = []
@@ -556,21 +347,11 @@ Para realizar un step-into:
 
 ::
    >>> gdbInstance.stepInto()
-   >>> time.sleep(2)
+   >>> time.sleep(7)
    
    >>> shared_list #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
    [{u'klass': u'running',
-      u'last_stream_records': [{u'stream': u'$9 = ...', u'type': u'Console'},
-                               {u'stream': u'\n', u'type': u'Console'},
-                               {u'stream': u'$10 = ...', u'type': u'Console'},
-                               {u'stream': u'\n', u'type': u'Console'},
-                               {u'stream': u'$11 = ...', u'type': u'Console'},
-                               {u'stream': u'\n', u'type': u'Console'},
-                               {u'stream': u'$13 = ...', u'type': u'Console'},
-                               {u'stream': u'\n', u'type': u'Console'},
-                               {u'stream': u'$14 = ...', u'type': u'Console'},
-                               {u'stream': u'\n', u'type': u'Console'},
-                               {u'stream': u'\nBreakpoint ',
+      u'last_stream_records': [{u'stream': u'\nBreakpoint ',
                                 u'type': u'Console'},
                                {u'stream': u'1, main (argc=1, argv=0x...) at testExe.cpp:10\n',
                                 u'type': u'Console'},
@@ -583,20 +364,8 @@ Para realizar un step-into:
       u'last_stream_records': [],
       u'results': {u'thread-id': u'all'},
       u'token': None,
-      u'type': u'Exec'}]
-   
-   
-
-   >>> shared_list = []
-   
-Para realizar un continue:
-
-::
-   >>> gdbInstance.continueExec()
-   >>> time.sleep(10)
-   
-   >>> shared_list[0] #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
-   {u'klass': u'stopped',
+      u'type': u'Exec'},
+     {u'klass': u'stopped',
       u'last_stream_records': [],
       u'results': {u'core': u'...',
                    u'frame': {u'addr': u'0x...',
@@ -611,52 +380,69 @@ Para realizar un continue:
                    u'stopped-threads': u'all',
                    u'thread-id': u'1'},
       u'token': None,
-      u'type': u'Exec'}
+      u'type': u'Exec'}]
    
-   >>> shared_list[1] #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
-     {u'klass': u'running',
+   
+   
+
+   >>> shared_list = []
+   
+Para realizar un continue:
+
+::
+   >>> gdbInstance.continueExec()
+   >>> time.sleep(2)
+   
+   >>> shared_list #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
+   [{u'klass': u'running',
       u'last_stream_records': [],
       u'results': {},
       u'token': None,
-      u'type': u'Sync'}
-   
-   >>> shared_list[2] #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
+      u'type': u'Sync'},
      {u'klass': u'running',
       u'last_stream_records': [],
       u'results': {u'thread-id': u'all'},
       u'token': None,
-      u'type': u'Exec'}
-   
-   >>> shared_list[3] #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
+      u'type': u'Exec'},
      {u'stream': u'[Inferior 1 (process ...) exited normally]\n',
-      u'type': u'Console'}
-   
-   >>> shared_list[4] #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
+      u'type': u'Console'},
      {u'klass': u'thread-exited',
       u'last_stream_records': [],
       u'results': {u'group-id': u'i1', u'id': u'1'},
       u'token': None,
-      u'type': u'Notify'}
-   
-   >>> shared_list[5] #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
+      u'type': u'Notify'},
      {u'klass': u'thread-group-exited',
       u'last_stream_records': [],
       u'results': {u'exit-code': u'0', u'id': u'i1'},
       u'token': None,
-      u'type': u'Notify'}
-   
-   >>> shared_list[6] #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
+      u'type': u'Notify'},
      {u'klass': u'stopped',
       u'last_stream_records': [],
       u'results': {u'reason': u'exited-normally'},
       u'token': None,
-      u'type': u'Exec'}
+      u'type': u'Exec'}]
+      
+   >>> shared_list = []
+   
 
    
 ::
    >>> gdbInstance.exit()
     
    >>> shared_list #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
+   [{u'stream': u'Quit\n', u'type': u'Log'},
+     {u'klass': u'error',
+      u'last_stream_records': [{u'stream': u'[Inferior 1 (process ...) exited normally]\n',
+                                u'type': u'Console'},
+                               {u'stream': u'Quit\n', u'type': u'Log'}],
+      u'results': {u'msg': u'Este programa no est\xe1 corriendo.'},
+      u'token': None,
+      u'type': u'Sync'},
+     {u'klass': u'exit',
+      u'last_stream_records': [],
+      u'results': {},
+      u'token': None,
+      u'type': u'Sync'}]
    
    
 

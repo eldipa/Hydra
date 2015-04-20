@@ -48,6 +48,10 @@ class Gdb:
 
         self.comandos = comandos
         self.log = log
+        self.outputFifoPath = None
+        self.inputRedirect = inputRedirect
+        self.inputFifoPath = None
+        self.inputFifo = None
         self.queue = Queue()
 
         self.gdb = subprocess.Popen([gdb_path] + gdb_args, stdin=PIPE, stdout=PIPE, stderr=PIPE)
@@ -67,12 +71,10 @@ class Gdb:
             self.outputFifoPath = tempfile.mktemp()
             os.mkfifo(self.outputFifoPath)
             self.gdbInput.write("fifo-register " + "stdout " + self.outputFifoPath + '\n')
-            
-        # TODO hacerlo opcional??
-        self.inputFifoPath = tempfile.mktemp()
-        os.mkfifo(self.inputFifoPath)
-        self.inputFifo = None
-        self.gdbInput.write("fifo-register " + "stdin " + self.inputFifoPath + '\n')
+        if(inputRedirect):
+            self.inputFifoPath = tempfile.mktemp()
+            os.mkfifo(self.inputFifoPath)
+            self.gdbInput.write("fifo-register " + "stdin " + self.inputFifoPath + '\n')
            
     def getSessionId(self):
         return self.gdb.pid
@@ -100,10 +102,13 @@ class Gdb:
     # -Gdb realiza un attach al proceso especificado
     def attach(self, pid):
         self.isAttached = True
-        self.inputFifo = open(self.inputFifoPath, 'r+')
+        if(self.inputRedirect):
+            self.inputFifo = open(self.inputFifoPath, 'r+')
         self.gdbInput.write("-target-attach " + str(pid) + '\n')
-        self.gdbInput.write("io-redirect stdout " + self.outputFifoPath + '\n')
-        self.gdbInput.write("io-redirect stdin " + self.inputFifoPath + '\n')
+        if(self.log):
+            self.gdbInput.write("io-redirect stdout " + self.outputFifoPath + '\n')
+        if(self.inputRedirect):
+            self.gdbInput.write("io-redirect stdin " + self.inputFifoPath + '\n')
         self.subscribe()
 #         self.eventHandler.subscribe(str(pid) + ".stdin", self.redirectToStdin)
 #         self.eventHandler.publish("debugger.new-output", [pid, self.outputFifoPath])
@@ -130,7 +135,7 @@ class Gdb:
     @Locker
     def run(self, data=""):
         # Abro al fifo aca por si en la ejecucion anterior se cerro para mandar un EOF
-        if (not self.inputFifo):
+        if (not self.inputFifo and self.inputRedirect):
             self.inputFifo = open(self.inputFifoPath, 'r+')
         if(self.log):
             self.targetPid = 0
@@ -150,30 +155,33 @@ class Gdb:
     # Finaliza el proceso gdb, junto con su target si este no hubiera finalizado
     @Locker
     def exit(self, data=""):
-#         self.gdb.terminate()  # Agrego para recuperar el prompt
-#         self.gdb.send_signal(signal.SIGINT)
+#         pass
+##         self.gdb.terminate()  # Agrego para recuperar el prompt
+        self.gdb.send_signal(signal.SIGINT)
 #         print "signal"
-        self.gdbInput.write("io-revert" + '\n')
-        print "revert"
-        if self.isAttached:
+        if(self.inputRedirect or self.log):
+                self.gdbInput.write("io-revert" + '\n')
+#                 print "revert"
+        if (self.isAttached):
             self.gdbInput.write("-target-detach" + '\n')
-            print "detach"
+#             print "detach"
         self.gdbInput.write("-gdb-exit" + '\n')
-        print "exit"
+#         print "exit"
         self.reader.join()
-        print "join"
+#         print "join"
         self.gdb.wait()
-        print "wait"
+#         print "wait"
         if(self.log):
            os.remove(self.outputFifoPath)
-           print "outfifo"
+#            print "outfifo"
         if (self.inputFifo):
             self.inputFifo.close()
-            print "infifoclose"
-        os.remove(self.inputFifoPath)
-        print "infifodelete"
+#             print "infifoclose"
+        if(self.inputRedirect):
+            os.remove(self.inputFifoPath)
+#             print "infifodelete"
         self.eventHandler.close()
-        print "handler"
+#         print "handler"
     
     # Establece un nuevo breakpoint al comienzo de la funcion dada
     # donde puede ser:

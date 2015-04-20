@@ -26,6 +26,8 @@ class OutputReader(threading.Thread):
                 salir = True
                 continue
             
+#             print "line=" + line
+            
             if line == "":
                 salir = True
                 continue
@@ -48,4 +50,4 @@ class OutputReader(threading.Thread):
                     pass  # de momento nada
                    
                 self.eventHandler.publish(topic, data)
-        print "saliendo reader"
+#         print "saliendo reader"

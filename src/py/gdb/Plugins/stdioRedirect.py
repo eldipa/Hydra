@@ -98,7 +98,9 @@ class stdioRedirectCleanup(gdb.Command):
     def __init__(self):
         super(stdioRedirectCleanup, self).__init__('io-revert', gdb.COMMAND_DATA)
         
-    def invoke (self , args , from_tty) :       
+    def invoke (self , args , from_tty) :    
+        print "in" + str(comandoIORedirect.revertIn)
+        print "out" + str(comandoIORedirect.revertOut)
         if comandoIORedirect.revertIn:
             print "Reverting stdin: %i -> %i" % (comandoIORedirect.InFd['old'], stdInFileNo)
             gdb.execute("call dup2( %i, %i)" % (comandoIORedirect.InFd['old'], stdInFileNo))
