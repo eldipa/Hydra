@@ -18,9 +18,10 @@ def Locker(func):
 
 class GdbSpawmer:
     
-    def __init__(self, comandos=False, log=False, debugPlugin=None):
+    def __init__(self, comandos=False, log=False, inputRedirect=False, debugPlugin=None):
         self.comandos = comandos;
         self.log = log
+        self.inputRedirect = inputRedirect
         self.debugPlugin = debugPlugin
         self.lock = Lock()
         self.listaGdb = {}
@@ -39,7 +40,7 @@ class GdbSpawmer:
     
     @Locker
     def attachAGdb(self, pid):
-        gdb = Gdb(comandos=self.comandos, log=self.log, debugPlugin=self.debugPlugin)
+        gdb = Gdb(comandos=self.comandos, log=self.log, inputRedirect=self.inputRedirect ,debugPlugin=self.debugPlugin)
         gdb.attach(pid)
         self.listaGdb[gdb.getSessionId()] = gdb
         self.eventHandler.publish("debugger.attached", pid)
@@ -48,7 +49,7 @@ class GdbSpawmer:
         
     @Locker
     def startNewProcessWithGdb(self, path):
-        gdb = Gdb(comandos=self.comandos, log=self.log, debugPlugin=self.debugPlugin)
+        gdb = Gdb(comandos=self.comandos, log=self.log, inputRedirect=self.inputRedirect, debugPlugin=self.debugPlugin)
         gdb.file(path)
         self.listaGdb[gdb.getSessionId()] = gdb
         return gdb.getSessionId()
@@ -69,7 +70,7 @@ class GdbSpawmer:
             self.listaGdb.pop(pid)
         else:
             for gdb in self.listaGdb:
-                print "exit "+ str(gdb)
+#                 print "exit "+ str(gdb)
                 self.listaGdb[gdb].exit() 
             self.listaGdb = {}
                 

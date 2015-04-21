@@ -428,14 +428,17 @@ Para realizar un continue:
    
 ::
    >>> gdbInstance.exit()
-    
+   >>> time.sleep(2)
+   
+   >>> #El error que figura aca, se debe a que se intenta realizar un detach del programa attachado, 
+   >>> #una vez que este finalizo. Es un error que no trae problemas, salvo el cartel.
    >>> shared_list #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
    [{u'stream': u'Quit\n', u'type': u'Log'},
      {u'klass': u'error',
       u'last_stream_records': [{u'stream': u'[Inferior 1 (process ...) exited normally]\n',
                                 u'type': u'Console'},
                                {u'stream': u'Quit\n', u'type': u'Log'}],
-      u'results': {u'msg': u'Este programa no est\xe1 corriendo.'},
+      u'results': {u'msg': u'...'},
       u'token': None,
       u'type': u'Sync'},
      {u'klass': u'exit',

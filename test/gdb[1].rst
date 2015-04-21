@@ -216,7 +216,6 @@ Para salir:
    >>> shared_list = []
    >>> gdbInstance.exit() 
    >>> time.sleep(2)
-   >>> shared_list.sort()
    >>> gdbInstance.poll()
    0
    >>> shared_list  #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS   

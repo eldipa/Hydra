@@ -28,7 +28,7 @@ Iniciamos al gdbSpawmer
    
 ::
    >>> import gdb.gdbSpawmer
-   >>> spawmer = gdb.gdbSpawmer.GdbSpawmer()
+   >>> spawmer = gdb.gdbSpawmer.GdbSpawmer(log = False, inputRedirect = False)
    
 Para lanzar un nuevo gdb:
 
