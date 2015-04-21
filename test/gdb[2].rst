@@ -428,7 +428,9 @@ Para realizar un continue:
    
 ::
    >>> gdbInstance.exit()
-    
+   
+   >>> #El error que figura aca, se debe a que se intenta realizar un detach del programa attachado, 
+   >>> #una vez que este finalizo. Es un error que no trae problemas, salvo el cartel.
    >>> shared_list #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
    [{u'stream': u'Quit\n', u'type': u'Log'},
      {u'klass': u'error',
