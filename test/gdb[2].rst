@@ -428,8 +428,9 @@ Para realizar un continue:
    
 ::
    >>> gdbInstance.exit()
+
    >>> time.sleep(2)
-   
+
    >>> #El error que figura aca, se debe a que se intenta realizar un detach del programa attachado, 
    >>> #una vez que este finalizo. Es un error que no trae problemas, salvo el cartel.
    >>> shared_list #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
