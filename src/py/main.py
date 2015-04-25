@@ -26,11 +26,16 @@ try:
 
     os.system("python py/publish_subscribe/notifier.py start")
 
-    spawmer = gdb.gdbSpawmer.GdbSpawmer(comandos=True, log =True)
+    spawmer = gdb.gdbSpawmer.GdbSpawmer(comandos=True, log =True, inputRedirect=True)
 
     # esperar quit
     while(stdin.readline() not in ["quit\n","q\n"]):
         print "Entrada invalida, ingrese quit o q para salir"
+
+except Exception as inst:
+    print type(inst)    
+    print inst.args     
+    print inst
 
 finally:
     

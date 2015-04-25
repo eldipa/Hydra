@@ -18,19 +18,34 @@ stdOutFileNo = 1
 def redirectFd(fifoPath, fd, flag = readWriteFlag):
     gdb.execute('call open("%s", %i)' % (fifoPath, flag), to_string=True)
     fdFifo = gdb.parse_and_eval("$")  # obtengo el ultimo valor de retorno
+    if (fdFifo < 0):
+        print "ERROR fdFifo " + "fifoPath=" + str(fifoPath)
     gdb.execute("call dup( %i)" % (fd))
     fdBackup = gdb.parse_and_eval("$")
+    if (fdBackup < 0):
+        print "ERROR fdBackup"
     gdb.execute("call dup2( %i, %i)" % (fdFifo, fd))
+    dup2Result = gdb.parse_and_eval("$")
+    if (dup2Result < 0):
+        print "ERROR dup2Result"
+    gdb.execute("call close(%i)" %(fdFifo))
+    closeResult = gdb.parse_and_eval("$")
+    if (closeResult < 0):
+        print "ERROR closeResult"
     return {'old': fdBackup, 'new': fdFifo}
     
     
 def redirectOutput(fifoPath):
     fd = redirectFd(fifoPath, stdOutFileNo)
     gdb.execute("call setlinebuf(stdout)")
+    comandoIORedirect.revertOut = True
+    comandoIORedirect.OutFd = fd
     return fd
     
 def redirectInput(fifoPath):
     fd = redirectFd(fifoPath, stdInFileNo, readOnlyFlag)
+    comandoIORedirect.revertIn = True
+    comandoIORedirect.InFd = fd
     return fd
 
 class StartAndBreak (gdb.Breakpoint):
@@ -47,8 +62,12 @@ class StartAndBreak (gdb.Breakpoint):
             self.stdoutPath = path
     
     def stop (self):
-        redirectOutput(self.stdoutPath)
-        redirectInput(self.stdinPath)
+        if(self.stdoutPath):
+            redirectOutput(self.stdoutPath)
+            print "redirecting Output on Breakpoint"
+        if(self.stdinPath):
+            redirectInput(self.stdinPath)
+            print "redirecting Input on Breakpoint"
         return False
 
 
@@ -82,14 +101,10 @@ class CommandIORedirect(gdb.Command):
         argv = gdb.string_to_argv(args)
         if (argv[0] == 'stdin'):
             fd = redirectInput(argv[1])
-            self.InFd = fd
             print "Redirecting stdin to new: %i, old: %i" % (fd['new'], fd['old'])
-            self.revertIn = True
         elif(argv[0] == 'stdout'):
             fd = redirectOutput(argv[1])
-            self.OutFd = fd
             print "Redirecting stdout to new: %i, old: %i" % (fd['new'], fd['old'])
-            self.revertOut = True
         
 comandoIORedirect = CommandIORedirect()
 
@@ -104,8 +119,22 @@ class stdioRedirectCleanup(gdb.Command):
         if comandoIORedirect.revertIn:
             print "Reverting stdin: %i -> %i" % (comandoIORedirect.InFd['old'], stdInFileNo)
             gdb.execute("call dup2( %i, %i)" % (comandoIORedirect.InFd['old'], stdInFileNo))
+            dup2Result = gdb.parse_and_eval("$")
+            if (dup2Result < 0):
+                print "ERROR dup2Result Revert In"
+            gdb.execute("call close(%i)" %(comandoIORedirect.InFd['old']))
+            closeResult = gdb.parse_and_eval("$")
+            if (closeResult < 0):
+                print "ERROR closeResult In"
+            
         if comandoIORedirect.revertOut:
             print "Reverting stdout: %i -> %i" % (comandoIORedirect.OutFd['old'], stdOutFileNo)
             gdb.execute("call dup2( %i, %i)" % (comandoIORedirect.OutFd['old'], stdOutFileNo))
-
+            dup2Result = gdb.parse_and_eval("$")
+            if (dup2Result < 0):
+                print "ERROR dup2Result Revert Out"
+            gdb.execute("call close(%i)" %(comandoIORedirect.OutFd['old']))
+            closeResult = gdb.parse_and_eval("$")
+            if (closeResult < 0):
+                print "ERROR closeResult Out"
 comandoRedirectCleanup = stdioRedirectCleanup()
