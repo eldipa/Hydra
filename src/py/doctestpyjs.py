@@ -1,5 +1,5 @@
 import doctest, re, sys, subprocess, time, socket, traceback
-
+GLOBAL_FLAGS = 0
 PASS = doctest.register_optionflag("PASS")
 
 old_OutputChecker_check_output = doctest.OutputChecker.check_output
@@ -244,7 +244,8 @@ def testfile(filename, module_relative=True, name=None, package=None,
              extraglobs=None, raise_on_error=False, parser=mixed_parser,
              encoding=None):
 
-   optionflags = optionflags | doctest.REPORT_NDIFF # default
+   global GLOBAL_FLAGS
+   optionflags = optionflags | GLOBAL_FLAGS
 
    import sys
    try:
@@ -260,5 +261,8 @@ doctest.testfile = testfile   # patching!
 
 
 if __name__ == "__main__":
+    if sys.argv[1] == "-d":
+      GLOBAL_FLAGS |= doctest.REPORT_NDIFF
+
     sys.exit(doctest._test())
 
