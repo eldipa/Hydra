@@ -66,3 +66,41 @@ def request(gdb, command, arguments=tuple()):
    pubsub.unsubscribe(subscription_id)
 
    return ctx['response']
+
+
+def collect(func_collector):
+   '''Wrap a function, that should return some data, and returns its decorated version.
+      This wrap will allow to call func_collector once and only once.
+      After the first call, subsequent calls will block the thread.
+      
+      The wrap will also contain a method called 'get_next' that will block if
+      no func_collector was done previuosly.
+
+      After calling (successfuly) func_collector, get_next is allowed to be called.
+      After calling get_next, func_collector is allowed again.
+
+      This interaction between func_collector and get_next allows to share results
+      from one thread (calling func_collector) to another thread (calling get_next).
+      The results are shared one at time.
+   '''
+   ctx = {}
+   can_read_flag = Lock()
+   can_read_flag.acquire()
+
+   can_write_flag = Lock()
+
+   def _collect(*args, **kargs):
+      can_write_flag.acquire()
+      ctx['data'] = func_collector(*args, **kargs)
+      can_read_flag.release()
+
+   def _get_next():
+      can_read_flag.acquire()
+      c = ctx['data']
+      can_write_flag.release()
+      return c
+
+   _collect.get_next = _get_next
+
+   return _collect
+

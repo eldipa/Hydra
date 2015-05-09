@@ -184,7 +184,7 @@ Para el caso de un ejecutable strippeado:
 
 lo cual era de esperarse ese error.
 
-Limiamos todo:
+Limpiamos todo:
 
 ::
 
