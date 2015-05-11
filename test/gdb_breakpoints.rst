@@ -22,6 +22,7 @@ simbolos para debugging
 Ahora ponemos un breakpoint sobre la funcion "main" y ponemos otro breakpoint
 sobre una linea de codigo fuente en particular. Ambas posiciones pueden ser deducidas
 por gdb por tener todos los simbolos e informacion de debugging en el ejecutable.
+(Nota, el flag -p NUM hace que el breakpoint se restrinja al thread NUM)
 
 ::
 
