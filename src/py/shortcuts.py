@@ -91,7 +91,13 @@ def collect(func_collector):
 
    def _collect(*args, **kargs):
       can_write_flag.acquire()
-      ctx['data'] = func_collector(*args, **kargs)
+
+      c = func_collector(*args, **kargs)
+      if c == None:
+         can_write_flag.release()
+         return # discard
+
+      ctx['data'] = c
       can_read_flag.release()
 
    def _get_next():
