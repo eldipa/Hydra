@@ -219,13 +219,27 @@ estaba el breakpoint puesto por el flag '--start' y por ello se detiene:
 
 ::
   
-   >>> collector.get_next()                           # doctest: +ELLIPSIS
+   >>> collector.get_next()
    {u'klass': u'running',
-    ...
+    u'last_stream_records': [],
+    u'results': {u'thread-id': u'all'},
+    u'token': None,
+    u'type': u'Exec'}
 
    >>> collector.get_next()                           # doctest: +ELLIPSIS
    {u'klass': u'stopped',
-    ...
+    u'last_stream_records': [],
+    u'results': {...
+                 u'frame': {...
+                            u'file': u'two_pthreads.c',
+                            u'fullname': u'.../two_pthreads.c',
+                            u'func': u'main',
+                            u'line': u'13'},
+                 u'reason': u'breakpoint-hit',
+                 u'stopped-threads': u'all',
+                 u'thread-id': u'1'},
+    u'token': None,
+    u'type': u'Exec'}
 
 
 Ahora pondremos un breakpoint en el codigo del hilo secundario (funcion llamada "roll") 
@@ -434,4 +448,27 @@ Se listan con -thread-info.  Eventos thread-created y thread-exited
 Al finalizar un programa, el TG queda cargado con su ejecutable pero apagado. 
 Eventos thread-group-exited (que tiene el exit code del proceso)
 
+eventos recibido      |   datos trackeados en funcion del tiempo (a medida que pasa los eventos)
+- - - - - - - - - - - - - - - - - - - - - - - - - -
+   <inicial>          |   < vacio > 
+thread-group-added    |   TG id (como 'i1')
+   ???? (1)           |   TG id; executable (como 'two_pthreads')
+   ???? (2)           |   TG id; executable; PID (process id)
+thread-created        |   TG id; executable; PID; thread id (como '1')
+running               |   TG id; executable; PID; thread id; thread state (running)
+stopped               |   TG id; executable; PID; thread id; thread state (stopped)
+thread-exited         |   TG id; executable; PID; thread id (thread lost or removed)
+thread-group-exited   |   TG id; executable; PID (lost); exit code (como 0)
+   ???? (3)           |   TG id; executable; exit code (removed)
+   ???? (4)           |   TG id; executable (removed)
+thread-group-removed  |   TG id (removed)
+   <final>            |   < vacio > 
+
+Los signos ???? representa que no hay ningun evento asincronico que contenga esa informacion.
+Solo los eventos sincronicos (resultados de un request) como las respuestas de los 
+comandos -thread-info y -list-thread-groups contienen esa data.
+Lo interesante es que incluso solo se necesita ejecutar -list-thread-groups, el resto de
+la informacion (en particular el estado de cada thread) se puede trackear con los eventos
+'running' y 'stopped'. Aun asi, -thread-info es util para hacer refresh, sincronizaciones
+y updateos en caso de perderse de algun running/stopped.
 
