@@ -23,6 +23,7 @@ class GdbSpawmer:
         self.log = log
         self.inputRedirect = inputRedirect
         self.debugPlugin = debugPlugin
+        self.extraPlugin = []
         self.lock = Lock()
         self.listaGdb = {}
         self.forkDetector = forkDetector.ForkDetector(self)
@@ -37,10 +38,15 @@ class GdbSpawmer:
         self.eventHandler.subscribe("debugger.load", self.startNewProcessWithGdb)
         self.eventHandler.subscribe("debugger.attach", self.attachAGdb)
         self.eventHandler.subscribe("debugger.exit", self.exit)
+        
+    def loadPlugin(self, plugin):
+        self.extraPlugin.append(plugin)
     
     @Locker
     def attachAGdb(self, pid):
         gdb = Gdb(comandos=self.comandos, log=self.log, inputRedirect=self.inputRedirect ,debugPlugin=self.debugPlugin)
+        for plugin in self.extraPlugin:
+            gdb.loadPlugin(plugin)
         gdb.attach(pid)
         self.listaGdb[gdb.getSessionId()] = gdb
         self.eventHandler.publish("debugger.attached", pid)
@@ -50,6 +56,8 @@ class GdbSpawmer:
     @Locker
     def startNewProcessWithGdb(self, path):
         gdb = Gdb(comandos=self.comandos, log=self.log, inputRedirect=self.inputRedirect, debugPlugin=self.debugPlugin)
+        for plugin in self.extraPlugin:
+            gdb.loadPlugin(plugin)
         gdb.file(path)
         self.listaGdb[gdb.getSessionId()] = gdb
         return gdb.getSessionId()

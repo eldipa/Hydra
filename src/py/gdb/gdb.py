@@ -81,6 +81,9 @@ class Gdb:
     
     def poll(self):
         return self.gdb.poll()
+    
+    def loadPlugin(self, plugin):
+        self.pluginLoader.load(plugin)
         
     def subscribe(self):
         self.eventHandler.subscribe(str(self.gdb.pid) + ".run", self.run)

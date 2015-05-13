@@ -69,7 +69,7 @@ class EventHandler(threading.Thread, Publisher):
         self.start()
         
         
-    def subscribe(self, topic, callback, return_subscription_id=False, send_and_wait_echo=True):
+    def subscribe(self, topic, callback, return_subscription_id=False, send_and_wait_echo=False):
         fail_if_topic_isnt_valid(topic, allow_empty=True)
 
         result = None

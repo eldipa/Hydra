@@ -3,6 +3,7 @@ import publish_subscribe.eventHandler
 import os
 from time import sleep
 import socket
+import pprint
 
 
 NOTIFIER_UP = True
@@ -22,9 +23,12 @@ class gdbManager:
     def registerEvent(self, event):
         self.events.append(event)
         
-    def loadPlugIn(self, plugin):
-        self.spawmer = gdb.gdbSpawmer.GdbSpawmer(log=True, debugPlugin=plugin)
+    def loadRedirect(self):
+        self.spawmer = gdb.gdbSpawmer.GdbSpawmer(log=True, inputRedirect=True, debugPlugin="stdioRedirect.py")
         
+    def loadPluin(self, plugin):
+        self.spawmer.loadPlugin(plugin)    
+          
     def starNewProcess(self, path):
         gdbPid = self.spawmer.startNewProcessWithGdb(path)
         return gdbPid
@@ -32,6 +36,19 @@ class gdbManager:
     def publish(self, topic, data):
         self.eventHandler.publish(topic, data)
         
+    def subscribe(self, topic, callback):
+        self.eventHandler.subscribe(topic, callback)
+        
+    #devuelve el primer evento que contenga a dicho string, none en caso contrario
+    def anyEventHasThisString(self, string):
+        for event in self.events:
+            if (string in str(event)):
+                return event
+        return None
+    
+    def printEvents(self):
+        print pprint.pformat(self.events)
+    
     def close(self):
         self.spawmer.shutdown()
         self.eventHandler.close()

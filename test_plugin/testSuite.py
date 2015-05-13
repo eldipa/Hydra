@@ -17,11 +17,19 @@ class CompleteTest(unittest.TestCase):
         self.manager = gdbManager.gdbManager()
     
     def test_stdioRedirect_load(self):
-        self.manager.loadPlugIn("stdioRedirect.py")
+        self.manager.loadRedirect()
         gdbPid = self.manager.starNewProcess(testCodePath + "stdinTest")
         self.manager.publish(str(gdbPid) + ".run", "")
-        sleep(0.5)
-        self.assertIn("Ingrese un texto:", self.manager.events, "No se detecto la salida, los eventos registrados son:\n %s" % (pprint.pformat(self.manager.events)))
+        sleep(2)
+        
+        event = self.manager.anyEventHasThisString("redirecting Output on Breakpoint")
+        self.assertIsNotNone(event, "No se encontro el evento de redireccion de salida")
+        
+        event = self.manager.anyEventHasThisString("redirecting Input on Breakpoint")
+        self.assertIsNotNone(event, "No se encontro el evento de redireccion de entrada")
+        
+        event = self.manager.anyEventHasThisString("Ingrese un texto:")
+        self.assertIsNotNone(event, "No se encontro el evento de string en output")
     
 #     def test_stdioRedirect_attach(self):
 #         self.assertTrue(True)
