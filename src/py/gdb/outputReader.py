@@ -37,6 +37,7 @@ class OutputReader(threading.Thread):
                 
                 
             data = vars(record)
+            data['debugger-id'] = self.gdbPid
             if record.type == "Sync":
                token = 0 if record.token is None else record.token
                topic = "result-gdb.%i.%i.%s" % (self.gdbPid, token, record.klass.lower())
@@ -50,3 +51,7 @@ class OutputReader(threading.Thread):
                topic = "notification-gdb.%i.%s.%s" %(self.gdbPid, record.type.lower(), record.klass.lower())
  
             self.eventHandler.publish(topic, data)
+        
+        # here we are really sure that gdb "is dead"
+        self.eventHandler.publish("spawner.debugger-exited", {"debugger-id": self.gdbPid,
+                                                              "exit-code": -1})
