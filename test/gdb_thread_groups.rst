@@ -41,8 +41,9 @@ Bien, ahora lanzamos GDB para ver que sucede
    >>> gdb = Gdb()
    >>> gdb.subscribe()
 
-   >>> collector.get_next()
-   {u'klass': u'thread-group-added',
+   >>> collector.get_next()                           # doctest: +ELLIPSIS
+   {u'debugger-id': ...
+    u'klass': u'thread-group-added',
     u'last_stream_records': [],
     u'results': {u'id': u'i1'},
     u'token': None,
@@ -58,14 +59,16 @@ thread group.
 ::
 
    >>> request(gdb, "-add-inferior", [])              # doctest: +ELLIPSIS
-   {u'klass': u'done',
+   {u'debugger-id': ...
+    u'klass': u'done',
     u'last_stream_records': [],
     u'results': {u'inferior': u'i2'},
     u'token': ...,
     u'type': u'Sync'}
 
    >>> collector.get_next()                           # doctest: +ELLIPSIS
-   {u'klass': u'thread-group-added',
+   {u'debugger-id': ...
+    u'klass': u'thread-group-added',
     u'last_stream_records': [],
     u'results': {u'id': u'i2'},
     u'token': None,
@@ -79,7 +82,8 @@ Ahora, debe haber 2 inferior o thread groups
 ::
 
    >>> request(gdb, '-list-thread-groups', [])        # doctest: +ELLIPSIS
-   {u'klass': u'done',
+   {u'debugger-id': ...
+    u'klass': u'done',
     u'last_stream_records': [],
     u'results': {u'groups': [{u'id': u'i2', u'type': u'process'},
                              {u'id': u'i1', u'type': u'process'}]},
@@ -93,14 +97,16 @@ Asi como se pueden agregar TGs, se los pueden borrar:
 ::
 
    >>> request(gdb, "-remove-inferior", ["i2"])              # doctest: +ELLIPSIS
-   {u'klass': u'done',
+   {u'debugger-id': ...
+    u'klass': u'done',
     u'last_stream_records': [],
     u'results': {},
     u'token': ...,
     u'type': u'Sync'}
 
    >>> collector.get_next()                           # doctest: +ELLIPSIS
-   {u'klass': u'thread-group-removed',
+   {u'debugger-id': ...
+    u'klass': u'thread-group-removed',
     u'last_stream_records': [],
     u'results': {u'id': u'i2'},
     u'token': None,
@@ -115,7 +121,8 @@ Aparentemente siempre debe haber al menos un inferior por GDB:
 ::
 
    >>> request(gdb, "-remove-inferior", ["i1"])              # doctest: +ELLIPSIS
-   {u'klass': u'error',
+   {u'debugger-id': ...
+    u'klass': u'error',
     u'last_stream_records': [],
     u'results': {u'msg': u'Cannot remove last inferior'},
     u'token': ...,
@@ -130,7 +137,8 @@ Cada TG es creado sin ningun ejecutable asociado. Para asociarlo podemos cargarl
    >>> request(gdb, "-file-exec-and-symbols", [BIN])        # doctest: +PASS
 
    >>> request(gdb, '-list-thread-groups', [])              # doctest: +ELLIPSIS
-   {u'klass': u'done',
+   {u'debugger-id': ...
+    u'klass': u'done',
     u'last_stream_records': [],
     u'results': {u'groups': [{u'executable': u'.../two_pthreads',
                               u'id': u'i1',
@@ -145,7 +153,8 @@ Ready and loaded. Veamos que pasa cuando iniciamos el proceso.
 
    >>> request(gdb, "-exec-run", ["--start"])        # doctest: +PASS
    >>> request(gdb, '-list-thread-groups', [])       # doctest: +ELLIPSIS
-   {u'klass': u'done',
+   {u'debugger-id': ...
+    u'klass': u'done',
     u'last_stream_records': ...,
     u'results': {u'groups': [{u'cores': [u'...'],
                               u'executable': u'.../two_pthreads',
@@ -158,12 +167,13 @@ Ready and loaded. Veamos que pasa cuando iniciamos el proceso.
 Vemos como aparece el ejecutable asi como tambien el process id. Este ultimo identificador
 depende del target donde se esta corriendo el proceso.
 
-Para ver mas en detalle que threads se estan usando sobre ese thread group hacemos:
+Para ver mas en detalle que threads se estan usando hacemos:
 
 ::
 
    >>> request(gdb, "-thread-info", [])       # doctest: +ELLIPSIS
-   {u'klass': u'done',
+   {u'debugger-id': ...
+    u'klass': u'done',
     u'last_stream_records': [],
     u'results': {u'current-thread-id': u'1',
                  u'threads': [{u'core': u'...',
@@ -190,19 +200,48 @@ que tenga valor mostrarlo.
 
 El estado ('state') puede tener dos valores posibles: 'stopped' o 'running'.
 
-Veamos que eventos aparecieron:
+Como se puede ver, la informacion de los thread no tienen ningun identificador que indique
+a que TG pertenece. De hecho, los ids de los threads es global independientemente de a
+que TG pertenezcan.
+Para poder asocias threads groups con threads es necesario hacer un request para
+listar los TGs con el flag 'recurse' para que incluya los hilos que tiene asociado (de
+hecho incluye la misma data que se obtiene al listar los threads directamente):
+
+:: 
+   
+   >>> request(gdb, '-list-thread-groups', ['--recurse', '1'])    # doctest: +ELLIPSIS
+   {u'debugger-id': ...,
+    u'klass': u'done',
+    u'last_stream_records': [],
+    u'results': {u'groups': [{u'cores': ...,
+                              u'executable': u'.../two_pthreads',
+                              u'id': u'i1',
+                              u'pid': ...,
+                              u'threads': [{u'core': ...,
+                                            u'frame': ...
+                                            u'id': u'1',
+                                            u'name': u'two_pthreads',
+                                            u'state': u'stopped',
+                                            u'target-id': u'...'}],
+                              u'type': u'process'}]},
+    u'token': ...,
+    u'type': u'Sync'}
+
+Veamos que eventos aparecieron tras darle play a un proceso para debuguearlo:
 
 ::
 
    >>> collector.get_next()                           # doctest: +ELLIPSIS
-   {u'klass': u'thread-group-started',
+   {u'debugger-id': ...
+    u'klass': u'thread-group-started',
     u'last_stream_records': [],
     u'results': {u'id': u'i1', u'pid': u'...'},
     u'token': None,
     u'type': u'Notify'}
    
    >>> collector.get_next()                           # doctest: +ELLIPSIS
-   {u'klass': u'thread-created',
+   {u'debugger-id': ...
+    u'klass': u'thread-created',
     u'last_stream_records': [],
     u'results': {u'group-id': u'i1', u'id': u'1'},
     u'token': None,
@@ -219,15 +258,17 @@ estaba el breakpoint puesto por el flag '--start' y por ello se detiene:
 
 ::
   
-   >>> collector.get_next()
-   {u'klass': u'running',
+   >>> collector.get_next()                           # doctest: +ELLIPSIS
+   {u'debugger-id': ...
+    u'klass': u'running',
     u'last_stream_records': [],
     u'results': {u'thread-id': u'all'},
     u'token': None,
     u'type': u'Exec'}
 
    >>> collector.get_next()                           # doctest: +ELLIPSIS
-   {u'klass': u'stopped',
+   {u'debugger-id': ...
+    u'klass': u'stopped',
     u'last_stream_records': [],
     u'results': {...
                  u'frame': {...
@@ -251,25 +292,29 @@ para ver como se muestra un proceso con dos hilos.
    >>> request(gdb, "-exec-continue")                 # doctest: +PASS
 
    >>> collector.get_next()                           # doctest: +ELLIPSIS
-   {u'klass': u'running',
+   {u'debugger-id': ...
+    u'klass': u'running',
     ...
 
    >>> collector.get_next()                           # doctest: +ELLIPSIS
-   {u'klass': u'thread-created',
+   {u'debugger-id': ...
+    u'klass': u'thread-created',
     u'last_stream_records': [],
     u'results': {u'group-id': u'i1', u'id': u'2'},
     u'token': None,
     u'type': u'Notify'}
 
    >>> collector.get_next()                           # doctest: +ELLIPSIS
-   {u'klass': u'running',
+   {u'debugger-id': ...
+    u'klass': u'running',
     u'last_stream_records': [],
     u'results': {u'thread-id': u'all'},
     u'token': None,
     u'type': u'Exec'}
 
    >>> collector.get_next()                           # doctest: +ELLIPSIS
-   {u'klass': u'stopped',
+   {u'debugger-id': ...
+    u'klass': u'stopped',
     u'last_stream_records': [],
     u'results': {u'bkptno': u'2',
                  u'core': ...,
@@ -306,7 +351,8 @@ Veamos como queda la info de los hilos:
 ::
 
    >>> request(gdb, "-thread-info", [])       # doctest: +ELLIPSIS
-   {u'klass': u'done',
+   {u'debugger-id': ...
+    u'klass': u'done',
     u'last_stream_records': ...
     u'results': {u'current-thread-id': u'2',
                  u'threads': [{u'core': ...,
@@ -350,18 +396,21 @@ main y haremos continue para que el hilo secundario termine y el main se bloque 
    >>> request(gdb, "-exec-continue")                 # doctest: +PASS
    
    >>> collector.get_next()                           # doctest: +ELLIPSIS
-   {u'klass': u'running',
+   {u'debugger-id': ...
+    u'klass': u'running',
     ...
 
    >>> collector.get_next()                           # doctest: +ELLIPSIS
-   {u'klass': u'thread-exited',
+   {u'debugger-id': ...
+    u'klass': u'thread-exited',
     u'last_stream_records': [],
     u'results': {u'group-id': u'i1', u'id': u'2'},
     u'token': None,
     u'type': u'Notify'}
 
    >>> collector.get_next()                           # doctest: +ELLIPSIS
-   {u'klass': u'stopped',
+   {u'debugger-id': ...
+    u'klass': u'stopped',
     ...
 
 
@@ -372,18 +421,21 @@ Y ahora veremos como  un programa termina, con un 'continue' final.
    >>> request(gdb, "-exec-continue")                 # doctest: +PASS
 
    >>> collector.get_next()                           # doctest: +ELLIPSIS
-   {u'klass': u'running',
+   {u'debugger-id': ...
+    u'klass': u'running',
     ...
 
    >>> collector.get_next()                           # doctest: +ELLIPSIS
-   {u'klass': u'thread-exited',
+   {u'debugger-id': ...
+    u'klass': u'thread-exited',
     u'last_stream_records': [],
     u'results': {u'group-id': u'i1', u'id': u'1'},
     u'token': None,
     u'type': u'Notify'}
 
    >>> collector.get_next()                           # doctest: +ELLIPSIS
-   {u'klass': u'thread-group-exited',
+   {u'debugger-id': ...
+    u'klass': u'thread-group-exited',
     u'last_stream_records': [],
     u'results': {u'exit-code': u'01', u'id': u'i1'},
     u'token': None,
@@ -391,7 +443,8 @@ Y ahora veremos como  un programa termina, con un 'continue' final.
 
 
    >>> collector.get_next()                           # doctest: +ELLIPSIS
-   {u'klass': u'stopped',
+   {u'debugger-id': ...
+    u'klass': u'stopped',
     u'last_stream_records': [],
     u'results': {u'exit-code': u'01', u'reason': u'exited'},
     u'token': None,
@@ -406,7 +459,8 @@ cuando el hilo secundario termino no hubo ningun 'stopped' de ese hilo!
 ::
 
    >>> request(gdb, '-list-thread-groups', [])       # doctest: +ELLIPSIS
-   {u'klass': u'done',
+   {u'debugger-id': ...
+    u'klass': u'done',
     u'last_stream_records': ...,
     u'results': {u'groups': [{u'executable': u'.../two_pthreads',
                               u'id': u'i1',
@@ -415,7 +469,8 @@ cuando el hilo secundario termino no hubo ningun 'stopped' de ese hilo!
     u'type': u'Sync'}
 
    >>> request(gdb, "-thread-info", [])               # doctest: +ELLIPSIS
-   {u'klass': u'done',
+   {u'debugger-id': ...
+    u'klass': u'done',
     u'last_stream_records': [],
     u'results': {u'threads': []},
     u'token': ...,
