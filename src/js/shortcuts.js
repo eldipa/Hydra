@@ -32,7 +32,9 @@ define(['event_handler'], function (event_handler) {
 
       eh.subscribe_for_once_call(response_topic, callback);
       eh.publish(request_topic, request_for_command);
-      
-      eh.close();
+   };
+
+   return {
+      gdb_request: gdb_request,
    };
 });
