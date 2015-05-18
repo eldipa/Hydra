@@ -86,6 +86,8 @@ class Gdb:
         self.pluginLoader.load(plugin)
         
     def subscribe(self):
+        self.eventHandler.subscribe("request-gdb.%i" % self.gdb.pid, self.execute_a_request)
+
         self.eventHandler.subscribe(str(self.gdb.pid) + ".run", self.run)
         self.eventHandler.subscribe(str(self.gdb.pid) + ".continue", self.continueExec)
         self.eventHandler.subscribe(str(self.gdb.pid) + ".step-into", self.stepInto)
@@ -248,5 +250,25 @@ class Gdb:
     def fileThreadJoiner(self, data):
         self.t_redirector.join()
     
-    
-    
+    def execute_a_request(self, request):
+        command = request['command']
+        token = int(request['token'])
+        arguments = request.get('arguments', tuple())
+        interpreter = request.get('interpreter', 'mi')
+
+        if interpreter not in ('mi', 'console'):
+           raise ValueError("Unexpected interpreter: '%s'. Expected 'mi' (machine interface) or 'console'." % interpreter)
+
+        arguments_string = " ".join(arguments)
+        command_and_arguments_string = " ".join([command, arguments_string])
+
+        if interpreter == "console":
+           command_line = '%i-interpreter-exec console "%s"\n' % (token, command_and_arguments_string)
+        else:
+           if command_and_arguments_string.startswith("-"):
+              command_line = "%i%s\n" % (token, command_and_arguments_string)
+           else:
+              command_line = "%i-%s\n" % (token, command_and_arguments_string)
+         
+        self.gdbInput.write(command_line)
+        self.gdbInput.flush()

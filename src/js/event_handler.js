@@ -17,7 +17,8 @@ define(function () {
          this.shutdown();
       }
 
-      this.socket = require('net').Socket();
+      var net = require('net');
+      this.socket = new net.Socket();
       
       var is_connected = false;
       var attempts = 0;

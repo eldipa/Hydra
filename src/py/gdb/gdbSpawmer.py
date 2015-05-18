@@ -35,12 +35,19 @@ class GdbSpawmer:
         self.subscribe()
         
     def subscribe(self):
+        self.eventHandler.subscribe("spawner.request.debuggers-info", self.response_debuggers_info)
+
         self.eventHandler.subscribe("debugger.load", self.startNewProcessWithGdb)
         self.eventHandler.subscribe("debugger.attach", self.attachAGdb)
         self.eventHandler.subscribe("debugger.exit", self.exit)
         
     def loadPlugin(self, plugin):
         self.extraPlugin.append(plugin)
+
+    @Locker
+    def response_debuggers_info(self, _):
+        debuggers_data = dict((debugger_id, {'debugger-id': debugger_id}) for debugger_id in self.listaGdb.keys())
+        self.eventHandler.publish("spawner.debuggers-info", {'debuggers': debuggers_data})
     
     @Locker
     def attachAGdb(self, pid):

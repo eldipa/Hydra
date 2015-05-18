@@ -121,7 +121,8 @@ define(['ace', 'jquery', 'layout'], function (ace, $, layout) {
       
       this.viewer.setFontSize(14);
       this.viewer.setTheme("ace/theme/xcode");
-      this.viewer.setReadOnly(true);
+      this.viewer.setOption("showPrintMargin", false)
+      this.viewer.setReadOnly(false);
       
       this.viewer.setHighlightActiveLine(false);
    };

@@ -17,6 +17,8 @@ info target
    >>> gdb = Gdb()
    >>> gdb.subscribe()
 
+   >>> BIN="../../src/cppTestCode/exe_with_and_without_symbols"
+
 
 Luego de la inicializacion, cargamos el binario 'example_full_debugging_symbol'.
 Este fue compilado con gcc con el flago -ggdb que le incluye todos los datos
@@ -24,7 +26,7 @@ de debugging necesarios (ademas de tener el source example.c disponible)
 
 ::
 
-   >>> request(gdb, "-file-exec-and-symbols example_with_debugging_symbol") # doctest: +PASS
+   >>> request(gdb, "-file-exec-and-symbols %s/example_with_debugging_symbol" % BIN) # doctest: +PASS
 
 Ahora podemos ver cual es el archivo fuente asociado (el que contiene el main) con
 solo llamar a 
@@ -38,12 +40,15 @@ solo llamar a
    >>> r['results']['fullname']              #doctest: +SKIP
    u'/foo/bar/example.c'
 
+   >>> r['results']['line']                  #doctest: +SKIP
+   u'1'
+
 
 Pero que pasa si tenemos el ejecutable sin la informacion necesaria para debuggear?
 
 ::
 
-   >>> request(gdb, "-file-exec-and-symbols example_without_debugging_symbol") # doctest: +PASS
+   >>> request(gdb, "-file-exec-and-symbols %s/example_without_debugging_symbol" % BIN) # doctest: +PASS
    
    >>> r = request(gdb, "-file-list-exec-source-file")
    >>> 'file' in r['results']
@@ -78,7 +83,7 @@ el entry point. La unica solucion es un comando tradicional y luego parsear.
 
 ::
 
-   >>> request(gdb, "-file-exec-and-symbols example_stripped")   # doctest: +PASS
+   >>> request(gdb, "-file-exec-and-symbols %s/example_stripped" % BIN)   # doctest: +PASS
 
    >>> stream_records = request(gdb, "info target")['last_stream_records']
    >>> entry_point_record = filter(lambda r: "Entry point" in r['stream'], stream_records)[0]

@@ -8,12 +8,13 @@ def doctests(source_dir, whitelist):
          and (fname in whitelist or not whitelist)]
 
 
-def run_doctests(sources, working_directory):
+def run_doctests(sources, working_directory, flags):
    for source in sources:
       print "Run tests in %s" % source
-      os.system("cd %s; python %s %s" % (
+      os.system("cd %s; python %s %s %s" % (
          working_directory, 
          "py/doctestpyjs.py", 
+         flags,
          source))
    
 
@@ -34,6 +35,11 @@ if __name__ == '__main__':
    working_directory = "../src"
    wiki_directory = "../../wiki"
 
+   if sys.argv[1] == "-d":
+      flags = "-d"
+      del sys.argv[1]
+   else:
+      flags = ""
 
    try:
       blacklist_token_pos = sys.argv[1:].index("--")
@@ -50,6 +56,6 @@ if __name__ == '__main__':
    whitelist.sort()
 
    sources = doctests(source_dir, whitelist)
-   run_doctests(sources, working_directory)
-   generate_wiki_pages(sources, wiki_directory)
+   run_doctests(sources, working_directory, flags)
+   #generate_wiki_pages(sources, wiki_directory)
 

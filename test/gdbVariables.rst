@@ -69,12 +69,13 @@ Pedimos las variables:
    ...   shared_list.append(data) 
    ...   shared_lock.release()
    
-   >>> eventHandler.subscribe("gdb." + str(gdbPid), add_sync)
+   >>> eventHandler.subscribe("result-gdb." + str(gdbPid), add_sync)
    >>> eventHandler.publish(str(gdbPid) + ".get-variables", "")
    >>> time.sleep(2)
    
    >>> shared_list[0] #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS 
-   {u'klass': u'done',
+   {u'debugger-id': ...
+    u'klass': u'done',
    ...
    u'results': {u'variables': [{u'name': u'estructura',
                                 u'value': u'{enteroStruct = ..., 
@@ -105,7 +106,8 @@ Para imprimir el valor de una expresion, en particular, de un puntero:
    >>> time.sleep(2)
    
    >>> shared_list[0] #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
-   {u'klass': u'done',
+   {u'debugger-id': ...
+    u'klass': u'done',
     ...
     u'results': {u'value': u'0'},
     u'token': None,

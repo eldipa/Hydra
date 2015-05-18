@@ -69,12 +69,14 @@ Pedimos las variables:
    ...   shared_list.append(data) 
    ...   shared_lock.release()
    
-   >>> eventHandler.subscribe("gdb." + str(gdbPid), add_sync)
+   >>> eventHandler.subscribe("result-gdb." + str(gdbPid), add_sync)
+   >>> eventHandler.subscribe("stream-gdb." + str(gdbPid), add_sync)
    >>> eventHandler.publish(str(gdbPid) + ".get-variables", "")
    >>> time.sleep(2)
    
    >>> shared_list[0] #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS 
-   {u'klass': u'done',
+   {u'debugger-id': ...
+    u'klass': u'done',
     u'last_stream_records': [...
     u'results': {u'variables': [{u'name': u'estructura',
                                  u'value': u'{enteroStruct = ..., floatStruct = ...}'},
@@ -108,16 +110,19 @@ separados por espacios en vez de comas):
    >>> eventHandler.publish(str(gdbPid) + ".evaluate-multiple-pointers", "punteroEntero punteroClase punteroStruct argv")
    >>> time.sleep(2)
    >>> shared_list #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
-   [{u'stream': u'pointer-printer punteroEntero punteroClase punteroStruct argv\n',
+   [{u'debugger-id': ...
+     u'stream': u'pointer-printer punteroEntero punteroClase punteroStruct argv\n',
      u'type': u'Log'},
-    {u'stream': u'[ punteroEntero: 0 , 
+    {u'debugger-id': ...
+     u'stream': u'[ punteroEntero: 0 , 
                     punteroClase: {atributoEntero = 0, 
                                    atributoFloat = 0} , 
                     punteroStruct: {enteroStruct = ..., 
                                     floatStruct = ...} , 
                     argv: 0x... "..." ]\n',
      u'type': u'Console'},
-    {u'klass': u'done', ...]
+    {u'debugger-id': ...
+     u'klass': u'done', ...]
 
 
 Limpieza:
