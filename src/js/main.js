@@ -14,6 +14,7 @@ requirejs.config({
       underscore: 'external/underscore-1.7.0',
       notify: 'external/notify',
       standarInput: 'standarInput',
+      shortcuts: 'shortcuts',
    },
 
    shim: {
@@ -44,7 +45,10 @@ requirejs.onResourceLoad = function(context, map, depArray) {
    }
 };
 
-requirejs(['ui', 'code_view', 'jquery', 'export_console', 'layout', 'layout_examples', 'jqueryui', 'ctxmenu', 'notify_js_console'], function (ui, code_view, $, export_console, layout, layout_examples, _, ctxmenu, notify_js_console) {
+requirejs(['ui', 'code_view', 'jquery', 'export_console', 'layout', 'layout_examples', 'jqueryui', 'ctxmenu', 'notify_js_console', 'debuggee_tracker', 'event_handler'], function (ui, code_view, $, export_console, layout, layout_examples, _, ctxmenu, notify_js_console, debuggee_tracker, event_handler) {
+   var EH = new event_handler.EventHandler();
+   EH.init();
+
    var js_console_server = export_console.init();
    var fs = require('fs');
 
@@ -65,7 +69,9 @@ requirejs(['ui', 'code_view', 'jquery', 'export_console', 'layout', 'layout_exam
    notify_js_console.start_redirection();
 
    //layout_examples.init_short_examples();
-   ui.init();
+   ui.init(EH);
+
+   dbg_tracker = new debuggee_tracker.DebuggeeTracker(EH);
 
    //process_view.start();
    //require('nw.gui').Window.get().reload(3);

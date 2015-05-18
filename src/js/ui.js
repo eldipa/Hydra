@@ -1,9 +1,9 @@
-define(['jquery', 'layout', 'code_view', 'event_handler', 'varViewer', 'widgets/buttons', 'listview_panel', 'standarInput'], function ($, layout, code_view, EH, varViewer, buttons, listview_panel, standarInput) {
+define(['jquery', 'layout', 'code_view', 'varViewer', 'widgets/buttons', 'listview_panel', 'standarInput'], function ($, layout, code_view, varViewer, buttons, listview_panel, standarInput) {
    var Panel = layout.Panel;
    var Tabbed = layout.Tabbed;
    var ListViewPanel = listview_panel.ListViewPanel;
-
-   var init = function init(dom_element) {
+ 
+   var init = function init(event_handler) {
       // Create the UI layout:
       //                |
       //   CodeViewer   | 
@@ -80,12 +80,6 @@ define(['jquery', 'layout', 'code_view', 'event_handler', 'varViewer', 'widgets/
       stdoutlog.split(syscalllog, "bottom")
       root.render();
            
-
-      // init the event handler system, connecting this with the notifier.
-      // now, we can send and receive events.
-      var event_handler = new EH.EventHandler();
-      event_handler.init();
-
 
       var session_id = null;
       var target_id = null;
