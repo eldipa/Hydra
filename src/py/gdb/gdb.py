@@ -102,7 +102,7 @@ class Gdb:
             self.targetPid = 0
             self.eventHandler.subscribe("debugger.new-target.%i" % (self.gdb.pid), self.registerPid)
         self.eventHandler.publish("debugger.new-session", self.gdb.pid)
-        self.eventHandler.publish("spawner.debugger-started", {"debugger-id": self.gdb.pid}
+        self.eventHandler.publish("spawner.debugger-started", {"debugger-id": self.gdb.pid})
 
     
     # -Gdb realiza un attach al proceso especificado

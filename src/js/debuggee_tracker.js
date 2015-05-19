@@ -188,6 +188,10 @@ define(["underscore", "shortcuts"], function (_, shortcuts) {
       var thread_id = data.results['thread-id'];
       var stopped_threads = data.results['stopped-threads']; // this can be 'all'
 
+      if (thread_id === undefined && stopped_threads === undefined) {
+         return; // ignore this, probably it was "the debugger" that was "stopped" and not a thread 
+      }
+
       var thread_objects_selected = this._get_thread_objects_selected_by(stopped_threads, debugger_id);
 
       _.each(thread_objects_selected, function (thread_object) {
