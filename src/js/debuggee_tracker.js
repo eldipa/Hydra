@@ -1,4 +1,20 @@
 define(["underscore", "shortcuts"], function (_, shortcuts) {
+   var Thread = function (obj) {
+      this.thread_group_id = obj.thread_group_id;
+      this.state = obj.state;
+      this.source_fullname = obj.source_fullname;
+      this.source_line = obj.source_line;
+      this.instruction_address = obj.instruction_address;
+   };
+   var ThreadGroup = function (obj) {
+      this.state = obj.state;
+      this.process_id = obj.process_id;
+      this.exit_code = obj.exit_code;
+
+      this.threads_by_id = [];
+   };
+   var Debugger = function () {};
+
    var DebuggeeTracker = function (EH) {
       this.EH = EH;
 
@@ -8,6 +24,7 @@ define(["underscore", "shortcuts"], function (_, shortcuts) {
       this.threads_by_debugger = {};
       this.subscription_ids_by_debugger = {};
 
+      this.debuggers_by_id = {};
 
       _.bindAll(this, "_debugger_started",     "_debugger_exited",
                       "_debuggers_info",
@@ -36,6 +53,8 @@ define(["underscore", "shortcuts"], function (_, shortcuts) {
       this.thread_groups_by_debugger[debugger_id] = {};
       this.threads_by_debugger[debugger_id] = {};
 
+      this.debuggers_by_id[debugger_id] = new Debugger();
+
       var subscription_ids_of_all_interested_events = this.track_this_debugger(debugger_id);
       this.subscription_ids_by_debugger[debugger_id] = subscription_ids_of_all_interested_events;
       
@@ -57,6 +76,7 @@ define(["underscore", "shortcuts"], function (_, shortcuts) {
       delete this.subscription_ids_by_debugger[debugger_id];
       delete this.thread_groups_by_debugger[debugger_id];
       delete this.threads_by_debugger[debugger_id];
+      delete this.debuggers_by_id[debugger_id];
    };
 
    /*
@@ -70,7 +90,7 @@ define(["underscore", "shortcuts"], function (_, shortcuts) {
       var debuggers_data = data['debuggers'];
       var debugger_ids = _.keys(debuggers_data);
 
-      var known_debugger_ids = _.keys(this.thread_groups_by_debugger);
+      var known_debugger_ids = _.keys(this.debuggers_by_id);
 
       var debugger_ids_of_new_debuggers = _.difference(debugger_ids, known_debugger_ids);
       var debugger_ids_of_already_dead_debuggers = _.difference(known_debugger_ids, debugger_ids);
@@ -118,9 +138,9 @@ define(["underscore", "shortcuts"], function (_, shortcuts) {
       var debugger_id = data['debugger-id'];
       var thread_group_id = data.results.id;
 
-      this.thread_groups_by_debugger[debugger_id][thread_group_id] = {
+      this.thread_groups_by_debugger[debugger_id][thread_group_id] = new ThreadGroup({
          state: "not-started",
-      };
+      });
    };
 
    DebuggeeTracker.prototype._thread_group_removed = function (data) {
@@ -155,11 +175,12 @@ define(["underscore", "shortcuts"], function (_, shortcuts) {
       var thread_group_id = data.results['group-id'];
       var thread_id = data.results.id;
       
-      var thread_object = {};
+      var thread_object = new Thread({thread_group_id: thread_group_id});
 
       var thread_group_object = this.thread_groups_by_debugger[debugger_id][thread_group_id];
 
       this.threads_by_debugger[debugger_id][thread_id] = thread_object;
+      thread_group_object.threads_by_id[thread_id] = thread_object;
    };
 
    DebuggeeTracker.prototype._thread_exited = function (data) {
@@ -170,6 +191,7 @@ define(["underscore", "shortcuts"], function (_, shortcuts) {
       var thread_group_object = this.thread_groups_by_debugger[debugger_id][thread_group_id];
       
       delete this.threads_by_debugger[debugger_id][thread_id];
+      delete thread_group_object.threads_by_id[thread_id];
    };
 
    DebuggeeTracker.prototype._running = function (data) {
@@ -241,7 +263,7 @@ define(["underscore", "shortcuts"], function (_, shortcuts) {
             var thread_group_object = thread_group_by_id[thread_group_id];
 
             if (thread_group_object === undefined) {
-               thread_group_object = {};              // new thread group
+               thread_group_object = new ThreadGroup();         // new thread group
                thread_group_by_id[thread_group_id] = thread_group_object; 
             }
 
@@ -287,7 +309,7 @@ define(["underscore", "shortcuts"], function (_, shortcuts) {
       var thread_object = thread_objects[thread_id];
 
       if (thread_object === undefined) {
-         thread_object = {};              // new thread
+         thread_object = new Thread();          // new thread
          thread_objects[thread_id] = thread_object; 
       }
 
