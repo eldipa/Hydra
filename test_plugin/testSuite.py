@@ -17,8 +17,12 @@ class CompleteTest(unittest.TestCase):
         self.manager = gdbManager.gdbManager()
     
     def test_stdioRedirect_load(self):
-        self.manager.loadRedirect()
+        #De quererse configurar el constructor del spawmer con algun argumento en particular, se debe configurar
+        #de la siguiente manera, si no se ejecuta esta linea, spawmer tomara los valores por default.
+        self.manager.configSpawmer(log = True, inputRedirect=True, debugPlugin=["stdioRedirect.py"])
+        
         gdbPid = self.manager.starNewProcess(testCodePath + "stdinTest")
+        
         self.manager.publish(str(gdbPid) + ".run", "")
         sleep(2)
         

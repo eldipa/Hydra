@@ -20,17 +20,26 @@ class gdbManager:
         self.eventHandler.subscribe("", self.registerEvent)
         
         
+        
     def registerEvent(self, event):
         self.events.append(event)
         
-    def loadRedirect(self):
-        self.spawmer = gdb.gdbSpawmer.GdbSpawmer(log=True, inputRedirect=True, debugPlugin="stdioRedirect.py")
+    def configSpawmer(self, log = False, inputRedirect = False, debugPlugin = []):
+        self.spawmer = gdb.gdbSpawmer.GdbSpawmer(log=log, inputRedirect=inputRedirect, debugPlugin=debugPlugin)
         
     def loadPluin(self, plugin):
         self.spawmer.loadPlugin(plugin)    
           
     def starNewProcess(self, path):
+        if (not self.spawmer):
+            self.spawmer = gdb.gdbSpawmer.GdbSpawmer()
         gdbPid = self.spawmer.startNewProcessWithGdb(path)
+        return gdbPid
+    
+    def attachToProcess(self, pid):
+        if (not self.spawmer):
+            self.spawmer = gdb.gdbSpawmer.GdbSpawmer()
+        gdbPid = self.spawmer.attachAGdb(pid)
         return gdbPid
         
     def publish(self, topic, data):
