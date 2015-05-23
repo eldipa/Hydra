@@ -56,6 +56,8 @@ class OutputLogger(threading.Thread):
                 event = { "timestamp" : str(timestamp),  "pid" : self.originPid[salida], "output": leido }
                 self.eventHandler.publish("outputlog.%i" % self.originPid[salida], event)
         os.remove(self.fifoPath)
+        self.eventHandler.publish("logger-exited","")
+        self.eventHandler.close()
             
     
     def newFd(self, data):
