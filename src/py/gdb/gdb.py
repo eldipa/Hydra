@@ -30,7 +30,7 @@ class Gdb:
                            
 
     # crea un nuevo proceso gdb vacio
-    def __init__(self, comandos=False, log=False, inputRedirect=False, debugPlugin=None):
+    def __init__(self, comandos=False, log=False, inputRedirect=False, debugPlugin=[]):
         cfg = globalconfig.get_global_config()
       
         use_gdb_system = cfg.getboolean('gdb', 'use-gdb-system')
@@ -65,8 +65,10 @@ class Gdb:
         self.pluginLoader = pluginLoader.PluginLoader(self.gdbInput)
         if (comandos):
             self.pluginLoader.loadAll()
-        if (debugPlugin):
-            self.pluginLoader.load(debugPlugin)
+        
+        if (isinstance(debugPlugin, list)):
+            for plugin in debugPlugin:
+                self.pluginLoader.load(plugin)
         if(log):
             self.outputFifoPath = tempfile.mktemp()
             os.mkfifo(self.outputFifoPath)

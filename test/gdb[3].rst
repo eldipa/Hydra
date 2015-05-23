@@ -47,7 +47,9 @@ la ejecucion el *outputReader* lanzara eventos bajo el topic "gdb.1234" (siendo
    >>> gdbId = gdbInstance.getSessionId()
    >>> gdbId > 0
    True
-   >>> eventHandler.subscribe("gdb." + str(gdbId), add_sync)
+   >>> eventHandler.subscribe("result-gdb." + str(gdbId), add_sync)
+   >>> eventHandler.subscribe("stream-gdb." + str(gdbId), add_sync)
+   >>> eventHandler.subscribe("notification-gdb." + str(gdbId), add_sync)
    >>> time.sleep(2)
    
 Para colocar un breakpoint en una funcion:
@@ -59,7 +61,8 @@ Para colocar un breakpoint en una funcion:
    >>> time.sleep(2)
 
    >>> shared_list #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
-   [{u'klass': u'done',
+   [{u'debugger-id': ...,
+      u'klass': u'done',
       u'last_stream_records': [],
       u'results': {u'bkpt': {u'addr': u'0x...',
                              u'disp': u'keep',
@@ -75,6 +78,7 @@ Para colocar un breakpoint en una funcion:
                              u'type': u'breakpoint'}},
       u'token': None,
       u'type': u'Sync'}]
+
     
    >>> shared_list = []
    
@@ -85,20 +89,26 @@ Para realizar un run:
    >>> time.sleep(2)
    
    >>> shared_list #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
-   [{u'stream': u'run > /tmp/SalidaAux.txt\n', u'type': u'Log'},
-     {u'stream': u'Starting program: .../src/cppTestCode/testExe > /tmp/SalidaAux.txt\n',
+   [{u'debugger-id': ...,
+      u'stream': u'run > /tmp/SalidaAux.txt\n',
+      u'type': u'Log'},
+     {u'debugger-id': ...,
+      u'stream': u'Starting program: .../src/cppTestCode/testExe > /tmp/SalidaAux.txt\n',
       u'type': u'Console'},
-     {u'klass': u'thread-group-started',
+     {u'debugger-id': ...,
+      u'klass': u'thread-group-started',
       u'last_stream_records': [],
       u'results': {u'id': u'i1', u'pid': u'...'},
       u'token': None,
       u'type': u'Notify'},
-     {u'klass': u'thread-created',
+     {u'debugger-id': ...,
+      u'klass': u'thread-created',
       u'last_stream_records': [],
       u'results': {u'group-id': u'i1', u'id': u'1'},
       u'token': None,
       u'type': u'Notify'},
-     {u'klass': u'library-loaded',
+     {u'debugger-id': ...,
+      u'klass': u'library-loaded',
       u'last_stream_records': [],
       u'results': {u'host-name': u'...',
                    u'id': u'...',
@@ -107,7 +117,8 @@ Para realizar un run:
                    u'thread-group': u'i1'},
       u'token': None,
       u'type': u'Notify'},
-     {u'klass': u'running',
+     {u'debugger-id': ...,
+      u'klass': u'running',
       u'last_stream_records': [{u'stream': u'run > /tmp/SalidaAux.txt\n',
                                 u'type': u'Log'},
                                {u'stream': u'Starting program: .../src/cppTestCode/testExe > /tmp/SalidaAux.txt\n',
@@ -115,12 +126,14 @@ Para realizar un run:
       u'results': {},
       u'token': None,
       u'type': u'Sync'},
-     {u'klass': u'running',
+     {u'debugger-id': ...,
+      u'klass': u'running',
       u'last_stream_records': [],
       u'results': {u'thread-id': u'all'},
       u'token': None,
       u'type': u'Exec'},
-     {u'klass': u'library-loaded',
+     {u'debugger-id': ...,
+      u'klass': u'library-loaded',
       u'last_stream_records': [],
       u'results': {u'host-name': u'...',
                    u'id': u'...',
@@ -129,7 +142,8 @@ Para realizar un run:
                    u'thread-group': u'i1'},
       u'token': None,
       u'type': u'Notify'},
-     {u'klass': u'library-loaded',
+     {u'debugger-id': ...,
+      u'klass': u'library-loaded',
       u'last_stream_records': [],
       u'results': {u'host-name': u'...',
                    u'id': u'...',
@@ -138,7 +152,8 @@ Para realizar un run:
                    u'thread-group': u'i1'},
       u'token': None,
       u'type': u'Notify'},
-     {u'klass': u'library-loaded',
+     {u'debugger-id': ...,
+      u'klass': u'library-loaded',
       u'last_stream_records': [],
       u'results': {u'host-name': u'...',
                    u'id': u'...',
@@ -147,7 +162,8 @@ Para realizar un run:
                    u'thread-group': u'i1'},
       u'token': None,
       u'type': u'Notify'},
-     {u'klass': u'library-loaded',
+     {u'debugger-id': ...,
+      u'klass': u'library-loaded',
       u'last_stream_records': [],
       u'results': {u'host-name': u'...',
                    u'id': u'...',
@@ -156,9 +172,10 @@ Para realizar un run:
                    u'thread-group': u'i1'},
       u'token': None,
       u'type': u'Notify'},
-     {u'klass': u'breakpoint-modified',
+     {u'debugger-id': ...,
+      u'klass': u'breakpoint-modified',
       u'last_stream_records': [],
-      u'results': {u'bkpt': {u'addr': u'0x...',
+      u'results': {u'bkpt': {u'addr': u'0...',
                              u'disp': u'keep',
                              u'enabled': u'y',
                              u'file': u'testExe.cpp',
@@ -172,11 +189,15 @@ Para realizar un run:
                              u'type': u'breakpoint'}},
       u'token': None,
       u'type': u'Notify'},
-     {u'stream': u'\nBreakpoint ', u'type': u'Console'},
-     {u'stream': u'1, main (argc=1, argv=0x...) at testExe.cpp:10\n',
+     {u'debugger-id': ..., u'stream': u'\nBreakpoint ', u'type': u'Console'},
+     {u'debugger-id': ...,
+      u'stream': u'1, main (argc=1, argv=0x...) at testExe.cpp:10\n',
       u'type': u'Console'},
-     {u'stream': u'10\t\tusleep(5000000);\n', u'type': u'Console'},
-     {u'klass': u'stopped',
+     {u'debugger-id': ...,
+      u'stream': u'10\t\tusleep(5000000);\n',
+      u'type': u'Console'},
+     {u'debugger-id': ...,
+      u'klass': u'stopped',
       u'last_stream_records': [],
       u'results': {u'bkptno': u'1',
                    u'core': u'...',
@@ -194,6 +215,7 @@ Para realizar un run:
                    u'thread-id': u'1'},
       u'token': None,
       u'type': u'Exec'}]
+
    
    
    
@@ -208,7 +230,8 @@ Para realizar un step-into:
    >>> time.sleep(7)
    
    >>> shared_list #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
-   [{u'klass': u'running',
+   [{u'debugger-id': ...,
+      u'klass': u'running',
       u'last_stream_records': [{u'stream': u'\nBreakpoint ',
                                 u'type': u'Console'},
                                {u'stream': u'1, main (argc=1, argv=0x...) at testExe.cpp:10\n',
@@ -218,12 +241,14 @@ Para realizar un step-into:
       u'results': {},
       u'token': None,
       u'type': u'Sync'},
-     {u'klass': u'running',
+     {u'debugger-id': ...,
+      u'klass': u'running',
       u'last_stream_records': [],
       u'results': {u'thread-id': u'all'},
       u'token': None,
       u'type': u'Exec'},
-     {u'klass': u'stopped',
+     {u'debugger-id': ...,
+      u'klass': u'stopped',
       u'last_stream_records': [],
       u'results': {u'core': u'...',
                    u'frame': {u'addr': u'0x...',
@@ -239,6 +264,7 @@ Para realizar un step-into:
                    u'thread-id': u'1'},
       u'token': None,
       u'type': u'Exec'}]
+
    
      
    >>> shared_list = []
@@ -250,29 +276,35 @@ Para realizar un continue:
    >>> time.sleep(2)
    
    >>> shared_list #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
-   [{u'klass': u'running',
+   [{u'debugger-id': ...,
+      u'klass': u'running',
       u'last_stream_records': [],
       u'results': {},
       u'token': None,
       u'type': u'Sync'},
-     {u'klass': u'running',
+     {u'debugger-id': ...,
+      u'klass': u'running',
       u'last_stream_records': [],
       u'results': {u'thread-id': u'all'},
       u'token': None,
       u'type': u'Exec'},
-     {u'stream': u'[Inferior 1 (process ...) exited normally]\n',
+     {u'debugger-id': ...,
+      u'stream': u'[Inferior 1 (process ...) exited normally]\n',
       u'type': u'Console'},
-     {u'klass': u'thread-exited',
+     {u'debugger-id': ...,
+      u'klass': u'thread-exited',
       u'last_stream_records': [],
       u'results': {u'group-id': u'i1', u'id': u'1'},
       u'token': None,
       u'type': u'Notify'},
-     {u'klass': u'thread-group-exited',
+     {u'debugger-id': ...,
+      u'klass': u'thread-group-exited',
       u'last_stream_records': [],
       u'results': {u'exit-code': u'0', u'id': u'i1'},
       u'token': None,
       u'type': u'Notify'},
-     {u'klass': u'stopped',
+     {u'debugger-id': ...,
+      u'klass': u'stopped',
       u'last_stream_records': [],
       u'results': {u'reason': u'exited-normally'},
       u'token': None,
@@ -290,7 +322,8 @@ Para realizar un comando arbitrario:
    >>> time.sleep(2) 
    
    >>> shared_list #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
-   [{u'klass': u'done',
+   [{u'debugger-id': ...,
+      u'klass': u'done',
       u'last_stream_records': [{u'stream': u'[Inferior 1 (process ...) exited normally]\n',
                                 u'type': u'Console'}],
       u'results': {u'bkpt': {u'addr': u'0x...',
@@ -304,6 +337,7 @@ Para realizar un comando arbitrario:
                              u'type': u'breakpoint'}},
       u'token': None,
       u'type': u'Sync'}]
+
     
    >>> shared_list = []
 
@@ -315,12 +349,14 @@ Para realizar un exit:
    >>> eventHandler.publish(str(gdbId) + ".exit", "")
    >>> time.sleep(2)
    >>> shared_list #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
-   [{u'stream': u'Quit\n', u'type': u'Log'},
-     {u'klass': u'exit',
+   [{u'debugger-id': ..., u'stream': u'Quit\n', u'type': u'Log'},
+     {u'debugger-id': ...,
+      u'klass': u'exit',
       u'last_stream_records': [{u'stream': u'Quit\n', u'type': u'Log'}],
       u'results': {},
       u'token': None,
       u'type': u'Sync'}]
+
 
 
 ::

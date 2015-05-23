@@ -63,20 +63,23 @@ Para instaciar un nuevo proceso gdb se debe hacer:
 
 ::
    >>> from gdb import gdb
-   >>> gdbInstance = gdb.Gdb(log = False, inputRedirect = False ,debugPlugin = None)
+   >>> gdbInstance = gdb.Gdb(log = False, inputRedirect = False)
    >>> gdbInstance.poll() #si no retorna resultado (none) quiere decir que esta corriendo
    >>> gdbId = gdbInstance.getSessionId()
    >>> gdbId > 0 
    True
-   >>> eventHandler.subscribe("gdb." + str(gdbId), add_sync)
+   >>> eventHandler.subscribe("result-gdb." + str(gdbId), add_sync)
+   >>> eventHandler.subscribe("stream-gdb." + str(gdbId), add_sync)
+   >>> eventHandler.subscribe("notification-gdb." + str(gdbId), add_sync)
    >>> time.sleep(2)
    
-   >>> shared_list[0] #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS 
-   {u'klass': u'thread-group-added',
+   >>> shared_list #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS 
+   [{u'debugger-id': ...,
+    u'klass': u'thread-group-added',
     u'last_stream_records': [],
     u'results': {u'id': u'...'},
     u'token': None, 
-    u'type': u'Notify'}
+    u'type': u'Notify'}]
    
    
 Para cargar un nuevo ejecutable en el entorno gdb:
@@ -86,27 +89,32 @@ Para cargar un nuevo ejecutable en el entorno gdb:
    >>> time.sleep(2)
    
    >>> shared_list #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
-   [{u'klass': u'thread-group-added',
+   [{u'debugger-id': ...,
+      u'klass': u'thread-group-added',
       u'last_stream_records': [],
       u'results': {u'id': u'i1'},
       u'token': None,
       u'type': u'Notify'},
-     {u'klass': u'done',
+     {u'debugger-id': ...,
+      u'klass': u'done',
       u'last_stream_records': [],
       u'results': {},
       u'token': None,
       u'type': u'Sync'},
-     {u'klass': u'done',
+     {u'debugger-id': ...,
+      u'klass': u'done',
       u'last_stream_records': [],
       u'results': {},
       u'token': None,
       u'type': u'Sync'},
-     {u'stream': u'\n', u'type': u'Log'},
-     {u'klass': u'done',
+     {u'debugger-id': ..., u'stream': u'\n', u'type': u'Log'},
+     {u'debugger-id': ...,
+      u'klass': u'done',
       u'last_stream_records': [{u'stream': u'\n', u'type': u'Log'}],
       u'results': {},
       u'token': None,
       u'type': u'Sync'}]
+
    
       
 Para realizar un run:
@@ -118,20 +126,26 @@ Para realizar un run:
    >>> gdbInstance.run()
    >>> time.sleep(8)
    >>> shared_list #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
-   [{u'stream': u'run > /tmp/SalidaAux.txt\n', u'type': u'Log'},
-     {u'stream': u'Starting program: .../src/cppTestCode/testExe > /tmp/SalidaAux.txt\n',
+    [{u'debugger-id': ...,
+      u'stream': u'run > /tmp/SalidaAux.txt\n',
+      u'type': u'Log'},
+     {u'debugger-id': ...,
+      u'stream': u'Starting program: .../src/cppTestCode/testExe > /tmp/SalidaAux.txt\n',
       u'type': u'Console'},
-     {u'klass': u'thread-group-started',
+     {u'debugger-id': ...,
+      u'klass': u'thread-group-started',
       u'last_stream_records': [],
       u'results': {u'id': u'i1', u'pid': u'...'},
       u'token': None,
       u'type': u'Notify'},
-     {u'klass': u'thread-created',
+     {u'debugger-id': ...,
+      u'klass': u'thread-created',
       u'last_stream_records': [],
       u'results': {u'group-id': u'i1', u'id': u'1'},
       u'token': None,
       u'type': u'Notify'},
-     {u'klass': u'library-loaded',
+     {u'debugger-id': ...,
+      u'klass': u'library-loaded',
       u'last_stream_records': [],
       u'results': {u'host-name': u'...',
                    u'id': u'...',
@@ -140,7 +154,8 @@ Para realizar un run:
                    u'thread-group': u'i1'},
       u'token': None,
       u'type': u'Notify'},
-     {u'klass': u'running',
+     {u'debugger-id': ...,
+      u'klass': u'running',
       u'last_stream_records': [{u'stream': u'run > /tmp/SalidaAux.txt\n',
                                 u'type': u'Log'},
                                {u'stream': u'Starting program: .../src/cppTestCode/testExe > /tmp/SalidaAux.txt\n',
@@ -148,12 +163,14 @@ Para realizar un run:
       u'results': {},
       u'token': None,
       u'type': u'Sync'},
-     {u'klass': u'running',
+     {u'debugger-id': ...,
+      u'klass': u'running',
       u'last_stream_records': [],
       u'results': {u'thread-id': u'all'},
       u'token': None,
       u'type': u'Exec'},
-     {u'klass': u'library-loaded',
+     {u'debugger-id': ...,
+      u'klass': u'library-loaded',
       u'last_stream_records': [],
       u'results': {u'host-name': u'...',
                    u'id': u'...',
@@ -162,7 +179,8 @@ Para realizar un run:
                    u'thread-group': u'i1'},
       u'token': None,
       u'type': u'Notify'},
-     {u'klass': u'library-loaded',
+     {u'debugger-id': ...,
+      u'klass': u'library-loaded',
       u'last_stream_records': [],
       u'results': {u'host-name': u'...',
                    u'id': u'...',
@@ -171,7 +189,8 @@ Para realizar un run:
                    u'thread-group': u'i1'},
       u'token': None,
       u'type': u'Notify'},
-     {u'klass': u'library-loaded',
+     {u'debugger-id': ...,
+      u'klass': u'library-loaded',
       u'last_stream_records': [],
       u'results': {u'host-name': u'...',
                    u'id': u'...',
@@ -180,7 +199,8 @@ Para realizar un run:
                    u'thread-group': u'i1'},
       u'token': None,
       u'type': u'Notify'},
-     {u'klass': u'library-loaded',
+     {u'debugger-id': ...,
+      u'klass': u'library-loaded',
       u'last_stream_records': [],
       u'results': {u'host-name': u'...',
                    u'id': u'...',
@@ -189,23 +209,28 @@ Para realizar un run:
                    u'thread-group': u'i1'},
       u'token': None,
       u'type': u'Notify'},
-     {u'stream': u'[Inferior 1 (process ...) exited normally]\n',
+     {u'debugger-id': ...,
+      u'stream': u'[Inferior 1 (process ...) exited normally]\n',
       u'type': u'Console'},
-     {u'klass': u'thread-exited',
+     {u'debugger-id': ...,
+      u'klass': u'thread-exited',
       u'last_stream_records': [],
       u'results': {u'group-id': u'i1', u'id': u'1'},
       u'token': None,
       u'type': u'Notify'},
-     {u'klass': u'thread-group-exited',
+     {u'debugger-id': ...,
+      u'klass': u'thread-group-exited',
       u'last_stream_records': [],
       u'results': {u'exit-code': u'0', u'id': u'i1'},
       u'token': None,
       u'type': u'Notify'},
-     {u'klass': u'stopped',
+     {u'debugger-id': ...,
+      u'klass': u'stopped',
       u'last_stream_records': [],
       u'results': {u'reason': u'exited-normally'},
       u'token': None,
       u'type': u'Exec'}]
+
    
    
       
@@ -219,14 +244,16 @@ Para salir:
    >>> gdbInstance.poll()
    0
    >>> shared_list  #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS   
-   [{u'stream': u'Quit\n', u'type': u'Log'},
-     {u'klass': u'exit',
+   [{u'debugger-id': ..., u'stream': u'Quit\n', u'type': u'Log'},
+     {u'debugger-id': ...,
+      u'klass': u'exit',
       u'last_stream_records': [{u'stream': u'[Inferior 1 (process ...) exited normally]\n',
                                 u'type': u'Console'},
                                {u'stream': u'Quit\n', u'type': u'Log'}],
       u'results': {},
       u'token': None,
       u'type': u'Sync'}]
+
    
      
    
