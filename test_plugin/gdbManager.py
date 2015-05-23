@@ -4,6 +4,7 @@ import os
 from time import sleep
 import socket
 import pprint
+from psutil import pid_exists
 
 
 NOTIFIER_UP = True
@@ -18,8 +19,6 @@ class gdbManager:
         self.wait_until(NOTIFIER_UP)
         self.eventHandler = publish_subscribe.eventHandler.EventHandler()
         self.eventHandler.subscribe("", self.registerEvent)
-        
-        
         
     def registerEvent(self, event):
         self.events.append(event)
@@ -54,6 +53,14 @@ class gdbManager:
             if (string in str(event)):
                 return event
         return None
+    
+    def getGdbIO(self, gdbPid):
+        gdbOutput = self.spawmer.listaGdb[gdbPid].gdbOutput
+        gdbInput = self.spawmer.listaGdb[gdbPid].gdbInput
+        return {'input': gdbInput, 'output': gdbOutput}
+    
+    def resetEvents(self):
+        self.events = []
     
     def printEvents(self):
         print pprint.pformat(self.events)
