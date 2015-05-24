@@ -7,38 +7,48 @@ from esc import esc
 
 #TODO add keep alive
 class _Endpoint(threading.Thread):
-   def __init__(self, socket, notifier, name):
+   def __init__(self, socket, notifier, codename):
       threading.Thread.__init__(self)
       self.connection = Connection(socket)
       self.is_finished = False
       self.notifier = notifier
-      self.name = name
+      self.codename = codename
+
+      self.name = ""
 
       self.start()
 
-
    def _is_valid_message(self, message):
       if not isinstance(message, dict):
-         syslog.syslog(syslog.LOG_ERR, "Invalid message. It isn't an object like {...} : '%s'." % esc(json.dumps(message)))
+         self._log(syslog.LOG_ERR, "Invalid message. It isn't an object like {...} : '%s'.", json.dumps(message))
          return False
 
-      if not "topic" in message or not "type" in message:
-         syslog.syslog(syslog.LOG_ERR, "Invalid message. It hasn't any topic or type: '%s'." % esc(json.dumps(message)))
+      if not "type" in message:
+         self._log(syslog.LOG_ERR, "Invalid message. It hasn't a type: '%s'.", json.dumps(message))
          return False
 
-      if not message["type"] in ("subscribe", "publish", "unsubscribe"):
-         syslog.syslog(syslog.LOG_ERR, "Invalid message. Unknown type: '%s'." % esc(json.dumps(message)))
+      if not message["type"] in ("subscribe", "publish", "unsubscribe", "introduce_myself"):
+         self._log(syslog.LOG_ERR, "Invalid message. Unknown type: '%s'.", json.dumps(message))
+         return False
+
+      if message["type"] not in ("introduce_myself",) and not "topic" in message:
+         self._log(syslog.LOG_ERR, "Invalid message of type '%s'. It hasn't any topic: '%s'.", message['type'], json.dumps(message))
          return False
 
       if message["type"] == "publish" and "data" not in message:
-         syslog.syslog(syslog.LOG_ERR, "Invalid message. Publish message hasn't any data: '%s'." % esc(json.dumps(message)))
+         self._log(syslog.LOG_ERR, "Invalid message. Publish message hasn't any data: '%s'.", json.dumps(message))
          return False
 
-      try:
-         fail_if_topic_isnt_valid(message["topic"], allow_empty = (message["type"] == "subscribe"))
-      except Exception as e:
-         syslog.syslog(syslog.LOG_ERR, "Invalid topic: '%s'" % str(e))
+      if message["type"] == "introduce_myself" and "name" not in message:
+         self._log(syslog.LOG_ERR, "Invalid message. Missing name paremeter in the 'introduce myself' message: %s", json.dumps(message))
          return False
+
+      if message["type"] not in ("introduce_myself",):
+         try:
+            fail_if_topic_isnt_valid(message["topic"], allow_empty = (message["type"] == "subscribe"))
+         except Exception as e:
+            self._log(syslog.LOG_ERR, "Invalid topic: '%s'", str(e))
+            return False
 
       return True
 
@@ -47,7 +57,7 @@ class _Endpoint(threading.Thread):
       for message in messages:
          is_valid = self._is_valid_message(message)
          if not is_valid:
-            syslog.syslog(syslog.LOG_ERR, "Invalid message: '%s'." % esc(json.dumps(message)))
+            self._log(syslog.LOG_ERR, "Invalid message: '%s'.", json.dumps(message))
             raise Exception("Invalid message.")
 
          if message["type"] == "publish":
@@ -55,6 +65,9 @@ class _Endpoint(threading.Thread):
 
          elif message["type"] == "unsubscribe":
             self.notifier.unsubscribe_me(message["topic"], self)
+
+         elif message["type"] == "introduce_myself":
+            self.name = message["name"]
          
          else:
             assert message["type"] == "subscribe"
@@ -64,13 +77,13 @@ class _Endpoint(threading.Thread):
       try:
          while not self.connection.end_of_the_communication:
             messages = self.connection.receive_objects()
-            syslog.syslog(syslog.LOG_DEBUG, "Received %i messages" % esc(len(messages)))
+            self._log(syslog.LOG_DEBUG, "Received %s messages", str(len(messages)))
 
             self._process_messages(messages)
 
-         syslog.syslog(syslog.LOG_NOTICE, "The connection was closed by the other point of the connection.")
+         self._log(syslog.LOG_NOTICE, "The connection was closed by the other point of the connection.")
       except:
-         syslog.syslog(syslog.LOG_ERR, "An exception has occurred when receiving/processing the messages: %s." % esc(traceback.format_exc()))
+         self._log(syslog.LOG_ERR, "An exception has occurred when receiving/processing the messages: %s.", traceback.format_exc())
       finally:
          self.is_finished = True
 
@@ -79,17 +92,21 @@ class _Endpoint(threading.Thread):
       try:
          self.connection.send_object(event)
       except:
-         syslog.syslog(syslog.LOG_ERR, "Endpoint exception when sending a message to it: %s." % esc(traceback.format_exc()))
+         self._log(syslog.LOG_ERR, "An exception when sending a message to it: %s.", traceback.format_exc())
          self.is_finished = True
 
    def close(self):
-      syslog.syslog(syslog.LOG_NOTICE, "Closing the connection with the endpoint: %s." % esc(repr(self)))
+      self._log(syslog.LOG_NOTICE, "Closing the connection with the endpoint.")
       self.is_finished = True
       self.connection.close()
-      syslog.syslog(syslog.LOG_NOTICE, "Connection closed: %s" % esc(repr(self)))
+      self._log(syslog.LOG_NOTICE, "Connection closed")
 
    def __repr__(self):
-      return "%s%s" % (self.name, (" [dead]" if self.is_finished else ""))
+      return "%s%s%s" % (self.codename, ((" (%s)" % self.name) if self.name else ""), (" [dead]" if self.is_finished else ""))
+
+   def _log(self, level, message, *arguments):
+      message = "%s: " + message
+      syslog.syslog(level, message % esc(repr(self), *arguments))
 
 
 # TODO endpoints_by_topic (and endpoint_subscription_lock) as a single object
@@ -140,13 +157,13 @@ class Notifier(daemon.Daemon):
          try:
             syslog.syslog(syslog.LOG_DEBUG, "Waiting for a new endpoint to connect with self.")
             socket, address = self.socket.accept()
-            name = "Endpoint to %s:%s" % (str(address[0]), str(address[1]))
+            codename = "Endpoint to %s:%s" % (str(address[0]), str(address[1]))
             syslog.syslog(syslog.LOG_NOTICE, "New endpoint connected: %s." % esc(str(address)))
          except: # TODO separate the real unexpected exceptions from the "shutdown" exception
             syslog.syslog(syslog.LOG_ERR, "Exception in the wait for new endpoints of the notifier: %s" % esc((traceback.format_exc())))
             break
 
-         self.endpoints.append(_Endpoint(socket, self, name))
+         self.endpoints.append(_Endpoint(socket, self, codename))
          self.reap()
 
 

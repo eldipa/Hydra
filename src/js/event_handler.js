@@ -12,7 +12,11 @@ define(function () {
       this.next_valid_subscription_id = 0;
    }
    
-   EventHandler.prototype.init = function () {
+   EventHandler.prototype.init = function (name) {
+      if (!name) {
+         var name = "(alice-js)";
+      }
+
       if(this.socket) {
          this.shutdown();
       }
@@ -41,6 +45,7 @@ define(function () {
 
       this.socket.on('connect', function () {
          is_connected = true;
+         that.socket.write(JSON.stringify({type: 'introduce_myself', name: name}));
          that.init_dispacher();
       });
 
