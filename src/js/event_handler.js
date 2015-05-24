@@ -241,6 +241,17 @@ define(function () {
 	   return "EventHandler Instance";
    }
 
-   return {EventHandler: EventHandler};
+   var GLOBAL_EVENT_HANDLER = null;
+
+   var set_global_event_handler = function (EH) {
+      GLOBAL_EVENT_HANDLER = EH;
+   };
+
+   var get_global_event_handler = function () {
+      return GLOBAL_EVENT_HANDLER;
+   };
+   return {EventHandler: EventHandler, 
+           set_global_event_handler: set_global_event_handler,
+           get_global_event_handler: get_global_event_handler};
 
 });
