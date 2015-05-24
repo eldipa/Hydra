@@ -26,7 +26,7 @@ class _Endpoint(threading.Thread):
          syslog.syslog(syslog.LOG_ERR, "Invalid message. It hasn't any topic or type: '%s'." % esc(json.dumps(message)))
          return False
 
-      if not message["type"] in ("subscribe", "publish"):
+      if not message["type"] in ("subscribe", "publish", "unsubscribe"):
          syslog.syslog(syslog.LOG_ERR, "Invalid message. Unknown type: '%s'." % esc(json.dumps(message)))
          return False
 
@@ -52,6 +52,9 @@ class _Endpoint(threading.Thread):
 
          if message["type"] == "publish":
             self.notifier.distribute_event({"topic": message["topic"], "data": message["data"]})
+
+         elif message["type"] == "unsubscribe":
+            self.notifier.unsubscribe_me(message["topic"], self)
          
          else:
             assert message["type"] == "subscribe"
@@ -199,6 +202,30 @@ class Notifier(daemon.Daemon):
             self.endpoints_by_topic[topic].append(endpoint)
          else:
             self.endpoints_by_topic[topic] = [endpoint]
+
+      finally:
+         self.endpoint_subscription_lock.release()
+
+      if self.show_stats:
+         self.show_endpoints_and_subscriptions()
+   
+   def unsubscribe_me(self, topic, endpoint):
+      self.endpoint_subscription_lock.acquire()
+      try:
+         syslog.syslog(syslog.LOG_NOTICE, "Removing endpoint subscription for the topic '%s'." % esc(topic if topic else "(the empty topic)"))
+         if topic not in self.endpoints_by_topic:
+            syslog.syslog(syslog.LOG_ERR, "Trying to unsubscribe from the topic '%s' but no one is subscribed to that topic!" % esc(topic if topic else "(the empty topic)"))
+            
+         else:
+            endpoints_subscribed = self.endpoints_by_topic[topic]
+
+            try:
+               endpoints_subscribed.remove(endpoint)
+            except ValueError:
+               syslog.syslog(syslog.LOG_ERR, "Trying to unsubscribe from the topic '%s' an endpoint that it is not subscribed to that topic!" % esc(topic if topic else "(the empty topic)"))
+
+            if not endpoints_subscribed:
+               del self.endpoints_by_topic[topic]  # if it is empty, remove it
 
       finally:
          self.endpoint_subscription_lock.release()

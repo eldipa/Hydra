@@ -151,7 +151,7 @@ class EventHandler(threading.Thread, Publisher):
 
         if not self.callbacks_by_topic[topic]:
            del self.callbacks_by_topic[topic]
-           #TODO send a message to the server, we are not interested in 'topic' any more
+           self.connection.send_object({'type': 'unsubscribe', 'topic': topic})
         
         del self.subscriptions_by_id[subscription_id]
 

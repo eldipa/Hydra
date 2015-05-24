@@ -113,7 +113,7 @@ define(function () {
       // remove the topic if there isn't any callback
       if (this.callbacks_by_topic[topic].length === 0) {
          delete this.callbacks_by_topic[topic];
-         // TODO: send a message to the notifier server.
+         this.socket.write(JSON.stringify({type: 'unsubscribe', topic: topic}));
       }
 
       // remove the subscription
