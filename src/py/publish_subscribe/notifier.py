@@ -153,6 +153,9 @@ class Notifier(daemon.Daemon):
 
    
    def wait_for_new_endpoints(self):
+      if self.show_stats:
+         self.show_endpoints_and_subscriptions()
+
       while True:
          try:
             syslog.syslog(syslog.LOG_DEBUG, "Waiting for a new endpoint to connect with self.")
@@ -166,6 +169,8 @@ class Notifier(daemon.Daemon):
          self.endpoints.append(_Endpoint(socket, self, codename))
          self.reap()
 
+         if self.show_stats:
+            self.show_endpoints_and_subscriptions()
 
    def reap(self):
       to_close = filter(lambda endpoint: endpoint.is_finished, self.endpoints)

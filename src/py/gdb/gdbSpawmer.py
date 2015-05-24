@@ -31,7 +31,7 @@ class GdbSpawmer:
         if(log):
             self.logger = outputLogger.OutputLogger()
             self.logger.start()
-        self.eventHandler = publish_subscribe.eventHandler.EventHandler()
+        self.eventHandler = publish_subscribe.eventHandler.EventHandler(name="(GDB Spawmer)")
         self.subscribe()
         
     def subscribe(self):
