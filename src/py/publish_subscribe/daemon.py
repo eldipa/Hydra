@@ -2,7 +2,7 @@
 
 import sys, os, time, atexit, resource, errno
 import signal
-from signal import SIGTERM, SIGHUP
+from signal import SIGTERM, SIGHUP, SIGKILL
 
 # Based in http://www.jejik.com/articles/2007/02/a_simple_unix_linux_daemon_in_python/
 
@@ -15,7 +15,8 @@ class Daemon(object):
          uid = os.getuid(), gid = os.getgid(),
          stdin = os.devnull, stdout = os.devnull, stderr = os.devnull,
          keep_open_fileno = None,
-         foreground = False
+         foreground = False,
+         stop_time=3
          ):
 
       self.pidfile, self.name = pidfile, name
@@ -27,6 +28,7 @@ class Daemon(object):
 
       self.keep_open = set() if not keep_open_fileno else set(keep_open_fileno)
       self.foreground = foreground
+      self.stop_time = stop_time
 
    def be_a_daemon(self):
       self.set_chroot()
@@ -164,9 +166,12 @@ class Daemon(object):
 
       # Try killing the daemon process	
       try:
-         while 1:
+         t = self.stop_time # if t == 0, use SIGKILL directly!
+         while t > 0:
             os.kill(pid, SIGTERM)
             time.sleep(0.1)
+            t -= 0.1
+         os.kill(pid, SIGKILL)
       except OSError, err:
          err = str(err)
          if err.find("No such process") > 0:
