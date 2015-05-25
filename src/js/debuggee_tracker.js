@@ -1,19 +1,77 @@
 define(["underscore", "shortcuts"], function (_, shortcuts) {
-   var Thread = function (obj) {
-      this.thread_group_id = obj.thread_group_id;
-      this.state = obj.state;
-      this.source_fullname = obj.source_fullname;
-      this.source_line = obj.source_line;
-      this.instruction_address = obj.instruction_address;
-   };
-   var ThreadGroup = function (obj) {
-      this.state = obj.state;
-      this.process_id = obj.process_id;
-      this.exit_code = obj.exit_code;
+   'use strict';
 
-      this.threads_by_id = [];
+   var _update_properties = function (obj) {
+      _.each(_.keys(obj), function (k) {
+         if (!(_.contains(this._properties, k))) {
+            throw Error("Unexpected key '"+k+"' to be read and updated");
+         }
+         this[k] = obj[k];
+
+      }, this);
    };
-   var Debugger = function () {};
+
+   var Thread = function (obj) {
+      this._properties = ["thread_group_id", "state", "source_fullname",
+                          "source_line",  "instruction_address"];
+
+      this.update(obj);
+
+   };
+   Thread.prototype.update = _update_properties;
+   Thread.prototype.get_display_name = function (myid) {
+      return "Thread "+myid+" ("+this.state+")";
+   };
+
+   var ThreadGroup = function (obj) {
+      this._properties = ["state", "executable", "process_id", "exit_code"];
+      this.update(obj);
+
+      this.threads_by_id = {};
+
+   };
+   ThreadGroup.prototype.update = _update_properties;
+   ThreadGroup.prototype.get_display_name = function (myid) {
+      var base = "Group " + myid + " ";
+      var more = [];
+      
+      if (this.executable != undefined) {
+         if (this.executable.length > 16) {
+            more.push("..."+this.executable.substr(this.executable.lastIndexOf("/")));
+         }
+         else {
+            more.push(this.executable);
+         }
+      }
+
+      if (this.state === "started") {
+         if (this.executable != undefined && this.process_id !== undefined) {
+            more.push("PID: " + this.process_id);
+         }
+      }
+      else {
+         if (this.exit_code !== undefined) {
+            more.push("Exit code: " + this.exit_code);
+         }
+      }
+
+      if (this.executable != undefined) {
+         if (this.executable.length > 16) {
+            more.push("(" + this.executable + ")");
+         }
+      }
+
+      return base + more.join(" ");
+   };
+
+   var Debugger = function (obj) {
+      this._properties = [];
+      this.update(obj);
+   };
+   Debugger.prototype.update = _update_properties;
+   Debugger.prototype.get_display_name = function (myid) {
+      return "Dbg " + myid;
+   };
 
    var DebuggeeTracker = function (EH) {
       this.EH = EH;
@@ -39,6 +97,19 @@ define(["underscore", "shortcuts"], function (_, shortcuts) {
 
       EH.publish('spawner.request.debuggers-info', {}); // send this to force a resync
    };
+   
+   /* 
+      ===== Public API =======
+   */
+
+   DebuggeeTracker.prototype.get_all_debuggers = function () {
+      return this.debuggers_by_id;
+   };
+
+ 
+   DebuggeeTracker.prototype.get_thread_groups_of = function (debugger_id) {
+      return this.thread_groups_by_debugger[debugger_id];
+   };  
 
    /*
       Call this when a new debugger is started. This will register several 
@@ -102,7 +173,6 @@ define(["underscore", "shortcuts"], function (_, shortcuts) {
 
       _.each(debugger_ids_of_new_debuggers, function (id) {
          this._debugger_started(debuggers_data[id]);
-         this._request_an_update_threads_info(id);
       },
       this);
    };
@@ -156,8 +226,7 @@ define(["underscore", "shortcuts"], function (_, shortcuts) {
       var thread_group_pid = data.results.pid;
 
       var thread_group_object = this.thread_groups_by_debugger[debugger_id][thread_group_id];
-      thread_group_object.process_id = thread_group_pid;
-      thread_group_object.state = "started";
+      thread_group_object.update({process_id: thread_group_pid, state: "started"});
    };
 
    DebuggeeTracker.prototype._thread_group_exited = function (data) {
@@ -166,8 +235,7 @@ define(["underscore", "shortcuts"], function (_, shortcuts) {
       var exit_code = data.results['exit-code'];
 
       var thread_group_object = this.thread_groups_by_debugger[debugger_id][thread_group_id];
-      thread_group_object.state = "not-started";
-      thread_group_object.exit_code = exit_code;
+      thread_group_object.update({state: "not-started", exit_code: exit_code});
    };
    
    DebuggeeTracker.prototype._thread_created = function (data) {
@@ -201,7 +269,7 @@ define(["underscore", "shortcuts"], function (_, shortcuts) {
       var thread_objects_selected = this._get_thread_objects_selected_by(thread_id, debugger_id);
 
       _.each(thread_objects_selected, function (thread_object) {
-         thread_object.state = "running";
+         thread_object.update({state: "running"});
       });
    };
 
@@ -217,7 +285,7 @@ define(["underscore", "shortcuts"], function (_, shortcuts) {
       var thread_objects_selected = this._get_thread_objects_selected_by(stopped_threads, debugger_id);
 
       _.each(thread_objects_selected, function (thread_object) {
-         thread_object.state = "stopped";
+         thread_object.update({state: "stopped"});
       });
 
       this._request_an_update_threads_info(debugger_id);
@@ -268,17 +336,17 @@ define(["underscore", "shortcuts"], function (_, shortcuts) {
             }
 
             if (group_data.pid == undefined || group_data.pid == null) {
-               thread_group_object.state = "not-started";
+               thread_group_object.update({state: "not-started"});
             }
             else {
-               thread_group_object.state = "started";
+               thread_group_object.update({state: "started"});
             }
 
-            thread_group_object.pid = group_data.pid;
-            thread_group_object.executable = group_data.executable;
+            thread_group_object.update({process_id: group_data.pid,
+                                        executable: group_data.executable});
 
             var threads_data = group_data.threads;
-            _.each(threads_data, _.partial(self._update_thread_info, _, self.threads_by_debugger[debugger_id]));
+            _.each(threads_data, _.partial(self._update_thread_info, _, self.threads_by_debugger[debugger_id], thread_group_object));
          });
          }, 
          debugger_id, 
@@ -292,19 +360,23 @@ define(["underscore", "shortcuts"], function (_, shortcuts) {
 
       The response will be processed asynchronously, updating the state, the source
       (fullname and line), the address of the threads.
+      
+      NOTE: this will update the thread info and the threads_by_debugger object BUT
+            IT WILL NOT update the threads_by_id object of a particular thread_group_object.
+            To do this, call _request_an_update_thread_groups_info.
    */
    DebuggeeTracker.prototype._request_an_update_threads_info = function (debugger_id) {
       var self = this;
       shortcuts.gdb_request(function (data) {
          var threads_data = data.results.threads;
-         _.each(threads_data, _.partial(self._update_thread_info, _, self.threads_by_debugger[debugger_id]));
+         _.each(threads_data, _.partial(self._update_thread_info, _, self.threads_by_debugger[debugger_id], undefined));
          }, 
          debugger_id, 
          "-thread-info"
       );
    };
 
-   DebuggeeTracker.prototype._update_thread_info = function (thread_data, thread_objects) {
+   DebuggeeTracker.prototype._update_thread_info = function (thread_data, thread_objects, thread_group_object) {
       var thread_id = thread_data.id;
       var thread_object = thread_objects[thread_id];
 
@@ -313,10 +385,16 @@ define(["underscore", "shortcuts"], function (_, shortcuts) {
          thread_objects[thread_id] = thread_object; 
       }
 
-      thread_object.state = thread_data.state;
-      thread_object.source_fullname = thread_data.frame.fullname;
-      thread_object.source_line = thread_data.frame.line;
-      thread_object.instruction_address = thread_data.frame.addr;
+      if (thread_group_object !== undefined) {
+         if (!(thread_id in thread_group_object.threads_by_id)) {
+            thread_group_object.threads_by_id[thread_id] = thread_object;
+         }
+      }
+
+      thread_object.update({state: thread_data.state,
+                            source_fullname: thread_data.frame.fullname,
+                            source_line: thread_data.frame.line,
+                            instruction_address: thread_data.frame.addr});
    };
 
    /* Notify to all of our observers that a new event has arrived like
