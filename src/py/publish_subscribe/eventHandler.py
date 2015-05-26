@@ -23,7 +23,7 @@ class Publisher(object):
         fail_if_topic_isnt_valid(topic, allow_empty=False)
 
         self._log(syslog.LOG_DEBUG, "Sending publication of an event with topic '%s'.", topic)
-        self.connection.send_object({'type': 'publish', 'topic': topic, 'data': data})
+        self.connection.send_object({'type': 'publish', 'topic': topic, 'data': json.dumps(data)})
         self._log(syslog.LOG_DEBUG, "Publication of an event sent.")
 
 
@@ -231,7 +231,7 @@ class EventHandler(threading.Thread, Publisher):
         for callbacks in callbacks_collected:   
             for callback, subscription in callbacks:
                 try:
-                    callback(event['data'])
+                    callback(json.loads(event['data']))
                 except:
                     self._log(syslog.LOG_ERR, "Exception in callback for the topic '%s': %s", (t if t else "(the empty topic)"), traceback.format_exc())
 
