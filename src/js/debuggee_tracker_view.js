@@ -8,6 +8,9 @@ define(["underscore", "jquery", "jstree", "layout"], function (_, $, jstree, lay
       this._$out_of_dom = this._$container;
 
       this.debuggee_tracker = debuggee_tracker;
+      this.debuggee_tracker.add_observer(this);
+
+      this.update_tree_data_debounced = _.debounce(_.bind(this.update_tree_data, this), 500);
 
       this._$container.jstree({
         'core' : {
@@ -21,6 +24,19 @@ define(["underscore", "jquery", "jstree", "layout"], function (_, $, jstree, lay
    };
 
    DebuggeeTrackerView.prototype.__proto__ = layout.Panel.prototype;
+
+   DebuggeeTrackerView.prototype.update = function (topic, data, observed) {
+      this.update_tree_data_debounced();
+   };
+
+   DebuggeeTrackerView.prototype.update_tree_data = function () {
+      var data = this.get_data();
+      $(this._$container).jstree(true).settings.core.data = data;
+      $(this._$container).jstree(true).refresh();
+      if (!this._$out_of_dom) {
+         this.repaint($(this.box));
+      }
+   };
 
    DebuggeeTrackerView.prototype.render = function() {
       if (this._$out_of_dom) {

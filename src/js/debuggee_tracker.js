@@ -134,6 +134,11 @@ define(["underscore", "shortcuts"], function (_, shortcuts) {
       // so those events are lost. to avoid real data lost, we request an update of the
       // data to be in sync with the debugger state
       this._request_an_update_thread_groups_info(this.thread_groups_by_debugger[debugger_id], debugger_id);
+
+      this.notify("debugger_started", { 
+                                       event_data: data,
+                                       debugger_id: debugger_id,
+                                       });
    };
 
    /*
@@ -143,11 +148,17 @@ define(["underscore", "shortcuts"], function (_, shortcuts) {
       var debugger_id = data['debugger-id'];
       var exit_code = data['exit-code'];           // not used it can be undefined
       
+      this.notify("debugger_exited", { 
+                                       event_data: data,
+                                       debugger_id: debugger_id,
+                                       });
+
       _.each(this.subscription_ids_by_debugger[debugger_id], this.EH.unsubscribe, this.EH);
       delete this.subscription_ids_by_debugger[debugger_id];
       delete this.thread_groups_by_debugger[debugger_id];
       delete this.threads_by_debugger[debugger_id];
       delete this.debuggers_by_id[debugger_id];
+      
    };
 
    /*
@@ -211,11 +222,23 @@ define(["underscore", "shortcuts"], function (_, shortcuts) {
       this.thread_groups_by_debugger[debugger_id][thread_group_id] = new ThreadGroup({
          state: "not-started",
       });
+      
+      this.notify("thread_group_added", { 
+                                       event_data: data,
+                                       debugger_id: debugger_id,
+                                       thread_group_id: thread_group_id
+                                       });
    };
 
    DebuggeeTracker.prototype._thread_group_removed = function (data) {
       var debugger_id = data['debugger-id'];
       var thread_group_id = data.results.id;
+
+      this.notify("thread_group_removed", { 
+                                       event_data: data,
+                                       debugger_id: debugger_id,
+                                       thread_group_id: thread_group_id
+                                       });
 
       delete this.thread_groups_by_debugger[debugger_id][thread_group_id];
    };
@@ -227,6 +250,12 @@ define(["underscore", "shortcuts"], function (_, shortcuts) {
 
       var thread_group_object = this.thread_groups_by_debugger[debugger_id][thread_group_id];
       thread_group_object.update({process_id: thread_group_pid, state: "started"});
+      
+      this.notify("thread_group_started", { 
+                                       event_data: data,
+                                       debugger_id: debugger_id,
+                                       thread_group_id: thread_group_id
+                                       });
    };
 
    DebuggeeTracker.prototype._thread_group_exited = function (data) {
@@ -236,6 +265,12 @@ define(["underscore", "shortcuts"], function (_, shortcuts) {
 
       var thread_group_object = this.thread_groups_by_debugger[debugger_id][thread_group_id];
       thread_group_object.update({state: "not-started", exit_code: exit_code});
+      
+      this.notify("thread_group_exited", { 
+                                       event_data: data,
+                                       debugger_id: debugger_id,
+                                       thread_group_id: thread_group_id
+                                       });
    };
    
    DebuggeeTracker.prototype._thread_created = function (data) {
@@ -249,6 +284,13 @@ define(["underscore", "shortcuts"], function (_, shortcuts) {
 
       this.threads_by_debugger[debugger_id][thread_id] = thread_object;
       thread_group_object.threads_by_id[thread_id] = thread_object;
+      
+      this.notify("thread_created", { 
+                                       event_data: data,
+                                       debugger_id: debugger_id,
+                                       thread_group_id: thread_group_id,
+                                       thread_id: thread_id
+                                       });
    };
 
    DebuggeeTracker.prototype._thread_exited = function (data) {
@@ -256,6 +298,13 @@ define(["underscore", "shortcuts"], function (_, shortcuts) {
       var thread_group_id = data.results['group-id'];
       var thread_id = data.results.id;
       
+      this.notify("thread_exited", { 
+                                       event_data: data,
+                                       debugger_id: debugger_id,
+                                       thread_group_id: thread_group_id,
+                                       thread_id: thread_id
+                                       });
+
       var thread_group_object = this.thread_groups_by_debugger[debugger_id][thread_group_id];
       
       delete this.threads_by_debugger[debugger_id][thread_id];
@@ -271,6 +320,13 @@ define(["underscore", "shortcuts"], function (_, shortcuts) {
       _.each(thread_objects_selected, function (thread_object) {
          thread_object.update({state: "running"});
       });
+      
+      this.notify("running", { 
+                              event_data: data,
+                              debugger_id: debugger_id,
+                              //thread_group_id: thread_group_id, TODO?
+                              //thread_id: thread_id              TODO?
+                              });
    };
 
    DebuggeeTracker.prototype._stopped = function (data) {
@@ -289,6 +345,13 @@ define(["underscore", "shortcuts"], function (_, shortcuts) {
       });
 
       this._request_an_update_threads_info(debugger_id);
+      
+      this.notify("stopped", { 
+                              event_data: data,
+                              debugger_id: debugger_id,
+                              //thread_group_id: thread_group_id, TODO?
+                              //thread_id: thread_id              TODO?
+                              });
    };
 
    /* Get the thread objects selected by 'thread_id'. This will return always a
@@ -346,7 +409,13 @@ define(["underscore", "shortcuts"], function (_, shortcuts) {
                                         executable: group_data.executable});
 
             var threads_data = group_data.threads;
-            _.each(threads_data, _.partial(self._update_thread_info, _, self.threads_by_debugger[debugger_id], thread_group_object));
+            _.each(threads_data, _.partial(self._update_thread_info, _, self.threads_by_debugger[debugger_id], thread_group_object, debugger_id), self);
+            
+            self.notify("thread_group_update", { 
+                                    event_data: group_data,
+                                    debugger_id: debugger_id,
+                                    thread_group_id: thread_group_id,
+                                    });
          });
          }, 
          debugger_id, 
@@ -369,14 +438,14 @@ define(["underscore", "shortcuts"], function (_, shortcuts) {
       var self = this;
       shortcuts.gdb_request(function (data) {
          var threads_data = data.results.threads;
-         _.each(threads_data, _.partial(self._update_thread_info, _, self.threads_by_debugger[debugger_id], undefined));
+         _.each(threads_data, _.partial(self._update_thread_info, _, self.threads_by_debugger[debugger_id], undefined, debugger_id), self);
          }, 
          debugger_id, 
          "-thread-info"
       );
    };
 
-   DebuggeeTracker.prototype._update_thread_info = function (thread_data, thread_objects, thread_group_object) {
+   DebuggeeTracker.prototype._update_thread_info = function (thread_data, thread_objects, thread_group_object, debugger_id) {
       var thread_id = thread_data.id;
       var thread_object = thread_objects[thread_id];
 
@@ -395,16 +464,40 @@ define(["underscore", "shortcuts"], function (_, shortcuts) {
                             source_fullname: thread_data.frame.fullname,
                             source_line: thread_data.frame.line,
                             instruction_address: thread_data.frame.addr});
+      
+      this.notify("thread_update", { 
+                              event_data: thread_data,
+                              debugger_id: debugger_id,
+                              thread_id: thread_id,
+                              });
    };
 
    /* Notify to all of our observers that a new event has arrived like
       a inferior or thread group has stopped or created or like a thread
       is running.
+
+      'data_object' will be an object with the following structure:
+         - event_data: the data arrived that triggered this event.
+         - debugger_id: the id of the debugger from where the event cames.
+      
+      In some cases --but not always-- the data_object will contain:
+         - thread_group_id: the id of the thread group (inferior)
+         - thread_id: the id of the thread involved.
+
+      Two kinds of topics are emmited. The first class are the topics which
+      event implies a deletion of some part of the information in this tracker,
+      like 'thread_group_removed' or 'debugger_exited'.
+      Those events are notified before that the deletion is takes place, so the
+      observer has a chance to copy the info before that this is deleted.
+
+      The other kinds of topics are emmited after apply all the modification to
+      this tracker.
+  
    */
-   DebuggeeTracker.prototype.notify = function (event_topic, event_data) {
+   DebuggeeTracker.prototype.notify = function (event_topic, data_object) {
       for (var i = 0; i < this.observers.length; i++) {
          try {
-            this.observers[i].update(event_topic, event_data, this);
+            this.observers[i].update(event_topic, data_object, this);
          } catch(e) {
             console.log("" + e);
          }
