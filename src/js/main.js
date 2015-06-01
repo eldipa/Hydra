@@ -15,6 +15,8 @@ requirejs.config({
       notify: 'external/notify',
       standarInput: 'standarInput',
       shortcuts: 'shortcuts',
+      jstree: 'external/jstree-3.1.1',
+      debuggee_tracker_view: 'debuggee_tracker_view',
    },
 
    shim: {
@@ -26,6 +28,10 @@ requirejs.config({
          exports: "_",
       },
       "notify": {
+         deps: ['jquery'],
+         exports: "$",
+      },
+      "jstree": {
          deps: ['jquery'],
          exports: "$",
       }
@@ -45,9 +51,10 @@ requirejs.onResourceLoad = function(context, map, depArray) {
    }
 };
 
-requirejs(['ui', 'code_view', 'jquery', 'export_console', 'layout', 'layout_examples', 'jqueryui', 'ctxmenu', 'notify_js_console', 'debuggee_tracker', 'event_handler'], function (ui, code_view, $, export_console, layout, layout_examples, _, ctxmenu, notify_js_console, debuggee_tracker, event_handler) {
+requirejs(['ui', 'code_view', 'jquery', 'export_console', 'layout', 'layout_examples', 'jqueryui', 'ctxmenu', 'notify_js_console', 'debuggee_tracker', 'event_handler', 'debuggee_tracker_view'], function (ui, code_view, $, export_console, layout, layout_examples, _, ctxmenu, notify_js_console, debuggee_tracker, event_handler, debuggee_tracker_view) {
    var EH = new event_handler.EventHandler();
-   EH.init();
+   EH.init("(ui)");
+   event_handler.set_global_event_handler(EH);
 
    var js_console_server = export_console.init();
    var fs = require('fs');
@@ -69,9 +76,15 @@ requirejs(['ui', 'code_view', 'jquery', 'export_console', 'layout', 'layout_exam
    notify_js_console.start_redirection();
 
    //layout_examples.init_short_examples();
-   ui.init(EH);
+   var l = ui.init(EH);
+   var root = l.root;
+   var visor = l.visor;
 
    dbg_tracker = new debuggee_tracker.DebuggeeTracker(EH);
+   dbg_tracker_view = new debuggee_tracker_view.DebuggeeTrackerView(dbg_tracker);
+
+   visor.split(dbg_tracker_view, "top");
+   root.render();
 
    //process_view.start();
    //require('nw.gui').Window.get().reload(3);
@@ -173,7 +186,11 @@ requirejs(['ui', 'code_view', 'jquery', 'export_console', 'layout', 'layout_exam
    // Hide and close the splash window and show this one
    window.splash_window.hide();
    require('nw.gui').Window.get().show();
-   window.splash_window.close();
+   
+   // release the memory
+   __status_element = null;
+   window.splash_window.close(true);
+   window.splash_window = null;
 },
 function (err) {
    alert("Error during the import (" + err.requireType + ").\nFailed modules: " + err.requireModules + "\n");

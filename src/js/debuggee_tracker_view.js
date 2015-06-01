@@ -12,15 +12,23 @@ define(["underscore", "jquery", "jstree", "layout"], function (_, $, jstree, lay
 
       this.update_tree_data_debounced = _.debounce(_.bind(this.update_tree_data, this), 500);
 
-      this._$container.jstree({
+      var _attach_ctxmenu_safe = _.throttle(_.bind(this._attach_ctxmenu, this), 500);
+      this._$container.on("after_open.jstree", function () {
+            _attach_ctxmenu_safe();
+         }).on("redraw.jstree", function () {
+            _attach_ctxmenu_safe();
+         }).jstree({
         'core' : {
           "animation" : false,
+          "worker": true, 
+          "multiple": false,
           "check_callback" : false,
           "themes" : { "url": false, "dots": true, "name": "default-dark", "stripped": true},
           "force_text": true,
           'data' : this.get_data(),
         },
       });
+
    };
 
    DebuggeeTrackerView.prototype.__proto__ = layout.Panel.prototype;
@@ -33,6 +41,7 @@ define(["underscore", "jquery", "jstree", "layout"], function (_, $, jstree, lay
       var data = this.get_data();
       $(this._$container).jstree(true).settings.core.data = data;
       $(this._$container).jstree(true).refresh();
+      
       if (!this._$out_of_dom) {
          this.repaint($(this.box));
       }
@@ -80,6 +89,100 @@ define(["underscore", "jquery", "jstree", "layout"], function (_, $, jstree, lay
          }, this);
 
       return tree_data;
+   };
+
+   DebuggeeTrackerView.prototype._attach_ctxmenu = function () {
+      var $debuggers_first_level =      this._$container.children('ul').children('li');
+      var $thread_groups_second_level = $debuggers_first_level.children('ul').children('li');
+      var $threads_third_level =        $thread_groups_second_level.children('ul').children('li');
+
+      
+      $debuggers_first_level.data('ctxmenu_controller', this._get_ctxmenu_for_debuggers());
+      $thread_groups_second_level.data('ctxmenu_controller', this._get_ctxmenu_for_thread_groups());
+      $threads_third_level.data('ctxmenu_controller', this._get_ctxmenu_for_threads());
+   };
+
+   DebuggeeTrackerView.prototype._get_id_of_selected = function () {
+      var nodes_selected = this._$container.jstree('get_selected');
+      return nodes_selected.attr('id'); //TODO CHANGE THIS: nodes_selected is an array and not a jquery selection
+   };
+
+   DebuggeeTrackerView.prototype._get_ctxmenu_for_debuggers = function () {
+      var self = this;
+      return [{
+               immediate_action: function (ctx_event, element_ctxmenu_owner) {
+                  if (ctx_event.jstree_hack_done) {
+                     return;
+                  }
+                  ctx_event.jstree_hack_done = true;
+
+                  var node_id = $(element_ctxmenu_owner).attr('id');
+                  self._$container.jstree("deselect_all");
+                  self._$container.jstree("select_node", node_id);
+              },
+              },{
+               text: 'Kill debugger',
+               action: function (e, element_ctxmenu_owner) {
+                  e.preventDefault();
+                  console.log(self._get_id_of_selected());
+               },
+              },{
+               text: 'Add thread group',
+               action: function (e) {
+                  e.preventDefault();
+                  console.log(self._get_id_of_selected());
+               },
+              }];
+   };
+
+   DebuggeeTrackerView.prototype._get_ctxmenu_for_thread_groups = function () {
+      var self = this;
+      return [{
+               immediate_action: function (ctx_event, element_ctxmenu_owner) {
+                  if (ctx_event.jstree_hack_done) {
+                     return;
+                  }
+                  ctx_event.jstree_hack_done = true;
+                  
+                  var node_id = $(element_ctxmenu_owner).attr('id');
+                  self._$container.jstree("deselect_all");
+                  self._$container.jstree("select_node", node_id);
+              },
+              },{
+               text: 'Remove thread group',
+               action: function (e) {
+                  e.preventDefault();
+                  console.log(self._get_id_of_selected());
+               },
+              },{
+               text: 'Load/attach',
+               action: function (e) {
+                  e.preventDefault();
+                  console.log(self._get_id_of_selected());
+               },
+              }];
+   };
+
+   DebuggeeTrackerView.prototype._get_ctxmenu_for_threads = function () {
+      var self = this;
+      return [{
+               immediate_action: function (ctx_event, element_ctxmenu_owner) {
+                  if (ctx_event.jstree_hack_done) {
+                     return;
+                  }
+                  ctx_event.jstree_hack_done = true;
+                  
+                  var node_id = $(element_ctxmenu_owner).attr('id');
+                  self._$container.jstree("deselect_all");
+                  self._$container.jstree("select_node", node_id);
+              },
+              },{
+               text: 'Something',
+               action: function (e) {
+                  e.preventDefault();
+                  console.log(self._get_id_of_selected());
+               },
+              }];
    };
 
    return {DebuggeeTrackerView: DebuggeeTrackerView};
