@@ -72,16 +72,19 @@ define(["underscore", "jquery", "jstree", "layout"], function (_, $, jstree, lay
 
             // first level
             return {text: debugger_obj.get_display_name(debugger_id),
+                    data: debugger_id,
                     children: _.map(thread_groups_objects_by_id,
                            function (thread_group_obj, thread_group_id) {
                               
                               // second level          
                               return {text: thread_group_obj.get_display_name(thread_group_id),
+                                      data: thread_group_id,
                                       children: _.map(thread_group_obj.threads_by_id,
                                           function (thread_obj, thread_id) {
 
                                              // third level
-                                             return {text: thread_obj.get_display_name(thread_id)};
+                                             return {text: thread_obj.get_display_name(thread_id),
+                                                     data: thread_id};
                                           }, this)
                                      };
                            }, this)
@@ -102,9 +105,11 @@ define(["underscore", "jquery", "jstree", "layout"], function (_, $, jstree, lay
       $threads_third_level.data('ctxmenu_controller', this._get_ctxmenu_for_threads());
    };
 
-   DebuggeeTrackerView.prototype._get_id_of_selected = function () {
+   DebuggeeTrackerView.prototype._get_data_from_selected = function () {
       var nodes_selected = this._$container.jstree('get_selected');
-      return nodes_selected.attr('id'); //TODO CHANGE THIS: nodes_selected is an array and not a jquery selection
+      var node_selected = nodes_selected[0]; //TODO we only support one of them for now
+
+      return this._$container.jstree(true).get_node(node_selected).data;
    };
 
    DebuggeeTrackerView.prototype._get_ctxmenu_for_debuggers = function () {
@@ -122,15 +127,16 @@ define(["underscore", "jquery", "jstree", "layout"], function (_, $, jstree, lay
               },
               },{
                text: 'Kill debugger',
-               action: function (e, element_ctxmenu_owner) {
+               action: function (e) {
                   e.preventDefault();
-                  console.log(self._get_id_of_selected());
+                  var debugger_id = self._get_data_from_selected();
+                  console.log(debugger_id);
                },
               },{
                text: 'Add thread group',
                action: function (e) {
                   e.preventDefault();
-                  console.log(self._get_id_of_selected());
+                  console.log(self._get_data_from_selected());
                },
               }];
    };
@@ -152,13 +158,13 @@ define(["underscore", "jquery", "jstree", "layout"], function (_, $, jstree, lay
                text: 'Remove thread group',
                action: function (e) {
                   e.preventDefault();
-                  console.log(self._get_id_of_selected());
+                  console.log(self._get_data_from_selected());
                },
               },{
                text: 'Load/attach',
                action: function (e) {
                   e.preventDefault();
-                  console.log(self._get_id_of_selected());
+                  console.log(self._get_data_from_selected());
                },
               }];
    };
@@ -180,7 +186,7 @@ define(["underscore", "jquery", "jstree", "layout"], function (_, $, jstree, lay
                text: 'Something',
                action: function (e) {
                   e.preventDefault();
-                  console.log(self._get_id_of_selected());
+                  console.log(self._get_data_from_selected());
                },
               }];
    };
