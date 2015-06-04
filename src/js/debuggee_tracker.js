@@ -12,27 +12,27 @@ define(["underscore", "shortcuts"], function (_, shortcuts) {
    };
 
    var Thread = function (obj) {
-      this._properties = ["thread_group_id", "state", "source_fullname",
+      this._properties = ["EH", "id", "thread_group_id", "state", "source_fullname",
                           "source_line",  "instruction_address"];
 
       this.update(obj);
 
    };
    Thread.prototype.update = _update_properties;
-   Thread.prototype.get_display_name = function (myid) {
-      return "Thread "+myid+" ("+this.state+")";
+   Thread.prototype.get_display_name = function () {
+      return "Thread "+this.id+" ("+this.state+")";
    };
 
    var ThreadGroup = function (obj) {
-      this._properties = ["state", "executable", "process_id", "exit_code"];
+      this._properties = ["EH", "id", "debugger_id", "state", "executable", "process_id", "exit_code"];
       this.update(obj);
 
       this.threads_by_id = {};
 
    };
    ThreadGroup.prototype.update = _update_properties;
-   ThreadGroup.prototype.get_display_name = function (myid) {
-      var base = "Group " + myid + " ";
+   ThreadGroup.prototype.get_display_name = function () {
+      var base = "Group " + this.id + " ";
       var more = [];
       
       if (this.executable != undefined) {
@@ -64,13 +64,33 @@ define(["underscore", "shortcuts"], function (_, shortcuts) {
       return base + more.join(" ");
    };
 
+   ThreadGroup.prototype.remove = function () {
+      shortcuts.gdb_request(null, 
+         this.debugger_id, 
+         "-remove-inferior",
+         [""+this.id]
+      );
+   };
+
    var Debugger = function (obj) {
-      this._properties = [];
+      this._properties = ["EH", "id"];
       this.update(obj);
    };
    Debugger.prototype.update = _update_properties;
-   Debugger.prototype.get_display_name = function (myid) {
-      return "Dbg " + myid;
+   Debugger.prototype.get_display_name = function () {
+      return "Dbg " + this.id;
+   };
+
+   Debugger.prototype.add_thread_group = function () {
+      shortcuts.gdb_request(null, 
+         this.id, 
+         "-add-inferior",
+         []
+      );
+   };
+
+   Debugger.prototype.kill = function () {  // TODO this is only a draft, add more options
+      this.EH.publish("spawner.kill-debugger", this.id); // like 'what to do with the debuggees?'
    };
 
    var DebuggeeTracker = function (EH) {
@@ -106,6 +126,9 @@ define(["underscore", "shortcuts"], function (_, shortcuts) {
       return this.debuggers_by_id;
    };
 
+   DebuggeeTracker.prototype.add_debugger = function () {
+      this.EH.publish("spawner.add-debugger", {});
+   };
  
    DebuggeeTracker.prototype.get_thread_groups_of = function (debugger_id) {
       return this.thread_groups_by_debugger[debugger_id];
@@ -124,7 +147,7 @@ define(["underscore", "shortcuts"], function (_, shortcuts) {
       this.thread_groups_by_debugger[debugger_id] = {};
       this.threads_by_debugger[debugger_id] = {};
 
-      this.debuggers_by_id[debugger_id] = new Debugger();
+      this.debuggers_by_id[debugger_id] = new Debugger({EH: this.EH, id: debugger_id});
 
       var subscription_ids_of_all_interested_events = this.track_this_debugger(debugger_id);
       this.subscription_ids_by_debugger[debugger_id] = subscription_ids_of_all_interested_events;
@@ -220,6 +243,9 @@ define(["underscore", "shortcuts"], function (_, shortcuts) {
       var thread_group_id = data.results.id;
 
       this.thread_groups_by_debugger[debugger_id][thread_group_id] = new ThreadGroup({
+         EH: this.EH,
+         id: thread_group_id,
+         debugger_id: debugger_id,
          state: "not-started",
       });
       
@@ -278,7 +304,7 @@ define(["underscore", "shortcuts"], function (_, shortcuts) {
       var thread_group_id = data.results['group-id'];
       var thread_id = data.results.id;
       
-      var thread_object = new Thread({thread_group_id: thread_group_id});
+      var thread_object = new Thread({EH: this.EH, id: thread_id, thread_group_id: thread_group_id});
 
       var thread_group_object = this.thread_groups_by_debugger[debugger_id][thread_group_id];
 
@@ -394,7 +420,7 @@ define(["underscore", "shortcuts"], function (_, shortcuts) {
             var thread_group_object = thread_group_by_id[thread_group_id];
 
             if (thread_group_object === undefined) {
-               thread_group_object = new ThreadGroup();         // new thread group
+               thread_group_object = new ThreadGroup({EH: self.EH, id: thread_group_id, debugger_id: debugger_id});
                thread_group_by_id[thread_group_id] = thread_group_object; 
             }
 
@@ -450,7 +476,7 @@ define(["underscore", "shortcuts"], function (_, shortcuts) {
       var thread_object = thread_objects[thread_id];
 
       if (thread_object === undefined) {
-         thread_object = new Thread();          // new thread
+         thread_object = new Thread({EH: this.EH, id: thread_id});
          thread_objects[thread_id] = thread_object; 
       }
 
