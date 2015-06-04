@@ -29,7 +29,9 @@ define(['event_handler'], function (event_handler) {
 
       var eh = event_handler.get_global_event_handler();
 
-      eh.subscribe_for_once_call(response_topic, callback);
+      if (callback !== null) {
+         eh.subscribe_for_once_call(response_topic, callback);
+      }
       eh.publish(request_topic, request_for_command);
    };
 
