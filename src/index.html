@@ -24,6 +24,8 @@
     <!-- Bootstrap core CSS -->
     <link href="resources/css/bootstrap.css" rel="stylesheet">
 
+    <link rel="stylesheet" href="resources/css/jstree-themes/default-dark/style.css" />
+
     <link href="resources/css/jquery-ui.structure.css" rel="stylesheet">
     
 
@@ -74,6 +76,15 @@
        * {
           -webkit-user-select: none;
        }
+
+       /* Add-Remove this class to trigger a repaint without triggering
+          a reflow. This will fix some issues in webkit:
+          http://stackoverflow.com/questions/3485365/
+            how-can-i-force-webkit-to-redraw-repaint-to-propagate-style-changes */
+       .repaint_toogleable_fix {
+          fill: #000000;
+       }
+
     </style>
 
   </head>

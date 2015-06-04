@@ -30,11 +30,13 @@ class GdbSpawmer:
         if(log):
             self.logger = outputLogger.OutputLogger()
             self.logger.start()
-        self.eventHandler = publish_subscribe.eventHandler.EventHandler()
+        self.eventHandler = publish_subscribe.eventHandler.EventHandler(name="(GDB Spawmer)")
         self.subscribe()
         
     def subscribe(self):
         self.eventHandler.subscribe("spawner.request.debuggers-info", self.response_debuggers_info)
+        self.eventHandler.subscribe("spawner.add-debugger", self.startNewGdb)
+        self.eventHandler.subscribe("spawner.kill-debugger", self.exit)
 
         self.eventHandler.subscribe("debugger.load", self.startNewProcessWithGdb)
         self.eventHandler.subscribe("debugger.attach", self.attachAGdb)
@@ -56,6 +58,15 @@ class GdbSpawmer:
         self.eventHandler.publish("debugger.attached", pid)
         return gdb.getSessionId()
 
+    @Locker
+    def startNewGdb(self, d):
+        gdb = Gdb(comandos=self.comandos, log=self.log, inputRedirect=self.inputRedirect, debugPlugin=self.debugPlugin)
+        for plugin in self.extraPlugin:
+            gdb.loadPlugin(plugin)
+
+        gdb.subscribe()
+        self.listaGdb[gdb.getSessionId()] = gdb
+        return gdb.getSessionId()
         
     @Locker
     def startNewProcessWithGdb(self, path):

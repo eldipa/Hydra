@@ -291,7 +291,7 @@ Publish *any* event make no senses.
    Traceback (most recent call last):
    Exception: ...
 
-   >>> pubsub.subscribe('', lambda: 0)  # no exception here
+   >>> pubsub.subscribe('', lambda e: 0)  # no exception here
 
 
 Unsubscription

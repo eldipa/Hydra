@@ -12,7 +12,11 @@ define(function () {
       this.next_valid_subscription_id = 0;
    }
    
-   EventHandler.prototype.init = function () {
+   EventHandler.prototype.init = function (name) {
+      if (!name) {
+         var name = "(alice-js)";
+      }
+
       if(this.socket) {
          this.shutdown();
       }
@@ -41,6 +45,7 @@ define(function () {
 
       this.socket.on('connect', function () {
          is_connected = true;
+         that.socket.write(JSON.stringify({type: 'introduce_myself', name: name}));
          that.init_dispacher();
       });
 
@@ -66,7 +71,7 @@ define(function () {
          throw "The topic must not be empty";
       }
 
-      this.socket.write(JSON.stringify({type: 'publish', topic: topic, data: data}));
+      this.socket.write(JSON.stringify({type: 'publish', topic: topic, data: JSON.stringify(data)}));
    };
 
    EventHandler.prototype.subscribe = function (topic, callback) {
@@ -113,7 +118,7 @@ define(function () {
       // remove the topic if there isn't any callback
       if (this.callbacks_by_topic[topic].length === 0) {
          delete this.callbacks_by_topic[topic];
-         // TODO: send a message to the notifier server.
+         this.socket.write(JSON.stringify({type: 'unsubscribe', topic: topic}));
       }
 
       // remove the subscription
@@ -227,7 +232,7 @@ define(function () {
          }
          for(var i = 0; i < callbacks.length; i++) {
             try {
-               callbacks[i](event.data);
+               callbacks[i](JSON.parse(event.data));
             }
             catch (e) {
                // TODO
@@ -241,6 +246,17 @@ define(function () {
 	   return "EventHandler Instance";
    }
 
-   return {EventHandler: EventHandler};
+   var GLOBAL_EVENT_HANDLER = null;
+
+   var set_global_event_handler = function (EH) {
+      GLOBAL_EVENT_HANDLER = EH;
+   };
+
+   var get_global_event_handler = function () {
+      return GLOBAL_EVENT_HANDLER;
+   };
+   return {EventHandler: EventHandler, 
+           set_global_event_handler: set_global_event_handler,
+           get_global_event_handler: get_global_event_handler};
 
 });

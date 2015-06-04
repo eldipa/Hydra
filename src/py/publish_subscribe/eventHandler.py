@@ -14,15 +14,17 @@ from esc import esc
 import random
 
 class Publisher(object):
-    def __init__(self):
+    def __init__(self, name="(publisher-only)"):
         self.connection = Connection(self._get_address())
+        self.connection.send_object({'type': 'introduce_myself', 'name': name})
+        self.name = name
         
     def publish(self, topic, data):
         fail_if_topic_isnt_valid(topic, allow_empty=False)
 
-        syslog.syslog(syslog.LOG_DEBUG, "Sending publication of an event with topic '%s'." % esc(topic))
-        self.connection.send_object({'type': 'publish', 'topic': topic, 'data': data})
-        syslog.syslog(syslog.LOG_DEBUG, "Publication of an event sent.")
+        self._log(syslog.LOG_DEBUG, "Sending publication of an event with topic '%s'.", topic)
+        self.connection.send_object({'type': 'publish', 'topic': topic, 'data': json.dumps(data)})
+        self._log(syslog.LOG_DEBUG, "Publication of an event sent.")
 
 
     def close(self):
@@ -50,15 +52,22 @@ class Publisher(object):
 
         return address
 
+    def __repr__(self):
+        return "Endpoint (%s)" % self.name
+
+    def _log(self, level, message, *arguments):
+        message = "%s: " + message
+        syslog.syslog(level, message % esc(repr(self), *arguments))
+
 
 class EventHandler(threading.Thread, Publisher):
     
-    def __init__(self, as_daemon=False):
+    def __init__(self, as_daemon=False, name="(bob-py)"):
         threading.Thread.__init__(self)
         if as_daemon:
            self.daemon = True
 
-        Publisher.__init__(self)
+        Publisher.__init__(self, name=name)
 
         self.lock = Lock()
         self.callbacks_by_topic = {}
@@ -68,6 +77,8 @@ class EventHandler(threading.Thread, Publisher):
 
         self.start()
         
+    def __repr__(self):
+        return "Endpoint (%s)" % self.name
         
     def subscribe(self, topic, callback, return_subscription_id=False, send_and_wait_echo=False):
         fail_if_topic_isnt_valid(topic, allow_empty=True)
@@ -77,13 +88,13 @@ class EventHandler(threading.Thread, Publisher):
         try:
            if self.callbacks_by_topic.has_key(topic):
                self.callbacks_by_topic[topic].append((callback, {'id': self.next_valid_subscription_id}))
-               syslog.syslog(syslog.LOG_DEBUG, "Registered subscription locally. Subscription to the topic '%s' already sent." % esc(topic))
+               self._log(syslog.LOG_DEBUG, "Registered subscription locally. Subscription to the topic '%s' already sent.", topic)
            else:
+               self._log(syslog.LOG_DEBUG, "Sending subscription to the topic '%s'.", topic)
                self.connection.send_object({'type': 'subscribe', 'topic': topic})
-               syslog.syslog(syslog.LOG_DEBUG, "Subscription sent.")
+               self._log(syslog.LOG_DEBUG, "Subscription sent.")
 
                self.callbacks_by_topic[topic] = [(callback, {'id': self.next_valid_subscription_id})]
-               syslog.syslog(syslog.LOG_DEBUG, "Sending subscription to the topic '%s'." % esc(topic))
 
            self.subscriptions_by_id[self.next_valid_subscription_id] = {
                  'callback': callback,
@@ -151,7 +162,7 @@ class EventHandler(threading.Thread, Publisher):
 
         if not self.callbacks_by_topic[topic]:
            del self.callbacks_by_topic[topic]
-           #TODO send a message to the server, we are not interested in 'topic' any more
+           self.connection.send_object({'type': 'unsubscribe', 'topic': topic})
         
         del self.subscriptions_by_id[subscription_id]
 
@@ -199,7 +210,7 @@ class EventHandler(threading.Thread, Publisher):
                    self.dispatch(event)
                    
         except:
-           syslog.syslog(syslog.LOG_ERR, "Exception when receiving a message: %s." % esc(traceback.format_exc()))
+           self._log(syslog.LOG_ERR, "Exception when receiving a message: %s.", traceback.format_exc())
         finally:
            self.connection.close()
 
@@ -209,10 +220,10 @@ class EventHandler(threading.Thread, Publisher):
         callbacks_collected = []
         self.lock.acquire()
         try:
-           syslog.syslog(syslog.LOG_DEBUG, "Executing callback over the topic chain '%s'." % esc(", ".join(topic_chain))) ##TODO
+           self._log(syslog.LOG_DEBUG, "Executing callback over the topic chain '%s'.", ", ".join(topic_chain)) ##TODO
            for t in topic_chain:
                callbacks = self.callbacks_by_topic.get(t, []);
-               syslog.syslog(syslog.LOG_DEBUG, "For the topic '%s' there are %i callbacks." % esc(t if t else "(the empty topic)", len(callbacks)))
+               self._log(syslog.LOG_DEBUG, "For the topic '%s' there are %s callbacks.", (t if t else "(the empty topic)"), str(len(callbacks)))
                callbacks_collected.append(list(callbacks)) # get a copy!
         finally:
            self.lock.release()
@@ -220,94 +231,12 @@ class EventHandler(threading.Thread, Publisher):
         for callbacks in callbacks_collected:   
             for callback, subscription in callbacks:
                 try:
-                    callback(event['data'])
+                    callback(json.loads(event['data']))
                 except:
-                    syslog.syslog(syslog.LOG_ERR, "Exception in callback for the topic '%s': %s" % esc(t if t else "(the empty topic)", traceback.format_exc()))
+                    self._log(syslog.LOG_ERR, "Exception in callback for the topic '%s': %s", (t if t else "(the empty topic)"), traceback.format_exc())
 
 
     def close(self):
        self.connection.close()
        self.join()
 
-    
-
-if __name__ == "__main__":
-    
-    def funcionCallback(data):
-        print 'Sucess: ' + data
-        
-    def otherCallback(data):
-        print "Other Sucess " + data
-        
-    def defaultCallback(data):
-        print "Esto pasa siempre " + data
-        
-    def myreceive(sock):
-        msg = ''
-        char = ''
-        cont = 0
-        salir = False
-        while not salir:
-            char = sock.read(1) 
-            msg += char
-            if char == '{':
-                cont += 1
-            if char == '}':
-                cont -= 1
-                if cont == 0:
-                    salir = True
-        return msg
-     
-    def mysend(sock, msg):
-        sock.write(msg)
-        sock.flush()
-        
-    serversocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    serversocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    try:
-        serversocket.bind(("localhost", 5555))
-        serversocket.listen(1)
-        
-        handler = EventHandler()
-
-        (clientsocket, address) = serversocket.accept()
-        
-        sfile = clientsocket.makefile()
-        
-        handler.start()
-        
-        handler.publish("prueba", "1234567")
-        print "publicado"
-        recvData = myreceive(sfile)
-        print 'recvData: ' + recvData
-
-        handler.subscribe("prueba", funcionCallback)
-        recvData = myreceive(sfile)
-        print 'recvData: ' + recvData
-        
-        handler.subscribe("prueba", otherCallback)
-        recvData = myreceive(sfile)
-        print 'recvData: ' + recvData
-        
-        handler.subscribe('', defaultCallback)
-        recvData = myreceive(sfile)
-        print 'recvData: ' + recvData
-        
-        msg = '{"topic": "prueba", "data": "1234567", "type": "publish"}'
-        mysend(sfile, msg)
-        
-        msg = '{"topic": "otro", "data": "42", "type": "publish"}'
-        mysend(sfile, msg)
-     
-    finally:
-        serversocket.close()
-        if clientsocket:
-            clientsocket.shutdown(2)
-            clientsocket.close()
-            
-    
-    
-
-                    
-                
-        

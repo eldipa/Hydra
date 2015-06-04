@@ -27,10 +27,11 @@ define(['event_handler'], function (event_handler) {
       var request_topic = "request-gdb."+gdb_id+"."+token;
       var response_topic = "result-gdb."+gdb_id+"."+token;
 
-      var eh = new event_handler.EventHandler();
-      eh.init();
+      var eh = event_handler.get_global_event_handler();
 
-      eh.subscribe_for_once_call(response_topic, callback);
+      if (callback !== null) {
+         eh.subscribe_for_once_call(response_topic, callback);
+      }
       eh.publish(request_topic, request_for_command);
    };
 

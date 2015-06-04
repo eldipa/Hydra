@@ -4,7 +4,7 @@
  * MIT License
  */
 
-define(['jquery'], function ($) {
+define(['jquery', 'underscore'], function ($, _) {
    return (function () {
            var options = {
                    fadeSpeed: 100,
@@ -46,12 +46,29 @@ define(['jquery'], function ($) {
                    options = $.extend({}, options, opts);
            }
 
-           function buildMenu(data, id, subMenu) {
+           function buildMenu(data, id, subMenu, ctx_event) {
                    var subClass = (subMenu) ? ' dropdown-context-sub' : '',
                            compressed = options.compress ? ' compressed-context' : '',
                            $menu = $('<ul class="dropdown-menu dropdown-context' + subClass + compressed+'" id="dropdown-' + id + '"></ul>');
            var i = 0, linkTarget = '';
+           var element_ctxmenu_owner = null;
            for(i; i<data.length; i++) {
+                   if (data[i].element_ctxmenu_owner) {
+                      element_ctxmenu_owner = data[i].element_ctxmenu_owner;
+                      continue;
+                   }
+
+                   if (data[i].immediate_action) {
+                      try {
+                        data[i].immediate_action(ctx_event, element_ctxmenu_owner);
+                      }
+                      catch (e) {
+                        console.log(e);
+                      }
+
+                      continue;
+                   }
+
                    if (typeof data[i].divider !== 'undefined') {
                                    $menu.append('<li class="divider"></li>');
                            } else if (typeof data[i].header !== 'undefined') {
@@ -74,11 +91,11 @@ define(['jquery'], function ($) {
                                                    eventAction = data[i].action;
                                            $sub.find('a').attr('id', actionID);
                                            $('#' + actionID).addClass('context-event');
-                                           $(document).on('click', '#' + actionID, eventAction);
+                                           $(document).on('click', '#' + actionID, _.partial(eventAction, _, element_ctxmenu_owner));
                                    }
                                    $menu.append($sub);
                                    if (typeof data[i].subMenu != 'undefined') {
-                                           var subMenuData = buildMenu(data[i].subMenu, id, true);
+                                           var subMenuData = buildMenu(data[i].subMenu, id, true, ctx_event);
                                            $menu.find('li:last').append(subMenuData);
                                    }
                            }
@@ -177,6 +194,7 @@ define(['jquery'], function ($) {
                          var dom_element = controllers[i].element;
                          var submenu = controllers[i].subctxmenu;
 
+                         menu_data.push({element_ctxmenu_owner: dom_element});
                          menu_data = menu_data.concat(submenu);
                       }
 
@@ -186,7 +204,7 @@ define(['jquery'], function ($) {
 
                       var d = new Date();
                       var id = d.getTime();
-                      var $menu = buildMenu(menu_data, id);
+                      var $menu = buildMenu(menu_data, id, false, e);
 
                       $('body').append($menu);
                       $('.dropdown-context:not(.dropdown-context-sub)').hide();

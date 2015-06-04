@@ -207,6 +207,11 @@ define([], function () {
       return false;
    };
 
+   /* Call this over the 'box' to trigger a repaint */
+   Panel.prototype.repaint = function ($box) {
+      $box.toggleClass("repaint_toogleable_fix");
+   };
+
    /*
     * Parent object.
     * */

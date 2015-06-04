@@ -283,7 +283,7 @@ define(['jquery', 'layout', 'code_view', 'varViewer', 'widgets/buttons', 'listvi
     	});
       
       
-
+      return {root: root, visor: visor};
    };
 
    return {
