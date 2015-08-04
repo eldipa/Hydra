@@ -10,6 +10,7 @@ import os
 import sys
 from sys import stdin
 from re import match
+import syslog
 
 if (not match(".*/src$", os.getcwd())):
     print "ESTE MAIN SE DEBE LLAMAR DESDE LA CARPETA SRC"
@@ -20,6 +21,10 @@ import globalconfig
 try:
 
     globalconfig.load_global_config()
+    cfg = globalconfig.get_global_config()
+
+    syslog.openlog(cfg.get("gdbspawner", "name"), logoption=syslog.LOG_PID)
+    syslog.setlogmask(syslog.LOG_UPTO(getattr(syslog, cfg.get("gdbspawner", "log_level"))))
 
     # lanzo nw
     ui_process = subprocess.Popen(['./scripts/run_ui.sh'], shell=True)

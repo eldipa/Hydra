@@ -30,7 +30,7 @@
  **/
 
 .left_panel_of_splitted {
-   width: 70%;
+   width: 50%;
    height: 100%;
    display: inline-block;
    float: left;
@@ -38,7 +38,7 @@
 }
 
 .right_side_panel_and_bar_of_splitted {
-   width: 30%;
+   width: 50%;
    height: 100%;
    display: inline-block;
    float: left;
@@ -82,7 +82,7 @@
  *
  * */
 .top_panel_of_splitted {
-   height: 30%;
+   height: 50%;
    width: 100%;
    display: inline-block;
    float: left;
@@ -90,7 +90,7 @@
 }
 
 .bottom_side_panel_and_bar_of_splitted {
-   height: 70%;
+   height: 50%;
    width: 100%;
    display: flex;
    float: left;

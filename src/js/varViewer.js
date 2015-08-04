@@ -90,16 +90,16 @@ define([ 'event_handler', 'layout', 'jquery' ], function(event_handler, layout,
 	}
 
 	VarViewer.prototype.render = function() {
-		if (this._$out_of_dom) {
+		/*if (this._$out_of_dom) {
 			this._$out_of_dom.appendTo(this.box);
 			this._$out_of_dom = null;
-		}
+		}*/
 	};
 
 	VarViewer.prototype.unlink = function() {
-		if (!this.$out_of_dom) {
+		/*if (!this.$out_of_dom) {
 			this.$out_of_dom = this._$container.detach();
-		}
+		}*/
 	};
 
 	VarViewer.prototype.__proto__ = layout.Panel.prototype;

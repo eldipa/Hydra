@@ -59,7 +59,7 @@ class Gdb:
         self.gdbOutput = self.gdb.stdout
         self.reader = outputReader.OutputReader(self.gdbOutput, self.queue, self.gdb.pid)
         self.reader.start()
-        self.eventHandler = publish_subscribe.eventHandler.EventHandler()
+        self.eventHandler = publish_subscribe.eventHandler.EventHandler(name="(gdb %i)" % self.gdb.pid)
         self.lock = threading.Lock()
         self.isAttached = False
         self.pluginLoader = pluginLoader.PluginLoader(self.gdbInput)

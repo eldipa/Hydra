@@ -5,6 +5,7 @@ import outputLogger
 from multiprocessing import Lock
 import publish_subscribe.eventHandler
 
+import globalconfig
 
 def Locker(func):
         def newFunc(self, *args, **kwargs):
@@ -19,6 +20,9 @@ def Locker(func):
 class GdbSpawmer:
     
     def __init__(self, comandos=False, log=False, inputRedirect=False, debugPlugin=[]):
+        cfg = globalconfig.get_global_config()
+        name = cfg.get('gdbspawner', 'name')
+
         self.comandos = comandos;
         self.log = log
         self.inputRedirect = inputRedirect
@@ -30,7 +34,7 @@ class GdbSpawmer:
         if(log):
             self.logger = outputLogger.OutputLogger()
             self.logger.start()
-        self.eventHandler = publish_subscribe.eventHandler.EventHandler(name="(GDB Spawmer)")
+        self.eventHandler = publish_subscribe.eventHandler.EventHandler(name=name)
         self.subscribe()
         
     def subscribe(self):
@@ -61,9 +65,6 @@ class GdbSpawmer:
     @Locker
     def startNewGdb(self, d):
         gdb = Gdb(comandos=self.comandos, log=self.log, inputRedirect=self.inputRedirect, debugPlugin=self.debugPlugin)
-        for plugin in self.extraPlugin:
-            gdb.loadPlugin(plugin)
-
         gdb.subscribe()
         self.listaGdb[gdb.getSessionId()] = gdb
         return gdb.getSessionId()

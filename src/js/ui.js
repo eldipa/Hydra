@@ -63,21 +63,26 @@ define(['jquery', 'layout', 'code_view', 'varViewer', 'widgets/buttons', 'listvi
 
       // Now we attach and build the final layout
       var root = view.attach($('body'));
-      view.split(log, "bottom");    // TODO (issue #61) poner esto en tabs y ademas hacer un metodo en layout.Panel que sea on_own_tab() para tomar un panel y reemplarlo por un Tabbed con un unico tab (el).
+      //view.split(log, "bottom");    // TODO (issue #61) poner esto en tabs y ademas hacer un metodo en layout.Panel que sea on_own_tab() para tomar un panel y reemplarlo por un Tabbed con un unico tab (el).
+      //root.render();
 
+      view.split(visor, "right");
       root.render();
-      view.parent().set_percentage(80); //TODO (issue #62) por que hay que hacer un render() antes de un set_percentage()?
-
-      view.parent().split(visor, "right");
-      root.render();
+      
       
       view.parent().split(stdoutlog, "bottom");
       root.render();
       
-      view.parent().split(stdinTextInput, "bottom");
-      root.render();
+      //stdoutlog.parent().split(stdinTextInput, "bottom");
+      //root.render();
 
       stdoutlog.split(syscalllog, "bottom")
+      root.render();
+      
+
+      root.render();
+      view.parent().set_percentage(80); //TODO (issue #62) por que hay que hacer un render() antes de un set_percentage()?
+      visor.parent().set_percentage(80); //TODO (issue #62) por que hay que hacer un render() antes de un set_percentage()?
       root.render();
            
 

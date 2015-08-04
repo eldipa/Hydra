@@ -78,7 +78,7 @@ define(["underscore", "shortcuts"], function (_, shortcuts) {
    };
    Debugger.prototype.update = _update_properties;
    Debugger.prototype.get_display_name = function () {
-      return "Dbg " + this.id;
+      return "GDB " + this.id;
    };
 
    Debugger.prototype.add_thread_group = function () {

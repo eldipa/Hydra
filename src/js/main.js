@@ -83,7 +83,7 @@ requirejs(['ui', 'code_view', 'jquery', 'export_console', 'layout', 'layout_exam
    dbg_tracker = new debuggee_tracker.DebuggeeTracker(EH);
    dbg_tracker_view = new debuggee_tracker_view.DebuggeeTrackerView(dbg_tracker);
 
-   visor.split(dbg_tracker_view, "top");
+   visor.swap(dbg_tracker_view);
    root.render();
 
    //process_view.start();

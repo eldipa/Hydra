@@ -311,7 +311,7 @@ def main():
    parent = os.path.pardir
 
    # TODO This shouldn't be hardcoded!
-   config_file = os.path.join(script_home, parent, parent, parent, "config", "publish_subscribe.cfg")
+   config_file = os.path.join(script_home, parent, parent, parent, "config", "global.cfg")
 
    config = ConfigParser.SafeConfigParser(
          defaults = {
