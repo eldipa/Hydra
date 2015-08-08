@@ -73,16 +73,17 @@ define(['jquery', 'layout', 'code_view', 'varViewer', 'widgets/buttons', 'listvi
       view.parent().split(stdoutlog, "bottom");
       root.render();
       
-      //stdoutlog.parent().split(stdinTextInput, "bottom");
-      //root.render();
-
-      stdoutlog.split(syscalllog, "bottom")
+      stdoutlog.parent().split(stdinTextInput, "bottom");
       root.render();
+
+      //stdoutlog.split(syscalllog, "bottom")
+      //root.render();
       
 
       root.render();
       view.parent().set_percentage(80); //TODO (issue #62) por que hay que hacer un render() antes de un set_percentage()?
-      visor.parent().set_percentage(80); //TODO (issue #62) por que hay que hacer un render() antes de un set_percentage()?
+      stdoutlog.parent().set_percentage(80); //TODO (issue #62) por que hay que hacer un render() antes de un set_percentage()?
+      stdinTextInput.parent().set_percentage(80); //TODO (issue #62) por que hay que hacer un render() antes de un set_percentage()?
       root.render();
            
 
