@@ -11,7 +11,7 @@ class Connection(object):
    def __init__(self, address_or_already_open_socket):
       self.buf = ""
       self.end_of_the_communication = False
-      self.closed = False
+      self.closed = True
 
       if isinstance(address_or_already_open_socket, (tuple, list)):
          address = address_or_already_open_socket
@@ -28,10 +28,12 @@ class Connection(object):
                attempts += 1
                if attempts > 100: #approx 0.5*100 = 50 seconds
                   raise
-
+         
+         self.closed = False
 
       else:
          self.socket = address_or_already_open_socket
+         self.closed = False
 
 
    def send_object(self, obj):

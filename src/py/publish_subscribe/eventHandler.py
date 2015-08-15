@@ -15,9 +15,17 @@ import random
 
 class Publisher(object):
     def __init__(self, name="(publisher-only)"):
-        self.connection = Connection(self._get_address())
-        self.connection.send_object({'type': 'introduce_myself', 'name': name})
         self.name = name
+        address = self._get_address()
+
+        try:
+          self.connection = Connection(address)
+          self._log(syslog.LOG_DEBUG, "Stablished a connection with the notifier server (%s).", str(address))
+        except:
+          self._log(syslog.LOG_ERR, "Error when creating a connection with the notifier server (%s): %s.", str(address), traceback.format_exc())
+          raise 
+
+        self.connection.send_object({'type': 'introduce_myself', 'name': name})
         
     def publish(self, topic, data):
         fail_if_topic_isnt_valid(topic, allow_empty=False)
@@ -56,8 +64,9 @@ class Publisher(object):
         return "Endpoint (%s)" % self.name
 
     def _log(self, level, message, *arguments):
-        message = "%s: " + message
-        syslog.syslog(level, message % esc(repr(self), *arguments))
+        message = ("%s: " + message) % esc(repr(self), *arguments)
+        syslog.syslog(level, message)
+        return message
 
 
 class EventHandler(threading.Thread, Publisher):
@@ -230,11 +239,14 @@ class EventHandler(threading.Thread, Publisher):
          
         for callbacks in callbacks_collected:   
             for callback, subscription in callbacks:
-                try:
-                    callback(json.loads(event['data']))
-                except:
-                    self._log(syslog.LOG_ERR, "Exception in callback for the topic '%s': %s", (t if t else "(the empty topic)"), traceback.format_exc())
+                self._execute_callback(callback, json.loads(event['data']), t) #TODO what is 't'?
 
+    def _execute_callback(self, callback, data, t):
+       try:
+          callback(data)
+       except:
+          self._log(syslog.LOG_ERR, "Exception in callback for the topic '%s': %s", (t if t else "(the empty topic)"), traceback.format_exc())
+      
 
     def close(self):
        self.connection.close()
