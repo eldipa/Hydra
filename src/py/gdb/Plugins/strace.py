@@ -1,13 +1,15 @@
+from gdb_event_handler import noexception, publish_expection_context
+
 import gdb
 import re
 import sys
 import atexit
 import time, datetime
+import syslog
 
-## TODO sys.path.append("/home/martin/Codigo/ConcuDebug/src/py/")
-import publish_subscribe.eventHandler
 try:
-    ## TODO sys.path.append('/home/martin/Downloads/python-ptrace-0.8/')
+    ## TODO 
+    sys.path.append('/home/martin/dummy/python-ptrace-0.8.1/')
     import ptrace
 except ImportError as e:
     raise ImportError("External lib 'ptrace' not found (formaly, python-ptrace, version 0.8 or higher)!: %s" % str(e))
@@ -37,14 +39,6 @@ elif RUNNING_LINUX:
 else:
     raise NotImplementedError("Unknown OS!: Unsupported OS or supported but it wasn't detected correctly.")
 
-
-eventHandler = publish_subscribe.eventHandler.Publisher()
-
-def cleanup():
-   global eventHandler
-   eventHandler.close()
-
-atexit.register(cleanup)
 
 
 class ProcessUnderGDB(PtraceProcess):
@@ -173,8 +167,9 @@ class Opts:
 
 
 class PtraceSyscallPublisher(PtraceSyscall):
-   def __init__(self, *args, **kargs):
+   def __init__(self, gdb_module, *args, **kargs):
       PtraceSyscall.__init__(self, *args, **kargs)
+      self.gdb_module = gdb_module
 
    def publish_syscall(self):
        ''' Publish the syscall's name, arguments and result. '''
@@ -197,79 +192,78 @@ class PtraceSyscallPublisher(PtraceSyscall):
                'result_text': self.result_text
            }
     
-           eventHandler.publish("syscall.exit.%i" % pid, data)
+           self.gdb_module.publish(".syscall-exit.%i" % pid, data)
 
        else:
            arguments = [arg.format() for arg in self.arguments]
            data = {
-               'timestamp':   timestamp,
+               'timestamp': timestamp,
                'pid':       pid,
                'restype':   self.restype,
                'name':      self.name,
                'arguments': arguments,
            }
          
-           eventHandler.publish("syscall.enter.%i" % pid, data)
+           self.gdb_module.publish(".syscall-enter.%i" % pid, data)
 
-#TODO reiniciar estas variables cada vez que se lanza de nuevo la aplicacion
-process = ProcessUnderGDB()
-tracer_in_syscall_by_inferior = {}
-
-def syscall_trace():
-    global tracer_in_syscall_by_inferior
-    global process
-
-    tracer_in_syscall = tracer_in_syscall_by_inferior.get(gdb.selected_inferior(), None)
-
-    leaving = tracer_in_syscall != None
-    process.set_inferior(gdb.selected_inferior()) 
-    if tracer_in_syscall:
-        syscall_tracer = tracer_in_syscall
-        syscall_tracer.exit()
-        tracer_in_syscall_by_inferior[gdb.selected_inferior()] = None
-    else:
-        regs = process.getregs()
-        syscall_tracer = PtraceSyscallPublisher(process, Opts(), regs) 
-        
-        syscall_tracer.enter(regs)
-        tracer_in_syscall_by_inferior[gdb.selected_inferior()] = syscall_tracer
-
-    syscall_tracer.publish_syscall()
 
 class SyscallBreakpoint(gdb.Breakpoint):
     ''' Special breakpoint to be set before or after a syscall. When this breakpoint
         is hit, the target is stopped, data from it is recollected, a syscall trace
         is created and then, the target is resumed. '''
 
-    def __init__(self, spec, in_the_start_of_syscall, end_breakpoint):
+    def __init__(self, gdb_module, process, spec, in_the_start_of_syscall, end_breakpoint):
         gdb.Breakpoint.__init__(self, spec, gdb.BP_BREAKPOINT, 0, True, False)
         self.silent = True
+
+        self.gdb_module = gdb_module
+
         self.in_the_start_of_syscall = in_the_start_of_syscall
         self.end_breakpoint = end_breakpoint
 
+        assert (in_the_start_of_syscall and end_breakpoint is not None) or \
+               (not in_the_start_of_syscall and end_breakpoint is None)
 
+        self.process = process
+
+    #@noexception("Error when stopping in the SyscallBreakpoint")
     def stop(self):
-        if self.in_the_start_of_syscall:
-           # get the current eax and save it in the next breakpoint
-           orig_eax = process.getreg("eax")
-           self.end_breakpoint.orig_eax = orig_eax 
-           
-           process.orig_eax = orig_eax
-           try:
-              syscall_trace()   
-           finally:
-              process.orig_eax = None
-           
-        else:
-           # set the orig_eax as the value of eax read by the previous breakpoint
-           # then, trace the syscall and delete the orig_eax for sanity.
-           process.orig_eax = self.orig_eax
-           try:
-              syscall_trace()   
-           finally:
-              process.orig_eax = None
+      try:
+        with publish_expection_context("Error when stopping in the SyscallBreakpoint"):
+          try:
+            if self.in_the_start_of_syscall:
+              # get the current eax and save it in the next breakpoint
+              orig_eax = self.process.getreg("eax")
+              self.end_breakpoint.orig_eax = orig_eax 
+               
+              regs = self.process.getregs()
 
+              syscall_tracer = PtraceSyscallPublisher(self.gdb_module, self.process, Opts(), regs) 
+              syscall_tracer.enter(regs)
+              
+              self.end_breakpoint.syscall_tracer = syscall_tracer # share this object to the 'end' breakpoint
+
+            else:
+              # set the orig_eax as the value of eax read by the previous breakpoint
+              # then, trace the syscall and delete the orig_eax for sanity.
+              self.process.orig_eax = self.orig_eax
+              
+              syscall_tracer = self.syscall_tracer # created from the 'start' breakpoint
+              syscall_tracer.exit()
+
+              del self.syscall_tracer
+
+            # publish the data from the syscall's enter/exit 
+            syscall_tracer.publish_syscall()
+
+          finally:
+            self.process.orig_eax = None
+
+          return False
+      
+      except:
         return False
+
 
 class KernelVSyscallBreakpoint(gdb.Breakpoint):
     ''' This special breakpoint will be set on the internal function __kernel_vsyscall
@@ -278,57 +272,93 @@ class KernelVSyscallBreakpoint(gdb.Breakpoint):
         it will find the 'sysenter' instruction to set a SyscallBreakpoint before
         and after it.
         '''
-    def __init__(self):
+    def __init__(self, gdb_module):
         gdb.Breakpoint.__init__(self, '__kernel_vsyscall', gdb.BP_BREAKPOINT, 0, True, True)
         self.silent = True
         self.breakpoint_hit = False
 
+        self.gdb_module = gdb_module
+
+    #@noexception("Error when stopping in the KernelVSyscall Breakpoint")
+    # por alguna razon este decorador arruina a GDB (hace que no funcione el breakpoint)
+    # puede deberse a que el decorador esta mal hecho o hay un conflicto con gdb.
     def stop(self):
-        if self.breakpoint_hit:
-            return False
+      try:
+        with publish_expection_context("Error when stopping in the KernelVSyscall Breakpoint"):
+          if self.breakpoint_hit:
+              return False
 
-        self.breakpoint_hit = True
-        disass_text = gdb.execute("disass", False, True)
+          self.breakpoint_hit = True
+          disass_text = gdb.execute("disass", False, True)
 
-        # get the source code (assemby)
-        # TODO algunas veces el commando "disass" viene en formato MI arruinando el parseo.
-        source_lines = []
-        for line in disass_text.split("\n"):
-            line = line.strip()
-            if line.startswith("=>"):
-               line = line.replace("=>", "").strip()
+          # get the source code (assemby)
+          # TODO algunas veces el commando "disass" viene en formato MI arruinando el parseo.
+          source_lines = []
+          for line in disass_text.split("\n"):
+              line = line.strip()
+              if line.startswith("=>"):
+                 line = line.replace("=>", "").strip()
 
-            if not line.startswith("0x"):
-               continue
+              if not line.startswith("0x"):
+                 continue
 
-            source_lines.append(line)
+              source_lines.append(line)
 
-        index_of_sysenter = None
-        index_of_interrupt_call = None
-        for i, line in enumerate(source_lines):
-            if "int " in line and "0x80" in line:
-               index_of_interrupt_call = i
-               break
+          index_of_sysenter = None
+          index_of_interrupt_call = None
+          for i, line in enumerate(source_lines):
+              if "int " in line and "0x80" in line:
+                 index_of_interrupt_call = i
+                 break
 
-            if "sysenter" in line:
-               index_of_sysenter = i
+              if "sysenter" in line:
+                 index_of_sysenter = i
 
-        if index_of_sysenter is None:
-            index_of_sysenter = (index_of_interrupt_call - 1) if index_of_interrupt_call is not None else None
+          if index_of_sysenter is None:
+              index_of_sysenter = (index_of_interrupt_call - 1) if index_of_interrupt_call is not None else None
 
-        if index_of_sysenter is None or index_of_interrupt_call is None or index_of_sysenter == index_of_interrupt_call:
-            raise Exception("Parsing byte code failed. Index of last edx usage: %s (%s). Index of interrupt call: %s (%s). Original assembly dump: %s" % (
-                     str(index_of_sysenter), source_lines[index_of_sysenter] if index_of_sysenter is not None else "",
-                     str(index_of_interrupt_call), source_lines[index_of_interrupt_call] if index_of_interrupt_call is not None else "",
-                     disass_text))
+          if index_of_sysenter is None or index_of_interrupt_call is None or index_of_sysenter == index_of_interrupt_call:
+              raise Exception("Parsing byte code failed. Index of last edx usage: %s (%s). Index of interrupt call: %s (%s). Original assembly dump: %s" % (
+                       str(index_of_sysenter), source_lines[index_of_sysenter] if index_of_sysenter is not None else "",
+                       str(index_of_interrupt_call), source_lines[index_of_interrupt_call] if index_of_interrupt_call is not None else "",
+                       disass_text))
 
 
-        address_of_start_syscall_breakpoint = int(source_lines[index_of_sysenter].split(":")[0].strip().split(" ")[0].strip(), 16)
-        address_of_end_syscall_breakpoint = int(source_lines[index_of_interrupt_call+1].split(":")[0].strip().split(" ")[0].strip(), 16)
+          address_of_end_syscall_breakpoint = int(source_lines[index_of_interrupt_call+1].split(":")[0].strip().split(" ")[0].strip(), 16)
+          address_of_start_syscall_breakpoint = int(source_lines[index_of_sysenter].split(":")[0].strip().split(" ")[0].strip(), 16)
 
-        end_bp = SyscallBreakpoint("*"+hex(address_of_end_syscall_breakpoint), False, None)
-        start_bp = SyscallBreakpoint("*"+hex(address_of_start_syscall_breakpoint), True, end_bp)
+          brk_spec_of_start_syscall = "*"+hex(address_of_start_syscall_breakpoint)
+          brk_spec_of_end_syscall   = "*"+hex(address_of_end_syscall_breakpoint)
 
+          if brk_spec_of_start_syscall.endswith('L'):
+            brk_spec_of_start_syscall = brk_spec_of_start_syscall[:-1]
+          
+          if brk_spec_of_end_syscall.endswith('L'):
+            brk_spec_of_end_syscall = brk_spec_of_end_syscall[:-1]
+
+          process = ProcessUnderGDB()
+          process.set_inferior(gdb.selected_inferior()) 
+
+          self.gdb_module.publish_log(syslog.LOG_DEBUG, "Start at " + brk_spec_of_start_syscall)
+          self.gdb_module.publish_log(syslog.LOG_DEBUG, "End at " + brk_spec_of_end_syscall)
+
+          self.end_bp   = SyscallBreakpoint(self.gdb_module, process, brk_spec_of_end_syscall,   False, None)
+          self.start_bp = SyscallBreakpoint(self.gdb_module, process, brk_spec_of_start_syscall, True,  self.end_bp)
+
+          return False
+      except:
         return False
 
-bp_on_kernel_vsyscall = KernelVSyscallBreakpoint()
+
+
+from gdb_module import GDBModule
+
+class GDBSyscallTrace(GDBModule):
+  def __init__(self):
+    GDBModule.__init__(self, 'strace')
+    self.kernel_vsyscall_breakpoints = []
+  
+  # on thread-group created ... what? create a KernelVSyscallBreakpoint?
+  # if then a process is attached, what is it the point?
+
+bp_on_kernel_vsyscall = KernelVSyscallBreakpoint(GDBSyscallTrace()) 
