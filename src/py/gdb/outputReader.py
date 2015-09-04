@@ -46,10 +46,26 @@ class OutputReader(threading.Thread):
                topic = "result-gdb.%i.%i.%s" % (self.gdbPid, token, record.klass.lower())
 
             elif record.type in ("Console", "Target", "Log"):
+               # Console: is output that should be displayed as is in the console. 
+               #      It is the textual response to a CLI command.
+               # Target: is the output produced by the target program.
+               # Log: output is output text coming from gdb's internals, 
+               #      for instance messages that should be displayed as part of 
+               #      an error log. 
+               #
+               # Source: https://sourceware.org/gdb/onlinedocs/gdb/GDB_002fMI-Output-Syntax.html#GDB_002fMI-Output-Syntax
                assert isinstance(record, Stream)
                topic = "stream-gdb.%i.%s" % (self.gdbPid, record.type.lower())
                
             else:
+               # Exec: contains asynchronous state change on the target (stopped, 
+               #      started, disappeared). 
+               # Status: contains on-going status information about the progress 
+               #      of a slow operation. It can be discarded.
+               # Notify: contains supplementary information that the client 
+               #      should handle (e.g., a new breakpoint information).
+               #
+               # Source: https://sourceware.org/gdb/onlinedocs/gdb/GDB_002fMI-Output-Syntax.html#GDB_002fMI-Output-Syntax
                assert record.type in ("Exec", "Status", "Notify")
                topic = "notification-gdb.%i.%s.%s" %(self.gdbPid, record.type.lower(), record.klass.lower())
  

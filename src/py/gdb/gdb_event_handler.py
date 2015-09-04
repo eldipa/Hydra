@@ -32,7 +32,7 @@ def noexception(error_message, return_value=None):
     def wrapper(self, *args, **kargs):
       try:
         with publish_expection_context(error_message):
-          return self.func(*args, **kargs)
+          return func(self, *args, **kargs)
       except:
         pass
       return return_value
@@ -45,7 +45,7 @@ def publish_expection_context(error_message):
     yield 
   except:
     publisher = _get_global_event_handler()
-    publisher.publish_exception(error_message)
+    publisher.publish_and_log_exception("gdb-error", error_message)   # TODO try to catch the GDBModule
 
 class _GDBEventHandler(EH):
   def __init__(self, gdb_id):
@@ -110,24 +110,25 @@ class _GDBEventHandler(EH):
        This method also must warranty that no exception can be raised from here.'''
     callback(data)
 
-  def publish_log(self, severity, log_message, *args, **kargs):
-    '''Log to syslog and publish an event of type 'gdb-log', with the defined severity.
-       The message will be 'log_message', fulfilled with the arguments 'args'.
+  
+  def publish_and_log(self, topic, severity, message, *args, **kargs):
+    '''Log to syslog and publish an event, with the defined severity and topic.
+       The message will be 'message', fulfilled with the arguments 'args'.
     '''
-    message = self._log(severity, log_message, *args)
+    assert isinstance(message, basestring)
+    message = self._log(severity, message, *args)
+    self.publish(topic, message)
 
-    data = {'msg': message, 'gdb-id': self.gdb_id, 'severity': severity}
-    data.update(kargs.get('extra_data', {}))
 
-    self.publish("gdb-log", data)
-
-  def publish_exception(self, error_message, **kargs):
+  def publish_and_log_exception(self, topic, error_message, *args):
     '''Shortcut for logging errors. This method will log to syslog and publish an
-       event using the publish_log method, with LOG_ERR severity.
+       event using the publish method, with LOG_ERR severity.
        The final message will be the concatenation of the error_message and the
        current traceback.
     '''
-    self.publish_log(syslog.LOG_ERR, error_message + "%s", traceback.format_exc(), extra_data=kargs.get('extra_data', {}))
+    assert isinstance(error_message, basestring)
+    message = error_message + traceback.format_exc()
+    self.publish_and_log(topic, syslog.LOG_ERR, message, *args)
 
 
 __EV = None

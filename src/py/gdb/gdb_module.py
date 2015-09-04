@@ -1,4 +1,5 @@
 from gdb_event_handler import _get_global_event_handler
+import functools
 
 class GDBModule(object):
   def __init__(self, uniq_module_name):
@@ -7,11 +8,37 @@ class GDBModule(object):
   
     self.ev = _get_global_event_handler()
 
-    self.topic_prefix = 'gdb-module.%i.%s' % (self.ev.get_gdb_id(), uniq_module_name)
-    self.ev.subscribe(self.topic_prefix + '.activate', self.activate)
-    self.ev.subscribe(self.topic_prefix + '.deactivate', self.deactivate)
-    self.ev.subscribe(self.topic_prefix + '.status-request', self._request_status_handler)
+    # This is a subtopic of "stream-gdb.%i.console". This last is used to tag the output
+    # of gdb itself. The messages of all the module should be seen as gdb output too.
+    #
+    # The object sent to this topic should be compatible with gdb_mi.Stream, which
+    # represents a simple string.
+    self.topic_for_log = "stream-gdb.%i.console.gdb-module.%s" % (self.ev.get_gdb_id(), uniq_module_name)
+
+    # This is a subtopic of 'notification-gdb.%i.<<type>>'. This topic is used for
+    # async notifications where <<type>> is defined later an is one of 
+    #     ("Exec", "Status", "Notify")
+    # The messages of this topic can have any form but they must have an attribute:
+    #     data['debugger-id'] = self.ev.get_gdb_id()  for compatibility with others.
+    self.topic_for_notification = "notification-gdb.%i.%s" % (
+                                             self.ev.get_gdb_id(), 
+                                             'gdb-module', # klass of gdb_mi.AsyncOutput
+                                             )
     
+    
+    self.topic_for_notification += ".%s."  # the type of gdb_mi.AsyncOutput ("Exec", "Status", "Notify")
+    self.topic_for_notification += uniq_module_name
+
+
+    # Shortcuts to publish and log messages and exceptions using the correct
+    # topic for this module running in this current gdb.
+    #
+    # Use them instead of the publish_and_log and publish_and_log_exception methods
+    # of the global event handler.
+    self.publish_and_log = functools.partial(self.ev.publish_and_log, self.topic_for_log)
+    self.publish_and_log_exception = functools.partial(self.ev.publish_and_log_exception, self.topic_for_log)
+
+
   def activate(self, *args):
     raise NotImplementedError('Subclass responsability')
 
@@ -30,25 +57,10 @@ class GDBModule(object):
     ''' Override me to execute code when the module is unloaded. '''
     pass
 
-  def publish(self, topic_posfix, *args, **kargs):
-    '''Shortcut to publish events using the module's topic prefix.'''
-    if not topic_posfix.startswith('.'):
-      topic = '.'.join((self.topic_prefix, topic_posfix))
-    else:
-      topic = self.topic_prefix + topic_posfix
+  def notify(self, type, data):
+    '''Shortcut to publish events using the module's topic notification (async).'''
+    assert type in ("Exec", "Status", "Notify")
 
-    return self.ev.publish(topic, *args, **kargs)
-
-  def publish_log(self, severity, log_message, *args, **kargs):
-    data = {'module': self.uniq_module_name}
-    data.update(kargs.get('extra_data', {}))
-    self.ev.publish_log(severity, log_message, *args, extra_data=data)
-
-  def publish_exception(self, error_message):
-    data = {'module': self.uniq_module_name}
-    data.update(kargs.get('extra_data', {}))
-    self.ev.publish_exception(error_message, extra_data=data)
+    data['debugger-id'] = self.ev.get_gdb_id() # for compatibility with others.
+    return self.ev.publish(self.topic_for_notification % type, data)
     
-  def _request_status_handler(self, *args):
-    s = self.status()
-    self.ev.publish(self.topic_prefix + '.status-response', s)
