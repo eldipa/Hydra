@@ -1,10 +1,15 @@
+import gdb
+
 from gdb_event_handler import _get_global_event_handler
+from gdb_event_handler import noexception 
 import functools
 
 class GDBModule(object):
   def __init__(self, uniq_module_name):
     self.uniq_module_name = uniq_module_name
     self._activated = False
+
+    self.registered_commands = {}
   
     self.ev = _get_global_event_handler()
 
@@ -39,6 +44,12 @@ class GDBModule(object):
     self.publish_and_log_exception = functools.partial(self.ev.publish_and_log_exception, self.topic_for_log)
 
 
+    # Register the three common commands to control this module
+    self.register_gdb_command_from(self.activate)
+    self.register_gdb_command_from(self.deactivate)
+    self.register_gdb_command_from(self.status)
+
+
   def activate(self, *args):
     raise NotImplementedError('Subclass responsability')
 
@@ -64,3 +75,30 @@ class GDBModule(object):
     data['debugger-id'] = self.ev.get_gdb_id() # for compatibility with others.
     return self.ev.publish(self.topic_for_notification % type, data)
     
+
+  def register_gdb_command_from(self, bound_method):
+    ''' Register the invokation of the bound method as a GDB's command,
+        so you can call this method using the CLI.
+
+        Because issues in the implementation, this will work on only one instance:
+        if you call register_gdb_command_from on the bound method self.foo over two
+        different instances self_1 and self_2, the command created will calls to
+        the last method used in the last invokation of register_gdb_command_from.
+
+        The GDB's command will have the form gdb-module-<<module name>>-<<method name>>.
+        '''
+    command_name = "gdb-module-%s-%s" % (self.uniq_module_name, 
+                                         bound_method.__name__)
+    class _command(gdb.Command):
+      def __init__(cmdself):
+          super(_command, cmdself).__init__(command_name, gdb.COMMAND_DATA)
+
+      @noexception("Error when executing the command %s" % command_name, None)
+      def invoke(cmdself, args, from_tty):            
+          argv = gdb.string_to_argv(args)
+          return bound_method(*argv)
+
+    if command_name in self.registered_commands:
+      raise KeyError("The command '%s' is already registered." % command_name)
+
+    self.registered_commands[command_name] = _command()

@@ -1,4 +1,4 @@
-from gdb_event_handler import noexception, publish_expection_context
+from gdb_event_handler import noexception 
 
 import gdb
 import re
@@ -231,7 +231,6 @@ class SyscallBreakpoint(gdb.Breakpoint):
 
     @noexception("Error when stopping in the SyscallBreakpoint", False)
     def stop(self):
-        self.gdb_module.publish_and_log(syslog.LOG_DEBUG, "HIT")
         try:
           if self.in_the_start_of_syscall:
             # get the current eax and save it in the next breakpoint
@@ -373,6 +372,8 @@ class GDBSyscallTrace(GDBModule):
     if self.syscall_end_breakpoint is not None:
       self.syscall_end_breakpoint.enabled = True
 
+    self._activated = True
+
 
   def deactivate(self, *args):
     ''' This will disable all the breakpoints created by this module.
@@ -388,6 +389,8 @@ class GDBSyscallTrace(GDBModule):
     
     if self.syscall_end_breakpoint is not None:
       self.syscall_end_breakpoint.enabled = False
+    
+    self._activated = False
 
 
   # on thread-group created ... what? create a KernelVSyscallBreakpoint?
