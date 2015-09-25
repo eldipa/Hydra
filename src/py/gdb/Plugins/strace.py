@@ -174,7 +174,7 @@ class PtraceSyscallPublisher(PtraceSyscall):
    def publish_syscall(self):
        ''' Publish the syscall's name, arguments and result. '''
 
-       self.gdb_module.publish_and_log(syslog.LOG_DEBUG, "Publish Syscall BEGIN")
+       self.gdb_module.DEBUG("Publish Syscall BEGIN")
        name = self.name
        text = self.format()
        pid = self.process.get_process_id()
@@ -207,7 +207,7 @@ class PtraceSyscallPublisher(PtraceSyscall):
          
            self.gdb_module.notify("Exec", {"at": "enter", "call": data})
        
-       self.gdb_module.publish_and_log(syslog.LOG_DEBUG, "Publish Syscall END")
+       self.gdb_module.DEBUG("Publish Syscall END")
 
 
 class SyscallBreakpoint(gdb.Breakpoint):
@@ -235,7 +235,8 @@ class SyscallBreakpoint(gdb.Breakpoint):
           if self.in_the_start_of_syscall:
             # get the current eax and save it in the next breakpoint
             orig_eax = self.process.getreg("eax")
-            self.end_breakpoint.orig_eax = orig_eax 
+            self.end_breakpoint.orig_eax = orig_eax  # this line is "superfluous"
+            self.process.orig_eax = orig_eax
              
             regs = self.process.getregs()
 
@@ -333,8 +334,8 @@ class KernelVSyscallBreakpoint(gdb.Breakpoint):
         process = ProcessUnderGDB()
         process.set_inferior(gdb.selected_inferior()) 
 
-        self.gdb_module.publish_and_log(syslog.LOG_DEBUG, "Start at " + brk_spec_of_start_syscall)
-        self.gdb_module.publish_and_log(syslog.LOG_DEBUG, "End at " + brk_spec_of_end_syscall)
+        self.gdb_module.DEBUG("Start at " + brk_spec_of_start_syscall)
+        self.gdb_module.DEBUG("End at " + brk_spec_of_end_syscall)
 
         self.gdb_module.syscall_end_breakpoint   = SyscallBreakpoint(self.gdb_module, process, brk_spec_of_end_syscall,   False, None)
         self.gdb_module.syscall_start_breakpoint = SyscallBreakpoint(self.gdb_module, process, brk_spec_of_start_syscall, True,  self.gdb_module.syscall_end_breakpoint)

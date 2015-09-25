@@ -2,7 +2,7 @@ import gdb
 
 from gdb_event_handler import _get_global_event_handler
 from gdb_event_handler import noexception 
-import functools
+import functools, syslog
 
 class GDBModule(object):
   def __init__(self, uniq_module_name, is_activated_by_default=False):
@@ -46,14 +46,16 @@ class GDBModule(object):
     # Use them instead of the publish_and_log and publish_and_log_exception methods
     # of the global event handler.
     #
-    # Use self.publish_and_log to log somo useful (or debug) info.
+    # Use self.publish_and_log to log some useful info. (INFO level)
     # Use self.publish_and_log_exception to log errors and exceptions
-    # Both methods will be publishing with the topic self.topic_for_log
+    # Use self.DEBUG to publish and log debug info (aka debugging prints) (DEBUG level)
+    # All of those methods will be publishing with the topic self.topic_for_log
     #
     # To publish events like results or other important data (not logging), use
     # the method self.notify instead. This will be publishing with the topic self.topic_for_notification
-    self.publish_and_log = functools.partial(self.ev.publish_and_log, self.topic_for_log)
+    self.publish_and_log = functools.partial(self.ev.publish_and_log, self.topic_for_log, syslog.LOG_INFO)
     self.publish_and_log_exception = functools.partial(self.ev.publish_and_log_exception, self.topic_for_log)
+    self.DEBUG = functools.partial(self.ev.publish_and_log, self.topic_for_log, syslog.LOG_DEBUG)
 
 
     # Register the three common commands to control this module (see self.register_gdb_command_from)

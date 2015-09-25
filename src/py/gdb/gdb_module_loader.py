@@ -27,7 +27,7 @@ class _GDBModuleLoader(object):
     if not dependencies.issubset(imported_module_names):
       raise Exception("Dependencies are not satisfied: %s" % str(dependencies.difference(imported_module_names)))
 
-    self._register(module, module_name)
+    return self._register(module, module_name)
 
 
   @noexception(error_message="Internal error when importing a gdb module (or modules) into GDB.")
@@ -87,6 +87,7 @@ class _GDBModuleLoader(object):
        self.cleanup_callbacks.append(noexception("Error in a cleanup method of a module/plugin")(cleanup))
 
     self.gdb_modules_by_name[module_name] = gdb_module
+    return gdb_module
 
 
   def _cleanup(self):
