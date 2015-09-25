@@ -13,25 +13,30 @@ class GDBModule(object):
   
     self.ev = _get_global_event_handler()
 
+    # Topic 
+    #   stream-gdb.<<gdb id>>.console.gdb-module.<<module name>>
+    #
     # This is a subtopic of "stream-gdb.%i.console". This last is used to tag the output
-    # of gdb itself. The messages of all the module should be seen as gdb output too.
+    # of gdb itself. The messages of all the modules should be seen as gdb output too.
     #
     # The object sent to this topic should be compatible with gdb_mi.Stream, which
     # represents a simple string.
     self.topic_for_log = "stream-gdb.%i.console.gdb-module.%s" % (self.ev.get_gdb_id(), uniq_module_name)
 
-    # This is a subtopic of 'notification-gdb.%i.<<type>>'. This topic is used for
-    # async notifications where <<type>> is defined later an is one of 
+    # Topic:
+    #   notification-gdb.<<gdb id>>.gdb-module.<<type>>.<<module name>>
+    #
+    # This is a subtopic of 'notification-gdb.<<gdb id>>.gdb-module.<<type>>'. 
+    # This topic is used for async notifications where <<type>> is defined later and is one of 
     #     ("Exec", "Status", "Notify")
     # The messages of this topic can have any form but they must have an attribute:
     #     data['debugger-id'] = self.ev.get_gdb_id()  for compatibility with others.
     self.topic_for_notification = "notification-gdb.%i.%s" % (
                                              self.ev.get_gdb_id(), 
-                                             'gdb-module', # klass of gdb_mi.AsyncOutput
+                                             'gdb-module', # we set 'gdb-module' as the klass of gdb_mi.AsyncOutput
                                              )
     
-    
-    self.topic_for_notification += ".%s."  # the type of gdb_mi.AsyncOutput ("Exec", "Status", "Notify")
+    self.topic_for_notification += ".%s."  # this parameter will be the type of gdb_mi.AsyncOutput ("Exec", "Status", "Notify")
     self.topic_for_notification += uniq_module_name
 
 
@@ -40,14 +45,21 @@ class GDBModule(object):
     #
     # Use them instead of the publish_and_log and publish_and_log_exception methods
     # of the global event handler.
+    #
+    # Use self.publish_and_log to log somo useful (or debug) info.
+    # Use self.publish_and_log_exception to log errors and exceptions
+    # Both methods will be publishing with the topic self.topic_for_log
+    #
+    # To publish events like results or other important data (not logging), use
+    # the method self.notify instead. This will be publishing with the topic self.topic_for_notification
     self.publish_and_log = functools.partial(self.ev.publish_and_log, self.topic_for_log)
     self.publish_and_log_exception = functools.partial(self.ev.publish_and_log_exception, self.topic_for_log)
 
 
-    # Register the three common commands to control this module
+    # Register the three common commands to control this module (see self.register_gdb_command_from)
     self.register_gdb_command_from(self.activate)
     self.register_gdb_command_from(self.deactivate)
-    self.register_gdb_command_from(self.status)
+    self.register_gdb_command_from(self.status) # <--- this is experimental!!
 
 
   def activate(self, *args):

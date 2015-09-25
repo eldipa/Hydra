@@ -45,6 +45,15 @@ class Gdb:
 
            data_directory_option = "--data-directory=%s" % gdb_data_path
            gdb_args.append(data_directory_option)
+        
+        # TODO stderr = PIPE ??  no one is using it, this should be redirected to dev/null or
+        # to a file
+        print [gdb_path] + gdb_args
+        self.gdb = subprocess.Popen([gdb_path] + gdb_args, stdin=PIPE, stdout=PIPE, stderr=PIPE)
+        self.gdbInput = self.gdb.stdin
+        self.gdbOutput = self.gdb.stdout
+
+        self.pluginLoader = pluginLoader.PluginLoader(self.gdbInput)
 
         self.comandos = comandos
         self.log = log
@@ -54,15 +63,11 @@ class Gdb:
         self.inputFifo = None
         self.queue = Queue()
 
-        self.gdb = subprocess.Popen([gdb_path] + gdb_args, stdin=PIPE, stdout=PIPE, stderr=PIPE)
-        self.gdbInput = self.gdb.stdin
-        self.gdbOutput = self.gdb.stdout
         self.reader = outputReader.OutputReader(self.gdbOutput, self.queue, self.gdb.pid)
         self.reader.start()
         self.eventHandler = publish_subscribe.eventHandler.EventHandler(name="(gdb %i)" % self.gdb.pid)
         self.lock = threading.Lock()
         self.isAttached = False
-        self.pluginLoader = pluginLoader.PluginLoader(self.gdbInput)
         if (comandos):
             self.pluginLoader.loadAll()
         
@@ -275,3 +280,4 @@ class Gdb:
          
         self.gdbInput.write(command_line)
         self.gdbInput.flush()
+

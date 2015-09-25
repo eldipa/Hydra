@@ -3,18 +3,22 @@ import atexit
 
 from gdb_event_handler import _get_global_event_handler
 
+# TODO protect these methods with logs of their exceptions!!!!!
+
 class _GDBModuleLoader(object):
   def __init__(self):
-    self.publisher = _get_global_event_handler()
+    #self.publisher = _get_global_event_handler() see the cleanup method of self
     self.cleanup_callbacks = []
     atexit.register(self._cleanup)
+
+    self.gdb_modules_by_name = {}
 
 
   def load(self, module_name):
     ''' Load a module. Import the module and check its dependencies, if their are
         satisfied, then call to its 'init' function. See _register for more details.
     '''
-    imported_module_names = self.imported_module_names
+    imported_module_names = set(self.gdb_modules_by_name.keys())
     if module_name in imported_module_names:
       return
 
@@ -32,7 +36,7 @@ class _GDBModuleLoader(object):
         according to their dependencies, registering the modules one by one as their
         dependecies are satified. As in 'load', see _register for more info.
     '''
-    imported_module_names = self.imported_module_names
+    imported_module_names = set(self.gdb_modules_by_name.keys())
     module_names = set(module_names).difference(imported_module_names)
 
     mods = {}
@@ -76,13 +80,13 @@ class _GDBModuleLoader(object):
     if entry_point is None:
       raise Exception("No entry point (no 'init' method in the module)")
 
-    entry_point()
+    gdb_module = entry_point()
      
-    cleanup = getattr(module, 'cleanup', None)
+    cleanup = getattr(gdb_module.cleanup, 'cleanup', None)
     if cleanup:
-       self.cleanup_callbacks.append(noexception(cleanup, "Error in a cleanup method of a module/plugin"))
+       self.cleanup_callbacks.append(noexception("Error in a cleanup method of a module/plugin")(cleanup))
 
-    self.imported_module_names.add(module_name)
+    self.gdb_modules_by_name[module_name] = gdb_module
 
 
   def _cleanup(self):
@@ -97,10 +101,14 @@ class _GDBModuleLoader(object):
     for cleanup in self.cleanup_callbacks:
       cleanup() # protected by noexception decorator
 
+    self.gdb_modules_by_name.clear() #remove all the links to each gdb module to free the resources
+
+    '''
     try:
       self.publisher.close()
     except:
       pass # closed the publisher we cannot notify about the error
+      ''' # is this our responsability???
 
 __Loader = None
 

@@ -396,3 +396,6 @@ class GDBSyscallTrace(GDBModule):
   # on thread-group created ... what? create a KernelVSyscallBreakpoint?
   # if then a process is attached, what is it the point?
 
+
+def init():
+    return GDBSyscallTrace()

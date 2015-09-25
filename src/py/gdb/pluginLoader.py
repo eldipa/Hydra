@@ -1,4 +1,4 @@
-import os
+import os, syslog
 from re import match
 import globalconfig
 
@@ -12,7 +12,7 @@ class PluginLoader(object):
 
         self.gdbInput = gdbInput
         self.files = []
-        for _, _, filenames) in os.walk(self.plugin_directory):
+        for _, _, filenames in os.walk(self.plugin_directory):
             for name in filenames:
                 if (match(".*.py$", name)):
                     self.files.append(name)
