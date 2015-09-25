@@ -5,9 +5,9 @@ from gdb_event_handler import noexception
 import functools
 
 class GDBModule(object):
-  def __init__(self, uniq_module_name):
+  def __init__(self, uniq_module_name, is_activated_by_default=False):
     self.uniq_module_name = uniq_module_name
-    self._activated = False
+    self._activated = is_activated_by_default
 
     self.registered_commands = {}
   
@@ -59,7 +59,7 @@ class GDBModule(object):
     # Register the three common commands to control this module (see self.register_gdb_command_from)
     self.register_gdb_command_from(self.activate)
     self.register_gdb_command_from(self.deactivate)
-    self.register_gdb_command_from(self.status) # <--- this is experimental!!
+    self.register_gdb_command_from(self.status) # <--- this is experimental!! (in fact, this doesnt work because the method returns a dictionary and dont print anything neither emit any event)
 
 
   def activate(self, *args):
@@ -81,8 +81,19 @@ class GDBModule(object):
     pass
 
   def notify(self, type, data):
-    '''Shortcut to publish events using the module's topic notification (async).'''
+    '''Shortcut to publish events using the module's topic notification (async).
+       
+       These are the possible types of notifications:
+         Exec: contains asynchronous state change on the target (stopped, 
+              started, disappeared). 
+         Status: contains on-going status information about the progress 
+              of a slow operation. It can be discarded.
+         Notify: contains supplementary information that the client 
+              should handle (e.g., a new breakpoint information).
+    
+    '''
     assert type in ("Exec", "Status", "Notify")
+    assert isinstance(data, dict)
 
     data['debugger-id'] = self.ev.get_gdb_id() # for compatibility with others.
     return self.ev.publish(self.topic_for_notification % type, data)
@@ -107,6 +118,7 @@ class GDBModule(object):
 
       @noexception("Error when executing the command %s" % command_name, None)
       def invoke(cmdself, args, from_tty):            
+          cmdself.dont_repeat()
           argv = gdb.string_to_argv(args)
           return bound_method(*argv)
 

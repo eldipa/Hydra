@@ -1,9 +1,7 @@
 import importlib
 import atexit
 
-from gdb_event_handler import _get_global_event_handler
-
-# TODO protect these methods with logs of their exceptions!!!!!
+from gdb_event_handler import _get_global_event_handler, noexception
 
 class _GDBModuleLoader(object):
   def __init__(self):
@@ -14,6 +12,7 @@ class _GDBModuleLoader(object):
     self.gdb_modules_by_name = {}
 
 
+  @noexception(error_message="Internal error when importing a gdb module into GDB.")
   def load(self, module_name):
     ''' Load a module. Import the module and check its dependencies, if their are
         satisfied, then call to its 'init' function. See _register for more details.
@@ -31,6 +30,7 @@ class _GDBModuleLoader(object):
     self._register(module, module_name)
 
 
+  @noexception(error_message="Internal error when importing a gdb module (or modules) into GDB.")
   def load_bulk(self, module_names):
     ''' Load multiples modules at once. Import all the modules and then order them
         according to their dependencies, registering the modules one by one as their
