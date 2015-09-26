@@ -235,7 +235,7 @@ class SyscallBreakpoint(gdb.Breakpoint):
           if self.in_the_start_of_syscall:
             # get the current eax and save it in the next breakpoint
             orig_eax = self.process.getreg("eax")
-            self.end_breakpoint.orig_eax = orig_eax  # this line is "superfluous"
+            self.end_breakpoint.orig_eax = orig_eax  # this line is NOT superfluous, because self.process.orig_eax is removed at the end of this method and we need the orig_eax in the next call so this line allow to us save it.
             self.process.orig_eax = orig_eax
              
             regs = self.process.getregs()
@@ -367,11 +367,10 @@ class GDBSyscallTrace(GDBModule):
     else:
       self.kernel_vsyscall_breakpoint.enabled = True
     
-    if self.syscall_start_breakpoint is not None:
-      self.syscall_start_breakpoint.enabled = True
-    
-    if self.syscall_end_breakpoint is not None:
-      self.syscall_end_breakpoint.enabled = True
+    for brk in (self.syscall_start_breakpoint,
+                self.syscall_end_breakpoint):
+        if brk is not None:
+            brk.enabled = True
 
     self._activated = True
 
@@ -382,17 +381,22 @@ class GDBSyscallTrace(GDBModule):
     if not self.are_activated():
       return
     
-    if self.kernel_vsyscall_breakpoint is not None:
-      self.kernel_vsyscall_breakpoint.enabled = False
-
-    if self.syscall_start_breakpoint is not None:
-      self.syscall_start_breakpoint.enabled = False
-    
-    if self.syscall_end_breakpoint is not None:
-      self.syscall_end_breakpoint.enabled = False
+    for brk in (self.kernel_vsyscall_breakpoint, 
+                self.syscall_start_breakpoint,
+                self.syscall_end_breakpoint):
+        if brk is not None:
+            brk.enabled = False
     
     self._activated = False
 
+  def cleanup(self):
+    self.deactivate()
+    
+    for brk in (self.kernel_vsyscall_breakpoint, 
+                self.syscall_start_breakpoint,
+                self.syscall_end_breakpoint):
+        if brk is not None:
+            brk.delete()
 
   # on thread-group created ... what? create a KernelVSyscallBreakpoint?
   # if then a process is attached, what is it the point?

@@ -9,6 +9,7 @@ class LogGDBModulesOutputToStdout(GDBModule):
         self.topics = [
                 "stream-gdb.%i.console.gdb-module" % gdb_id,
                 "notification-gdb.%i.gdb-module" % gdb_id,
+                "gdb-error",
                 ]
 
         self.subscriptions_by_topic = {}

@@ -61,7 +61,7 @@ class GDBModule(object):
     # Register the three common commands to control this module (see self.register_gdb_command_from)
     self.register_gdb_command_from(self.activate)
     self.register_gdb_command_from(self.deactivate)
-    self.register_gdb_command_from(self.status) # <--- this is experimental!! (in fact, this doesnt work because the method returns a dictionary and dont print anything neither emit any event)
+    self.register_gdb_command_from(self.status)
 
 
   def activate(self, *args):
@@ -71,7 +71,7 @@ class GDBModule(object):
     raise NotImplementedError('Subclass responsability')
 
   def status(self):
-    return {'activated': self._activated}
+    self.notify("Status", {'activated': self._activated})
 
   def are_activated(self):
     ''' Return True if the module is activated and should be doing something
