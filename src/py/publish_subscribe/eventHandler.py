@@ -20,9 +20,9 @@ class Publisher(object):
 
         try:
           self.connection = Connection(address)
-          self._log(syslog.LOG_DEBUG, "Stablished a connection with the notifier server (%s).", str(address))
+          self._log(syslog.LOG_DEBUG, "Stablished a connection with the notifier server (%s)." % esc(str(address)))
         except:
-          self._log(syslog.LOG_ERR, "Error when creating a connection with the notifier server (%s): %s.", str(address), traceback.format_exc())
+          self._log(syslog.LOG_ERR, "Error when creating a connection with the notifier server (%s): %s." % esc(str(address), traceback.format_exc()))
           raise 
 
         self.connection.send_object({'type': 'introduce_myself', 'name': name})
@@ -30,7 +30,7 @@ class Publisher(object):
     def publish(self, topic, data):
         fail_if_topic_isnt_valid(topic, allow_empty=False)
 
-        self._log(syslog.LOG_DEBUG, "Sending publication of an event with topic '%s'.", topic)
+        self._log(syslog.LOG_DEBUG, "Sending publication of an event with topic '%s'." % esc(topic))
         self.connection.send_object({'type': 'publish', 'topic': topic, 'data': json.dumps(data)})
         self._log(syslog.LOG_DEBUG, "Publication of an event sent.")
 
@@ -63,8 +63,10 @@ class Publisher(object):
     def __repr__(self):
         return "Endpoint (%s)" % self.name
 
-    def _log(self, level, message, *arguments):
-        message = ("%s: " + message) % esc(repr(self), *arguments)
+    def _log(self, level, message): #TODO remove the "%" stuff over an unknow string (not local string)
+        header = "%s: " % esc(repr(self))
+        message = header + message
+
         syslog.syslog(level, message)
         return message
 
@@ -97,9 +99,9 @@ class EventHandler(threading.Thread, Publisher):
         try:
            if self.callbacks_by_topic.has_key(topic):
                self.callbacks_by_topic[topic].append((callback, {'id': self.next_valid_subscription_id}))
-               self._log(syslog.LOG_DEBUG, "Registered subscription locally. Subscription to the topic '%s' already sent.", topic)
+               self._log(syslog.LOG_DEBUG, "Registered subscription locally. Subscription to the topic '%s' already sent." % esc(topic))
            else:
-               self._log(syslog.LOG_DEBUG, "Sending subscription to the topic '%s'.", topic)
+               self._log(syslog.LOG_DEBUG, "Sending subscription to the topic '%s'." % esc(topic))
                self.connection.send_object({'type': 'subscribe', 'topic': topic})
                self._log(syslog.LOG_DEBUG, "Subscription sent.")
 
@@ -219,7 +221,7 @@ class EventHandler(threading.Thread, Publisher):
                    self.dispatch(event)
                    
         except:
-           self._log(syslog.LOG_ERR, "Exception when receiving a message: %s.", traceback.format_exc())
+           self._log(syslog.LOG_ERR, "Exception when receiving a message: %s." % esc(traceback.format_exc()))
         finally:
            self.connection.close()
 
@@ -229,10 +231,10 @@ class EventHandler(threading.Thread, Publisher):
         callbacks_collected = []
         self.lock.acquire()
         try:
-           self._log(syslog.LOG_DEBUG, "Executing callback over the topic chain '%s'.", ", ".join(topic_chain)) ##TODO
+           self._log(syslog.LOG_DEBUG, "Executing callback over the topic chain '%s'." % esc(", ".join(topic_chain))) ##TODO
            for t in topic_chain:
                callbacks = self.callbacks_by_topic.get(t, []);
-               self._log(syslog.LOG_DEBUG, "For the topic '%s' there are %s callbacks.", (t if t else "(the empty topic)"), str(len(callbacks)))
+               self._log(syslog.LOG_DEBUG, "For the topic '%s' there are %s callbacks." % esc( (t if t else "(the empty topic)"), str(len(callbacks))))
                callbacks_collected.append(list(callbacks)) # get a copy!
         finally:
            self.lock.release()
@@ -245,7 +247,7 @@ class EventHandler(threading.Thread, Publisher):
        try:
           callback(data)
        except:
-          self._log(syslog.LOG_ERR, "Exception in callback for the topic '%s': %s", (t if t else "(the empty topic)"), traceback.format_exc())
+          self._log(syslog.LOG_ERR, "Exception in callback for the topic '%s': %s" % esc((t if t else "(the empty topic)"), traceback.format_exc()))
       
 
     def close(self):

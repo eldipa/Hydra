@@ -20,34 +20,34 @@ class _Endpoint(threading.Thread):
 
    def _is_valid_message(self, message):
       if not isinstance(message, dict):
-         self._log(syslog.LOG_ERR, "Invalid message. It isn't an object like {...} : '%s'.", json.dumps(message))
+         self._log(syslog.LOG_ERR, "Invalid message. It isn't an object like {...} : '%s'." % esc(json.dumps(message)))
          return False
 
       if not "type" in message:
-         self._log(syslog.LOG_ERR, "Invalid message. It hasn't a type: '%s'.", json.dumps(message))
+         self._log(syslog.LOG_ERR, "Invalid message. It hasn't a type: '%s'." % esc(json.dumps(message)))
          return False
 
       if not message["type"] in ("subscribe", "publish", "unsubscribe", "introduce_myself"):
-         self._log(syslog.LOG_ERR, "Invalid message. Unknown type: '%s'.", json.dumps(message))
+         self._log(syslog.LOG_ERR, "Invalid message. Unknown type: '%s'." % esc(json.dumps(message)))
          return False
 
       if message["type"] not in ("introduce_myself",) and not "topic" in message:
-         self._log(syslog.LOG_ERR, "Invalid message of type '%s'. It hasn't any topic: '%s'.", message['type'], json.dumps(message))
+         self._log(syslog.LOG_ERR, "Invalid message of type '%s'. It hasn't any topic: '%s'." % esc(message['type'], json.dumps(message)))
          return False
 
       if message["type"] == "publish" and "data" not in message:
-         self._log(syslog.LOG_ERR, "Invalid message. Publish message hasn't any data: '%s'.", json.dumps(message))
+         self._log(syslog.LOG_ERR, "Invalid message. Publish message hasn't any data: '%s'." % esc(json.dumps(message)))
          return False
 
       if message["type"] == "introduce_myself" and "name" not in message:
-         self._log(syslog.LOG_ERR, "Invalid message. Missing name paremeter in the 'introduce myself' message: %s", json.dumps(message))
+         self._log(syslog.LOG_ERR, "Invalid message. Missing name paremeter in the 'introduce myself' message: %s" % esc(json.dumps(message)))
          return False
 
       if message["type"] not in ("introduce_myself",):
          try:
             fail_if_topic_isnt_valid(message["topic"], allow_empty = (message["type"] == "subscribe"))
          except Exception as e:
-            self._log(syslog.LOG_ERR, "Invalid topic: '%s'", str(e))
+            self._log(syslog.LOG_ERR, "Invalid topic: '%s'" % esc(str(e)))
             return False
 
       return True
@@ -57,7 +57,7 @@ class _Endpoint(threading.Thread):
       for message in messages:
          is_valid = self._is_valid_message(message)
          if not is_valid:
-            self._log(syslog.LOG_ERR, "Invalid message: '%s'.", json.dumps(message))
+            self._log(syslog.LOG_ERR, "Invalid message: '%s'." % esc(json.dumps(message)))
             raise Exception("Invalid message.")
 
          if message["type"] == "publish":
@@ -77,13 +77,13 @@ class _Endpoint(threading.Thread):
       try:
          while not self.connection.end_of_the_communication:
             messages = self.connection.receive_objects()
-            self._log(syslog.LOG_DEBUG, "Received %s messages", str(len(messages)))
+            self._log(syslog.LOG_DEBUG, "Received %s messages" % esc(str(len(messages))))
 
             self._process_messages(messages)
 
          self._log(syslog.LOG_NOTICE, "The connection was closed by the other point of the connection.")
       except:
-         self._log(syslog.LOG_ERR, "An exception has occurred when receiving/processing the messages: %s.", traceback.format_exc())
+         self._log(syslog.LOG_ERR, "An exception has occurred when receiving/processing the messages: %s." % esc(traceback.format_exc()))
       finally:
          self.is_finished = True
 
@@ -92,7 +92,7 @@ class _Endpoint(threading.Thread):
       try:
          self.connection.send_object(event)
       except:
-         self._log(syslog.LOG_ERR, "An exception when sending a message to it: %s.", traceback.format_exc())
+         self._log(syslog.LOG_ERR, "An exception when sending a message to it: %s." % esc(traceback.format_exc()))
          self.is_finished = True
 
    def close(self):
@@ -104,9 +104,9 @@ class _Endpoint(threading.Thread):
    def __repr__(self):
       return "%s%s%s" % (self.codename, ((" (%s)" % self.name) if self.name else ""), (" [dead]" if self.is_finished else ""))
 
-   def _log(self, level, message, *arguments):
-      message = "%s: " + message
-      syslog.syslog(level, message % esc(repr(self), *arguments))
+   def _log(self, level, message):
+      message = ("%s: " % esc(repr(self))) + message
+      syslog.syslog(level, message)
 
 
 # TODO endpoints_by_topic (and endpoint_subscription_lock) as a single object

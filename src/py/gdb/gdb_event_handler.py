@@ -111,16 +111,16 @@ class _GDBEventHandler(EH):
     callback(data)
 
   
-  def publish_and_log(self, topic, severity, message, *args, **kargs):
+  def publish_and_log(self, topic, severity, message):
     '''Log to syslog and publish an event, with the defined severity and topic.
-       The message will be 'message', fulfilled with the arguments 'args'.
+       The message will be 'message'.
     '''
     assert isinstance(message, basestring)
-    message = self._log(severity, message, *args)
+    message = self._log(severity, message)
     self.publish(topic, message)
 
 
-  def publish_and_log_exception(self, topic, error_message, *args):
+  def publish_and_log_exception(self, topic, error_message):
     '''Shortcut for logging errors. This method will log to syslog and publish an
        event using the publish method, with LOG_ERR severity.
        The final message will be the concatenation of the error_message and the
@@ -128,7 +128,7 @@ class _GDBEventHandler(EH):
     '''
     assert isinstance(error_message, basestring)
     message = error_message + traceback.format_exc()
-    self.publish_and_log(topic, syslog.LOG_ERR, message, *args)
+    self.publish_and_log(topic, syslog.LOG_ERR, message)
 
 
 __EV = None
