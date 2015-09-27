@@ -272,13 +272,25 @@ class StdfdRedirect(GDBModule):
     def __init__(self):
         GDBModule.__init__(self, 'stdfd-redirect')
 
-        self.redirections_by_fd_target = {}
+        self.redirections_by_fd_target_by_inferior = {}
+
+        prefix = "notification-gdb.%i.Notify" % self.ev.get_gdb_id()
+
+        #self.ev.subscribe(prefix + ".thread-group-started", self._handle_process_started)
+        self.ev.subscribe(prefix + ".thread-group-exited", self._handle_process_exited)
 
         self.register_gdb_command_from(self.redirect_target_to_destine_file)
         self.register_gdb_command_from(self.deactive_redirection_of)
-    
+ 
+    def _get_inferior(self, inferior_from_cmdline):
+        # TODO this is a hack: the MI events say things like "i1" as the id of an inferior
+        # but the Python  interface says "1".
+        #
+        # just ugly....
+        return ("i%i" % gdb.selected_inferior().num) if inferior_from_cmdline is None else inferior_from_cmdline 
 
-    def redirect_target_to_destine_file(self, fd_target, destine_filepath, flow_direction=2):
+
+    def redirect_target_to_destine_file(self, fd_target, destine_filepath, flow_direction=2, inferior=None):
         ''' Redirect the opened file with file descriptor fd_target to the still-no-open file 
             with path destine_filepath. 
             
@@ -293,15 +305,21 @@ class StdfdRedirect(GDBModule):
                 2 - open file in read-write mode
 
             The default is flow_direction == 2 (read-write mode)
+
+            If inferior is not None, is the id of the inferior (process) to redirect.
             '''
         fd_target = int(fd_target)
         flow_direction = int(flow_direction)
 
+        inferior = self._get_inferior(inferior)
+
         if not flow_direction in (0, 1, 2):
             raise ValueError("Unexpected flags for open the file: '%s'" % flow_direction)
 
-        if fd_target in self.redirections_by_fd_target:
-            old_redirection = self.redirections_by_fd_target[fd_target]
+        redirections_by_fd_target = self.redirections_by_fd_target_by_inferior.get(inferior, {})
+
+        if fd_target in redirections_by_fd_target:
+            old_redirection = redirections_by_fd_target[fd_target]
             old_redirection.destroy()
 
         # TODO acceptar fd_target nombres simbolicos "stdout" "stdin" que ademas le manden setlinebuf
@@ -312,18 +330,23 @@ class StdfdRedirect(GDBModule):
                                     flow_direction = flow_direction)
 
         redirection.active_target_redirection_to_destine()
-        self.redirections_by_fd_target[fd_target] = redirection
+        redirections_by_fd_target[fd_target] = redirection
+        self.redirections_by_fd_target_by_inferior[inferior] = redirections_by_fd_target
 
-    def deactive_redirection_of(self, fd_target):
+    def deactive_redirection_of(self, fd_target, inferior=None):
         fd_target = int(fd_target)
-        self.redirections_by_fd_target[fd_target].deactive_redirection()
+        inferior = self._get_inferior(inferior)
+
+        redirections_by_fd_target = self.redirections_by_fd_target_by_inferior.get(inferior, {})
+        redirections_by_fd_target[fd_target].deactive_redirection()
 
     def activate(self, *args):
         if self.are_activated():
             return
 
-        for fd_target, redirection in self.redirections_by_fd_target.items():
-            redirection.enable()
+        for redirections_by_fd_target in self.redirections_by_fd_target_by_inferior.values():
+            for redirection in redirections_by_fd_target.values():
+                redirection.enable()
 
         self._activated = True
 
@@ -331,21 +354,41 @@ class StdfdRedirect(GDBModule):
         if not self.are_activated():
             return
     
-        for fd_target, redirection in self.redirections_by_fd_target.items():
-            redirection.disable_temporally()
+        for redirections_by_fd_target in self.redirections_by_fd_target_by_inferior.values():
+            for redirection in redirections_by_fd_target.values():
+                redirection.disable_temporally()
 
         self._activated = False
   
     def status(self):
-        self.notify("Status", {'activated': self._activated, 
-            'redirections': {fd: str(r) for fd, r in self.redirections_by_fd_target.items()}})
+        self.notify("Status", {
+            'activated': self._activated, 
+            'redirections': {
+                inferior: {fd: str(r) for fd, r in rs_by_fd_target.items()} 
+                    for inferior, rs_by_fd_target in self.redirections_by_fd_target_by_inferior.items()
+                }
+            })
 
     def cleanup(self):
         self.deactivate()
-        for fd_target, redirection in self.redirections_by_fd_target.items():
-            redirection.destroy()
+        for inferior in self.redirections_by_fd_target_by_inferior.keys():
+            self._cleanup_per_inferior(inferior)
 
-        self.redirections_by_fd_target.clear()
+        self.redirections_by_fd_target_by_inferior.clear()
+
+    def _cleanup_per_inferior(self, inferior):
+        redirections_by_fd_target = self.redirections_by_fd_target_by_inferior[inferior]
+        for redirection in redirections_by_fd_target.values():
+            redirection.destroy()
+        
+        redirections_by_fd_target.clear()
+
+    def _handle_process_exited(self, data):
+        ''' Remove all the redirections and do a cleanup for the resources allocated 
+            for the process exited. 
+            '''
+        inferior = data['results']['id']
+        self._cleanup_per_inferior(inferior)
 
 
 def init():
