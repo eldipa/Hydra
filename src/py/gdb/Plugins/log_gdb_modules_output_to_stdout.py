@@ -2,6 +2,12 @@ from gdb_module import GDBModule
 import pprint
 
 class LogGDBModulesOutputToStdout(GDBModule):
+    ''' For debugging. This module will capture almost all the events emitted
+        from this GDB session and it will print them in the GDB console.
+        
+        This is only form debugging, when  the user is interacting with GDB
+        manually and is not using its MI interface.
+        '''
     def __init__(self):
         GDBModule.__init__(self, 'log-gdb-modules-output-to-stdout')
 

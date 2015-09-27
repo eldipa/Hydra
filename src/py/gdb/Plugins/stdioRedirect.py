@@ -269,6 +269,7 @@ class Redirection(object):
 
 
 class StdfdRedirect(GDBModule):
+    ''' Module to redirect file descriptors of the target at will. '''
     def __init__(self):
         GDBModule.__init__(self, 'stdfd-redirect')
 

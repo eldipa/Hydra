@@ -347,6 +347,7 @@ class KernelVSyscallBreakpoint(gdb.Breakpoint):
 from gdb_module import GDBModule
 
 class GDBSyscallTrace(GDBModule):
+  ''' Module to log the system calls (syscalls) in a similar fashion like strace does.'''
   def __init__(self):
     GDBModule.__init__(self, 'strace')
     self.kernel_vsyscall_breakpoint = None

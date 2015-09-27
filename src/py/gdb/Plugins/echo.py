@@ -1,6 +1,7 @@
 from gdb_module import GDBModule
 
 class Echo(GDBModule):
+    ''' Simple module (for demo purposes) '''
     def __init__(self):
         GDBModule.__init__(self, 'echo')
     
