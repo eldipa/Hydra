@@ -1,109 +1,70 @@
 
 from gdb import Gdb
-import forkDetector 
-import outputLogger
-from multiprocessing import Lock
 import publish_subscribe.eventHandler
 
 import globalconfig
 
-def Locker(func):
-        def newFunc(self, *args, **kwargs):
-            self.lock.acquire()
-            try:
-                result = func(self, *args, **kwargs)
-            finally:
-                self.lock.release()
-            return result
-        return newFunc
-
-class GdbSpawmer:
-    
-    def __init__(self, comandos=False, log=False, inputRedirect=False, debugPlugin=[]):
+class GdbSpawner(object):
+    def __init__(self): 
         cfg = globalconfig.get_global_config()
         name = cfg.get('gdbspawner', 'name')
 
-        self.comandos = comandos;
-        self.log = log
-        self.inputRedirect = inputRedirect
-        self.debugPlugin = debugPlugin
-        self.lock = Lock()
-        self.listaGdb = {}
-        self.forkDetector = forkDetector.ForkDetector(self)
-        self.forkDetector.start()
-        if(log):
-            self.logger = outputLogger.OutputLogger()
-            self.logger.start()
-        self.eventHandler = publish_subscribe.eventHandler.EventHandler(name=name)
-        self.subscribe()
+        self.gdb_by_its_pid = {}
         
-    def subscribe(self):
-        self.eventHandler.subscribe("spawner.request.debuggers-info", self.response_debuggers_info)
-        self.eventHandler.subscribe("spawner.add-debugger", self.startNewGdb)
-        self.eventHandler.subscribe("spawner.kill-debugger", self.exit)
+        self.ev = publish_subscribe.eventHandler.EventHandler(name=name)
+        self._subscribe_to_interested_events_for_me()
+ 
 
-        self.eventHandler.subscribe("debugger.load", self.startNewProcessWithGdb)
-        self.eventHandler.subscribe("debugger.attach", self.attachAGdb)
-        self.eventHandler.subscribe("debugger.exit", self.exit)
-        
-    def loadPlugin(self, plugin):
-        self.debugPlugin.append(plugin)
-
-    @Locker
-    def response_debuggers_info(self, _):
-        debuggers_data = dict((debugger_id, {'debugger-id': debugger_id}) for debugger_id in self.listaGdb.keys())
-        self.eventHandler.publish("spawner.debuggers-info", {'debuggers': debuggers_data})
+    def _subscribe_to_interested_events_for_me(self):
+        self.subscriptions = [
+            self.ev.subscribe("spawner.request.debuggers-info", self._response_debuggers_info, return_subscription_id=True),
+            self.ev.subscribe("spawner.add-debugger", self._spawn_a_gdb, return_subscription_id=True),
+            self.ev.subscribe("spawner.kill-debugger", self._shutdown_a_gdb, return_subscription_id=True),
+            self.ev.subscribe("spawner.kill-all-debuggers", self._shutdown_all_gdbs, return_subscription_id=True),
+            ]
     
-    @Locker
-    def attachAGdb(self, pid):
-        gdb = Gdb(comandos=self.comandos, log=self.log, inputRedirect=self.inputRedirect ,debugPlugin=self.debugPlugin)
-        gdb.attach(pid)
-        self.listaGdb[gdb.getSessionId()] = gdb
-        self.eventHandler.publish("debugger.attached", pid)
-        return gdb.getSessionId()
+    def _unsubscribe_me_for_all_events(self):
+        for s in self.subscriptions:
+            self.ev.unsubscribe(s)
+        
+    def _response_debuggers_info(self, _):
+        debuggers_data = dict((debugger_id, {'debugger-id': debugger_id}) for debugger_id in self.gdb_by_its_pid.keys())
+        self.ev.publish("spawner.debuggers-info", {'debuggers': debuggers_data})
 
-    @Locker
-    def startNewGdb(self, d):
-        gdb = Gdb(comandos=self.comandos, log=self.log, inputRedirect=self.inputRedirect, debugPlugin=self.debugPlugin)
-        gdb.subscribe()
-        self.listaGdb[gdb.getSessionId()] = gdb
-        return gdb.getSessionId()
-        
-    @Locker
-    def startNewProcessWithGdb(self, path):
-        gdb = Gdb(comandos=self.comandos, log=self.log, inputRedirect=self.inputRedirect, debugPlugin=self.debugPlugin)
-        gdb.file(path)
-        self.listaGdb[gdb.getSessionId()] = gdb
-        return gdb.getSessionId()
+    def _spawn_a_gdb(self, _):
+        gdb = Gdb()
+        gdb_pid = gdb.get_gdb_pid()
+
+        self.gdb_by_its_pid[gdb_pid] = gdb
+
+        self.ev.publish("spawner.debugger-started", {"debugger-id": gdb_pid})
+
+        return gdb_pid
+
+    def _shutdown_a_gdb(self, data):
+        ''' Shutdown the GDB process with process id data['pid']. '''
+        pid = data['pid']
+        returncode = self.gdb_by_its_pid[pid].shutdown()
+        self.ev.publish("spawner.debugger-exited", {"debugger-id": pid,
+                                                              "exit-code": returncode})
+
+        self.gdb_by_its_pid.pop(pid)
     
-    @Locker
-    def contineExecOfProcess(self, pid):
-        self.listaGdb[pid].continueExec()
-        
-    @Locker
-    def stepIntoOfProcess(self, pid):
-        self.listaGdb[pid].stepInto()
-        
-    # finaliza el gdb deseado, se acepta all
-    @Locker
-    def exit(self, pid):
-        if pid != "all":
-            self.listaGdb[pid].exit()
-            self.listaGdb.pop(pid)
-        else:
-            for gdb in self.listaGdb:
-#                 print "exit "+ str(gdb)
-                self.listaGdb[gdb].exit() 
-            self.listaGdb = {}
+    def _shutdown_all_gdbs(self, _):
+        for gdb_pid, gdb in self.gdb_by_its_pid.iteritems():
+            returncode = gdb.shutdown() 
+            self.ev.publish("spawner.debugger-exited", {"debugger-id": gdb_pid,
+                                                                  "exit-code": returncode})
+
+        self.gdb_by_its_pid.clear()
                 
-    def eliminarCola(self):
-        self.forkDetector.salir()
-        self.forkDetector.join()
-        
     def shutdown(self):
-        self.eliminarCola()
-        self.exit('all')
-        if self.log:
-           self.logger.finalizar()
-           self.logger.join()
+        ''' This will shutdown everything, all the GDBs and myself included. '''
+        self._unsubscribe_me_for_all_events()
+        self.ev.close() # wait until all the events are flushed out, so there should not be any race condition with the thread of my event-handler
     
+        for gdb_pid, gdb in self.gdb_by_its_pid.iteritems():
+            try:
+                gdb.exit()
+            except:
+                pass # we did our best effort

@@ -1,36 +1,91 @@
 
 import subprocess
 from subprocess import PIPE
-from multiprocessing import Queue
 
 import outputReader
 import publish_subscribe.eventHandler
-import tempfile
 import os
-import threading
 import signal
-import pluginLoader
+import syslog
+import functools
 
 import globalconfig
 
-HACK_PATH = "/shared/hack.so"
+class Gdb(object):
+    def __init__(self): 
+        self._start_gdb_process()
+        
+        name = "(gdb proxy of %i)" % self.gdb.pid
+        self.ev = publish_subscribe.eventHandler.EventHandler(name=name)
 
-# Lock para utilizar en cada funcion que escriba en el stdin del target
-def Locker(func):
-        def newFunc(self, *args, **kwargs):
-            self.lock.acquire()
-            try:
-                result = func(self, *args, **kwargs)
-            finally:
-                self.lock.release()
-            return result
-        return newFunc
+        self._start_gdb_output_reader(name)
+        self._load_base_py_modules_into_gdb_process()
 
-class Gdb:
-                           
+        self._subscribe_to_interested_events_for_me()
 
-    # crea un nuevo proceso gdb vacio
-    def __init__(self, comandos=False, log=False, inputRedirect=False, debugPlugin=[]):
+    def get_gdb_pid(self):
+        return self.gdb_pid  # thread-safe implementation
+
+    def _subscribe_to_interested_events_for_me(self):
+        # to avoid any race condition, the handlers must not have an instance of self.
+        # other parameters shared must be seen with caution
+        self.subscriptions = [
+                self.ev.subscribe("request-gdb.%i" % self.gdb.pid, 
+                        self._execute_a_request, ,
+                        return_subscription_id=True),
+                ]
+
+    def _unsubscribe_me_for_all_events(self):
+        for s in self.subscriptions:
+            self.ev.unsubscribe(s)
+   
+
+    # Finaliza el proceso gdb, junto con su target si este no hubiera finalizado
+    def shutdown(self, _):
+        self._unsubscribe_me_for_all_events() # no more events for me
+        self.ev.close() # wait until all the events are flushed out, so there should not be any race condition with the thread of my event-handler
+                        # but can lead to a deadlock if a handler running in that thread tries to call a publish and in the meanwhile the connection was closed.
+        self.outputReader.keep_running = False
+
+        try:
+            if self.gdb.poll() is None:
+                self.gdb.send_signal(signal.SIGINT) # wake up the debugger
+                
+                self.gdbInput.write("-gdb-exit\n")
+                self.gdbInput.flush() 
+
+                self.reader.join(timeout=25) # we wait for the end, nicely
+                if self.reader.isAlive():
+                    self.gdb.send_signal(signal.SIGTERM) # try to terminate the debugger, again
+
+                self.reader.join(timeout=25) # wait again...
+            
+            if self.gdb.poll() is None:
+                self.gdb.send_signal(signal.SIGKILL) # enough, kill it!
+
+        finally:
+            # close the descriptors and join the threads/processes if they are still alive
+            self.gdbInput.close() 
+            self.gdbOutput.close()
+            self.reader.join()
+            self.gdb.wait()
+
+            return self.gdb.returncode
+
+        # TODO detattch the target (if any) before the exit of the debugger.
+        # in other case, the target will be killed
+    
+
+    # Pide todas las variables y sus tipos  XXX
+    #   self.gdbInput.write('-stack-list-variables --all-values' + '\n')
+    #   self.gdbInput.write('-data-evaluate-expression ' + data + '\n')
+    #   self.gdbInput.write('pointer-printer ' + data + '\n')
+        
+    
+
+    def _start_gdb_process(self):
+        ''' Spawn a GDB process. The attributes gdb, gdbInput and gdbOutput will become
+            valid. '''
         cfg = globalconfig.get_global_config()
       
         use_gdb_system = cfg.getboolean('gdb', 'use-gdb-system')
@@ -46,219 +101,60 @@ class Gdb:
            data_directory_option = "--data-directory=%s" % gdb_data_path
            gdb_args.append(data_directory_option)
         
-        # TODO stderr = PIPE ??  no one is using it, this should be redirected to dev/null or
-        # to a file
-        print [gdb_path] + gdb_args
-        self.gdb = subprocess.Popen([gdb_path] + gdb_args, stdin=PIPE, stdout=PIPE, stderr=PIPE)
+        # TODO stderr = /dev/null??  this is simple, but some errors of gdb may be missing
+        self.gdb = subprocess.Popen([gdb_path] + gdb_args, stdin=PIPE, 
+                        stdout=PIPE, stderr=open('/dev/null', 'w'))
         self.gdbInput = self.gdb.stdin
         self.gdbOutput = self.gdb.stdout
 
-        self.pluginLoader = pluginLoader.PluginLoader(self.gdbInput)
+        self.gdb_pid = self.gdb.pid
 
-        self.comandos = comandos
-        self.log = log
-        self.outputFifoPath = None
-        self.inputRedirect = inputRedirect
-        self.inputFifoPath = None
-        self.inputFifo = None
-        self.queue = Queue()
-
-        self.reader = outputReader.OutputReader(self.gdbOutput, self.queue, self.gdb.pid)
+    def _start_gdb_output_reader(self, name)
+        self.reader = outputReader.OutputReader(self.gdbOutput, self.gdb_pid, name)
         self.reader.start()
-        self.eventHandler = publish_subscribe.eventHandler.EventHandler(name="(gdb %i)" % self.gdb.pid)
-        self.lock = threading.Lock()
-        self.isAttached = False
-        if (comandos):
-            self.pluginLoader.loadAll()
+
+    def _load_base_py_modules_into_gdb_process(self):
+        ''' Load the basic python modules into GDB. Those are the framework which
+            all other modules and plugin can assume to be valid like
+                - plugin loader
+                - a publish / subscribe system
+            '''
+        cfg = globalconfig.get_global_config()
         
-        if (isinstance(debugPlugin, list)):
-            for plugin in debugPlugin:
-                self.pluginLoader.load(plugin)
-        if(log):
-            self.outputFifoPath = tempfile.mktemp()
-            os.mkfifo(self.outputFifoPath)
-            self.gdbInput.write("fifo-register " + "stdout " + self.outputFifoPath + '\n')
-        if(inputRedirect):
-            self.inputFifoPath = tempfile.mktemp()
-            os.mkfifo(self.inputFifoPath)
-            self.gdbInput.write("fifo-register " + "stdin " + self.inputFifoPath + '\n')
-           
-    def getSessionId(self):
-        return self.gdb.pid
-    
-    def poll(self):
-        return self.gdb.poll()
-    
-    def loadPlugin(self, plugin):
-        self.pluginLoader.load(plugin)
-        
-    def subscribe(self):
-        self.eventHandler.subscribe("request-gdb.%i" % self.gdb.pid, self.execute_a_request)
+        name = cfg.get("gdbplugin", "name")
+        log_level = getattr(syslog, cfg.get("gdbplugin", "log_level"))
+        plugin_directory = os.path.abspath(cfg.get("gdbplugin", "plugin_directory"))
 
-        self.eventHandler.subscribe(str(self.gdb.pid) + ".run", self.run)
-        self.eventHandler.subscribe(str(self.gdb.pid) + ".continue", self.continueExec)
-        self.eventHandler.subscribe(str(self.gdb.pid) + ".step-into", self.stepInto)
-        self.eventHandler.subscribe(str(self.gdb.pid) + ".exit", self.exit)
-        self.eventHandler.subscribe(str(self.gdb.pid) + ".break-funcion", self.setBreakPoint)
-        self.eventHandler.subscribe(str(self.gdb.pid) + ".direct-command", self.directCommand)
-        self.eventHandler.subscribe(str(self.gdb.pid) + ".get-variables", self.getVariables)
-        self.eventHandler.subscribe(str(self.gdb.pid) + ".evaluate-expression", self.evaluarExpresion)
-        if (self.comandos):
-            self.eventHandler.subscribe(str(self.gdb.pid) + ".evaluate-multiple-pointers", self.evaluarMultiplesPunteros)
-        if(self.log):
-            self.targetPid = 0
-            self.eventHandler.subscribe("debugger.new-target.%i" % (self.gdb.pid), self.registerPid)
-        self.eventHandler.publish("debugger.new-session", self.gdb.pid)
-        self.eventHandler.publish("spawner.debugger-started", {"debugger-id": self.gdb.pid})
+        base_module_path_1 = os.path.abspath('./py')
+        base_module_path_2 = os.path.abspath('./py/gdb')
 
-    
-    # -Gdb realiza un attach al proceso especificado
-    def attach(self, pid):
-        self.isAttached = True
-        if(self.inputRedirect):
-            self.inputFifo = open(self.inputFifoPath, 'r+')
-        self.gdbInput.write("-target-attach " + str(pid) + '\n')
-        if(self.log):
-            self.gdbInput.write("io-redirect stdout " + self.outputFifoPath + '\n')
-        if(self.inputRedirect):
-            self.gdbInput.write("io-redirect stdin " + self.inputFifoPath + '\n')
-        self.subscribe()
-#         self.eventHandler.subscribe(str(pid) + ".stdin", self.redirectToStdin)
-#         self.eventHandler.publish("debugger.new-output", [pid, self.outputFifoPath])
-    
-    # -Gdb coloca como proceso target un nuevo proceso del codigo 'file'
-    # -Modifica el entorno (ld_preload)
-    # -Retorna el pid del nuevo proceso
-    def file(self, path):
-        self.gdbInput.write("-file-exec-and-symbols " + path + '\n')
-        self.gdbInput.write("-gdb-set " + "exec-wrapper env LD_PRELOAD=" + HACK_PATH + '\n')
-        self.gdbInput.write('\n')
-        self.subscribe()
+        python_code = '''
+import syslog
+syslog.openlog("%(name)s", logoption=syslog.LOG_PID)
+syslog.setlogmask(syslog.LOG_UPTO(%(log_level)s))
+import sys
+sys.path.append("%(base_module_path_1)s")
+sys.path.append("%(base_module_path_2)s")
 
-    def registerPid(self, data):
-        self.targetPid = int(data["targetPid"])
-        self.eventHandler.subscribe(str(self.targetPid) + ".stdin.txt", self.redirectToStdin)
-        self.eventHandler.subscribe(str(self.targetPid) + ".stdin.eof", self.sendEOF)
-        self.eventHandler.subscribe(str(self.targetPid) + ".stdin.file", self.redirectFileToStdin)
-        self.eventHandler.subscribe(str(self.targetPid) + ".fileRedirectComplete", self.fileThreadJoiner)
-        self.eventHandler.publish("debugger.new-output", [self.targetPid, self.outputFifoPath])
+import gdb_event_handler
+import gdb_module_loader
 
-    
-    # Ejecuta al target desde el comienzo
-    @Locker
-    def run(self, data=""):
-        # Abro al fifo aca por si en la ejecucion anterior se cerro para mandar un EOF
-        if (not self.inputFifo and self.inputRedirect):
-            self.inputFifo = open(self.inputFifoPath, 'r+')
-        if(self.log):
-            self.targetPid = 0
-            self.gdbInput.write("run " + '\n')
-        else:
-            self.gdbInput.write("run > " + "/tmp/SalidaAux.txt" + '\n')
-    
-    # Ejecuta al target desde el punto donde se encontraba
-    def continueExec(self, data=""):
-        self.gdbInput.write("-exec-continue" + '\n')
-    
-    # Ejecuta una sola intruccion del target
-    def stepInto(self, data=""):
-        self.gdbInput.write("-exec-step" + '\n')
-    
-    
-    # Finaliza el proceso gdb, junto con su target si este no hubiera finalizado
-    @Locker
-    def exit(self, data=""):
-#         pass
-##         self.gdb.terminate()  # Agrego para recuperar el prompt
-        self.gdb.send_signal(signal.SIGINT)
-#         print "signal"
-        if(self.inputRedirect or self.log):
-                self.gdbInput.write("io-revert" + '\n')
-#                 print "revert"
-        if (self.isAttached):
-            self.gdbInput.write("-target-detach" + '\n')
-#             print "detach"
-        self.gdbInput.write("-gdb-exit" + '\n')
-#         print "exit"
-        self.reader.join()
-#         print "join"
-        self.gdb.wait()
-#         print "wait"
-        if(self.log):
-           os.remove(self.outputFifoPath)
-#            print "outfifo"
-        if (self.inputFifo):
-            self.inputFifo.close()
-#             print "infifoclose"
-        if(self.inputRedirect):
-            os.remove(self.inputFifoPath)
-#             print "infifodelete"
-        self.eventHandler.close()
-#         print "handler"
-    
-    # Establece un nuevo breakpoint al comienzo de la funcion dada
-    # donde puede ser:
-    # function
-    # filename:linenum
-    # filename:function
-    # *address 
-    def setBreakPoint(self, donde):
-        self.gdbInput.write("-break-insert " + donde + '\n')
+gdb_event_handler.initialize()
+gdb_module_loader.initialize()
 
-    # Ejectua un comando arbitrario pasado como argumento
-    def directCommand(self, command):
-        self.gdbInput.write(command + '\n')
-        
-    # Pide todas las variables y sus tipos 
-    def getVariables(self, data=""):
-        self.gdbInput.write('-stack-list-variables --all-values' + '\n')
-           
-    def evaluarExpresion(self, data=""):
-        self.gdbInput.write('-data-evaluate-expression ' + data + '\n')
-       
-    def evaluarMultiplesPunteros(self, data=""):
-        self.gdbInput.write('pointer-printer ' + data + '\n')
-        
-    @Locker  
-    def redirectToStdin(self, data):
-        print "redirigiendo " + data
-        os.write(self.inputFifo.fileno(), data + '\n')  # Creo que este \n no deberia ir
+sys.path.append("%(plugin_module_path)s")
+''' % {
+       'name':               name,
+       'log_level':          log_level,
+       'base_module_path_1': base_module_path_1,
+       'base_module_path_2': base_module_path_2,
+       'plugin_module_path': plugin_directory,
+      }
+        for line in python_code.strip().split('\n'):
+            self.gdbInput('python %s\n' % line)
 
-    @Locker
-    def sendEOF(self, data):
-        print "Sending EOF"
-        self.inputFifo.close()
-        self.inputFifo = None
-        
-    def redirectFileToStdin(self, data):
-        def enviarArchivo(path):
-            try:
-                fileToRedirect = open(path, 'r')
-                
-                self.lock.acquire()
-                
-                line = os.read(fileToRedirect.fileno(), 512)
-                while (line != ''):
-                    os.write(self.inputFifo.fileno(), line)
-                    line = os.read(fileToRedirect.fileno(), 512)
-                fileToRedirect.close()
-                
-                self.lock.release()
-                
-                self.eventHandler.publish(str(self.targetPid) + ".fileRedirectComplete", path)
-            
-                print "Redirigiendo archivo: " + data
-                
-            except IOError as e:
-                print "I/O error({0}): {1}".format(e.errno, e.strerror)
-                
-        self.t_redirector = threading.Thread(target=enviarArchivo, args=[data])
-        self.t_redirector.start()
-            
-    def fileThreadJoiner(self, data):
-        self.t_redirector.join()
-    
-    def execute_a_request(self, request):
+
+    def _execute_a_request(self, request):
         command = request['command']
         token = int(request['token'])
         arguments = request.get('arguments', tuple())
