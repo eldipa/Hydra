@@ -35,7 +35,7 @@ class Publisher(object):
         self._log(syslog.LOG_DEBUG, "Publication of an event sent.")
 
 
-    def close(self):
+    def close(self, *args, **kargs):
        self.connection.close()
     
     def _get_address(self):
@@ -250,7 +250,7 @@ class EventHandler(threading.Thread, Publisher):
           self._log(syslog.LOG_ERR, "Exception in callback for the topic '%s': %s" % esc((t if t else "(the empty topic)"), traceback.format_exc()))
       
 
-    def close(self):
+    def close(self, *args, **kargs):
        self.connection.close()
-       self.join()
+       self.join(*args,  **kargs)
 
