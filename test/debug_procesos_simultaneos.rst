@@ -42,9 +42,10 @@ gdb) e instanciamos uno de esos wrapper.
 Ahora cargamos 2 *inferiors* con ese ejecutable
 
 ::
+   >>> from shortcuts import request
 
-   >>> gdbInstance.directCommand("-file-exec-and-symbols cppTestCode/write_one_char_at_time")
-   >>> gdbInstance.directCommand("add-inferior -exec cppTestCode/write_one_char_at_time")
+   >>> request(gdbInstance, "-file-exec-and-symbols cppTestCode/write_one_char_at_time", return_none=True)
+   >>> request(gdbInstance, "add-inferior -exec cppTestCode/write_one_char_at_time", return_none=True)
 
 
 Bien, ahora nos moveremos al inferior 1, haremos un *run*, luego iremos al inferior 2 
@@ -52,11 +53,11 @@ y ahoremos otro *run*.
 
 ::
 
-   >>> gdbInstance.directCommand("inferior 1")
-   >>> gdbInstance.directCommand("run")
+   >>> request(gdbInstance, "inferior 1", return_none=True)
+   >>> request(gdbInstance, "run", return_none=True)
 
-   >>> gdbInstance.directCommand("inferior 2")
-   >>> gdbInstance.directCommand("run")
+   >>> request(gdbInstance, "inferior 2", return_none=True)
+   >>> request(gdbInstance, "run", return_none=True)
 
 Ahora solo esperamos un poco para que puedan ejecutar algunas lineas
 
@@ -68,7 +69,8 @@ Bien, ahora procedemos a matar a ambos procesos y finalizar la session de gdb.
 
 ::
 
-   >>> gdbInstance.exit()
+   >>> gdbInstance.shutdown()
+   0
 
 Bien, si ambos proceso se ejecutaron en paralelo veremos un entremezclado del patron
 

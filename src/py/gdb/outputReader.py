@@ -13,15 +13,15 @@ class OutputReader(threading.Thread):
         self.daemon = True
         self.gdbPid = gdbPid
 
-        self.keep_running = True
+        self.should_be_running = True
 
     def join(self, *args, **kargs):
-        Thread.join(self,  *args,  **kargs)
+        threading.Thread.join(self,  *args,  **kargs)
         self.eventHandler.close(*args, **kargs)
 
     
     def run(self):
-        while self.keep_running:
+        while True: # always True: try to consume everything until the end of the output of GDB
             record = self.next_record_from_gdb()
             if record is None:
                 break
@@ -29,7 +29,7 @@ class OutputReader(threading.Thread):
             topic, data = self.build_event_from_gdb_record(record)
             self.eventHandler.publish(topic, data)
 
-        if self.keep_running: # kill myself
+        if self.should_be_running: # kill myself
             self.eventHandler.publish('spawner.kill-debugger', {'pid': self.gdbPid})
         
     def build_event_from_gdb_record(self, record):
@@ -93,3 +93,5 @@ class OutputReader(threading.Thread):
             
             if record == "(gdb)":
                continue
+
+            return record

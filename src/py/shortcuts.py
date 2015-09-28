@@ -27,10 +27,10 @@ def stop_notifier(path):
    notifier_path = os.path.join(path, "notifier.py")
    check_call(["python", notifier_path, "stop"]) 
 
-def request(gdb, command, arguments=tuple()):
+def request(gdb, command, arguments=tuple(), return_none=False):
    cookie = int(random.getrandbits(30))
-   request_topic = "request-gdb.%i.%i" % (gdb.gdb.pid, cookie)
-   response_topic = "result-gdb.%i.%i" % (gdb.gdb.pid, cookie)
+   request_topic = "request-gdb.%i.%i" % (gdb.get_gdb_pid(), cookie)
+   response_topic = "result-gdb.%i.%i" % (gdb.get_gdb_pid(), cookie)
 
    # Build the command correctly: use always the MI interface and a cookie
    if not command.startswith("-"):
@@ -65,7 +65,7 @@ def request(gdb, command, arguments=tuple()):
    response_received_flag.acquire() # block until the flag is release by the callback (and the respose was received)
    pubsub.unsubscribe(subscription_id)
 
-   return ctx['response']
+   return None if return_none else ctx['response']
 
 
 def collect(func_collector):

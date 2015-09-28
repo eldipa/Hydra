@@ -31,7 +31,7 @@ class Gdb(object):
         # other parameters shared must be seen with caution
         self.subscriptions = [
                 self.ev.subscribe("request-gdb.%i" % self.gdb.pid, 
-                        self._execute_a_request, ,
+                        self._execute_a_request,
                         return_subscription_id=True),
                 ]
 
@@ -41,11 +41,11 @@ class Gdb(object):
    
 
     # Finaliza el proceso gdb, junto con su target si este no hubiera finalizado
-    def shutdown(self, _):
+    def shutdown(self):
         self._unsubscribe_me_for_all_events() # no more events for me
         self.ev.close() # wait until all the events are flushed out, so there should not be any race condition with the thread of my event-handler
                         # but can lead to a deadlock if a handler running in that thread tries to call a publish and in the meanwhile the connection was closed.
-        self.outputReader.keep_running = False
+        self.reader.should_be_running = False
 
         try:
             if self.gdb.poll() is None:
@@ -60,8 +60,8 @@ class Gdb(object):
 
                 self.reader.join(timeout=25) # wait again...
             
-            if self.gdb.poll() is None:
-                self.gdb.send_signal(signal.SIGKILL) # enough, kill it!
+                if self.gdb.poll() is None:
+                    self.gdb.send_signal(signal.SIGKILL) # enough, kill it!
 
         finally:
             # close the descriptors and join the threads/processes if they are still alive
@@ -109,7 +109,7 @@ class Gdb(object):
 
         self.gdb_pid = self.gdb.pid
 
-    def _start_gdb_output_reader(self, name)
+    def _start_gdb_output_reader(self, name):
         self.reader = outputReader.OutputReader(self.gdbOutput, self.gdb_pid, name)
         self.reader.start()
 
@@ -151,7 +151,9 @@ sys.path.append("%(plugin_module_path)s")
        'plugin_module_path': plugin_directory,
       }
         for line in python_code.strip().split('\n'):
-            self.gdbInput('python %s\n' % line)
+            if line.strip(): # warning, any empty line will make gdb to enter into 'python mode': we need to execute one line at time.
+                self.gdbInput.write('python %s\n' % line)
+        self.gdbInput.flush()
 
 
     def _execute_a_request(self, request):
@@ -173,7 +175,7 @@ sys.path.append("%(plugin_module_path)s")
               command_line = "%i%s\n" % (token, command_and_arguments_string)
            else:
               command_line = "%i-%s\n" % (token, command_and_arguments_string)
-         
+ 
         self.gdbInput.write(command_line)
         self.gdbInput.flush()
 
