@@ -1,9 +1,10 @@
-import threading
+import threading, sys, traceback, syslog
 from gdb_mi import Output, Record, Stream
 import publish_subscribe.eventHandler
 
 
 class OutputReader(threading.Thread):
+    _DEBUG = False
     
     def __init__(self, gdbOutput, gdbPid, name): 
         threading.Thread.__init__(self)
@@ -27,7 +28,13 @@ class OutputReader(threading.Thread):
                 break
 
             topic, data = self.build_event_from_gdb_record(record)
+            if self._DEBUG:
+                sys.stderr.write("**TOPIC**:" + topic + "\n")
+
             self.eventHandler.publish(topic, data)
+
+            if self._DEBUG:
+                sys.stderr.write("**EV-SENT**:" + topic + "\n")
 
         if self.should_be_running: # kill myself
             self.eventHandler.publish('spawner.kill-debugger', {'pid': self.gdbPid})
@@ -84,9 +91,15 @@ class OutputReader(threading.Thread):
         while True:
             try:
                 line = self.gdbOutput.readline()
+                if self._DEBUG:
+                    sys.stderr.write("**LINE**:" + line)
+
                 if line == "":
                     return None
-            except:
+            except Exception, e:
+                syslog.syslog(syslog.LOG_INFO, traceback.format_exc())
+                if self._DEBUG:
+                    sys.stderr.write("**ERROR**:" + traceback.format_exc())
                 return None
 
             record = self.parser.parse_line(line)
