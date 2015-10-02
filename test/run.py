@@ -2,20 +2,20 @@ import os, sys
 import os.path 
 
 def doctests(source_dir, whitelist):
-   return [os.path.abspath(fname) for fname in os.listdir(source_dir) if \
-         os.path.isfile(fname) \
-         and os.path.splitext(fname)[1] == ".rst" \
-         and (fname in whitelist or not whitelist)]
+   return [os.path.abspath(fname) for fname in whitelist if os.path.isfile(fname) \
+                     and os.path.splitext(fname)[1] == ".rst"]
 
 
 def run_doctests(sources, working_directory, flags):
    for source in sources:
       print "Run tests in %s" % source
-      os.system("cd %s; python %s %s %s" % (
+      cmd = ("cd %s; python %s %s %s" % (
          working_directory, 
          "py/doctestpyjs.py", 
          flags,
          source))
+
+      os.system(cmd)
    
 
 def generate_wiki_pages(sources, wiki_directory):
@@ -35,8 +35,11 @@ if __name__ == '__main__':
    working_directory = "../src"
    wiki_directory = "../../wiki"
 
-   if sys.argv[1] == "-d":
-      flags = "-d"
+   # Flags:
+   #    d:  Diff output, doctest.REPORT_NDIFF
+   #    L:  Log each test
+   if sys.argv[1].startswith("-"):
+      flags = sys.argv[1]
       del sys.argv[1]
    else:
       flags = ""

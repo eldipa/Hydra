@@ -1,3 +1,9 @@
+DEPRECATED TESTS:
+Lo que se ven en estos tests son el lanzamiento de un GDB, la carga de un ejecutable
+y el cierre/limpieza de todo.
+Estos tests son superados por los que se encuentran en gdb_thread_groups.rst.
+
+
 Introduccion
 ------------
 

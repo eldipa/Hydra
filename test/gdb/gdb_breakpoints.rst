@@ -7,7 +7,6 @@ Como siempre, inicializamos nuestro gdb y el sistema de comunicaciones
 
    >>> from gdb.gdb import Gdb
    >>> gdb = Gdb()
-   >>> gdb.subscribe()
 
    >>> BIN="../src/cppTestCode/exe_with_and_without_symbols"
 
@@ -195,5 +194,7 @@ Limpiamos todo:
 
 ::
 
-   >>> gdb.exit()
+   >>> gdb.shutdown()
+   0
+
    >>> stop_notifier("../src/py/publish_subscribe/")

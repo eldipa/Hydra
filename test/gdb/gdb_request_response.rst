@@ -9,7 +9,6 @@ comando retorna con dicho tag lo que permite aparear cada request con su respons
 
    >>> from gdb.gdb import Gdb
    >>> gdb = Gdb()
-   >>> gdb.subscribe()
 
    >>> pubsub = publish_subscribe.eventHandler.EventHandler()
 
@@ -99,5 +98,7 @@ Limiamos todo:
 
 ::
 
-   >>> gdb.exit()
+   >>> gdb.shutdown()
+   0
+
    >>> stop_notifier("../src/py/publish_subscribe/")

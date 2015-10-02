@@ -1,5 +1,6 @@
 import doctest, re, sys, subprocess, time, socket, traceback
 GLOBAL_FLAGS = 0
+LOG_TEST = False
 PASS = doctest.register_optionflag("PASS")
 
 old_OutputChecker_check_output = doctest.OutputChecker.check_output
@@ -212,9 +213,16 @@ def compile(source, filename, mode, flags=0, dont_inherit=0):
       If it is python, just  execute the 'compile' built-in function.
       If it is javascript, invoke the _js_test function to send the
       source to the remote javascript session so it is evaluated there.'''
+   global LOG_TEST
    _, source_type = mixed_parser.type_of_source[source].pop()
 
    import sys, pprint   # hook the displayhook to use pprint instead of repr
+   if LOG_TEST:
+       sys.stderr.write(source.strip() + " [running]\n" )
+   else:
+       sys.stderr.write(".")
+
+   sys.stderr.flush()
    sys.displayhook = lambda x: pprint.pprint(x) if x is not None else None
 
    if source_type == "js":
@@ -229,8 +237,6 @@ def compile(source, filename, mode, flags=0, dont_inherit=0):
    else:
       raise Exception("Unknown source's type: %s" % source_type)
 
-   sys.stderr.write(".")
-   sys.stderr.flush()
    return original_compile_func(source, filename, mode, flags, dont_inherit)
 
 __builtin__.compile = compile    # patching!
@@ -261,8 +267,11 @@ doctest.testfile = testfile   # patching!
 
 
 if __name__ == "__main__":
-    if sys.argv[1] == "-d":
-      GLOBAL_FLAGS |= doctest.REPORT_NDIFF
+    if sys.argv[1].startswith("-"):
+        if "d" in sys.argv[1]:
+          GLOBAL_FLAGS |= doctest.REPORT_NDIFF
+        if "L" in sys.argv[1]:
+          LOG_TEST = True
 
     sys.exit(doctest._test())
 

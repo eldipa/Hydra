@@ -22,7 +22,7 @@ son los que lanza justo al iniciarse.
 ::
 
    >>> from publish_subscribe.eventHandler import EventHandler
-   >>> EH = EventHandler()
+   >>> EH = EventHandler(name="TheTest")
    
    >>> @collect
    ... def collector(data):  
@@ -39,7 +39,6 @@ Bien, ahora lanzamos GDB para ver que sucede
 
    >>> from gdb.gdb import Gdb
    >>> gdb = Gdb()
-   >>> gdb.subscribe()
 
    >>> collector.get_next()                           # doctest: +ELLIPSIS
    {u'debugger-id': ...
@@ -312,6 +311,11 @@ para ver como se muestra un proceso con dos hilos.
     u'token': None,
     u'type': u'Exec'}
 
+NOTE: algunas veces el evento de que se detuvo por un breakpoint nunca llega.
+Tras  algo de debuggeo, es GDB quien nunca emite el evento. Parece que esto
+esta relacionado con la aplicacion multithreading:
+https://sourceware.org/bugzilla/show_bug.cgi?id=17247
+
    >>> collector.get_next()                           # doctest: +ELLIPSIS
    {u'debugger-id': ...
     u'klass': u'stopped',
@@ -484,7 +488,9 @@ Limpiamos todo:
 
 ::
 
-   >>> gdb.exit()
+   >>> gdb.shutdown()
+   0
+
    >>> stop_notifier("../src/py/publish_subscribe/")
 
 Conclusiones

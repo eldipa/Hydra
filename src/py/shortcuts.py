@@ -54,7 +54,7 @@ def request(gdb, command, arguments=tuple(), return_none=False):
       ctx['response'] = event
       response_received_flag.release() # release the flag, response received!
       
-   pubsub = publish_subscribe.eventHandler.EventHandler()
+   pubsub = publish_subscribe.eventHandler.EventHandler(name="requester")
    subscription_id = pubsub.subscribe(
                                  response_topic, 
                                  _wait_and_get_response_from_gdb, 
