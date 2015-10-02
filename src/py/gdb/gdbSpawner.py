@@ -3,6 +3,7 @@ from gdb import Gdb
 import publish_subscribe.eventHandler
 
 import globalconfig
+import traceback, syslog
 
 class GdbSpawner(object):
     def __init__(self): 
@@ -17,10 +18,10 @@ class GdbSpawner(object):
 
     def _subscribe_to_interested_events_for_me(self):
         self.subscriptions = [
-            self.ev.subscribe("spawner.request.debuggers-info", self._response_debuggers_info, return_subscription_id=True),
-            self.ev.subscribe("spawner.add-debugger", self._spawn_a_gdb, return_subscription_id=True),
-            self.ev.subscribe("spawner.kill-debugger", self._shutdown_a_gdb, return_subscription_id=True),
-            self.ev.subscribe("spawner.kill-all-debuggers", self._shutdown_all_gdbs, return_subscription_id=True),
+            self.ev.subscribe("spawner.request.debuggers-info", self._response_debuggers_info, return_subscription_id=True, send_and_wait_echo=True),
+            self.ev.subscribe("spawner.add-debugger", self._spawn_a_gdb, return_subscription_id=True, send_and_wait_echo=True),
+            self.ev.subscribe("spawner.kill-debugger", self._shutdown_a_gdb, return_subscription_id=True, send_and_wait_echo=True),
+            self.ev.subscribe("spawner.kill-all-debuggers", self._shutdown_all_gdbs, return_subscription_id=True, send_and_wait_echo=True),
             ]
     
     def _unsubscribe_me_for_all_events(self):
@@ -43,7 +44,7 @@ class GdbSpawner(object):
 
     def _shutdown_a_gdb(self, data):
         ''' Shutdown the GDB process with process id data['pid']. '''
-        pid = data['pid']
+        pid = data['debugger-id']
         returncode = self.gdb_by_its_pid[pid].shutdown()
         self.ev.publish("spawner.debugger-exited", {"debugger-id": pid,
                                                               "exit-code": returncode})
@@ -65,6 +66,7 @@ class GdbSpawner(object):
     
         for gdb_pid, gdb in self.gdb_by_its_pid.iteritems():
             try:
-                gdb.exit()
-            except:
+                gdb.shutdown()
+            except Exception, e:
+                syslog.syslog(syslog.LOG_INFO, traceback.format_exc())
                 pass # we did our best effort

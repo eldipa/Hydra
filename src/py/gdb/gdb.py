@@ -15,10 +15,10 @@ class Gdb(object):
     def __init__(self): 
         self._start_gdb_process()
         
-        name = "(gdb proxy of %i)" % self.gdb.pid
-        self.ev = publish_subscribe.eventHandler.EventHandler(name=name)
+        name_prefix = "(gdb %i" % self.gdb.pid
+        self.ev = publish_subscribe.eventHandler.EventHandler(name=name_prefix + "[input])")
 
-        self._start_gdb_output_reader(name)
+        self._start_gdb_output_reader(name_prefix + "[output])")
         self._load_base_py_modules_into_gdb_process()
 
         self._subscribe_to_interested_events_for_me()
@@ -32,7 +32,7 @@ class Gdb(object):
         self.subscriptions = [
                 self.ev.subscribe("request-gdb.%i" % self.gdb.pid, 
                         self._execute_a_request,
-                        return_subscription_id=True),
+                        return_subscription_id=True, send_and_wait_echo=True),
                 ]
 
     def _unsubscribe_me_for_all_events(self):
