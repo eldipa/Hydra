@@ -180,10 +180,26 @@ define(["underscore", "jquery", "jstree", "layout"], function (_, $, jstree, lay
                   thread_group_obj.remove();
                },
               },{
-               text: 'Load/attach',
+               text: 'Load sources', //TODO attach (and others)
                action: function (e) {
-                  e.preventDefault(); //TODO
-                  console.log(self._get_data_from_selected());
+                  e.preventDefault();
+                  var ids = self._get_data_from_selected();
+                  var debugger_id = ids['debugger_id'];
+                  var thread_group_id = ids['thread_group_id'];
+
+                  var thread_group_obj = self.debuggee_tracker.thread_groups_by_debugger[debugger_id][thread_group_id];
+
+                  var input_file_dom = $('<input style="display:none;" type="file" />');
+                  input_file_dom.change(function(evt) {
+                      var file_exec_path = "" + $(this).val();
+                      if (file_exec_path) {
+                          thread_group_obj.load_file_exec_and_symbols(self.debuggee_tracker, file_exec_path);
+                      }
+                      else {
+                          console.log("Loading nothing");
+                      }
+                  });
+                  input_file_dom.trigger('click');
                },
               }];
    };

@@ -4,7 +4,7 @@ Created on 19/04/2014
 @author: nicolas
 '''
 
-import gdb.gdbSpawmer
+import gdb.gdbSpawner
 import subprocess
 import os
 import sys
@@ -31,7 +31,7 @@ try:
 
     os.system("python py/publish_subscribe/notifier.py start")
 
-    spawmer = gdb.gdbSpawmer.GdbSpawmer(comandos=True, log =True, inputRedirect=True)
+    spawner = gdb.gdbSpawner.GdbSpawner()
 
     # esperar quit
     while(stdin.readline() not in ["quit\n","q\n"]):
@@ -44,7 +44,7 @@ except Exception as inst:
 
 finally:
     
-    spawmer.shutdown()
+    spawner.shutdown()
     
     os.system("python py/publish_subscribe/notifier.py stop")
  

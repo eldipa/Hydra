@@ -72,6 +72,20 @@ define(["underscore", "shortcuts"], function (_, shortcuts) {
       );
    };
 
+   ThreadGroup.prototype.load_file_exec_and_symbols = function (debugger_tracker, filepath) {
+      var self = this;
+      var update_my_status_when_file_is_loaded = function () {
+          var s = debugger_tracker.thread_groups_by_debugger[self.debugger_id];
+          debugger_tracker._request_an_update_thread_groups_info(s, self.debugger_id);
+      };
+
+      shortcuts.gdb_request(update_my_status_when_file_is_loaded, 
+         this.debugger_id, 
+         "-file-exec-and-symbols",
+         [filepath]
+      );
+   };
+
    var Debugger = function (obj) {
       this._properties = ["EH", "id"];
       this.update(obj);
@@ -90,7 +104,7 @@ define(["underscore", "shortcuts"], function (_, shortcuts) {
    };
 
    Debugger.prototype.kill = function () {  // TODO this is only a draft, add more options
-      this.EH.publish("spawner.kill-debugger", this.id); // like 'what to do with the debuggees?'
+      this.EH.publish("spawner.kill-debugger", {'debugger-id': this.id}); // like 'what to do with the debuggees?'
    };
 
    var DebuggeeTracker = function (EH) {
