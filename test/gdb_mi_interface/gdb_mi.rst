@@ -200,11 +200,7 @@ can be a c-string, a list or a tuple, ending the list with a newline.
    >>> record.klass, record.type, record.results
    ('foo', 'Exec', {})
    >>> record
-   {'klass': 'foo',
-    'last_stream_records': [],
-    'results': {},
-    'token': None,
-    'type': 'Exec'}
+   {'klass': 'foo', 'results': {}, 'token': None, 'type': 'Exec'}
 
    >>> r.parse('+bar,a="b"\n', 0)
    10
@@ -212,11 +208,7 @@ can be a c-string, a list or a tuple, ending the list with a newline.
    >>> record.klass, record.type, record.results
    ('bar', 'Status', {'a': 'b'})
    >>> record
-   {'klass': 'bar',
-    'last_stream_records': [],
-    'results': {'a': 'b'},
-    'token': None,
-    'type': 'Status'}
+   {'klass': 'bar', 'results': {'a': 'b'}, 'token': None, 'type': 'Status'}
 
    >>> r.parse('=baz,a=[],b={c="d"}\n', 0)
    19
@@ -225,25 +217,20 @@ can be a c-string, a list or a tuple, ending the list with a newline.
    ('baz', 'Notify', {'a': [], 'b': {'c': 'd'}})
    >>> record                          #doctest: +NORMALIZE_WHITESPACE
    {'klass': 'baz', 
-    'last_stream_records': [],
     'results': {'a': [], 'b': {'c': 'd'}}, 
     'token': None, 
     'type': 'Notify'}
    
 ::
 
-   >>> r = ResultRecord(last_stream_records=[])
+   >>> r = ResultRecord()
    >>> r.parse('^bar,a="b"\n', 0)
    10
    >>> record = r.as_native()
    >>> record.klass, record.type, record.results
    ('bar', 'Sync', {'a': 'b'})
    >>> record
-   {'klass': 'bar',
-    'last_stream_records': [],
-    'results': {'a': 'b'},
-    'token': None,
-    'type': 'Sync'}
+   {'klass': 'bar', 'results': {'a': 'b'}, 'token': None, 'type': 'Sync'}
 
 The other top level construction are the Stream. These are unstructured c-strings.
 
@@ -297,28 +284,8 @@ each asynchronous message / stream / result separately.
    {'stream': 'foo', 'type': 'Console'}
 
 
-But all the ResultRecord have the last StreamRecords included (yes, they are duplicated).
-This is done because in some cases this is more useful, but in other cases,
-delivering each StreamRecord and ResultRecord as separated messages is better.
 
-::
-
-   >>> s1 = StreamRecord()
-   >>> _ = s1.parse('~"foo"\n', 0)
-
-   >>> s2 = StreamRecord()
-   >>> _ = s2.parse('~"bar"\n', 0)
-
-   >>> r = ResultRecord(last_stream_records=[s1, s2])
-   >>> _ = r.parse('^zaz\n', 0)
-
-   >>> record = r.as_native()
-   >>> record.klass, record.type, record.results
-   ('zaz', 'Sync', {})
-   >>> record.last_stream_records
-   [{'stream': 'foo', 'type': 'Console'}, {'stream': 'bar', 'type': 'Console'}]
-
-For example, this is the message after setting a breakpoint
+As an example, this is the message after setting a breakpoint
 
 ::
 
@@ -344,7 +311,6 @@ For example, this is the message after setting a breakpoint
    'type': 'breakpoint'}
    >>> record                          #doctest: +NORMALIZE_WHITESPACE
    {'klass': 'done',
-    'last_stream_records': [],
     'results': {'bkpt': {'addr': '0x08048564',
                          'disp': 'keep',
                          'enabled': 'y',
@@ -376,7 +342,6 @@ Or, when a execution is stopped
    ('breakpoint-hit', 'keep', '1', '0')
    >>> record                         #doctest: +NORMALIZE_WHITESPACE
    {'klass': 'stopped',
-   'last_stream_records': [],
    'results': {'bkptno': '1',
                'disp': 'keep',
                'frame': {'addr': '0x08048564',

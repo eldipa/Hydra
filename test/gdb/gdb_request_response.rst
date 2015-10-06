@@ -78,7 +78,6 @@ Y ahora esperamos la respuesta.
    >>> response                           # doctest: +ELLIPSIS
    {u'debugger-id': ...
     u'klass': u'done',
-    u'last_stream_records': [],
     u'results': {},
     u'token': 1,
     u'type': u'Sync'}

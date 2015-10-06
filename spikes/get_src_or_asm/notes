@@ -1,0 +1,44 @@
+Ver el test get_src_or_asm.rst
+==============================
+==============================
+
+
+Load file
+=========
+
+-file-exec-and-symbols file
+carga el ejecutable y los simbolos desde "file"
+es un shortcut para estos dos comandos que hacen lo mismo:
+
+-file-exec-file file
+-file-symbol-file file
+
+
+Attach
+======
+
+-target-attach pid
+se attacha al proceso que esta corriendo con su process id igual a pid
+
+-target-detach thread_group_id
+se desatacha de lo que este corriendo en ese thread_group (se puede usar un pid, pero
+creo que es mejor manejarse con el thread_group)
+
+
+Core files
+==========
+
+aparentemente no hay un comando MI equivalente. El comando CLI es: "core-file corefile"
+
+
+http://stackoverflow.com/questions/519107/jquery-autocomplete-tagging-plug-in-like-stackoverflows-input-tags
+https://help.github.com/articles/search-syntax/
+<input type="text" placeholder="Fill me ">
+
+
+attach:pid
+load:file
+remote:ip:port
+
+
+

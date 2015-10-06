@@ -29,7 +29,6 @@ por gdb por tener todos los simbolos e informacion de debugging en el ejecutable
    >>> b1                                                        # doctest: +ELLIPSIS
    {u'debugger-id': ...
     u'klass': u'done',
-    u'last_stream_records': [],
     u'results': {u'bkpt': {u'addr': ...,
                            u'disp': u'keep',
                            u'enabled': u'y',
@@ -50,7 +49,6 @@ por gdb por tener todos los simbolos e informacion de debugging en el ejecutable
    >>> b2                                                        # doctest: +ELLIPSIS
    {u'debugger-id': ...
     u'klass': u'done',
-    u'last_stream_records': [],
     u'results': {u'bkpt': {u'addr': ...,
                            u'disp': u'keep',
                            u'enabled': u'y',
@@ -110,7 +108,6 @@ Para poder obtener todos los breakpoints seteados, podemos pedirselo a GDB
    >>> request(gdb, "-break-list")                    # doctest: +ELLIPSIS
    {u'debugger-id': ...
     u'klass': u'done',
-    u'last_stream_records': [],
     u'results': {u'BreakpointTable': {u'body': [[u'bkpt',
                                                  {u'addr': ...
                                                   ...
@@ -145,7 +142,6 @@ toda la info de debugging
    >>> b1                                                        # doctest: +ELLIPSIS
    {u'debugger-id': ...
     u'klass': u'done',
-    u'last_stream_records': [],
     u'results': {u'bkpt': {u'addr': ...
                            u'at': ...
                            u'disp': u'keep',
@@ -163,7 +159,6 @@ toda la info de debugging
    >>> b2                                                        # doctest: +ELLIPSIS
    {u'debugger-id': ...
     u'klass': u'error',
-    u'last_stream_records': [],
     u'results': {u'msg': u'No symbol table is loaded.  Use the "file" command.'},
     u'token': ...
     u'type': u'Sync'}
@@ -183,7 +178,6 @@ Para el caso de un ejecutable strippeado:
    >>> b1                                                        # doctest: +ELLIPSIS
    {u'debugger-id': ...
     u'klass': u'error',
-    u'last_stream_records': [],
     u'results': {u'msg': u'Function "main" not defined.'},
     u'token': ...
     u'type': u'Sync'}

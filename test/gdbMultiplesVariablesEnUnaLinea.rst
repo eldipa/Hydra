@@ -77,7 +77,6 @@ Pedimos las variables:
    >>> shared_list[0] #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS 
    {u'debugger-id': ...
     u'klass': u'done',
-    u'last_stream_records': [...
     u'results': {u'variables': [{u'name': u'estructura',
                                  u'value': u'{enteroStruct = ..., floatStruct = ...}'},
                                 {u'name': u'entero', u'value': u'0'},

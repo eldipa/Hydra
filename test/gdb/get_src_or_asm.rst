@@ -7,17 +7,13 @@ info target
 
 ::
 
-   >>> import sys
-   >>> sys.path.append("../../src/py/")
-
-   >>> from shortcuts import start_notifier, stop_notifier, request
-   >>> start_notifier("../../src/py/publish_subscribe/")
+   >>> from shortcuts import start_notifier, stop_notifier, request, collect
+   >>> start_notifier("../src/py/publish_subscribe/")
 
    >>> from gdb.gdb import Gdb
    >>> gdb = Gdb()
-   >>> gdb.subscribe()
 
-   >>> BIN="../../src/cppTestCode/exe_with_and_without_symbols"
+   >>> BIN="../src/cppTestCode/exe_with_and_without_symbols"
 
 
 Luego de la inicializacion, cargamos el binario 'example_full_debugging_symbol'.
@@ -43,6 +39,34 @@ solo llamar a
    >>> r['results']['line']                  #doctest: +SKIP
    u'1'
 
+
+Para poder correr el ejecutable, ademas del obvio 'run', podemos hacer un 'start' y podemos
+luego ver cual es el estado del hilo principal.
+
+::
+
+   >>> request(gdb, "-exec-run", ["--start"])        # doctest: +PASS
+   >>> request(gdb, "-thread-info", [])              # doctest: +ELLIPSIS
+   {u'debugger-id': ...
+    u'klass': u'done',
+    u'results': {u'current-thread-id': u'1',
+                 u'threads': [{u'core': u'...',
+                               u'frame': {u'addr': u'0x...',
+                                          u'args': [{u'name': u'argc',
+                                                     u'value': u'1'},
+                                                    {u'name': u'argv',
+                                                     u'value': u'0x...'}],
+                                          u'file': u'example.c',
+                                          u'fullname': u'.../example.c',
+                                          u'func': u'main',
+                                          u'level': u'0',
+                                          u'line': u'...'},
+                               u'id': u'1',
+                               u'name': u'...',
+                               u'state': u'stopped',
+                               u'target-id': u'...'}]},
+    u'token': ...,
+    u'type': u'Sync'}
 
 Pero que pasa si tenemos el ejecutable sin la informacion necesaria para debuggear?
 
@@ -79,15 +103,31 @@ La funcion "main" no existe como tal por que no existe el tag "main"!
 La unica alternativa es averiguar cual es el entry point y arrancar por ahi.
 
 **Nota:** Lamentablemente no hay un comando MI de gdb para obtener
-el entry point. La unica solucion es un comando tradicional y luego parsear.
+el entry point. La unica solucion es un comando tradicional y luego parsear 
+la salida (stream events) de GDB... horrible.
 
 ::
 
-   >>> request(gdb, "-file-exec-and-symbols %s/example_stripped" % BIN)   # doctest: +PASS
+   >>> from publish_subscribe.eventHandler import EventHandler
+   >>> EH = EventHandler(name="TheTest")
+   
+   >>> @collect
+   ... def collector(data):  
+   ...   s = data['stream']
+   ...   if "Entry point" in s:
+   ...      return s
+   ...
+   ...   return None #discard
+   
+   >>> EH.subscribe('stream-gdb', collector, send_and_wait_echo=True) # start to track the logs
 
-   >>> stream_records = request(gdb, "info target")['last_stream_records']
-   >>> entry_point_record = filter(lambda r: "Entry point" in r['stream'], stream_records)[0]
-   >>> entry_point_address = entry_point_record['stream'].split(": ")[-1].strip()
+   >>> # do the request
+   >>> request(gdb, "-file-exec-and-symbols %s/example_stripped" % BIN)   # doctest: +PASS
+   >>> request(gdb, "info target")                                        # doctest: +PASS
+
+   >>> log_of_entry_point = collector.get_next()  # extract the wanted log
+
+   >>> entry_point_address = log_of_entry_point.split(": ")[-1].strip()
    >>> entry_point_address
    u'0x8048320'
 
@@ -111,5 +151,7 @@ Limiamos todo:
 
 ::
 
-   >>> gdb.exit()
-   >>> stop_notifier("../../src/py/publish_subscribe/")
+   >>> gdb.shutdown()
+   0
+   
+   >>> stop_notifier("../src/py/publish_subscribe/")
