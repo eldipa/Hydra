@@ -41,7 +41,8 @@ solo llamar a
 
 
 Para poder correr el ejecutable, ademas del obvio 'run', podemos hacer un 'start' y podemos
-luego ver cual es el estado del hilo principal.
+luego ver cual es el estado del hilo principal donde podemos encontrar el archivo (file y fullname)
+del codigo que se esta ejecutando y el numero de linea.
 
 ::
 
@@ -90,13 +91,61 @@ Para ello desamblamos el codigo objeto desde la direccion &main hasta los primer
 ::
 
    >>> r = request(gdb, "-data-disassemble -s &main -e &main+10 -- 0")
-   >>> instructions = r['results']['asm_insns'] # lista de instrucciones
+   >>> r['results']                                             # doctest: +ELLIPSIS
+   {u'asm_insns': [{u'address': u'0x0804841d',
+                    u'func-name': u'main',
+                    u'inst': u'push   %ebp',
+                    u'offset': u'0'},
+                   {u'address': u'0x0804841e',
+                    u'func-name': u'main',
+                    u'inst': u'mov    %esp,%ebp',
+                    u'offset': u'1'},
+                   {u'address': u'0x08048420',
+                    u'func-name': u'main',
+                    u'inst': u'and    $0xfffffff0,%esp',
+                    u'offset': u'3'},
+                   {u'address': u'0x08048423',
+                    u'func-name': u'main',
+                    u'inst': u'sub    $0x20,%esp',
+                    u'offset': u'6'},
+                   {u'address': u'0x08048426',
+                    u'func-name': u'main',
+                    u'inst': u'cmpl   $0x41414141,0x1c(%esp)',
+                    u'offset': u'9'}]}
+
+   >>> instructions = r['results']['asm_insns']     # lista de instrucciones
    >>> map(lambda i: (i['address'], i['inst']), instructions)
    [(u'0x0804841d', u'push   %ebp'),
     (u'0x0804841e', u'mov    %esp,%ebp'),
     (u'0x08048420', u'and    $0xfffffff0,%esp'),
     (u'0x08048423', u'sub    $0x20,%esp'),
     (u'0x08048426', u'cmpl   $0x41414141,0x1c(%esp)')]
+
+
+Dado que el simbolo 'main' no fue borrado, aun podemos hacer un 'start' y el estado del 
+hilo principal. En este caso perdemos los argumentos, el archivo source (file y fullname)
+y el numero de linea. Basicamente al compilar son los simbolos lo que hace el compilador
+es no poner el mapeo entre el codigo binario y el codigo fuente.
+
+::
+
+   >>> request(gdb, "-exec-run", ["--start"])        # doctest: +PASS
+   >>> request(gdb, "-thread-info", [])              # doctest: +ELLIPSIS
+   {u'debugger-id': ...
+    u'klass': u'done',
+    u'results': {u'current-thread-id': u'1',
+                 u'threads': [{u'core': u'...',
+                               u'frame': {u'addr': u'0x...',
+                                          u'args': [],
+                                          u'func': u'main',
+                                          u'level': u'0'},
+                               u'id': u'1',
+                               u'name': u'...',
+                               u'state': u'stopped',
+                               u'target-id': u'...'}]},
+    u'token': ...,
+    u'type': u'Sync'}
+
 
 Pero esto no es todo. Si el ejecutable esta strippeado, no hay ningun simbolo. 
 La funcion "main" no existe como tal por que no existe el tag "main"!
@@ -146,6 +195,29 @@ es la direccion de quien llama --indirectamente-- a main).
     (u'0x08048328', u'push   %eax'),
     (u'0x08048329', u'push   %esp')]
 
+Dado que el simbolo 'main' fue borrado, podemos emular un 'start' al poner un
+breakpoint temporal en la direccion de entrada.
+Obviamente no tenemos ni el source ni la linea. Ni siquiera el nombre de la funcion.
+
+::
+
+   >>> request(gdb, "-break-insert", ["-t", "*" + entry_point_address])     # doctest: +PASS
+   >>> request(gdb, "-exec-run", [])                                        # doctest: +PASS
+   >>> request(gdb, "-thread-info", [])                                     # doctest: +ELLIPSIS
+   {u'debugger-id': ...
+    u'klass': u'done',
+    u'results': {u'current-thread-id': u'1',
+                 u'threads': [{u'core': u'...',
+                               u'frame': {u'addr': u'0x...',
+                                          u'args': [],
+                                          u'func': u'??',
+                                          u'level': u'0'},
+                               u'id': u'1',
+                               u'name': u'...',
+                               u'state': u'stopped',
+                               u'target-id': u'...'}]},
+    u'token': ...,
+    u'type': u'Sync'}
 
 Limiamos todo:
 
