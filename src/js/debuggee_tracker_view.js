@@ -64,26 +64,26 @@ define(["underscore", "jquery", "jstree", "layout"], function (_, $, jstree, lay
 
    DebuggeeTrackerView.prototype.get_data = function () {
       var debuggee_tracker = this.debuggee_tracker;
-      var debugger_objects_by_id =  debuggee_tracker.get_all_debuggers();
+      var debuggers_by_id =  debuggee_tracker.get_all_debuggers();
 
-      var tree_data = _.map(debugger_objects_by_id, 
+      var tree_data = _.map(debuggers_by_id, 
          function (debugger_obj, debugger_id) {   
             var thread_groups_objects_by_id = debuggee_tracker.get_thread_groups_of(debugger_id);
 
             // first level
-            return {text: debugger_obj.get_display_name(debugger_id),
+            return {text: debugger_obj.get_display_name(),
                     data: {debugger_id: debugger_id},
                     children: _.map(thread_groups_objects_by_id,
                            function (thread_group_obj, thread_group_id) {
                               
                               // second level          
-                              return {text: thread_group_obj.get_display_name(thread_group_id),
+                              return {text: thread_group_obj.get_display_name(),
                                       data: {debugger_id: debugger_id, thread_group_id: thread_group_id},
                                       children: _.map(thread_group_obj.threads_by_id,
                                           function (thread_obj, thread_id) {
 
                                              // third level
-                                             return {text: thread_obj.get_display_name(thread_id),
+                                             return {text: thread_obj.get_display_name(),
                                                      data: {debugger_id: debugger_id, thread_group_id: thread_group_id, thread_id: thread_id}};
                                           }, this)
                                      };
