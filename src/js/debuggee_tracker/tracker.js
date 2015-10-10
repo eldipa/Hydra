@@ -42,8 +42,8 @@ define(["underscore", "shortcuts", "event_handler", "debuggee_tracker/debugger",
       this.EH.publish("spawner.add-debugger", {});
    };
  
-   DebuggeeTracker.prototype.get_thread_groups_of = function (debugger_id) {
-      return this.thread_groups_by_debugger[debugger_id];
+   DebuggeeTracker.prototype.get_debugger_with_id = function (debugger_id) {
+       return this.debuggers_by_id[debugger_id];
    };  
 
    /*

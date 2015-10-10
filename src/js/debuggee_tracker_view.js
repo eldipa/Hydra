@@ -141,7 +141,7 @@ define(["underscore", "jquery", "jstree", "layout"], function (_, $, jstree, lay
                action: function (e) {
                   e.preventDefault();
                   var debugger_id = self._get_data_from_selected().debugger_id;
-                  var debugger_obj = self.debuggee_tracker.debuggers_by_id[debugger_id];
+                  var debugger_obj = self.debuggee_tracker.get_debugger_with_id(debugger_id);
                   debugger_obj.kill();
                },
               },{
@@ -149,7 +149,7 @@ define(["underscore", "jquery", "jstree", "layout"], function (_, $, jstree, lay
                action: function (e) {
                   e.preventDefault();
                   var debugger_id = self._get_data_from_selected().debugger_id;
-                  var debugger_obj = self.debuggee_tracker.debuggers_by_id[debugger_id];
+                  var debugger_obj = self.debuggee_tracker.get_debugger_with_id(debugger_id);
                   debugger_obj.add_thread_group();
                },
               }];
@@ -176,7 +176,7 @@ define(["underscore", "jquery", "jstree", "layout"], function (_, $, jstree, lay
                   var debugger_id = ids['debugger_id'];
                   var thread_group_id = ids['thread_group_id'];
 
-                  var thread_group = self.debuggee_tracker.thread_groups_by_debugger[debugger_id][thread_group_id];
+                  var thread_group = self.debuggee_tracker.get_debugger_with_id(debugger_id).get_thread_group_with_id(thread_group_id);
                   thread_group.remove();
                },
               },{
@@ -187,7 +187,7 @@ define(["underscore", "jquery", "jstree", "layout"], function (_, $, jstree, lay
                   var debugger_id = ids['debugger_id'];
                   var thread_group_id = ids['thread_group_id'];
 
-                  var thread_group = self.debuggee_tracker.thread_groups_by_debugger[debugger_id][thread_group_id];
+                  var thread_group = self.debuggee_tracker.get_debugger_with_id(debugger_id).get_thread_group_with_id(thread_group_id);
 
                   var input_file_dom = $('<input style="display:none;" type="file" />');
                   input_file_dom.change(function(evt) {

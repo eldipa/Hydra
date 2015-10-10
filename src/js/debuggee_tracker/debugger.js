@@ -28,7 +28,11 @@ define(["underscore", "shortcuts", 'event_handler'], function (_, shortcuts, eve
     };
 
     Debugger.prototype.your_thread_groups_by_id = function () {
-        return this.tracker.get_thread_groups_of(this.id);
+        return this.tracker.thread_groups_by_debugger[this.id];
+    };
+
+    Debugger.prototype.get_thread_group_with_id = function (thread_group_id) {
+        return this.tracker.thread_groups_by_debugger[this.id][thread_group_id];
     };
 
     return {Debugger: Debugger};
