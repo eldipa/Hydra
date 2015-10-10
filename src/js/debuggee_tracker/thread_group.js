@@ -60,5 +60,9 @@ define(["underscore", "shortcuts", 'event_handler'], function (_, shortcuts, eve
                 );
     };
 
+    ThreadGroup.prototype.your_threads_by_id = function () {
+        return this.threads_by_id;
+    };
+
     return {ThreadGroup: ThreadGroup};
 });

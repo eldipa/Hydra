@@ -79,7 +79,7 @@ define(["underscore", "jquery", "jstree", "layout"], function (_, $, jstree, lay
                               // second level          
                               return {text: thread_group.get_display_name(),
                                       data: {debugger_id: debugger_obj.id, thread_group_id: thread_group.id},
-                                      children: _.map(thread_group.threads_by_id,
+                                      children: _.map(thread_group.your_threads_by_id(),
                                           function (thread) {
 
                                              // third level
