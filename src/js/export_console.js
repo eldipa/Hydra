@@ -1,4 +1,4 @@
-define(['event_handler'], function (event_handler) {
+define(["underscore"], function (_) {
    'use strict';
 
    var repl = require("repl");
@@ -10,7 +10,7 @@ define(['event_handler'], function (event_handler) {
 
    /* Start a server so the client can connect to him and start to send
     * arbitrary javascript statements. */
-   var init = function () {
+   var init = function (context) {
       var server = net.createServer(function (socket) {
           var repl_object = repl.start({
                  prompt: "js> ",
@@ -26,9 +26,7 @@ define(['event_handler'], function (event_handler) {
            });
 
           // add variables to the context (export variables)
-          // repl_object.context.foo = local_foo;
-          repl_object.context.event_handler = event_handler;
-         
+          _.extend(repl_object.context, context);
       });
       
       server.listen(port, host)
