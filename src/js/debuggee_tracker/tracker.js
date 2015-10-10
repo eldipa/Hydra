@@ -2,6 +2,7 @@ define(["underscore", "shortcuts", "event_handler", "debuggee_tracker/debugger",
    'use strict';
 
    var Debugger = debugger_module.Debugger;
+   var ThreadGroup = thread_group_module.ThreadGroup;
 
    var _update_properties = function (obj) {
       _.each(_.keys(obj), function (k) {
@@ -23,69 +24,6 @@ define(["underscore", "shortcuts", "event_handler", "debuggee_tracker/debugger",
    Thread.prototype.update = _update_properties;
    Thread.prototype.get_display_name = function () {
       return "Thread "+this.id+" ("+this.state+")";
-   };
-
-   var ThreadGroup = function (obj) {
-      this._properties = ["EH", "id", "debugger_id", "state", "executable", "process_id", "exit_code"];
-      this.update(obj);
-
-      this.threads_by_id = {};
-
-   };
-   ThreadGroup.prototype.update = _update_properties;
-   ThreadGroup.prototype.get_display_name = function () {
-      var base = "Group " + this.id + " ";
-      var more = [];
-      
-      if (this.executable != undefined) {
-         if (this.executable.length > 16) {
-            more.push("..."+this.executable.substr(this.executable.lastIndexOf("/")));
-         }
-         else {
-            more.push(this.executable);
-         }
-      }
-
-      if (this.state === "started") {
-         if (this.executable != undefined && this.process_id !== undefined) {
-            more.push("PID: " + this.process_id);
-         }
-      }
-      else {
-         if (this.exit_code !== undefined) {
-            more.push("Exit code: " + this.exit_code);
-         }
-      }
-
-      if (this.executable != undefined) {
-         if (this.executable.length > 16) {
-            more.push("(" + this.executable + ")");
-         }
-      }
-
-      return base + more.join(" ");
-   };
-
-   ThreadGroup.prototype.remove = function () {
-      shortcuts.gdb_request(null, 
-         this.debugger_id, 
-         "-remove-inferior",
-         [""+this.id]
-      );
-   };
-
-   ThreadGroup.prototype.load_file_exec_and_symbols = function (debugger_tracker, filepath) {
-      var self = this;
-      var update_my_status_when_file_is_loaded = function () {
-          var s = debugger_tracker.thread_groups_by_debugger[self.debugger_id];
-          debugger_tracker._request_an_update_thread_groups_info(s, self.debugger_id);
-      };
-
-      shortcuts.gdb_request(update_my_status_when_file_is_loaded, 
-         this.debugger_id, 
-         "-file-exec-and-symbols",
-         [filepath]
-      );
    };
 
 
@@ -238,9 +176,7 @@ define(["underscore", "shortcuts", "event_handler", "debuggee_tracker/debugger",
       var debugger_id = data['debugger-id'];
       var thread_group_id = data.results.id;
 
-      this.thread_groups_by_debugger[debugger_id][thread_group_id] = new ThreadGroup({
-         EH: this.EH,
-         id: thread_group_id,
+      this.thread_groups_by_debugger[debugger_id][thread_group_id] = new ThreadGroup(thread_group_id, {
          debugger_id: debugger_id,
          state: "not-started",
       });
@@ -416,7 +352,7 @@ define(["underscore", "shortcuts", "event_handler", "debuggee_tracker/debugger",
             var thread_group_object = thread_group_by_id[thread_group_id];
 
             if (thread_group_object === undefined) {
-               thread_group_object = new ThreadGroup({EH: self.EH, id: thread_group_id, debugger_id: debugger_id});
+               thread_group_object = new ThreadGroup(thread_group_id, {debugger_id: debugger_id});
                thread_group_by_id[thread_group_id] = thread_group_object; 
             }
 

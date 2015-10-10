@@ -1,9 +1,13 @@
 define(["underscore", "shortcuts", 'event_handler'], function (_, shortcuts, event_handler) {
     'use strict';
-    
-    var ThreadGroup = function (obj) {
-        this._properties = ["id", "debuggee_tracker", "debugger_id", "state", "executable", "process_id", "exit_code"];
+
+    var ThreadGroup = function (id, obj) {
+        this._properties = ["debugger_id", "state", "executable", "process_id", "exit_code"];
         this.update(obj);
+
+        this.threads_by_id = {};
+        this.id = id;
+        this.EH = event_handler.get_global_event_handler();
     };
 
     ThreadGroup.prototype.update = shortcuts._update_properties;
@@ -41,11 +45,11 @@ define(["underscore", "shortcuts", 'event_handler'], function (_, shortcuts, eve
                 );
     };
 
-    ThreadGroup.prototype.load_file_exec_and_symbols = function (filepath) {
+    ThreadGroup.prototype.load_file_exec_and_symbols = function (debugger_tracker, filepath) {
         var self = this;
         var update_my_status_when_file_is_loaded = function () {
-            var s = self.debuggee_tracker.thread_groups_by_debugger[self.debugger_id];
-            self.debuggee_tracker._request_an_update_thread_groups_info(s, self.debugger_id);
+            var s = debugger_tracker.thread_groups_by_debugger[self.debugger_id];
+            debugger_tracker._request_an_update_thread_groups_info(s, self.debugger_id);
         };
 
         shortcuts.gdb_request(update_my_status_when_file_is_loaded, 
