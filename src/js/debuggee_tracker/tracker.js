@@ -3,28 +3,7 @@ define(["underscore", "shortcuts", "event_handler", "debuggee_tracker/debugger",
 
    var Debugger = debugger_module.Debugger;
    var ThreadGroup = thread_group_module.ThreadGroup;
-
-   var _update_properties = function (obj) {
-      _.each(_.keys(obj), function (k) {
-         if (!(_.contains(this._properties, k))) {
-            throw Error("Unexpected key '"+k+"' to be read and updated");
-         }
-         this[k] = obj[k];
-
-      }, this);
-   };
-
-   var Thread = function (obj) {
-      this._properties = ["EH", "id", "thread_group_id", "state", "source_fullname",
-                          "source_line",  "instruction_address"];
-
-      this.update(obj);
-
-   };
-   Thread.prototype.update = _update_properties;
-   Thread.prototype.get_display_name = function () {
-      return "Thread "+this.id+" ("+this.state+")";
-   };
+   var Thread = thread_module.Thread;
 
 
    var DebuggeeTracker = function (EH) {
@@ -236,7 +215,7 @@ define(["underscore", "shortcuts", "event_handler", "debuggee_tracker/debugger",
       var thread_group_id = data.results['group-id'];
       var thread_id = data.results.id;
       
-      var thread_object = new Thread({EH: this.EH, id: thread_id, thread_group_id: thread_group_id});
+      var thread_object = new Thread(thread_id, {thread_group_id: thread_group_id});
 
       var thread_group_object = this.thread_groups_by_debugger[debugger_id][thread_group_id];
 
@@ -408,7 +387,7 @@ define(["underscore", "shortcuts", "event_handler", "debuggee_tracker/debugger",
       var thread_object = thread_objects[thread_id];
 
       if (thread_object === undefined) {
-         thread_object = new Thread({EH: this.EH, id: thread_id});
+         thread_object = new Thread(thread_id, {});
          thread_objects[thread_id] = thread_object; 
       }
 
