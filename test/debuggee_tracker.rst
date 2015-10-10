@@ -1,3 +1,6 @@
+Nota: para correr estos tests la UI no debe instanciar ningun objeto DebuggeeTracker ya
+que terminara interfiriendo con los tests.
+
 
 El objeto debugge_tracker mantiene el estado de los debuggers, threads and thread groups
 que estan corriendo.
