@@ -59,7 +59,7 @@ define(["underscore", "shortcuts", "event_handler", "debuggee_tracker/debugger",
       this.thread_groups_by_debugger[debugger_id] = {};
       this.threads_by_debugger[debugger_id] = {};
 
-      this.debuggers_by_id[debugger_id] = new Debugger(debugger_id, {});
+      this.debuggers_by_id[debugger_id] = new Debugger(debugger_id, this, {});
 
       var subscription_ids_of_all_interested_events = this.track_this_debugger(debugger_id);
       this.subscription_ids_by_debugger[debugger_id] = subscription_ids_of_all_interested_events;

@@ -1,11 +1,12 @@
 define(["underscore", "shortcuts", 'event_handler'], function (_, shortcuts, event_handler) {
     'use strict';
 
-    var Debugger = function (id, obj) {
+    var Debugger = function (id, tracker, obj) {
         this._properties = [];
         this.update(obj);
 
         this.id = id;
+        this.tracker = tracker;
         this.EH = event_handler.get_global_event_handler();
     };
 
@@ -24,6 +25,10 @@ define(["underscore", "shortcuts", 'event_handler'], function (_, shortcuts, eve
 
     Debugger.prototype.kill = function () {  // TODO this is only a draft, add more options
         this.EH.publish("spawner.kill-debugger", {'debugger-id': this.id}); // like 'what to do with the debuggees?'
+    };
+
+    Debugger.prototype.your_thread_groups_by_id = function () {
+        return this.tracker.get_thread_groups_of(this.id);
     };
 
     return {Debugger: Debugger};

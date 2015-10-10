@@ -68,23 +68,23 @@ define(["underscore", "jquery", "jstree", "layout"], function (_, $, jstree, lay
 
       var tree_data = _.map(debuggers_by_id, 
          function (debugger_obj) {   
-            var thread_groups_objects_by_id = debuggee_tracker.get_thread_groups_of(debugger_obj.id);
+            var thread_groups_by_id = debugger_obj.your_thread_groups_by_id();
 
             // first level
             return {text: debugger_obj.get_display_name(),
                     data: {debugger_id: debugger_obj.id},
-                    children: _.map(thread_groups_objects_by_id,
-                           function (thread_group, thread_group_id) {
+                    children: _.map(thread_groups_by_id,
+                           function (thread_group) {
                               
                               // second level          
                               return {text: thread_group.get_display_name(),
-                                      data: {debugger_id: debugger_obj.id, thread_group_id: thread_group_id},
+                                      data: {debugger_id: debugger_obj.id, thread_group_id: thread_group.id},
                                       children: _.map(thread_group.threads_by_id,
-                                          function (thread_obj, thread_id) {
+                                          function (thread) {
 
                                              // third level
-                                             return {text: thread_obj.get_display_name(),
-                                                     data: {debugger_id: debugger_obj.id, thread_group_id: thread_group_id, thread_id: thread_id}};
+                                             return {text: thread.get_display_name(),
+                                                     data: {debugger_id: debugger_obj.id, thread_group_id: thread_group.id, thread_id: thread.id}};
                                           }, this)
                                      };
                            }, this)
