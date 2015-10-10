@@ -35,7 +35,18 @@ define(['event_handler'], function (event_handler) {
       eh.publish(request_topic, request_for_command);
    };
 
+   var _update_properties = function (obj) {
+      _.each(_.keys(obj), function (k) {
+         if (!(_.contains(this._properties, k))) {
+            throw Error("Unexpected key '"+k+"' to be read and updated");
+         }
+         this[k] = obj[k];
+
+      }, this);
+   };
+
    return {
       gdb_request: gdb_request,
+      _update_properties: _update_properties
    };
 });
