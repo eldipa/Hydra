@@ -16,7 +16,7 @@ requirejs.config({
       standarInput: 'standarInput',
       shortcuts: 'shortcuts',
       jstree: 'external/jstree-3.1.1',
-      debuggee_tracker_view: 'debuggee_tracker_view',
+      debuggee_tracker_view: 'debuggee_tracker_view'
    },
 
    shim: {
@@ -51,12 +51,16 @@ requirejs.onResourceLoad = function(context, map, depArray) {
    }
 };
 
-requirejs(['ui', 'code_view', 'jquery', 'export_console', 'layout', 'layout_examples', 'jqueryui', 'ctxmenu', 'notify_js_console', 'debuggee_tracker', 'event_handler', 'debuggee_tracker_view'], function (ui, code_view, $, export_console, layout, layout_examples, _, ctxmenu, notify_js_console, debuggee_tracker, event_handler, debuggee_tracker_view) {
+requirejs(['ui', 'code_view', 'jquery', 'export_console', 'layout', 'layout_examples', 'jqueryui', 'ctxmenu', 'notify_js_console', 'debuggee_tracker/tracker', 'event_handler', 'debuggee_tracker_view', 'underscore'], function (ui, code_view, $, export_console, layout, layout_examples, jqueryui, ctxmenu, notify_js_console, debuggee_tracker, event_handler, debuggee_tracker_view, _) {
    var EH = new event_handler.EventHandler();
    EH.init("(ui)");
    event_handler.set_global_event_handler(EH);
 
-   var js_console_server = export_console.init();
+   var js_console_server = export_console.init({
+       event_handler: event_handler,
+       debuggee_tracker: debuggee_tracker,
+       u: _
+   });
    var fs = require('fs');
 
    // Load the context menu handler.
@@ -80,7 +84,7 @@ requirejs(['ui', 'code_view', 'jquery', 'export_console', 'layout', 'layout_exam
    var root = l.root;
    var visor = l.visor;
 
-   dbg_tracker = new debuggee_tracker.DebuggeeTracker(EH);
+   dbg_tracker = new debuggee_tracker.DebuggeeTracker();
    dbg_tracker_view = new debuggee_tracker_view.DebuggeeTrackerView(dbg_tracker);
 
    visor.swap(dbg_tracker_view);

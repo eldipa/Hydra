@@ -1,4 +1,4 @@
-define(["underscore", "shortcuts"], function (_, shortcuts) {
+define(["underscore", "shortcuts", "event_handler"], function (_, shortcuts, event_handler) {
    'use strict';
 
    var _update_properties = function (obj) {
@@ -108,7 +108,7 @@ define(["underscore", "shortcuts"], function (_, shortcuts) {
    };
 
    var DebuggeeTracker = function (EH) {
-      this.EH = EH;
+      this.EH = event_handler.get_global_event_handler();
 
       this.observers = [];
 
@@ -125,11 +125,11 @@ define(["underscore", "shortcuts"], function (_, shortcuts) {
                       "_thread_created",       "_thread_exited",
                       "_running",              "_stopped");
 
-      EH.subscribe('spawner.debugger-started', this._debugger_started);
-      EH.subscribe('spawner.debugger-exited',  this._debugger_exited);
-      EH.subscribe('spawner.debuggers-info',   this._debuggers_info);
+      this.EH.subscribe('spawner.debugger-started', this._debugger_started);
+      this.EH.subscribe('spawner.debugger-exited',  this._debugger_exited);
+      this.EH.subscribe('spawner.debuggers-info',   this._debuggers_info);
 
-      EH.publish('spawner.request.debuggers-info', {}); // send this to force a resync
+      this.EH.publish('spawner.request.debuggers-info', {}); // send this to force a resync
    };
    
    /* 
