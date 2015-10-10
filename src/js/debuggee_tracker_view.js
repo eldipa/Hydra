@@ -67,24 +67,24 @@ define(["underscore", "jquery", "jstree", "layout"], function (_, $, jstree, lay
       var debuggers_by_id =  debuggee_tracker.get_all_debuggers();
 
       var tree_data = _.map(debuggers_by_id, 
-         function (debugger_obj, debugger_id) {   
-            var thread_groups_objects_by_id = debuggee_tracker.get_thread_groups_of(debugger_id);
+         function (debugger_obj) {   
+            var thread_groups_objects_by_id = debuggee_tracker.get_thread_groups_of(debugger_obj.id);
 
             // first level
             return {text: debugger_obj.get_display_name(),
-                    data: {debugger_id: debugger_id},
+                    data: {debugger_id: debugger_obj.id},
                     children: _.map(thread_groups_objects_by_id,
-                           function (thread_group_obj, thread_group_id) {
+                           function (thread_group, thread_group_id) {
                               
                               // second level          
-                              return {text: thread_group_obj.get_display_name(),
-                                      data: {debugger_id: debugger_id, thread_group_id: thread_group_id},
-                                      children: _.map(thread_group_obj.threads_by_id,
+                              return {text: thread_group.get_display_name(),
+                                      data: {debugger_id: debugger_obj.id, thread_group_id: thread_group_id},
+                                      children: _.map(thread_group.threads_by_id,
                                           function (thread_obj, thread_id) {
 
                                              // third level
                                              return {text: thread_obj.get_display_name(),
-                                                     data: {debugger_id: debugger_id, thread_group_id: thread_group_id, thread_id: thread_id}};
+                                                     data: {debugger_id: debugger_obj.id, thread_group_id: thread_group_id, thread_id: thread_id}};
                                           }, this)
                                      };
                            }, this)
@@ -176,8 +176,8 @@ define(["underscore", "jquery", "jstree", "layout"], function (_, $, jstree, lay
                   var debugger_id = ids['debugger_id'];
                   var thread_group_id = ids['thread_group_id'];
 
-                  var thread_group_obj = self.debuggee_tracker.thread_groups_by_debugger[debugger_id][thread_group_id];
-                  thread_group_obj.remove();
+                  var thread_group = self.debuggee_tracker.thread_groups_by_debugger[debugger_id][thread_group_id];
+                  thread_group.remove();
                },
               },{
                text: 'Load sources', //TODO attach (and others)
@@ -187,13 +187,13 @@ define(["underscore", "jquery", "jstree", "layout"], function (_, $, jstree, lay
                   var debugger_id = ids['debugger_id'];
                   var thread_group_id = ids['thread_group_id'];
 
-                  var thread_group_obj = self.debuggee_tracker.thread_groups_by_debugger[debugger_id][thread_group_id];
+                  var thread_group = self.debuggee_tracker.thread_groups_by_debugger[debugger_id][thread_group_id];
 
                   var input_file_dom = $('<input style="display:none;" type="file" />');
                   input_file_dom.change(function(evt) {
                       var file_exec_path = "" + $(this).val();
                       if (file_exec_path) {
-                          thread_group_obj.load_file_exec_and_symbols(self.debuggee_tracker, file_exec_path);
+                          thread_group.load_file_exec_and_symbols(self.debuggee_tracker, file_exec_path);
                       }
                       else {
                           console.log("Loading nothing");
