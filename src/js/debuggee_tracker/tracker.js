@@ -184,8 +184,8 @@ define(["underscore", "shortcuts", "event_handler", "debuggee_tracker/debugger",
       var thread_group_id = data.results.id;
       var thread_group_pid = data.results.pid;
 
-      var thread_group_object = this.thread_groups_by_debugger[debugger_id][thread_group_id];
-      thread_group_object.update({process_id: thread_group_pid, state: "started"});
+      var thread_group = this.thread_groups_by_debugger[debugger_id][thread_group_id];
+      thread_group.update({process_id: thread_group_pid, state: "started"});
       
       this.notify("thread_group_started", { 
                                        event_data: data,
@@ -199,8 +199,8 @@ define(["underscore", "shortcuts", "event_handler", "debuggee_tracker/debugger",
       var thread_group_id = data.results.id;
       var exit_code = data.results['exit-code'];
 
-      var thread_group_object = this.thread_groups_by_debugger[debugger_id][thread_group_id];
-      thread_group_object.update({state: "not-started", exit_code: exit_code});
+      var thread_group = this.thread_groups_by_debugger[debugger_id][thread_group_id];
+      thread_group.update({state: "not-started", exit_code: exit_code});
       
       this.notify("thread_group_exited", { 
                                        event_data: data,
@@ -216,10 +216,10 @@ define(["underscore", "shortcuts", "event_handler", "debuggee_tracker/debugger",
       
       var thread = new Thread(thread_id, {thread_group_id: thread_group_id});
 
-      var thread_group_object = this.thread_groups_by_debugger[debugger_id][thread_group_id];
+      var thread_group = this.thread_groups_by_debugger[debugger_id][thread_group_id];
 
       this.threads_by_debugger[debugger_id][thread_id] = thread;
-      thread_group_object.threads_by_id[thread_id] = thread;
+      thread_group.threads_by_id[thread_id] = thread;
       
       this.notify("thread_created", { 
                                        event_data: data,
@@ -241,10 +241,10 @@ define(["underscore", "shortcuts", "event_handler", "debuggee_tracker/debugger",
                                        thread_id: thread_id
                                        });
 
-      var thread_group_object = this.thread_groups_by_debugger[debugger_id][thread_group_id];
+      var thread_group = this.thread_groups_by_debugger[debugger_id][thread_group_id];
       
       delete this.threads_by_debugger[debugger_id][thread_id];
-      delete thread_group_object.threads_by_id[thread_id];
+      delete thread_group.threads_by_id[thread_id];
    };
 
    DebuggeeTracker.prototype._running = function (data) {
@@ -327,25 +327,25 @@ define(["underscore", "shortcuts", "event_handler", "debuggee_tracker/debugger",
          var groups_data = data.results.groups;
          _.each(groups_data, function (group_data) {
             var thread_group_id = group_data.id;
-            var thread_group_object = thread_group_by_id[thread_group_id];
+            var thread_group = thread_group_by_id[thread_group_id];
 
-            if (thread_group_object === undefined) {
-               thread_group_object = new ThreadGroup(thread_group_id, {debugger_id: debugger_id});
-               thread_group_by_id[thread_group_id] = thread_group_object; 
+            if (thread_group === undefined) {
+               thread_group = new ThreadGroup(thread_group_id, {debugger_id: debugger_id});
+               thread_group_by_id[thread_group_id] = thread_group; 
             }
 
             if (group_data.pid == undefined || group_data.pid == null) {
-               thread_group_object.update({state: "not-started"});
+               thread_group.update({state: "not-started"});
             }
             else {
-               thread_group_object.update({state: "started"});
+               thread_group.update({state: "started"});
             }
 
-            thread_group_object.update({process_id: group_data.pid,
+            thread_group.update({process_id: group_data.pid,
                                         executable: group_data.executable});
 
             var threads_data = group_data.threads;
-            _.each(threads_data, _.partial(self._update_thread_info, _, self.threads_by_debugger[debugger_id], thread_group_object, debugger_id), self);
+            _.each(threads_data, _.partial(self._update_thread_info, _, self.threads_by_debugger[debugger_id], thread_group, debugger_id), self);
             
             self.notify("thread_group_update", { 
                                     event_data: group_data,
@@ -367,7 +367,7 @@ define(["underscore", "shortcuts", "event_handler", "debuggee_tracker/debugger",
       (fullname and line), the address of the threads.
       
       NOTE: this will update the thread info and the threads_by_debugger object BUT
-            IT WILL NOT update the threads_by_id object of a particular thread_group_object.
+            IT WILL NOT update the threads_by_id object of a particular thread_group.
             To do this, call _request_an_update_thread_groups_info.
    */
    DebuggeeTracker.prototype._request_an_update_threads_info = function (debugger_id) {
@@ -381,7 +381,7 @@ define(["underscore", "shortcuts", "event_handler", "debuggee_tracker/debugger",
       );
    };
 
-   DebuggeeTracker.prototype._update_thread_info = function (thread_data, threads, thread_group_object, debugger_id) {
+   DebuggeeTracker.prototype._update_thread_info = function (thread_data, threads, thread_group, debugger_id) {
       var thread_id = thread_data.id;
       var thread = threads[thread_id];
 
@@ -390,9 +390,9 @@ define(["underscore", "shortcuts", "event_handler", "debuggee_tracker/debugger",
          threads[thread_id] = thread; 
       }
 
-      if (thread_group_object !== undefined) {
-         if (!(thread_id in thread_group_object.threads_by_id)) {
-            thread_group_object.threads_by_id[thread_id] = thread;
+      if (thread_group !== undefined) {
+         if (!(thread_id in thread_group.threads_by_id)) {
+            thread_group.threads_by_id[thread_id] = thread;
          }
       }
 
