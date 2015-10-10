@@ -5,8 +5,7 @@ define(["underscore", "shortcuts", "event_handler", "debuggee_tracker/debugger",
    var ThreadGroup = thread_group_module.ThreadGroup;
    var Thread = thread_module.Thread;
 
-
-   var DebuggeeTracker = function (EH) {
+   var DebuggeeTracker = function () {
       this.EH = event_handler.get_global_event_handler();
 
       this.observers = [];
@@ -215,12 +214,12 @@ define(["underscore", "shortcuts", "event_handler", "debuggee_tracker/debugger",
       var thread_group_id = data.results['group-id'];
       var thread_id = data.results.id;
       
-      var thread_object = new Thread(thread_id, {thread_group_id: thread_group_id});
+      var thread = new Thread(thread_id, {thread_group_id: thread_group_id});
 
       var thread_group_object = this.thread_groups_by_debugger[debugger_id][thread_group_id];
 
-      this.threads_by_debugger[debugger_id][thread_id] = thread_object;
-      thread_group_object.threads_by_id[thread_id] = thread_object;
+      this.threads_by_debugger[debugger_id][thread_id] = thread;
+      thread_group_object.threads_by_id[thread_id] = thread;
       
       this.notify("thread_created", { 
                                        event_data: data,
@@ -252,10 +251,10 @@ define(["underscore", "shortcuts", "event_handler", "debuggee_tracker/debugger",
       var debugger_id = data['debugger-id'];
       var thread_id = data.results['thread-id'];    // this can be 'all' too 
 
-      var thread_objects_selected = this._get_thread_objects_selected_by(thread_id, debugger_id);
+      var threads_selected = this._get_threads_selected_by(thread_id, debugger_id);
 
-      _.each(thread_objects_selected, function (thread_object) {
-         thread_object.update({state: "running"});
+      _.each(threads_selected, function (thread) {
+         thread.update({state: "running"});
       });
       
       this.notify("running", { 
@@ -275,10 +274,10 @@ define(["underscore", "shortcuts", "event_handler", "debuggee_tracker/debugger",
          return; // ignore this, probably it was "the debugger" that was "stopped" and not a thread 
       }
 
-      var thread_objects_selected = this._get_thread_objects_selected_by(stopped_threads, debugger_id);
+      var threads_selected = this._get_threads_selected_by(stopped_threads, debugger_id);
 
-      _.each(thread_objects_selected, function (thread_object) {
-         thread_object.update({state: "stopped"});
+      _.each(threads_selected, function (thread) {
+         thread.update({state: "stopped"});
       });
 
       this._request_an_update_threads_info(debugger_id);
@@ -299,19 +298,19 @@ define(["underscore", "shortcuts", "event_handler", "debuggee_tracker/debugger",
       returned.
 
    */
-   DebuggeeTracker.prototype._get_thread_objects_selected_by = function (thread_id, debugger_id) {
+   DebuggeeTracker.prototype._get_threads_selected_by = function (thread_id, debugger_id) {
       var threads = this.threads_by_debugger[debugger_id];
       if (thread_id === 'all') {
-         var thread_objects_selected = _.values(threads);
+         var threads_selected = _.values(threads);
       }
       else if (_.isArray(thread_id)) {
-         var thread_objects_selected = _.map(thread_id, function (id) { return threads[id];});
+         var threads_selected = _.map(thread_id, function (id) { return threads[id];});
       }
       else {
-         var thread_objects_selected = [threads[thread_id]];
+         var threads_selected = [threads[thread_id]];
       }
 
-      return thread_objects_selected;
+      return threads_selected;
    };
 
    /*
@@ -382,22 +381,22 @@ define(["underscore", "shortcuts", "event_handler", "debuggee_tracker/debugger",
       );
    };
 
-   DebuggeeTracker.prototype._update_thread_info = function (thread_data, thread_objects, thread_group_object, debugger_id) {
+   DebuggeeTracker.prototype._update_thread_info = function (thread_data, threads, thread_group_object, debugger_id) {
       var thread_id = thread_data.id;
-      var thread_object = thread_objects[thread_id];
+      var thread = threads[thread_id];
 
-      if (thread_object === undefined) {
-         thread_object = new Thread(thread_id, {});
-         thread_objects[thread_id] = thread_object; 
+      if (thread === undefined) {
+         thread = new Thread(thread_id, {});
+         threads[thread_id] = thread; 
       }
 
       if (thread_group_object !== undefined) {
          if (!(thread_id in thread_group_object.threads_by_id)) {
-            thread_group_object.threads_by_id[thread_id] = thread_object;
+            thread_group_object.threads_by_id[thread_id] = thread;
          }
       }
 
-      thread_object.update({state: thread_data.state,
+      thread.update({state: thread_data.state,
                             source_fullname: thread_data.frame.fullname,
                             source_line: thread_data.frame.line,
                             instruction_address: thread_data.frame.addr});
