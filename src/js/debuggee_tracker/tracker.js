@@ -154,7 +154,7 @@ define(["underscore", "shortcuts", "event_handler", "debuggee_tracker/debugger",
       var debugger_id = data['debugger-id'];
       var thread_group_id = data.results.id;
 
-      this.thread_groups_by_debugger[debugger_id][thread_group_id] = new ThreadGroup(thread_group_id, {
+      this.thread_groups_by_debugger[debugger_id][thread_group_id] = new ThreadGroup(thread_group_id, this, {
          debugger_id: debugger_id,
          state: "not-started",
       });
@@ -214,7 +214,7 @@ define(["underscore", "shortcuts", "event_handler", "debuggee_tracker/debugger",
       var thread_group_id = data.results['group-id'];
       var thread_id = data.results.id;
       
-      var thread = new Thread(thread_id, {thread_group_id: thread_group_id});
+      var thread = new Thread(thread_id, this, {thread_group_id: thread_group_id});
 
       var thread_group = this.thread_groups_by_debugger[debugger_id][thread_group_id];
 
@@ -330,7 +330,7 @@ define(["underscore", "shortcuts", "event_handler", "debuggee_tracker/debugger",
             var thread_group = thread_group_by_id[thread_group_id];
 
             if (thread_group === undefined) {
-               thread_group = new ThreadGroup(thread_group_id, {debugger_id: debugger_id});
+               thread_group = new ThreadGroup(thread_group_id, this, {debugger_id: debugger_id});
                thread_group_by_id[thread_group_id] = thread_group; 
             }
 
@@ -386,7 +386,7 @@ define(["underscore", "shortcuts", "event_handler", "debuggee_tracker/debugger",
       var thread = threads[thread_id];
 
       if (thread === undefined) {
-         thread = new Thread(thread_id, {});
+         thread = new Thread(thread_id, this, {});
          threads[thread_id] = thread; 
       }
 

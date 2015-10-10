@@ -193,7 +193,7 @@ define(["underscore", "jquery", "jstree", "layout"], function (_, $, jstree, lay
                   input_file_dom.change(function(evt) {
                       var file_exec_path = "" + $(this).val();
                       if (file_exec_path) {
-                          thread_group.load_file_exec_and_symbols(self.debuggee_tracker, file_exec_path);
+                          thread_group.load_file_exec_and_symbols(file_exec_path);
                       }
                       else {
                           console.log("Loading nothing");
