@@ -236,7 +236,7 @@ define(function () {
             }
             catch (e) {
                // TODO
-               console.log("Error in callback (topic: "+topic+"): " + e);
+               console.log("Error in callback (topic: "+topic+"): " + e + "\n" + e.stack);
             }
          }
       }
