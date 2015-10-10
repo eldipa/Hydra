@@ -1,6 +1,8 @@
 define(["underscore", "shortcuts", "event_handler", "debuggee_tracker/debugger", "debuggee_tracker/thread_group", "debuggee_tracker/thread"], function (_, shortcuts, event_handler, debugger_module, thread_group_module, thread_module) {
    'use strict';
 
+   var Debugger = debugger_module.Debugger;
+
    var _update_properties = function (obj) {
       _.each(_.keys(obj), function (k) {
          if (!(_.contains(this._properties, k))) {
@@ -86,26 +88,6 @@ define(["underscore", "shortcuts", "event_handler", "debuggee_tracker/debugger",
       );
    };
 
-   var Debugger = function (obj) {
-      this._properties = ["EH", "id"];
-      this.update(obj);
-   };
-   Debugger.prototype.update = _update_properties;
-   Debugger.prototype.get_display_name = function () {
-      return "GDB " + this.id;
-   };
-
-   Debugger.prototype.add_thread_group = function () {
-      shortcuts.gdb_request(null, 
-         this.id, 
-         "-add-inferior",
-         []
-      );
-   };
-
-   Debugger.prototype.kill = function () {  // TODO this is only a draft, add more options
-      this.EH.publish("spawner.kill-debugger", {'debugger-id': this.id}); // like 'what to do with the debuggees?'
-   };
 
    var DebuggeeTracker = function (EH) {
       this.EH = event_handler.get_global_event_handler();
@@ -161,7 +143,7 @@ define(["underscore", "shortcuts", "event_handler", "debuggee_tracker/debugger",
       this.thread_groups_by_debugger[debugger_id] = {};
       this.threads_by_debugger[debugger_id] = {};
 
-      this.debuggers_by_id[debugger_id] = new Debugger({EH: this.EH, id: debugger_id});
+      this.debuggers_by_id[debugger_id] = new Debugger(debugger_id, {});
 
       var subscription_ids_of_all_interested_events = this.track_this_debugger(debugger_id);
       this.subscription_ids_by_debugger[debugger_id] = subscription_ids_of_all_interested_events;
