@@ -1,4 +1,4 @@
-define(["underscore", "shortcuts", "event_handler"], function (_, shortcuts, event_handler) {
+define(["underscore", "shortcuts", "event_handler", "debuggee_tracker/debugger", "debuggee_tracker/thread_group", "debuggee_tracker/thread"], function (_, shortcuts, event_handler, debugger_module, thread_group_module, thread_module) {
    'use strict';
 
    var _update_properties = function (obj) {
@@ -557,5 +557,8 @@ define(["underscore", "shortcuts", "event_handler"], function (_, shortcuts, eve
                               });
    };
 
-   return {DebuggeeTracker: DebuggeeTracker};
+   return {DebuggeeTracker: DebuggeeTracker,
+           Debugger: Debugger,
+           ThreadGroup: ThreadGroup,
+           Thread: Thread};
 });
