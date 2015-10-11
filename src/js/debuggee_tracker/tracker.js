@@ -59,7 +59,8 @@ define(["underscore", "shortcuts", "event_handler", "debuggee_tracker/debugger",
       this.thread_groups_by_debugger[debugger_id] = {};
       this.threads_by_debugger[debugger_id] = {};
 
-      this.debuggers_by_id[debugger_id] = new Debugger(debugger_id, this, {});
+      var debugger_obj = new Debugger(debugger_id, this, {});
+      this.debuggers_by_id[debugger_id] = debugger_obj;
 
       var subscription_ids_of_all_interested_events = this.track_this_debugger(debugger_id);
       this.subscription_ids_by_debugger[debugger_id] = subscription_ids_of_all_interested_events;
@@ -72,7 +73,7 @@ define(["underscore", "shortcuts", "event_handler", "debuggee_tracker/debugger",
 
       this.notify("debugger_started", { 
                                        event_data: data,
-                                       debugger_id: debugger_id,
+                                       debugger_obj: debugger_obj,
                                        });
    };
 
@@ -83,9 +84,10 @@ define(["underscore", "shortcuts", "event_handler", "debuggee_tracker/debugger",
       var debugger_id = data['debugger-id'];
       var exit_code = data['exit-code'];           // not used it can be undefined
       
+      var debugger_obj = this.debuggers_by_id[debugger_id];
       this.notify("debugger_exited", { 
                                        event_data: data,
-                                       debugger_id: debugger_id,
+                                       debugger_obj: debugger_obj,
                                        });
 
       _.each(this.subscription_ids_by_debugger[debugger_id], this.EH.unsubscribe, this.EH);
@@ -154,15 +156,18 @@ define(["underscore", "shortcuts", "event_handler", "debuggee_tracker/debugger",
       var debugger_id = data['debugger-id'];
       var thread_group_id = data.results.id;
 
-      this.thread_groups_by_debugger[debugger_id][thread_group_id] = new ThreadGroup(thread_group_id, this, {
+      var debugger_obj = this.debuggers_by_id[debugger_id];
+      var thread_group = new ThreadGroup(thread_group_id, this, {
          debugger_id: debugger_id,
          state: "not-started",
       });
+
+      this.thread_groups_by_debugger[debugger_id][thread_group_id] = thread_group;
       
       this.notify("thread_group_added", { 
                                        event_data: data,
-                                       debugger_id: debugger_id,
-                                       thread_group_id: thread_group_id
+                                       debugger_obj: debugger_obj,
+                                       thread_group: thread_group
                                        });
    };
 
@@ -170,10 +175,13 @@ define(["underscore", "shortcuts", "event_handler", "debuggee_tracker/debugger",
       var debugger_id = data['debugger-id'];
       var thread_group_id = data.results.id;
 
+      var debugger_obj = this.debuggers_by_id[debugger_id];
+      var thread_group = this.thread_groups_by_debugger[debugger_id][thread_group_id];
+
       this.notify("thread_group_removed", { 
                                        event_data: data,
-                                       debugger_id: debugger_id,
-                                       thread_group_id: thread_group_id
+                                       debugger_obj: debugger_obj,
+                                       thread_group: thread_group
                                        });
 
       delete this.thread_groups_by_debugger[debugger_id][thread_group_id];
@@ -184,13 +192,14 @@ define(["underscore", "shortcuts", "event_handler", "debuggee_tracker/debugger",
       var thread_group_id = data.results.id;
       var thread_group_pid = data.results.pid;
 
+      var debugger_obj = this.debuggers_by_id[debugger_id];
       var thread_group = this.thread_groups_by_debugger[debugger_id][thread_group_id];
       thread_group.update({process_id: thread_group_pid, state: "started"});
       
       this.notify("thread_group_started", { 
                                        event_data: data,
-                                       debugger_id: debugger_id,
-                                       thread_group_id: thread_group_id
+                                       debugger_obj: debugger_obj,
+                                       thread_group: thread_group
                                        });
    };
 
@@ -199,13 +208,14 @@ define(["underscore", "shortcuts", "event_handler", "debuggee_tracker/debugger",
       var thread_group_id = data.results.id;
       var exit_code = data.results['exit-code'];
 
+      var debugger_obj = this.debuggers_by_id[debugger_id];
       var thread_group = this.thread_groups_by_debugger[debugger_id][thread_group_id];
       thread_group.update({state: "not-started", exit_code: exit_code});
       
       this.notify("thread_group_exited", { 
                                        event_data: data,
-                                       debugger_id: debugger_id,
-                                       thread_group_id: thread_group_id
+                                       debugger_obj: debugger_obj,
+                                       thread_group: thread_group
                                        });
    };
    
@@ -217,15 +227,16 @@ define(["underscore", "shortcuts", "event_handler", "debuggee_tracker/debugger",
       var thread = new Thread(thread_id, this, {thread_group_id: thread_group_id});
 
       var thread_group = this.thread_groups_by_debugger[debugger_id][thread_group_id];
+      var debugger_obj = this.debuggers_by_id[debugger_id];
 
       this.threads_by_debugger[debugger_id][thread_id] = thread;
       thread_group.threads_by_id[thread_id] = thread;
       
       this.notify("thread_created", { 
                                        event_data: data,
-                                       debugger_id: debugger_id,
-                                       thread_group_id: thread_group_id,
-                                       thread_id: thread_id
+                                       debugger_obj: debugger_obj,
+                                       thread_group: thread_group,
+                                       thread: thread
                                        });
    };
 
@@ -234,11 +245,15 @@ define(["underscore", "shortcuts", "event_handler", "debuggee_tracker/debugger",
       var thread_group_id = data.results['group-id'];
       var thread_id = data.results.id;
       
+      var debugger_obj = this.debuggers_by_id[debugger_id];
+      var thread_group = this.thread_groups_by_debugger[debugger_id][thread_group_id];
+      var thread = this.threads_by_debugger[debugger_id][thread_id];
+
       this.notify("thread_exited", { 
                                        event_data: data,
-                                       debugger_id: debugger_id,
-                                       thread_group_id: thread_group_id,
-                                       thread_id: thread_id
+                                       debugger_obj: debugger_obj,
+                                       thread_group: thread_group,
+                                       thread: thread
                                        });
 
       var thread_group = this.thread_groups_by_debugger[debugger_id][thread_group_id];
@@ -251,6 +266,8 @@ define(["underscore", "shortcuts", "event_handler", "debuggee_tracker/debugger",
       var debugger_id = data['debugger-id'];
       var thread_id = data.results['thread-id'];    // this can be 'all' too 
 
+      var debugger_obj = this.debuggers_by_id[debugger_id];
+
       var threads_selected = this._get_threads_selected_by(thread_id, debugger_id);
 
       _.each(threads_selected, function (thread) {
@@ -259,7 +276,7 @@ define(["underscore", "shortcuts", "event_handler", "debuggee_tracker/debugger",
       
       this.notify("running", { 
                               event_data: data,
-                              debugger_id: debugger_id,
+                              debugger_obj: debugger_obj,
                               //thread_group_id: thread_group_id, TODO?
                               //thread_id: thread_id              TODO?
                               });
@@ -274,6 +291,8 @@ define(["underscore", "shortcuts", "event_handler", "debuggee_tracker/debugger",
          return; // ignore this, probably it was "the debugger" that was "stopped" and not a thread 
       }
 
+      var debugger_obj = this.debuggers_by_id[debugger_id];
+
       var threads_selected = this._get_threads_selected_by(stopped_threads, debugger_id);
 
       _.each(threads_selected, function (thread) {
@@ -284,7 +303,7 @@ define(["underscore", "shortcuts", "event_handler", "debuggee_tracker/debugger",
       
       this.notify("stopped", { 
                               event_data: data,
-                              debugger_id: debugger_id,
+                              debugger_obj: debugger_obj,
                               //thread_group_id: thread_group_id, TODO?
                               //thread_id: thread_id              TODO?
                               });
@@ -323,6 +342,7 @@ define(["underscore", "shortcuts", "event_handler", "debuggee_tracker/debugger",
    */
    DebuggeeTracker.prototype._request_an_update_thread_groups_info = function (thread_group_by_id, debugger_id) {
       var self = this;
+      var debugger_obj = this.debuggers_by_id[debugger_id];
       shortcuts.gdb_request(function (data) {
          var groups_data = data.results.groups;
          _.each(groups_data, function (group_data) {
@@ -349,8 +369,8 @@ define(["underscore", "shortcuts", "event_handler", "debuggee_tracker/debugger",
             
             self.notify("thread_group_update", { 
                                     event_data: group_data,
-                                    debugger_id: debugger_id,
-                                    thread_group_id: thread_group_id,
+                                    debugger_obj: debugger_obj,
+                                    thread_group: thread_group,
                                     });
          });
          }, 
@@ -384,6 +404,8 @@ define(["underscore", "shortcuts", "event_handler", "debuggee_tracker/debugger",
    DebuggeeTracker.prototype._update_thread_info = function (thread_data, threads, thread_group, debugger_id) {
       var thread_id = thread_data.id;
       var thread = threads[thread_id];
+      
+      var debugger_obj = this.debuggers_by_id[debugger_id];
 
       if (thread === undefined) {
          thread = new Thread(thread_id, this, {});
@@ -403,8 +425,8 @@ define(["underscore", "shortcuts", "event_handler", "debuggee_tracker/debugger",
       
       this.notify("thread_update", { 
                               event_data: thread_data,
-                              debugger_id: debugger_id,
-                              thread_id: thread_id,
+                              debugger_obj: debugger_obj,
+                              thread: thread,
                               });
    };
 
@@ -414,11 +436,11 @@ define(["underscore", "shortcuts", "event_handler", "debuggee_tracker/debugger",
 
       'data_object' will be an object with the following structure:
          - event_data: the data arrived that triggered this event.
-         - debugger_id: the id of the debugger from where the event cames.
+         - debugger_obj: the debugger from where the event cames.
       
       In some cases --but not always-- the data_object will contain:
-         - thread_group_id: the id of the thread group (inferior)
-         - thread_id: the id of the thread involved.
+         - thread_group: the thread group (inferior)
+         - thread: the thread involved.
 
       Two kinds of topics are emmited. The first class are the topics which
       event implies a deletion of some part of the information in this tracker,
@@ -433,7 +455,7 @@ define(["underscore", "shortcuts", "event_handler", "debuggee_tracker/debugger",
    DebuggeeTracker.prototype.notify = function (event_topic, data_object) {
       for (var i = 0; i < this.observers.length; i++) {
          try {
-            this.observers[i].update(event_topic, data_object, this);
+            this.observers[i].update(data_object, event_topic, this);
          } catch(e) {
             console.log("" + e);
          }

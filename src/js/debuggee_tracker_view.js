@@ -33,7 +33,7 @@ define(["underscore", "jquery", "jstree", "layout"], function (_, $, jstree, lay
 
    DebuggeeTrackerView.prototype.__proto__ = layout.Panel.prototype;
 
-   DebuggeeTrackerView.prototype.update = function (topic, data, observed) {
+   DebuggeeTrackerView.prototype.update = function (data, topic, tracker) {
       this.update_tree_data_debounced();
    };
 
