@@ -64,7 +64,7 @@ class _GDBEventHandler(EH):
     # We need this as a workaround for the bug in GDB: https://sourceware.org/bugzilla/show_bug.cgi?id=17314
     # This is based in the fix done in GDB for Guile in this patch: https://sourceware.org/git/gitweb.cgi?p=binutils-gdb.git;a=patch;h=92d8d229d9a310ebfcfc13bf4a75a286c1add1ac
     import signal
-    previous_mask = signalfd.sigprocmask(signalfd.SIG_BLOCK, [signal.SIGCHLD])
+    previous_mask = signalfd.sigprocmask(signalfd.SIG_BLOCK, [signal.SIGCHLD, signal.SIGCONT, signal.SIGINT])
     try:
         EH.__init__(self, name="(gdb %s)" % gdb_id, as_daemon=True) # as_daemon=True otherwise GDB hangs
     finally:
