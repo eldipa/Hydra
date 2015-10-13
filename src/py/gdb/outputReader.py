@@ -38,6 +38,11 @@ class OutputReader(threading.Thread):
 
         if self.should_be_running: # kill myself
             self.eventHandler.publish('spawner.kill-debugger', {'pid': self.gdbPid})
+            if self._DEBUG:
+                sys.stderr.write("**GDB is DEAD?!**: i'm (output reader) should be keep running!\n")
+        
+        if self._DEBUG:
+            sys.stderr.write("**BYE!**\n")
         
     def build_event_from_gdb_record(self, record):
         ''' Take a GDB record (an object created by the MI parser) that represent
