@@ -26,7 +26,8 @@ son los que lanza justo al iniciarse.
    
    >>> @collect
    ... def collector(data):
-   ...   if data['klass'] == u'library-loaded' or data['klass'].startswith('breakpoint-'):
+   ...   if data['klass'] == u'library-loaded' or data['klass'].startswith('breakpoint-') \
+   ...         or data['klass'].startswith('cmd-param-changed'):
    ...      return None # discard
    ...   return data
    

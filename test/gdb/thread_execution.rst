@@ -38,7 +38,7 @@ Configuramos a GDB en modo
 
 ::
 
-   >>> request(gdb, "set non-stop", [])                        # doctest: +PASS
+   >>> request(gdb, "set non-stop on", [])                     # doctest: +PASS
    >>> request(gdb, "set target-async on", [])                 # doctest: +PASS
 
 Cargamos un executable que tendra 2 hilos, el principal (funcion main) y el thread 2 (funcion roll)
