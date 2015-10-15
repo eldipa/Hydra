@@ -278,7 +278,9 @@ para ver como se muestra un proceso con dos hilos.
    >>> collector.get_next()                           # doctest: +ELLIPSIS
    {u'debugger-id': ...
     u'klass': u'running',
-    ...
+    u'results': {u'thread-id': u'all'},
+    u'token': None,
+    u'type': u'Exec'}
 
    >>> collector.get_next()                           # doctest: +ELLIPSIS
    {u'debugger-id': ...
@@ -290,14 +292,10 @@ para ver como se muestra un proceso con dos hilos.
    >>> collector.get_next()                           # doctest: +ELLIPSIS
    {u'debugger-id': ...
     u'klass': u'running',
-    u'results': {u'thread-id': u'all'},
+    u'results': {u'thread-id': u'2'},
     u'token': None,
     u'type': u'Exec'}
 
-NOTE: algunas veces el evento de que se detuvo por un breakpoint nunca llega.
-Tras  algo de debuggeo, es GDB quien nunca emite el evento. Parece que esto
-esta relacionado con la aplicacion multithreading:
-https://sourceware.org/bugzilla/show_bug.cgi?id=17247
 
    >>> collector.get_next()                           # doctest: +ELLIPSIS
    {u'debugger-id': ...
@@ -320,17 +318,15 @@ https://sourceware.org/bugzilla/show_bug.cgi?id=17247
 
 Al darle 'continue', el hilo principal empieza a correr y lanza su hilo secundario.
 Esto se refleja en los dos eventos 'thread-created' y el segundo 'running'.
-Debido a que le decimos a GDB que arranque todos los hilos, el evento 'running' indica
-que los hilos que se estan corriendo son todos ('all'). (Tal vez, pero no se muestra
-aca, se puede decirle a GDB que haga un 'continue' de solo algunos hilos)
 
 Luego el hilo secundario llega al breakpoint y se detiene como lo muestra el evento 'stopped'.
 
 Ahora tenemos 2 hilos, el principal bloqueado en el join (pero no esta bloqueado
-por algo de GDB como un breakpoint) y el segundo hilo, bloqueado en un breakpoint.
+por algo de GDB como un breakpoint asi que su estado es running) y el segundo hilo, 
+bloqueado en un breakpoint.
 
 Pero se puede ver que el evento 'stopped' indica que hilos fueron detenidos ('stopped-threads')
-y como se muestra, todos los hilos fueron detenidos.
+y como se muestra, todos los hilos fueron detenidos. Esto es debido al modo all-stop.
 
 Veamos como queda la info de los hilos:
 
@@ -354,10 +350,7 @@ Veamos como queda la info de los hilos:
                                u'state': u'stopped',
                                u'target-id': ...},
                               {u'core': ...,
-                               u'frame': {u'addr': u'0x...',
-                                          u'args': [],
-                                          u'func': u'__kernel_vsyscall',
-                                          u'level': u'0'},
+                               ...
                                u'id': u'1',
                                u'name': ...
                                u'state': u'stopped',
@@ -367,8 +360,8 @@ Veamos como queda la info de los hilos:
 
 Como era de esperarse, ahora tenemos 2 hilos. Sin embargo, algunas observaciones:
  - el hilo principal esta en el estado 'stopped' lo que es raro porque si bien esta
-   bloqueado en un join, no esta bloqueado por culpa de GDB. Lo mas probable es que
-   el breakpoint alcanzado por el segundo hilo haya hecho frenar a ambos.
+   bloqueado en un join, no esta bloqueado por culpa de GDB. 
+   El breakpoint alcanzado por el segundo hilo haya hecho frenar a ambos (modo all-stop).
  - el 'current-thread-id' paso de ser 1 (el hilo principal) a ser 2 (el nuevo hilo) 
    sin ninguna intervencion nuestra. A no suponer que se mantiene constante!!!.
 
@@ -443,6 +436,7 @@ cuando el hilo secundario termino no hubo ningun 'stopped' de ese hilo!
    {u'debugger-id': ...
     u'klass': u'done',
     u'results': {u'groups': [{u'executable': u'.../two_pthreads',
+                              u'exit-code': u'01',
                               u'id': u'i1',
                               u'type': u'process'}]},
     u'token': ...,
@@ -455,9 +449,6 @@ cuando el hilo secundario termino no hubo ningun 'stopped' de ese hilo!
     u'token': ...,
     u'type': u'Sync'}
 
-
-Lo interesante es que la documentacion de GDB dice que debe haber un 'exit-code' cuando
-se lista los TGs. Pero esta informacion no aparece; solo se la vio en el thread-group-exited.
 
 Limpiamos todo:
 

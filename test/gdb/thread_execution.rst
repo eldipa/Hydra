@@ -48,11 +48,8 @@ main (linea ~14).
 ::
 
    >>> request(gdb, "-file-exec-and-symbols", [BIN])        # doctest: +PASS
-   >>> time.sleep(3)
    >>> request(gdb, "-break-insert", ["roll"])              # doctest: +PASS
-   >>> time.sleep(3)
    >>> request(gdb, "-break-insert", ["14"])                # doctest: +PASS
-   >>> time.sleep(3)
    >>> request(gdb, "-exec-run", [])                        # doctest: +PASS
    
    >>> collector.get_next()                                 # doctest: +ELLIPSIS
