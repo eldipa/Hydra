@@ -286,6 +286,18 @@ Estos son:
   --thread-group TG
   --all
 Ver la documentacion y el codigo de la funcion  mi_cmd_execute de GDB.
+Este es un extracto:
+
+    - "Cannot specify --thread-group together with --all"
+    - "Cannot specify --thread together with --all"
+    - "Cannot specify --thread together with --thread-group"
+    - "Cannot specify --frame without --thread"
+
+    "if --thread-group option identifies
+     an inferior with multiple threads, then a random one will be
+     picked.  This is not a problem -- frontend should always
+     provide --thread if it wishes to operate on a specific
+     thread."
 
 ::
 
