@@ -18,7 +18,8 @@ class CompleteTest(unittest.TestCase):
         self.manager = gdbManager.gdbManager()
     
     def test_stdioRedirect_load(self):
-        pass
+        gdbpid = self.manager.publish("spawner.add-debugger", '')
+        self.assertTrue(gdbpid > 0, "Error")
         
 #     def test_stdioRedirect_attach(self):
 #         self.assertTrue(True)

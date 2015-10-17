@@ -9,12 +9,12 @@ class GdbSpawner(object):
     def __init__(self): 
         cfg = globalconfig.get_global_config()
         name = cfg.get('gdbspawner', 'name')
-
+        
         self.gdb_by_its_pid = {}
         
         self.ev = publish_subscribe.eventHandler.EventHandler(name=name)
         self._subscribe_to_interested_events_for_me()
- 
+        
 
     def _subscribe_to_interested_events_for_me(self):
         self.subscriptions = [

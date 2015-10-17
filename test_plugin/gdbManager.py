@@ -13,26 +13,20 @@ NOTIFIER_DOWN = False
 class gdbManager:
     
     def __init__(self):
-        self.spawner = gdb.gdbSpawner.GdbSpawner()
-        self.events = []
         os.system("python ../src/py/publish_subscribe/notifier.py start")
         self.wait_until(NOTIFIER_UP)
+        print "Notifier"
+        
+        self.spawner = gdb.gdbSpawner.GdbSpawner()
+        self.events = []
+        print "Spawner"
+        
         self.eventHandler = publish_subscribe.eventHandler.EventHandler()
         self.eventHandler.subscribe("", self.registerEvent)
+        print "subscribe"
         
     def registerEvent(self, event):
-        self.events.append(event)
-        
-    def loadPluin(self, plugin):
-        pass  
-          
-    def starNewProcess(self, path):
-        gdbPid = self.spawner._spawn_a_gdb()
-        return gdbPid
-    
-    def attachToProcess(self, pid):
-        gdbPid = self.spawner._spawn_a_gdb()
-        return gdbPid
+        self.events.append(event)   
         
     def publish(self, topic, data):
         self.eventHandler.publish(topic, data)
@@ -59,7 +53,7 @@ class gdbManager:
         print pprint.pformat(self.events)
     
     def close(self):
-        self.spawmer.shutdown()
+        self.spawner.shutdown()
         self.eventHandler.close()
         os.system("python ../src/py/publish_subscribe/notifier.py stop")
         self.wait_until(NOTIFIER_DOWN)
