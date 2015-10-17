@@ -45,40 +45,39 @@ Cargamos un executable que tendra 2 hilos, el principal (funcion main) y el thre
 Ponemos un breakpoint al principio del al funcion roll y otro antes de un join en la funcion
 main (linea ~14).
 
-::
+Nota: a pesar de dejarlo explicito, los breakpoints son seteados en todos los procesos que
+tengan el mismo ejecutable. (Ver luego el FIX para este test)
 
-   >>> request(gdb, "-file-exec-and-symbols", [BIN])        # doctest: +PASS
-   >>> request(gdb, "-break-insert", ["roll"])              # doctest: +PASS
-   >>> request(gdb, "-break-insert", ["14"])                # doctest: +PASS
-   >>> request(gdb, "-exec-run", [])                        # doctest: +PASS
+::
+   
+   >>> request(gdb, "-file-exec-and-symbols", ["--thread-group i1", BIN])        # doctest: +PASS
+   >>> request(gdb, "-break-insert", ["--thread-group i1", "roll"])              # doctest: +PASS
+   >>> request(gdb, "-break-insert", ["--thread-group i1", "14"])                # doctest: +PASS
+   >>> request(gdb, "-exec-run", ["--thread-group i1"])                        # doctest: +PASS
    
    >>> collector.get_next()                                 # doctest: +ELLIPSIS
    {u'debugger-id': ...
     u'klass': u'thread-created',
     u'results': {u'group-id': u'i1', u'id': u'1'},
-    u'token': None,
-    u'type': u'Notify'}
+    ...}
 
    >>> collector.get_next()                                 # doctest: +ELLIPSIS
    {u'debugger-id': ...
     u'klass': u'running',
     u'results': {u'thread-id': u'1'},
-    u'token': None,
-    u'type': u'Exec'}
+    ...}
    
    >>> collector.get_next()                           # doctest: +ELLIPSIS
    {u'debugger-id': ...
     u'klass': u'thread-created',
     u'results': {u'group-id': u'i1', u'id': u'2'},
-    u'token': None,
-    u'type': u'Notify'}
+    ...}
    
    >>> collector.get_next()                                 # doctest: +ELLIPSIS
    {u'debugger-id': ...
     u'klass': u'running',
     u'results': {u'thread-id': u'2'},
-    u'token': None,
-    u'type': u'Exec'}
+    ...}
 
    >>> collector.get_next()                           # doctest: +ELLIPSIS
    {u'debugger-id': ...
@@ -87,15 +86,98 @@ main (linea ~14).
    >>> collector.get_next()                           # doctest: +ELLIPSIS
    {u'debugger-id': ...
     u'klass': u'stopped',...
+ 
+Ahora agregamos otro inferior/thread group/proceso. El mismo tiene el mismo ejecutable que el
+anterior. En este caso pondremos un unico breakpoint en la funcion roll que hara que le thread
+secundario se bloquee pero el principal no (quedara en running aunque el thread estara esperando
+en el join)
 
-Ahora, ambos threads deberian estar frenados debido a cada uno de los breakpoints.
+Nota: dado que los breakpoints son globales a todos los procesos con el mismo ejecutable,
+no pondremos ningun breakpoint extra en la funcion roll y el thread 3, que se quedara bloqueado
+por el breakpoint en la linea 14 que fue seteado para el primer proceso, lo desbloquearemos 
+con un continue. Vease los FIXs
+
+::
+   
+   >>> import time
+   >>> time.sleep(3)
+
+   >>> request(gdb, "-add-inferior", [])                    # doctest: +PASS
+
+   >>> request(gdb, "-file-exec-and-symbols", ["--thread-group i2", BIN])        # doctest: +PASS
+
+   >>> #FIX
+   ### request(gdb, "-break-insert", ["--thread-group i2", "roll"])              # doctest: +PASS
+   
+   >>> request(gdb, "-exec-run", ["--thread-group i2"])                        # doctest: +PASS
+   
+   >>> collector.get_next()                                 # doctest: +ELLIPSIS
+   {u'debugger-id': ...
+    u'klass': u'thread-created',
+    u'results': {u'group-id': u'i2', u'id': u'3'},
+    ...}
+
+   >>> collector.get_next()                                 # doctest: +ELLIPSIS
+   {u'debugger-id': ...
+    u'klass': u'running',
+    u'results': {u'thread-id': u'3'},
+    ...}
+   
+   >>> collector.get_next()                           # doctest: +ELLIPSIS
+   {u'debugger-id': ...
+    u'klass': u'thread-created',
+    u'results': {u'group-id': u'i2', u'id': u'4'},
+    ...}
+   
+   >>> collector.get_next()                                 # doctest: +ELLIPSIS
+   {u'debugger-id': ...
+    u'klass': u'running',
+    u'results': {u'thread-id': u'4'},
+    ...}
+
+   >>> collector.get_next()                           # doctest: +ELLIPSIS
+   {u'debugger-id': ...
+    u'klass': u'stopped',...
+
+   >>> request(gdb, '-list-thread-groups', [])              # doctest: +ELLIPSIS
+   {u'debugger-id': ...,
+    u'klass': u'done',
+    u'results': {u'groups': [{u'cores': [...],
+                              u'executable': u'.../two_pthreads',
+                              u'id': u'i2',
+                              u'pid': u'...',
+                              u'type': u'process'},
+                             {u'cores': [...],
+                              u'executable': u'.../two_pthreads',
+                              u'id': u'i1',
+                              u'pid': u'...',
+                              u'type': u'process'}]},
+    ...}
+   >>> #FIX
+   >>> collector.get_next()                                        # doctest: +ELLIPSIS
+   {u'debugger-id': ...
+    u'klass': u'stopped',...
+   >>> request(gdb, '-exec-continue', ["--thread 3"])              # doctest: +PASS
+   >>> collector.get_next()                                        # doctest: +ELLIPSIS
+   {u'debugger-id': ...
+    u'klass': u'running',...
+
+Ahora, todos los threads salvo el tercero deberian estar frenados debido a cada uno de los breakpoints.
 
 ::
 
    >>> request(gdb, "-thread-info", [])       # doctest: +ELLIPSIS
    {u'debugger-id': ...
     u'results': {u'current-thread-id': ...,
-                 u'threads': [{u'core': ...,
+                 u'threads': [{...
+                               u'id': u'4',
+                               u'name': u'...',
+                               u'state': u'stopped',
+                               ...
+                               u'id': u'3',
+                               u'name': u'...',
+                               u'state': u'running',
+                               ...
                                u'id': u'2',
                                u'name': u'...',
                                u'state': u'stopped',
@@ -103,13 +185,16 @@ Ahora, ambos threads deberian estar frenados debido a cada uno de los breakpoint
                                u'id': u'1',
                                u'name': u'...',
                                u'state': u'stopped',
-                               u'target-id': u'...'}]},
+                               ...}]},
     u'token': ...,
     u'type': u'Sync'}
 
-Si le damos continue al thread 1, solo este se quedara en running.
+Ahora solo nos concetraremos en manipular al primer proceso viendo como este afecta a sus
+propios hilos y los hilos del proceso 2.
+
+Si le damos continue al thread 1, solo este se quedara en running (mas el thread 3).
 Si bien sera el thread 1 quien el current thread de GDB, dado que estamos en modo target-async
-aun podremos hablarle a GDB
+aun podremos hablarle a GDB.
 
 ::
 
@@ -123,7 +208,15 @@ aun podremos hablarle a GDB
    >>> request(gdb, "-thread-info", [])       # doctest: +ELLIPSIS
    {u'debugger-id': ...
     u'results': {u'current-thread-id': ...,
-                 u'threads': [{u'core': ...,
+                 u'threads': [{...
+                               u'id': u'4',
+                               u'name': u'...',
+                               u'state': u'stopped',
+                               ...
+                               u'id': u'3',
+                               u'name': u'...',
+                               u'state': u'running',
+                               ...
                                u'id': u'2',
                                u'name': u'...',
                                u'state': u'stopped',
@@ -131,13 +224,13 @@ aun podremos hablarle a GDB
                                u'id': u'1',
                                u'name': u'...',
                                u'state': u'running',
-                               u'target-id': u'...'}]},
+                               ...}]},
     u'token': ...,
     u'type': u'Sync'}
 
 Veamos de hacer un step. Esto deberia poner en running al thread 2 y luego stoppearlo.
 Dado que estamos en modo non-stop, solo el thread 2 se frenara mientras que el thread 1
-seguira en running.
+seguira en running. (y los thread del segundo proceso inalterados)
 
 Lo mismo si hacemos un next.
 
@@ -170,7 +263,15 @@ Lo mismo si hacemos un next.
    >>> request(gdb, "-thread-info", [])       # doctest: +ELLIPSIS
    {u'debugger-id': ...
     u'results': {u'current-thread-id': ...,
-                 u'threads': [{u'core': ...,
+                 u'threads': [{...
+                               u'id': u'4',
+                               u'name': u'...',
+                               u'state': u'stopped',
+                               ...
+                               u'id': u'3',
+                               u'name': u'...',
+                               u'state': u'running',
+                               ...
                                u'id': u'2',
                                u'name': u'...',
                                u'state': u'stopped',
@@ -178,7 +279,7 @@ Lo mismo si hacemos un next.
                                u'id': u'1',
                                u'name': u'...',
                                u'state': u'running',
-                               u'target-id': u'...'}]},
+                               ...}]},
     u'token': ...,
     u'type': u'Sync'}
 
@@ -197,7 +298,15 @@ Lo mismo si hacemos un next.
    >>> request(gdb, "-thread-info", [])       # doctest: +ELLIPSIS
    {u'debugger-id': ...
     u'results': {u'current-thread-id': ...,
-                 u'threads': [{u'core': ...,
+                 u'threads': [{...
+                               u'id': u'4',
+                               u'name': u'...',
+                               u'state': u'stopped',
+                               ...
+                               u'id': u'3',
+                               u'name': u'...',
+                               u'state': u'running',
+                               ...
                                u'id': u'2',
                                u'name': u'...',
                                u'state': u'stopped',
@@ -205,7 +314,7 @@ Lo mismo si hacemos un next.
                                u'id': u'1',
                                u'name': u'...',
                                u'state': u'running',
-                               u'target-id': u'...'}]},
+                               ...}]},
     u'token': ...,
     u'type': u'Sync'}
    
@@ -232,7 +341,15 @@ A pesar de que el thread 1 sigue corriendo, lo podemos interrumpir:
    >>> request(gdb, "-thread-info", [])       # doctest: +ELLIPSIS
    {u'debugger-id': ...
     u'results': {u'current-thread-id': ...,
-                 u'threads': [{u'core': ...,
+                 u'threads': [{...
+                               u'id': u'4',
+                               u'name': u'...',
+                               u'state': u'stopped',
+                               ...
+                               u'id': u'3',
+                               u'name': u'...',
+                               u'state': u'running',
+                               ...
                                u'id': u'2',
                                u'name': u'...',
                                u'state': u'stopped',
@@ -240,20 +357,47 @@ A pesar de que el thread 1 sigue corriendo, lo podemos interrumpir:
                                u'id': u'1',
                                u'name': u'...',
                                u'state': u'stopped',
-                               u'target-id': u'...'}]},
+                               ...}]},
     u'token': ...,
     u'type': u'Sync'}
 
-Podemos ahora darle un continue a ambos threads. Asi, el proceso terminara.
+Podemos ahora darle un continue a ambos threads, del primer proceso, asi este terminara.
 
 ::
 
-   >>> request(gdb, "-exec-continue", ["--all"])                        # doctest: +PASS
+   >>> request(gdb, "-exec-continue", ["--thread-group i1"])                        # doctest: +PASS
    >>> collector.get_next()                           # doctest: +ELLIPSIS
    {u'debugger-id': ...,
     u'klass': u'running',
     ...}
 
+   >>> collector.get_next()                           # doctest: +ELLIPSIS
+   {u'debugger-id': ...,
+    u'klass': u'running',
+    ...}
+
+   >>> collector.get_next()                           # doctest: +ELLIPSIS
+   {u'debugger-id': ...,
+    u'klass': u'thread-exited',
+    ...}
+
+   >>> collector.get_next()                           # doctest: +ELLIPSIS
+   {u'debugger-id': ...,
+    u'klass': u'thread-exited',
+    ...}
+
+   >>> collector.get_next()                           # doctest: +ELLIPSIS
+   {u'debugger-id': ...,
+    u'klass': u'stopped',
+    u'results': {u'exit-code': u'01', u'reason': u'exited'},
+    u'token': None,
+    u'type': u'Exec'}
+
+Podemos tambien hacer un continue global para que el proceso 2 termine tambien.
+
+::
+
+   >>> request(gdb, "-exec-continue", ["--all"])                        # doctest: +PASS
    >>> collector.get_next()                           # doctest: +ELLIPSIS
    {u'debugger-id': ...,
     u'klass': u'running',
