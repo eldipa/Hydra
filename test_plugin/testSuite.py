@@ -8,6 +8,7 @@ from time import sleep
 sys.path.append("../src/py")
 sys.path.append("../src/ipc/pyipc")
 import gdbManager
+from shortcuts import request
 
 testCodePath = "./cppTestCode/"
 
@@ -20,9 +21,13 @@ class CompleteTest(unittest.TestCase):
     def test_stdioRedirect_load(self):
         gdb = self.manager.addManualGdb()
         self.assertTrue(int(gdb.get_gdb_pid()) > 0, "Pid de gdb erroneo")
+        request(gdb, "-file-exec-and-symbols %s" % (testCodePath + "outputTest"))
+        
+#         request(gdb, "-exec-run")
+#         sleep(1)
         
         
-#         self.manager.printEvents()
+        self.manager.printEvents()
 
         
 #     def test_stdioRedirect_attach(self):
