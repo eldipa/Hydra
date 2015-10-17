@@ -1,4 +1,4 @@
-import gdb.gdbSpawmer
+import gdb.gdbSpawner
 import publish_subscribe.eventHandler 
 import os
 from time import sleep
@@ -13,7 +13,7 @@ NOTIFIER_DOWN = False
 class gdbManager:
     
     def __init__(self):
-        self.spawmer = None
+        self.spawner = gdb.gdbSpawner.GdbSpawner()
         self.events = []
         os.system("python ../src/py/publish_subscribe/notifier.py start")
         self.wait_until(NOTIFIER_UP)
@@ -23,22 +23,15 @@ class gdbManager:
     def registerEvent(self, event):
         self.events.append(event)
         
-    def configSpawmer(self, log = False, inputRedirect = False, debugPlugin = []):
-        self.spawmer = gdb.gdbSpawmer.GdbSpawmer(log=log, inputRedirect=inputRedirect, debugPlugin=debugPlugin)
-        
     def loadPluin(self, plugin):
-        self.spawmer.loadPlugin(plugin)    
+        pass  
           
     def starNewProcess(self, path):
-        if (not self.spawmer):
-            self.spawmer = gdb.gdbSpawmer.GdbSpawmer()
-        gdbPid = self.spawmer.startNewProcessWithGdb(path)
+        gdbPid = self.spawner._spawn_a_gdb()
         return gdbPid
     
     def attachToProcess(self, pid):
-        if (not self.spawmer):
-            self.spawmer = gdb.gdbSpawmer.GdbSpawmer()
-        gdbPid = self.spawmer.attachAGdb(pid)
+        gdbPid = self.spawner._spawn_a_gdb()
         return gdbPid
         
     def publish(self, topic, data):
@@ -55,8 +48,8 @@ class gdbManager:
         return None
     
     def getGdbIO(self, gdbPid):
-        gdbOutput = self.spawmer.listaGdb[gdbPid].gdbOutput
-        gdbInput = self.spawmer.listaGdb[gdbPid].gdbInput
+        gdbOutput = self.spawner.gdb_by_its_pid[gdbPid].gdbOutput
+        gdbInput = self.spawner.gdb_by_its_pid[gdbPid].gdbInput
         return {'input': gdbInput, 'output': gdbOutput}
     
     def resetEvents(self):
