@@ -1,4 +1,5 @@
 import gdb.gdbSpawner
+from gdb.gdb import Gdb
 import publish_subscribe.eventHandler 
 import os
 from time import sleep
@@ -15,15 +16,23 @@ class gdbManager:
     def __init__(self):
         os.system("python ../src/py/publish_subscribe/notifier.py start")
         self.wait_until(NOTIFIER_UP)
-        print "Notifier"
         
         self.spawner = gdb.gdbSpawner.GdbSpawner()
         self.events = []
-        print "Spawner"
+        
+        self.gdb_by_pid = {}
         
         self.eventHandler = publish_subscribe.eventHandler.EventHandler()
         self.eventHandler.subscribe("", self.registerEvent)
-        print "subscribe"
+        
+    def addManualGdb(self):
+        gdb = Gdb()
+        self.gdb_by_pid[gdb.get_gdb_pid] = gdb 
+        return gdb
+    
+    def shutdownManualGdb(self, gdbPid):
+        self.gdb_by_pid[gdbPid].shutdown()
+        self.gdb_by_pid.pop(gdbPid)
         
     def registerEvent(self, event):
         self.events.append(event)   
@@ -41,7 +50,7 @@ class gdbManager:
                 return event
         return None
     
-    def getGdbIO(self, gdbPid):
+    def getGdbIOfromSpawner(self, gdbPid):
         gdbOutput = self.spawner.gdb_by_its_pid[gdbPid].gdbOutput
         gdbInput = self.spawner.gdb_by_its_pid[gdbPid].gdbInput
         return {'input': gdbInput, 'output': gdbOutput}
@@ -50,10 +59,13 @@ class gdbManager:
         self.events = []
     
     def printEvents(self):
+        print ""
         print pprint.pformat(self.events)
     
     def close(self):
         self.spawner.shutdown()
+        for gdb in self.gdb_by_pid:
+            self.gdb_by_pid[gdb].shutdown()
         self.eventHandler.close()
         os.system("python ../src/py/publish_subscribe/notifier.py stop")
         self.wait_until(NOTIFIER_DOWN)
