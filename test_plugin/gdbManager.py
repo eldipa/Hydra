@@ -26,7 +26,7 @@ class gdbManager:
         
     def addManualGdb(self):
         gdb = Gdb()
-        self.gdb_by_pid[gdb.get_gdb_pid] = gdb 
+        self.gdb_by_pid[gdb.get_gdb_pid()] = gdb 
         return gdb
     
     def shutdownManualGdb(self, gdbPid):
