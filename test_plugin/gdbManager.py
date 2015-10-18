@@ -6,7 +6,7 @@ from time import sleep
 import socket
 import pprint
 from psutil import pid_exists
-
+from shortcuts import start_notifier, stop_notifier
 
 NOTIFIER_UP = True
 NOTIFIER_DOWN = False
@@ -14,8 +14,7 @@ NOTIFIER_DOWN = False
 class gdbManager:
     
     def __init__(self):
-        os.system("python ../src/py/publish_subscribe/notifier.py start")
-        self.wait_until(NOTIFIER_UP)
+        start_notifier("../src/py/publish_subscribe/")
         
         self.spawner = gdb.gdbSpawner.GdbSpawner()
         self.events = []
@@ -55,7 +54,7 @@ class gdbManager:
         gdbInput = self.spawner.gdb_by_its_pid[gdbPid].gdbInput
         return {'input': gdbInput, 'output': gdbOutput}
     
-    def resetEvents(self):
+    def clearEvents(self):
         self.events = []
     
     def printEvents(self):
@@ -67,59 +66,7 @@ class gdbManager:
         for gdb in self.gdb_by_pid:
             self.gdb_by_pid[gdb].shutdown()
         self.eventHandler.close()
-        os.system("python ../src/py/publish_subscribe/notifier.py stop")
-        self.wait_until(NOTIFIER_DOWN)
-            
-    # #COPIA DE EVENTHANDLER
-    def _get_address(self):
-        import os, ConfigParser
-        script_home = os.path.abspath(os.path.dirname(__file__))
-        parent = os.path.pardir
-
-        # TODO This shouldn't be hardcoded!
-        config_file = os.path.join(script_home, parent, "config", "publish_subscribe.cfg")
-
-        config = ConfigParser.SafeConfigParser(defaults={
-                    'wait_on_address': "localhost",
-                    'wait_on_port': "5555",
-                     })
-
-        config.read([config_file])
-        if not config.has_section("notifier"):
-            config.add_section("notifier")
-
-
-        address = (config.get("notifier", 'wait_on_address'), config.getint("notifier", 'wait_on_port'))
-
-        return address
-    
-    def tryNewConection(self):
-        isUp = None
-        sock = None
-        try:
-            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            sock.connect(self._get_address())
-            isUp = True
-        except Exception as inst:
-            isUp = False
-#             print "Exception: " + str(type(inst)) + " errno:" + os.strerror(inst.errno)
-        
-        return isUp
-            
-    def wait_until(self, stopConditon):
-        timeout = 2
-        step = 0.01
-        stop = False
-        while not stop  and timeout > 0:
-            sleep(step)
-            timeout -= step
-            status = self.tryNewConection()
-            if (status == stopConditon):
-                stop = True
-        
-        if not stop:
-            raise Exception
-        
+        stop_notifier("../src/py/publish_subscribe/")
         
     
     
