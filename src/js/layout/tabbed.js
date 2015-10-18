@@ -5,7 +5,7 @@ define(['jquery', 'layout/panel', 'jqueryui'], function ($, P, _) {
    /*
     * A Tabbed panel is a compound of 0, 1, 2 or more panels. Only one of them
     * is shown at the same time, organizing them into tabs. */
-   var Tabbed = function () {
+   var Tabbed = function (add_new_tab_button) {
       var id = ("" + Math.random()).slice(2);
       var self = this;
 
@@ -14,13 +14,16 @@ define(['jquery', 'layout/panel', 'jqueryui'], function ($, P, _) {
       this._$container = $('<div id="'+id+'" style="height: 100%;"></div>');
       this._$headers = $('<ul class="panel_tabbed"></ul>');
 
-      var add_new_tab_button = $('<span class="ui-icon ui-icon-circle-plus" style="height: 14px; display: inline-block; cursor: pointer"></span>');
-      add_new_tab_button.click(function () {
-         self.add_child(P.new_empty_panel(), "intab");
-         self.render();
-      });
+      if (add_new_tab_button || false) {
+          var new_tab_button = $('<span class="ui-icon fa fa-plus" style="height: 13px; display: inline-block; cursor: pointer"></span>');
+          new_tab_button.click(function () {
+             self.add_child(P.new_empty_panel(), "intab");
+             self.render();
+          });
 
-      this._$headers.append(add_new_tab_button);
+          this._$headers.append(new_tab_button);
+      }
+
       this._tabs = [];
 
       this._$container.data("panel", this); //XXX - used in the drag & drop functionality
