@@ -37,6 +37,32 @@
     <link href="resources/css/splitted.css" rel="stylesheet">
     <link href="resources/css/stacked.css" rel="stylesheet">
     <link href="resources/css/scrollbar.css" rel="stylesheet">
+    
+    <link href="resources/css/icons/font-awesome-4.4.0.min.css" rel="stylesheet">
+
+    <style>
+/* Allow Font Awesome Icons in lieu of jQuery UI and only apply when using a FA icon */
+.ui-icon[class*=" fa-"] {
+    /* Remove the jQuery UI Icon */
+    background: none repeat scroll 0 0 transparent;
+    /* Remove the jQuery UI Text Indent */
+    text-indent: 0; 
+    /* Bump it up - jQuery UI is -8px */
+    margin-top: -0.5em;
+}
+
+/* Allow use of icon-large to be properly aligned */
+.ui-icon.icon-large {
+    margin-top: -0.75em;
+}
+
+.ui-button-icon-only .ui-icon[class*=" fa-"] {
+    /* Bump it - jQuery UI is -8px */
+    margin-left: -9px;
+}
+
+
+    </style>
     <style>
        /* The selections of ACE require this */
        .fixed-position {
@@ -90,6 +116,13 @@
             font-family: 'monaco';
             src: url('resources/fonts/monaco/monaco.ttf') format('truetype');
         }
+
+
+.ui-tabs .ui-tabs-nav {
+    border: none;
+    background-image: none;
+}
+
     </style>
 
   </head>
