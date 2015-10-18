@@ -5,24 +5,24 @@
 } 
 
 /* The space where the thumb is moved */ 
-::-webkit-scrollbar-track { 
+/*::-webkit-scrollbar-track { 
  -webkit-box-shadow: inset 0 0 6px rgba(0,255,0,0.3); 
  -webkit-border-radius: 10px; 
  border-radius: 10px;
-} 
+}*/
 
 /* Handle which you move */ 
 ::-webkit-scrollbar-thumb { 
  -webkit-border-radius: 10px; 
  border-radius: 10px; 
- background: rgba(255,0,0,0.8); 
+ background: rgba(97, 148, 192, 1);
  -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.5); 
 } 
 
 /* Handle in second plane */
-::-webkit-scrollbar-thumb:window-inactive { 
- background: rgba(255,0,0,0.4); 
-}
+/*::-webkit-scrollbar-thumb:window-inactive { 
+ background: rgba(97, 148, 192, 1);
+}*/
 
 /* if both the vertical and the horizontal bars appear, then perhaps the right bottom corner also needs to be styled */
 ::-webkit-scrollbar-corner {
@@ -30,7 +30,12 @@
 } 
 
 /* Handle when it's inside a tab-nav */
+ul.ui-tabs-nav::-webkit-scrollbar {
+ width: 4px; 
+ height: 4px;
+} 
+
 ul.ui-tabs-nav::-webkit-scrollbar-thumb { 
- background: rgba(255,255,0,0.4); 
+ background: rgba(97, 148, 192, 1);
 }
 
