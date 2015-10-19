@@ -1,4 +1,4 @@
-define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore'], function (ace, $, layout, shortcuts, _) {
+define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'widgets/buttons'], function (ace, $, layout, shortcuts, _, buttons) {
     var get_text_of_gutter_line_number_from_number = function(session, row) {
         return "" + row; // This is the default
     };
@@ -12,6 +12,8 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore'], function (ace, $,
         this._$out_of_dom = this._$container;
 
         this.current_loaded_file = "";
+
+        this.create_toolbar();
     };
 
     CodeEditor.prototype.__proto__ = layout.Panel.prototype;
@@ -40,6 +42,105 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore'], function (ace, $,
 
     CodeEditor.prototype.attach_menu = function (menu) {
         this._$container.data('ctxmenu_controller', menu);
+    };
+
+    CodeEditor.prototype.create_toolbar = function () {
+        var self = this;
+
+        var args_for_reversing_mode = function () {
+              if (self.is_flow_reversed()) {
+                  return ["--reverse"];
+              }
+              else {
+                  return [];
+              }
+        };
+
+        var target_of_the_action = function () {
+              if (self.is_targeting_to_all_threads_in_thread_group()) {
+                  return self.thread_followed.get_thread_group_you_belong();
+              }
+              else {
+                  return self.thread_followed;
+              }
+        };
+
+        this.toolbar = new buttons.Buttons([
+             {
+               label: "Continue",  // "Interrupt"
+               text: false,
+               icons: {primary: 'fa fa-play'},  // fa-pause
+               action: function (ev) {
+                  ev.preventDefault();
+                  var args = args_for_reversing_mode();
+                  var target = target_of_the_action();
+
+                  if (self.is_current_thread_running()) {
+                      target.execute("-exec-interrupt", []);
+                  }
+                  else {
+                      target.execute("-exec-continue", args);
+                  }
+               },
+            },
+            {
+               label: "Next",
+               text: false,
+               icons: {primary: 'fa fa-step-forward'},
+               action: function (ev) {
+                  ev.preventDefault();
+                  var args = args_for_reversing_mode();
+                  var target = self.thread_followed;
+                  
+                  if (self.is_in_assembly_mode()) {
+                      target.execute("-exec-next-instruction", args);
+                  }
+                  else {
+                      target.execute("-exec-next", args);
+                  }
+               },
+            }, 
+            {
+               label: "Step",
+               text: false,
+               icons: {primary: 'fa fa-sign-in'},
+               action: function (ev) {
+                  ev.preventDefault();
+                  var args = args_for_reversing_mode();
+                  var target = self.thread_followed;
+
+                  if (self.is_in_assembly_mode()) {
+                      target.execute("-exec-step-instruction", args);
+                  }
+                  else {
+                      target.execute("-exec-step", args);
+                  }
+               },
+            }, 
+            {
+               label: "Finish",
+               text: false,
+               icons: {primary: 'fa fa-forward'},
+               action: function (ev) {
+                  ev.preventDefault();
+                  var args = args_for_reversing_mode();
+                  var target = self.thread_followed;
+
+                  target.execute("-exec-interrupt", args);
+               },
+            }, 
+            {
+               label: "Return",
+               text: false,
+               icons: {primary: 'fa fa-eject'},
+               action: function (ev) {
+                  ev.preventDefault();
+                  var target = self.thread_followed;
+                  target.execute("-exec-return", []);
+               },
+            } 
+            ]
+                , true);
     };
 
     CodeEditor.prototype.follow = function (thread_to_follow) {
