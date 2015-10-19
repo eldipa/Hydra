@@ -17,7 +17,7 @@ class CompleteTest(unittest.TestCase):
     def setUp(self):
         self.manager = gdbManager.gdbManager()
         
-    @unittest.skipIf(True, "Manual Skip")
+    @unittest.skipIf(False, "Manual Skip")
     def test_stdioRedirect_output_on_load(self):
         gdb = self.manager.addManualGdb()
         self.assertTrue(int(gdb.get_gdb_pid()) > 0, "Pid de gdb erroneo")
@@ -58,7 +58,7 @@ class CompleteTest(unittest.TestCase):
         archivoSalida.close()
         os.remove("Salida.txt")
 
-    @unittest.skipIf(True, "Manual Skip")    
+    @unittest.skipIf(False, "Manual Skip")    
     def test_stdioRedirect_input_on_load(self):
         gdb = self.manager.addManualGdb()
         self.assertTrue(int(gdb.get_gdb_pid()) > 0, "Pid de gdb erroneo")
@@ -150,11 +150,49 @@ class CompleteTest(unittest.TestCase):
         target.stdin.close()
         target.wait()
 
+    @unittest.skipIf(False, "Manual Skip")
+    def test_stdioRedirect_input_on_attach(self):
+        #Creo un gdb vacio, e incio el modulo de redireccion
+        gdb = self.manager.addManualGdb()
+        self.assertTrue(int(gdb.get_gdb_pid()) > 0, "Pid de gdb erroneo")
+        request(gdb, "python import gdb_module_loader; gdb_module_loader.get_module_loader().load('stdioRedirect')", [])
+        request(gdb, "gdb-module-stdfd-redirect-activate", [])
         
+        #Creo un proceso nuevo al cual voy a attacharme
+        target = subprocess.Popen([testCodePath + "stdinTest"], stdin=PIPE, 
+                        stdout=PIPE, stderr=open('/dev/null', 'w'))
+        #Simple prueba de que el programa se esta ejecutando
+        os.write(target.stdin.fileno(), "Sin Dirigir\n")
+        sleep(1)
+        textoSalida = os.read(target.stdout.fileno(), 1024)
+        self.assertEqual(textoSalida, "Ingrese un texto:\nUsted ingreso: Sin Dirigir\nIngrese un texto:\n", "Se recibio: " + textoSalida)
+        
+        #Realizo el attach y hago el redireccionamiento de stdin desde Entrada.txt
+        request(gdb, "-target-attach", [str(target.pid)])
+        
+        # Creo el archivo a usar como entrada
+        entrada = open("Entrada.txt" , 'a')
+        entrada.write("Esta es la entrada desde una archivo\nTiene 2 lineas en total\n")
+        entrada.close()
+        
+        request(gdb, "gdb-module-stdfd-redirect-redirect_target_to_destine_file", ["0", "Entrada.txt", "0"])
+        request(gdb, "continue")
+        sleep(1)
+        gdb.gdbInput.close()  # Cierro la entrada para que sea tomada como un EOF
+        sleep(1)
+        
+        os.remove("Entrada.txt")
+        
+        #Compruebo la Salida
+        textoSalida = os.read(target.stdout.fileno(), 1024)
+        self.assertEqual(textoSalida, "Usted ingreso: Esta es la entrada desde una archivo\nIngrese un texto:\nUsted ingreso: Tiene 2 lineas en total\nIngrese un texto:\nFin\n", "Se recibio: " + textoSalida)
+        
+        target.wait()
         
     def tearDown(self):
         self.manager.close()    
     
+#Ejecutar desde la carpeta test_plugin: ".../test_plugin$ python testSuite.py"
 if __name__ == '__main__':
     os.chdir("../src")
     print os.getcwd()
