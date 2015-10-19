@@ -68,5 +68,23 @@ define(["underscore", "shortcuts", 'event_handler'], function (_, shortcuts, eve
         return this.threads_by_id[thread_id];
     };
 
+    ThreadGroup.prototype.execute = function (command, args, callback, self_id_argument_position) {
+        args = args || [];
+        var self_id_argument = "--thread-group " + this.id;
+
+        if (self_id_argument_position === undefined) {
+            args.push(self_id_argument_position);
+        }
+        else {
+            args[self_id_argument_position] = self_id_argument_position;
+        }
+
+        shortcuts.gdb_request(callback, 
+                this.debugger_id, 
+                command,
+                args
+                );
+    };
+
     return {ThreadGroup: ThreadGroup};
 });

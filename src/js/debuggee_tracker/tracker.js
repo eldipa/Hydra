@@ -224,7 +224,7 @@ define(["underscore", "shortcuts", "event_handler", "debuggee_tracker/debugger",
       var thread_group_id = data.results['group-id'];
       var thread_id = data.results.id;
       
-      var thread = new Thread(thread_id, this, {thread_group_id: thread_group_id});
+      var thread = new Thread(thread_id, this, {debugger_id: debugger_id, thread_group_id: thread_group_id});
 
       var thread_group = this.thread_groups_by_debugger[debugger_id][thread_group_id];
       var debugger_obj = this.debuggers_by_id[debugger_id];
