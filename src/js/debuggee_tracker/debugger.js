@@ -35,5 +35,13 @@ define(["underscore", "shortcuts", 'event_handler'], function (_, shortcuts, eve
         return this.tracker.thread_groups_by_debugger[this.id][thread_group_id];
     };
 
+    Debugger.prototype.execute = function (command, args, callback, self_id_argument_position) {
+        args = args || [];
+        shortcuts.gdb_request(callback || null, 
+                this.id, 
+                command,
+                args
+                );
+    };
     return {Debugger: Debugger};
 });

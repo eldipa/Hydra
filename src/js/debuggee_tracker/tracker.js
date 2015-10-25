@@ -471,7 +471,7 @@ define(["underscore", "shortcuts", "event_handler", "debuggee_tracker/debugger",
       this.observers = _.filter(
                               this.observers, 
                               function (obs) { 
-                                 return obs !== observers; 
+                                 return obs !== observer; 
                               });
    };
 

@@ -29,10 +29,10 @@ define(["underscore", "shortcuts", 'event_handler'], function (_, shortcuts, eve
             args.push(self_id_argument_position);
         }
         else {
-            args[self_id_argument_position] = self_id_argument_position;
+            args[self_id_argument_position] = self_id_argument;
         }
 
-        shortcuts.gdb_request(callback, 
+        shortcuts.gdb_request(callback || null,
                 this.debugger_id, 
                 command,
                 args
