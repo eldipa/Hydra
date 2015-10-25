@@ -46,11 +46,15 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
         var line_number_str = this.thread_followed.source_line;
 
         if (source_fullname && line_number_str) {
+            this.button_bar.leave_assembly_mode();
+
             if (! this.is_this_file_already_loaded(source_fullname)) {
                 this.update_yourself_from_source_code(source_fullname, line_number_str);
             }
         }
         else {
+            this.button_bar.enter_assembly_mode();
+
             var instruction_address = this.thread_followed.instruction_address;
             //TODO request to GDB to dissamble few (how much?) instructions around 'instruction_address'.
             //then call update_yourself_from_dissabled_code
