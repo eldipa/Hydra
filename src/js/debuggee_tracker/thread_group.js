@@ -73,7 +73,7 @@ define(["underscore", "shortcuts", 'event_handler'], function (_, shortcuts, eve
         var self_id_argument = "--thread-group " + this.id;
 
         if (self_id_argument_position === undefined) {
-            args.push(self_id_argument_position);
+            args.push(self_id_argument);
         }
         else {
             args[self_id_argument_position] = self_id_argument;
