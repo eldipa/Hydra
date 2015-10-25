@@ -193,6 +193,7 @@ define(['jquery', 'layout', 'code_editor', 'varViewer', 'widgets/buttons', 'list
       });
 
 
+      /*
       view.attach_menu([
                   {
                      header: 'On this line'
@@ -206,10 +207,11 @@ define(['jquery', 'layout', 'code_editor', 'varViewer', 'widgets/buttons', 'list
                      }
                   },
       ]);
+      */
 
       // TODO (issue #67) cuando se hace un click en un boton, este queda seleccionado
       // y no es desmarcado hasta que se hace click en otro lado!
-      var main_button_bar = new buttons.Buttons([
+      /* var main_button_bar = new buttons.Buttons([
             {
                label: "Run",
                text: false,
@@ -270,14 +272,16 @@ define(['jquery', 'layout', 'code_editor', 'varViewer', 'widgets/buttons', 'list
                   event_handler.publish("debugger.exit", "all");
                },
             }], true);
+            */
 
       // TODO (issue #69) hacer que las lineas de separacion del split sean mas finas y que se engrosen
       // mientras este el mouse encima de ellas.
       
-      var S1 = new layout.Stacked("vertically");
+      /*var S1 = new layout.Stacked("vertically");
       view.swap(S1);
       S1.add_child(main_button_bar, {position: "top", grow: 0, shrink: 0});
       S1.add_child(view, {position: "bottom", grow: 1, shrink: 1});
+      */
 
       root.render();
 

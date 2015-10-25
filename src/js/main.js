@@ -51,7 +51,7 @@ requirejs.onResourceLoad = function(context, map, depArray) {
    }
 };
 
-requirejs(['ui', 'code_view', 'jquery', 'export_console', 'layout', 'layout_examples', 'jqueryui', 'ctxmenu', 'notify_js_console', 'debuggee_tracker/tracker', 'event_handler', 'debuggee_tracker_view', 'underscore', 'shortcuts'], function (ui, code_view, $, export_console, layout, layout_examples, jqueryui, ctxmenu, notify_js_console, debuggee_tracker, event_handler, debuggee_tracker_view, _, shortcuts) {
+requirejs(['ui', 'code_view', 'jquery', 'export_console', 'layout', 'layout_examples', 'jqueryui', 'ctxmenu', 'notify_js_console', 'debuggee_tracker/tracker', 'event_handler', 'debuggee_tracker_view', 'underscore', 'shortcuts', 'thread_follower'], function (ui, code_view, $, export_console, layout, layout_examples, jqueryui, ctxmenu, notify_js_console, debuggee_tracker, event_handler, debuggee_tracker_view, _, shortcuts, thread_follower) {
    var EH = new event_handler.EventHandler();
    EH.init("(ui)");
    event_handler.set_global_event_handler(EH);
@@ -84,11 +84,15 @@ requirejs(['ui', 'code_view', 'jquery', 'export_console', 'layout', 'layout_exam
    var l = ui.init(EH);
    var root = l.root;
    var visor = l.visor;
+   var old_code_editor = l.code_editor;
 
-   dbg_tracker = new debuggee_tracker.DebuggeeTracker();
-   dbg_tracker_view = new debuggee_tracker_view.DebuggeeTrackerView(dbg_tracker);
+   var dbg_tracker = new debuggee_tracker.DebuggeeTracker();
+   var dbg_tracker_view = new debuggee_tracker_view.DebuggeeTrackerView(dbg_tracker);
+
+   var aThreadFollower = new thread_follower.ThreadFollower();
 
    visor.swap(dbg_tracker_view);
+   old_code_editor.swap(aThreadFollower);
    root.render();
 
    //process_view.start();
