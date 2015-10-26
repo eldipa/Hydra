@@ -31,8 +31,9 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
     // TODO: the ThreadFollower should update himself not only if its thread changed but also if
     // other threads changed and their files are the same that the file seen by this ThreadFollower
     ThreadFollower.prototype.update = function (data, topic, tracker) {
-        if (data.thread === this.thread_to_follow) {
-            console.log("Update");
+        console.log("Update");
+        if (this.thread_followed && (data.thread === this.thread_followed)) {
+            console.log("Thread UPDATE");
             this.see_your_thread_and_update_yourself();
         }
     };
@@ -49,8 +50,10 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
             this.button_bar.leave_assembly_mode();
 
             if (! this.is_this_file_already_loaded(source_fullname)) {
-                this.update_yourself_from_source_code(source_fullname, line_number_str);
+                this.update_yourself_from_source_code(source_fullname);
             }
+
+            this.update_current_line(line_number_str);
         }
         else {
             this.button_bar.enter_assembly_mode();
@@ -61,11 +64,17 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
         }
     };
 
-    ThreadFollower.prototype.update_yourself_from_source_code = function (source_fullname, line_number) {
+    ThreadFollower.prototype.update_current_line = function (line_number) {
+        line_number = Number(line_number) + 1;
+        this.code_editor.go_to_line(line_number);
+
+        this.code_editor.highlight_thread_current_line(line_number);
+    };
+
+    ThreadFollower.prototype.update_yourself_from_source_code = function (source_fullname) {
         //TODO do we need to disable the code view (ace) before doing this stuff and reenable it later?
         
-        line_number = 0 + line_number;
-        this.code_editor.load_cpp_code(source_fullname, line_number);
+        this.code_editor.load_cpp_code(source_fullname);
         
         this.current_loaded_file = source_fullname;
     };
@@ -79,6 +88,7 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
         var instructions = _.pluck(asm_lines, 'inst');
 
         this.code_editor.load_assembly_code(addresses, instructions.join("\n"));
+        this.code_editor.go_to_line(0);
 
         this.current_loaded_file = null;
     };
