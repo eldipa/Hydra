@@ -86,10 +86,12 @@ requirejs(['ui', 'code_view', 'jquery', 'export_console', 'layout', 'layout_exam
    var visor = l.visor;
    var old_code_editor = l.code_editor;
 
-   var dbg_tracker = new debuggee_tracker.DebuggeeTracker();
-   var dbg_tracker_view = new debuggee_tracker_view.DebuggeeTrackerView(dbg_tracker);
-
    var aThreadFollower = new thread_follower.ThreadFollower();
+
+   var dbg_tracker = new debuggee_tracker.DebuggeeTracker();
+   var dbg_tracker_view = new debuggee_tracker_view.DebuggeeTrackerView(dbg_tracker, aThreadFollower);
+
+   dbg_tracker.add_observer(aThreadFollower);
 
    visor.swap(dbg_tracker_view);
    old_code_editor.swap(aThreadFollower);

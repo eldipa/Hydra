@@ -1,8 +1,10 @@
 define(["underscore", "jquery", "jstree", "layout"], function (_, $, jstree, layout) {
    'use strict';
 
-   var DebuggeeTrackerView = function (debuggee_tracker) {
+   var DebuggeeTrackerView = function (debuggee_tracker, thread_follower) {  //TODO thread_follower is a hack
       this.super("DebuggeeTrackerView");
+
+      this.thread_follower = thread_follower;
 
       this._$container = $('<div style="height: 100%; width: 100%"></div>');
       this._$out_of_dom = this._$container;
@@ -194,6 +196,10 @@ define(["underscore", "jquery", "jstree", "layout"], function (_, $, jstree, lay
                       var file_exec_path = "" + $(this).val();
                       if (file_exec_path) {
                           thread_group.load_file_exec_and_symbols(file_exec_path);
+
+                          // HACK, run the process
+                          var debugger_obj = self.debuggee_tracker.get_debugger_with_id(debugger_id);
+                          debugger_obj.execute("start");
                       }
                       else {
                           console.log("Loading nothing");
@@ -218,10 +224,17 @@ define(["underscore", "jquery", "jstree", "layout"], function (_, $, jstree, lay
                   self._$container.jstree("select_node", node_id);
               },
               },{
-               text: 'Something',
+               text: 'Follow',
                action: function (e) {
                   e.preventDefault();
-                  console.log(self._get_data_from_selected());
+                  var ids = self._get_data_from_selected();
+                  var debugger_id = ids['debugger_id'];
+                  var thread_group_id = ids['thread_group_id'];
+                  var thread_id = ids['thread_id'];
+
+                  var thread = self.debuggee_tracker.get_debugger_with_id(debugger_id).get_thread_group_with_id(thread_group_id).get_thread_with_id(thread_id);
+
+                  self.thread_follower.follow(thread);
                },
               }];
    };
