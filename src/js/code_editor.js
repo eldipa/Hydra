@@ -41,7 +41,7 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore'], function (ace, $,
     };
 
 
-    CodeEditor.prototype.load_cpp_code = function (source_fullname, line_number) {
+    CodeEditor.prototype.load_cpp_code = function (source_fullname) {
         this.edit_session.setMode("ace/mode/c_cpp");
         this.use_the_common_decimal_gutter();
         this.load_code_from_file(source_fullname); // TODO use line_number
@@ -52,6 +52,30 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore'], function (ace, $,
         this.edit_session.setMode("ace/mode/assembly_x86");  // TODO avoid re create the session if the file to load is already loaded
         this.use_the_gutter_for_hexa_addresses(addresses);
         this.load_code_from_string(assembly_code);
+    };
+
+    CodeEditor.prototype.go_to_line = function (line_number) {
+        this.editor.scrollToLine(line_number, false, false);
+        this.editor.gotoLine(line_number, 0, false);
+    };
+
+    CodeEditor.prototype.highlight_lines = function (css_classes, start_line_number, end_line_number) {
+        var end_line_number = end_line_number || start_line_number;
+
+        var range = new ace.range.Range(start_line_number, 0, end_line_number, 10);
+        var marker_id = this.edit_session.addMarker(range, "code-editor-marker " + css_classes, "fullLine");
+
+        console.log(start_line_number);
+        console.log(end_line_number);
+        return {marker_id: marker_id};
+    };
+
+    CodeEditor.prototype.remove_highlight = function (highlight) {
+        this.edit_session.removeMarker(highlight.marker_id);
+    };
+
+    CodeEditor.prototype.highlight_thread_current_line = function (line_number) {
+        return this.highlight_lines("code-editor-thread-current-line", line_number);
     };
 
     
