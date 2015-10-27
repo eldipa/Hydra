@@ -277,8 +277,8 @@ define(["underscore", "shortcuts", "event_handler", "debuggee_tracker/debugger",
       this.notify("running", { 
                               event_data: data,
                               debugger_obj: debugger_obj,
-                              //thread_group_id: thread_group_id, TODO?
-                              //thread_id: thread_id              TODO?
+                              //thread_group_id: thread_group_id, TODO? un thread group para el hilo actual y los otros, pero podrian haber multiples thread groups si se corre "ALL" todos los hilos de todos los thread groups.
+                              threads: threads_selected
                               });
    };
 
@@ -304,8 +304,8 @@ define(["underscore", "shortcuts", "event_handler", "debuggee_tracker/debugger",
           self.notify("stopped", { 
                                   event_data: data,
                                   debugger_obj: debugger_obj,
-                                  //thread_group_id: thread_group_id, TODO?
-                                  //thread_id: thread_id              TODO?
+                                  //thread_group_id: thread_group_id, TODO? un thread group para el hilo actual y los otros, pero podrian haber multiples thread groups si se corre "ALL" todos los hilos de todos los thread groups.
+                                  threads: threads_selected
                                   });
       });
       
@@ -432,6 +432,7 @@ define(["underscore", "shortcuts", "event_handler", "debuggee_tracker/debugger",
       this.notify("thread_update", { 
                               event_data: thread_data,
                               debugger_obj: debugger_obj,
+                              thread_group: thread_group,
                               thread: thread,
                               });
    };

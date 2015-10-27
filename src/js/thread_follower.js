@@ -32,7 +32,28 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
     // TODO: the ThreadFollower should update himself not only if its thread changed but also if
     // other threads changed and their files are the same that the file seen by this ThreadFollower
     ThreadFollower.prototype.update = function (data, topic, tracker) {
-        if (this.thread_followed && (data.thread === this.thread_followed)) { // TODO data.thread is undefined: see tracker.js
+        if (! this.thread_followed ) {
+            return;
+        }
+
+        var threads;
+        var is_my_thread_updated = false;
+        if (data.threads) {
+            threads = data.threads;
+            is_my_thread_updated = !!_.find(function (t) { 
+                return this.thread_followed === t; 
+            }, data.threads, this);
+        }
+        else if (data.thread) {
+            threads = [data.thread];
+            is_my_thread_updated = this.thread_followed === data.thread;
+        }
+        else {
+            threads = [];
+            is_my_thread_updated = false;
+        }
+
+        if (is_my_thread_updated) { 
             console.log("Thread UPDATE");
             this.see_your_thread_and_update_yourself();
         }
