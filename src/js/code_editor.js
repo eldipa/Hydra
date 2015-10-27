@@ -44,7 +44,7 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore'], function (ace, $,
     CodeEditor.prototype.load_cpp_code = function (source_fullname) {
         this.edit_session.setMode("ace/mode/c_cpp");
         this.use_the_common_decimal_gutter();
-        this.load_code_from_file(source_fullname); // TODO use line_number
+        this.load_code_from_file(source_fullname);
     };
 
 

@@ -10,6 +10,7 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
         this.stacked_view.add_child(this.code_editor, {position: "bottom", grow: 1, shrink: 1});
 
         this.current_loaded_file = "";
+        this.current_line_highlight = null;
     };
 
     ThreadFollower.prototype.__proto__ = layout.Panel.prototype;
@@ -31,8 +32,7 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
     // TODO: the ThreadFollower should update himself not only if its thread changed but also if
     // other threads changed and their files are the same that the file seen by this ThreadFollower
     ThreadFollower.prototype.update = function (data, topic, tracker) {
-        console.log("Update");
-        if (this.thread_followed && (data.thread === this.thread_followed)) {
+        if (this.thread_followed && (data.thread === this.thread_followed)) { // TODO data.thread is undefined: see tracker.js
             console.log("Thread UPDATE");
             this.see_your_thread_and_update_yourself();
         }
@@ -65,10 +65,14 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
     };
 
     ThreadFollower.prototype.update_current_line = function (line_number) {
-        line_number = Number(line_number) + 1;
+        line_number = Number(line_number) - 1;
         this.code_editor.go_to_line(line_number);
 
-        this.code_editor.highlight_thread_current_line(line_number);
+        if (this.current_line_highlight) {
+            this.code_editor.remove_highlight(this.current_line_highlight);
+        }
+
+        this.current_line_highlight = this.code_editor.highlight_thread_current_line(line_number);
     };
 
     ThreadFollower.prototype.update_yourself_from_source_code = function (source_fullname) {
