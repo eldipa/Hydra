@@ -299,14 +299,16 @@ define(["underscore", "shortcuts", "event_handler", "debuggee_tracker/debugger",
          thread.update({state: "stopped"});
       });
 
-      this._request_an_update_threads_info(debugger_id);
+      var self = this;
+      this._request_an_update_threads_info(debugger_id, function () {
+          self.notify("stopped", { 
+                                  event_data: data,
+                                  debugger_obj: debugger_obj,
+                                  //thread_group_id: thread_group_id, TODO?
+                                  //thread_id: thread_id              TODO?
+                                  });
+      });
       
-      this.notify("stopped", { 
-                              event_data: data,
-                              debugger_obj: debugger_obj,
-                              //thread_group_id: thread_group_id, TODO?
-                              //thread_id: thread_id              TODO?
-                              });
    };
 
    /* Get the thread objects selected by 'thread_id'. This will return always a
@@ -390,11 +392,15 @@ define(["underscore", "shortcuts", "event_handler", "debuggee_tracker/debugger",
             IT WILL NOT update the threads_by_id object of a particular thread_group.
             To do this, call _request_an_update_thread_groups_info.
    */
-   DebuggeeTracker.prototype._request_an_update_threads_info = function (debugger_id) {
+   DebuggeeTracker.prototype._request_an_update_threads_info = function (debugger_id, callback_after_update) {
       var self = this;
       shortcuts.gdb_request(function (data) {
          var threads_data = data.results.threads;
          _.each(threads_data, _.partial(self._update_thread_info, _, self.threads_by_debugger[debugger_id], undefined, debugger_id), self);
+
+         if (callback_after_update) {
+             callback_after_update();
+         }
          }, 
          debugger_id, 
          "-thread-info"
