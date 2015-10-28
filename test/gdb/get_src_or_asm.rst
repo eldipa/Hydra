@@ -15,6 +15,7 @@ info target
 
    >>> BIN="../src/cppTestCode/exe_with_and_without_symbols"
 
+   >>> request(gdb, "set target-async off", [])                 # doctest: +PASS
 
 Luego de la inicializacion, cargamos el binario 'example_full_debugging_symbol'.
 Este fue compilado con gcc con el flago -ggdb que le incluye todos los datos

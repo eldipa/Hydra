@@ -4,12 +4,14 @@ comando retorna con dicho tag lo que permite aparear cada request con su respons
 ::
 
    >>> from shortcuts import start_notifier, stop_notifier 
+   >>> from shortcuts import request as _request_
    >>> import publish_subscribe.eventHandler 
    >>> start_notifier("../src/py/publish_subscribe/")
 
    >>> from gdb.gdb import Gdb
    >>> gdb = Gdb()
 
+   >>> _request_(gdb, "set target-async off", [])                 # doctest: +PASS
    >>> pubsub = publish_subscribe.eventHandler.EventHandler()
 
 Para comenzar, creamos un token o cookie, un numero unico que representara esta transaccion.

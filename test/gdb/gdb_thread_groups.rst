@@ -40,6 +40,7 @@ Bien, ahora lanzamos GDB para ver que sucede
 
    >>> from gdb.gdb import Gdb
    >>> gdb = Gdb()
+   >>> request(gdb, "set target-async off", [])                 # doctest: +PASS
 
    >>> collector.get_next()                           # doctest: +ELLIPSIS
    {u'debugger-id': ...
@@ -248,7 +249,7 @@ estaba el breakpoint puesto por el flag '--start' y por ello se detiene:
    >>> collector.get_next()                           # doctest: +ELLIPSIS
    {u'debugger-id': ...
     u'klass': u'running',
-    u'results': {u'thread-id': u'all'},
+    u'results': {u'thread-id': u'1'},
     u'token': None,
     u'type': u'Exec'}
 
@@ -262,11 +263,13 @@ estaba el breakpoint puesto por el flag '--start' y por ello se detiene:
                             u'func': u'main',
                             u'line': u'13'},
                  u'reason': u'breakpoint-hit',
-                 u'stopped-threads': u'all',
+                 u'stopped-threads': [u'1'],
                  u'thread-id': u'1'},
     u'token': None,
     u'type': u'Exec'}
 
+El thread-id (el primer evento) y el stopped-threads (del segundo) pueden valer el string "all"
+en cuyo caso significa que todos los hilos se ven afectados (empezaron a correr/se detuvieron).
 
 Ahora pondremos un breakpoint en el codigo del hilo secundario (funcion llamada "roll") 
 para ver como se muestra un proceso con dos hilos.
@@ -279,7 +282,7 @@ para ver como se muestra un proceso con dos hilos.
    >>> collector.get_next()                           # doctest: +ELLIPSIS
    {u'debugger-id': ...
     u'klass': u'running',
-    u'results': {u'thread-id': u'all'},
+    u'results': {u'thread-id': u'1'},
     u'token': None,
     u'type': u'Exec'}
 
@@ -312,7 +315,7 @@ para ver como se muestra un proceso con dos hilos.
                             u'func': u'roll',
                             u'line': u'5'},
                  u'reason': u'breakpoint-hit',
-                 u'stopped-threads': u'all',
+                 u'stopped-threads': [u'2'],
                  u'thread-id': u'2'},
     u'token': None,
     u'type': u'Exec'}
@@ -326,44 +329,34 @@ Ahora tenemos 2 hilos, el principal bloqueado en el join (pero no esta bloqueado
 por algo de GDB como un breakpoint asi que su estado es running) y el segundo hilo, 
 bloqueado en un breakpoint.
 
-Pero se puede ver que el evento 'stopped' indica que hilos fueron detenidos ('stopped-threads')
-y como se muestra, todos los hilos fueron detenidos. Esto es debido al modo all-stop.
+Esto es asi porque estamos en modo non-stop. Si estuvieramos en el modo all-stop el hecho de
+que un thread se detuviera haria que todos los threads se detuvieran tambien lo que
+se indiecaria en el atributo 'stopped-threads' que valdria 'all'.
 
 Veamos como queda la info de los hilos:
 
 ::
-
    >>> request(gdb, "-thread-info", [])       # doctest: +ELLIPSIS
    {u'debugger-id': ...
     u'klass': u'done',
-    u'results': {u'current-thread-id': u'2',
+    u'results': {u'current-thread-id': u'...',
                  u'threads': [{u'core': ...,
-                               u'frame': {u'addr': u'0x...',
-                                          u'args': [{u'name': u'cookie',
-                                                     u'value': u'0x...'}],
-                                          u'file': u'two_pthreads.c',
-                                          u'fullname': ...
-                                          u'func': u'roll',
-                                          u'level': u'0',
-                                          u'line': u'5'},
+                               ...
                                u'id': u'2',
-                               u'name': ...
+                               ...
                                u'state': u'stopped',
-                               u'target-id': ...},
-                              {u'core': ...,
                                ...
                                u'id': u'1',
-                               u'name': ...
-                               u'state': u'stopped',
-                               u'target-id': ...}]},
+                               ...
+                               u'state': u'running',
+                               ...
     u'token': ...,
     u'type': u'Sync'}
 
 Como era de esperarse, ahora tenemos 2 hilos. Sin embargo, algunas observaciones:
- - el hilo principal esta en el estado 'stopped' lo que es raro porque si bien esta
-   bloqueado en un join, no esta bloqueado por culpa de GDB. 
-   El breakpoint alcanzado por el segundo hilo haya hecho frenar a ambos (modo all-stop).
- - el 'current-thread-id' paso de ser 1 (el hilo principal) a ser 2 (el nuevo hilo) 
+ - el hilo principal esta en el estado 'running' bloqueado en un join
+   El breakpoint alcanzado por el segundo hilo no freno a ambos threads (modo non-stop).
+ - el 'current-thread-id' puede pasar de ser 1 (el hilo principal) a ser 2 (el nuevo hilo) 
    sin ninguna intervencion nuestra. A no suponer que se mantiene constante!!!.
 
 Veamos que sucede cuando un hilo termina. Para ello, pondremos otro breakpoint en el
@@ -372,7 +365,7 @@ main y haremos continue para que el hilo secundario termine y el main se bloque 
 ::
 
    >>> request(gdb, "-break-insert", ["16"])          # doctest: +PASS
-   >>> request(gdb, "-exec-continue")                 # doctest: +PASS
+   >>> request(gdb, "-exec-continue", ["--all"])      # doctest: +PASS
    
    >>> collector.get_next()                           # doctest: +ELLIPSIS
    {u'debugger-id': ...

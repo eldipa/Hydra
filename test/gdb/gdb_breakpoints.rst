@@ -9,6 +9,8 @@ Como siempre, inicializamos nuestro gdb y el sistema de comunicaciones
    >>> gdb = Gdb()
 
    >>> BIN="../src/cppTestCode/exe_with_and_without_symbols"
+   
+   >>> request(gdb, "set target-async off", [])                 # doctest: +PASS
 
 
 Para comenzar, veamos como se setean breakpoints en un binario con todos los
