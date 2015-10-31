@@ -63,7 +63,25 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore'], function (ace, $,
         var end_line_number = end_line_number || start_line_number;
 
         var range = new ace.range.Range(start_line_number, 0, end_line_number, 10);
-        var marker_id = this.edit_session.addMarker(range, "code-editor-marker " + css_classes, "fullLine");
+        //var marker_id = this.edit_session.addMarker(range, "code-editor-marker " + css_classes, "fullLine");
+
+        var marker_id = this.edit_session.addMarker(range, "", 
+                function (stringBuilder, range, left, top, config) {
+                    var clazz = "code-editor-marker " + css_classes; // My stuff
+                    var extraStyle = "text-align: right;";           // My stuff
+
+                    var height = config.lineHeight;
+                    
+                    if (range.start.row != range.end.row)
+                        height += ((range.end.row - config.firstRowScreen) * config.lineHeight) - top;
+
+                    stringBuilder.push(
+                        "<div class='", clazz, "' style='",
+                        "height:", height, "px;",
+                        "top:", top, "px;",
+                        "left:0;right:0;", extraStyle || "", "'><span>XXXX</span></div>"
+                    );
+                });
 
         console.log(start_line_number);
         console.log(end_line_number);

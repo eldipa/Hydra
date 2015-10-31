@@ -169,16 +169,6 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'widgets/buttons']
 
                   target.execute("-exec-finish", args);
                },
-            }, 
-            {
-               label: "Return",
-               text: false,
-               icons: {primary: 'fa fa-eject'},
-               action: function (ev) {
-                  ev.preventDefault();
-                  var target = self.thread_follower.thread_followed;
-                  target.execute("-exec-return", []);
-               },
             } 
             ];
 
@@ -232,8 +222,6 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'widgets/buttons']
             button_descriptions.push(desc);
         }
 
-        this._configure_disable_buttons_inplace([4], button_descriptions, button_descriptions_prototype);
-
         return button_descriptions;
     };
     
@@ -248,7 +236,7 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'widgets/buttons']
             button_descriptions.push(desc);
         }
 
-        this._configure_disable_buttons_inplace([3, 4], button_descriptions, button_descriptions_prototype);
+        this._configure_disable_buttons_inplace([3], button_descriptions, button_descriptions_prototype);
 
         return button_descriptions;
     };
@@ -263,7 +251,7 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'widgets/buttons']
         button_descriptions[0].label = "Interrupt";
         button_descriptions[0].icons.primary = "fa fa-pause";
 
-        this._configure_disable_buttons_inplace([1, 2, 3, 4], button_descriptions, button_descriptions_prototype);
+        this._configure_disable_buttons_inplace([1, 2, 3], button_descriptions, button_descriptions_prototype);
 
         return button_descriptions;
     };
