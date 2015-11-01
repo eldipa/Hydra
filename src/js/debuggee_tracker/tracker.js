@@ -1,4 +1,4 @@
-define(["underscore", "shortcuts", "event_handler", "debuggee_tracker/debugger", "debuggee_tracker/thread_group", "debuggee_tracker/thread"], function (_, shortcuts, event_handler, debugger_module, thread_group_module, thread_module) {
+define(["underscore", "event_handler", "debuggee_tracker/debugger", "debuggee_tracker/thread_group", "debuggee_tracker/thread"], function (_, event_handler, debugger_module, thread_group_module, thread_module) {
    'use strict';
 
    var Debugger = debugger_module.Debugger;
@@ -345,41 +345,39 @@ define(["underscore", "shortcuts", "event_handler", "debuggee_tracker/debugger",
    DebuggeeTracker.prototype._request_an_update_thread_groups_info = function (thread_group_by_id, debugger_id) {
       var self = this;
       var debugger_obj = this.debuggers_by_id[debugger_id];
-      shortcuts.gdb_request(function (data) {
-         var groups_data = data.results.groups;
-         _.each(groups_data, function (group_data) {
-            var thread_group_id = group_data.id;
-            var thread_group = thread_group_by_id[thread_group_id];
 
-            if (thread_group === undefined) {
-               thread_group = new ThreadGroup(thread_group_id, this, {debugger_id: debugger_id});
-               thread_group_by_id[thread_group_id] = thread_group; 
-            }
+      debugger_obj.execute("-list-thread-groups", ["--recurse", "1"], 
+              function (data) {
+                 var groups_data = data.results.groups;
+                 _.each(groups_data, function (group_data) {
+                    var thread_group_id = group_data.id;
+                    var thread_group = thread_group_by_id[thread_group_id];
 
-            if (group_data.pid == undefined || group_data.pid == null) {
-               thread_group.update({state: "not-started"});
-            }
-            else {
-               thread_group.update({state: "started"});
-            }
+                    if (thread_group === undefined) {
+                       thread_group = new ThreadGroup(thread_group_id, this, {debugger_id: debugger_id});
+                       thread_group_by_id[thread_group_id] = thread_group; 
+                    }
 
-            thread_group.update({process_id: group_data.pid,
-                                        executable: group_data.executable});
+                    if (group_data.pid == undefined || group_data.pid == null) {
+                       thread_group.update({state: "not-started"});
+                    }
+                    else {
+                       thread_group.update({state: "started"});
+                    }
 
-            var threads_data = group_data.threads;
-            _.each(threads_data, _.partial(self._update_thread_info, _, self.threads_by_debugger[debugger_id], thread_group, debugger_id), self);
-            
-            self.notify("thread_group_update", { 
-                                    event_data: group_data,
-                                    debugger_obj: debugger_obj,
-                                    thread_group: thread_group,
-                                    });
-         });
-         }, 
-         debugger_id, 
-         "-list-thread-groups",
-         ["--recurse", "1"]
-      );
+                    thread_group.update({process_id: group_data.pid,
+                                                executable: group_data.executable});
+
+                    var threads_data = group_data.threads;
+                    _.each(threads_data, _.partial(self._update_thread_info, _, self.threads_by_debugger[debugger_id], thread_group, debugger_id), self);
+                    
+                    self.notify("thread_group_update", { 
+                                            event_data: group_data,
+                                            debugger_obj: debugger_obj,
+                                            thread_group: thread_group,
+                                            });
+                 });
+            });
    };
 
    /* 
@@ -394,17 +392,17 @@ define(["underscore", "shortcuts", "event_handler", "debuggee_tracker/debugger",
    */
    DebuggeeTracker.prototype._request_an_update_threads_info = function (debugger_id, callback_after_update) {
       var self = this;
-      shortcuts.gdb_request(function (data) {
-         var threads_data = data.results.threads;
-         _.each(threads_data, _.partial(self._update_thread_info, _, self.threads_by_debugger[debugger_id], undefined, debugger_id), self);
+      var debugger_obj = this.debuggers_by_id[debugger_id];
+      
+      debugger_obj.execute("-thread-info", [], 
+              function (data) {
+                 var threads_data = data.results.threads;
+                 _.each(threads_data, _.partial(self._update_thread_info, _, self.threads_by_debugger[debugger_id], undefined, debugger_id), self);
 
-         if (callback_after_update) {
-             callback_after_update();
-         }
-         }, 
-         debugger_id, 
-         "-thread-info"
-      );
+                 if (callback_after_update) {
+                     callback_after_update();
+                 }
+              }); 
    };
 
    DebuggeeTracker.prototype._update_thread_info = function (thread_data, threads, thread_group, debugger_id) {
