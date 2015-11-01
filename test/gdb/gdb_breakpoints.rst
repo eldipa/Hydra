@@ -111,10 +111,18 @@ Para poder obtener todos los breakpoints seteados, podemos pedirselo a GDB
    {u'debugger-id': ...
     u'klass': u'done',
     u'results': {u'BreakpointTable': {u'body': [[u'bkpt',
-                                                 {u'addr': ...
-                                                  ...
+                                                 {u'addr': u'0x...',
+                                                  u'disp': u'keep',
+                                                  u'enabled': u'y',
+                                                  u'file': u'example.c',
+                                                  u'fullname': u'.../exe_with_and_without_symbols/example.c',
+                                                  u'func': u'main',
+                                                  u'line': u'5',
                                                   u'number': u'1',
-                                                  ...
+                                                  u'original-location': u'main',
+                                                  u'thread': [u'1', u'1'],
+                                                  u'thread-groups': [u'i1'],
+                                                  u'times': u'0',
                                                   u'type': u'breakpoint'}],
                                                 [u'bkpt',
                                                  {u'addr': ...
@@ -185,6 +193,79 @@ Para el caso de un ejecutable strippeado:
     u'type': u'Sync'}
 
 lo cual era de esperarse ese error.
+
+Ahora veamos como se comportan los breakpoints en un ambiente multithreading
+
+::
+   
+   >>> gdb.shutdown()
+   0
+   >>> gdb = Gdb()
+
+   >>> BIN="../src/cppTestCode/threads/three_pthreads"
+
+En este caso, nuestro proceso lanzara 2 hilos que ejecutaran la funcion roll mientras el hilo principal espera en
+el join.
+Pondremos un breakpoint en la funcion roll que hara que esos 2 hilos se bloqueen. Luego pondremos un breakpoint
+adicional solo para uno de esos dos hilos.
+Al darle continue, todos lo hilos deberian correr salvo ese, probando que los breakpoints se pueden asignar por thread.
+
+::
+   
+   >>> request(gdb, "-file-exec-and-symbols", ["--thread-group i1", BIN])        # doctest: +PASS
+
+   >>> b1 = request(gdb, "-break-insert", ["roll"])                             # doctest: +PASS 
+   >>> request(gdb, "-exec-run", ["--thread-group i1"])                         # doctest: +PASS 
+
+   >>> import time; time.sleep(0.5)
+   >>> request(gdb, "-thread-info", [])       # doctest: +ELLIPSIS
+   {...
+                 u'threads': [{...
+                                          u'func': u'roll',
+                                          u'level': u'0',
+                                          u'line': u'5'},
+                               u'id': u'3',
+                               u'name': u'three_pthreads',
+                               u'state': u'stopped',
+                               ...},
+                              {...
+                                          u'func': u'roll',
+                                          u'level': u'0',
+                                          u'line': u'5'},
+                               u'id': u'2',
+                               u'name': u'three_pthreads',
+                               u'state': u'stopped',
+                               ...},
+                              {...
+                               u'id': u'1',
+                               u'name': u'three_pthreads',
+                               u'state': u'running',
+                               ...}]},
+    ...}
+
+
+   >>> b2 = request(gdb, "-break-insert", ["-p", "2", "6"])                  # doctest: +PASS 
+   >>> request(gdb, '-exec-continue', ["--thread-group i1"])                    # doctest: +PASS
+
+   >>> import time; time.sleep(0.5)
+   >>> request(gdb, "-thread-info", [])       # doctest: +ELLIPSIS
+   {...
+                 u'threads': [{...
+                                          u'func': u'roll',
+                                          u'level': u'0',
+                                          u'line': u'6'},
+                               u'id': u'2',
+                               u'name': u'three_pthreads',
+                               u'state': u'stopped',
+                               ...},
+                              {...
+                               u'id': u'1',
+                               u'name': u'three_pthreads',
+                               u'state': u'running',
+                               ...}]},
+    ...}
+   
+   >>> request(gdb, '-exec-continue', ["--thread-group i1"])                    # doctest: +PASS
 
 Limpiamos todo:
 

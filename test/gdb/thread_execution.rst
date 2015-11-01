@@ -48,6 +48,8 @@ main (linea ~14).
 
 Nota: a pesar de dejarlo explicito, los breakpoints son seteados en todos los procesos que
 tengan el mismo ejecutable. (Ver luego el FIX para este test)
+https://bugs.eclipse.org/bugs/show_bug.cgi?id=389945
+https://sourceware.org/ml/gdb/2012-09/msg00054.html
 
 ::
    
@@ -154,6 +156,7 @@ con un continue. Vease los FIXs
                               u'pid': u'...',
                               u'type': u'process'}]},
     ...}
+
    >>> #FIX
    >>> collector.get_next()                                        # doctest: +ELLIPSIS
    {u'debugger-id': ...
