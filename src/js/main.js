@@ -16,7 +16,9 @@ requirejs.config({
       standarInput: 'standarInput',
       shortcuts: 'shortcuts',
       jstree: 'external/jstree-3.1.1',
-      debuggee_tracker_view: 'debuggee_tracker_view'
+      debuggee_tracker_view: 'debuggee_tracker_view',
+      sigma: 'external/sigma.require',
+      fd_redirector: 'fd_redirector'
    },
 
    shim: {
@@ -34,6 +36,9 @@ requirejs.config({
       "jstree": {
          deps: ['jquery'],
          exports: "$",
+      },
+      "sigma": {
+          exports: 'sigma',
       }
    }
 

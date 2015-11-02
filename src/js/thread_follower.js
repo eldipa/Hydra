@@ -1,13 +1,15 @@
-define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'thread_button_bar_controller'], function (ace, $, layout, shortcuts, _, code_editor, thread_button_bar_controller) {
+define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'thread_button_bar_controller', 'fd_redirector'], function (ace, $, layout, shortcuts, _, code_editor, thread_button_bar_controller, fd_redirector) {
     var ThreadFollower = function () {
         this.super("Thread Follower");
 
         this.code_editor = new code_editor.CodeEditor();
         this.button_bar = new thread_button_bar_controller.ThreadButtonBarController(this);
+        this.fd_redirector = new fd_redirector.FD_Redirector();
 
         this.stacked_view = new layout.Stacked("vertically");
         this.stacked_view.add_child(this.button_bar, {position: "top", grow: 0, shrink: 0});
         this.stacked_view.add_child(this.code_editor, {position: "bottom", grow: 1, shrink: 1});
+        this.stacked_view.add_child(this.fd_redirector, {position: "bottom", grow: 1, shrink: 1});
 
         this.current_loaded_file = "";
         this.current_line_highlight = null;
