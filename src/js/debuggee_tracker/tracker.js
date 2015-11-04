@@ -378,6 +378,51 @@ define(["underscore", "event_handler", "debuggee_tracker/debugger", "debuggee_tr
                                             });
                  });
             });
+      
+      debugger_obj.execute("-break-list", [], 
+              function (data) {
+                  var breaktpoint_data_rows = data.results.BreakpointTable.body;
+                  _.each(breaktpoint_data_rows, function (breakpoint_data) {
+                      var type = breakpoint_data.type;
+
+                      if (type !== "breakpoint") {
+                          return;
+                      }
+
+                      var is_pending = breakpoint_data.pending !== undefined;
+                      var apply_to_all_threads = breakpoint_data.thread === undefined;
+                      var is_enabled = breakpoint_data.enabled === 'y';
+                      var is_temporal = breakpoint_data.disp !== 'keep';
+
+                      var thread_ids = [];
+                      if (!apply_to_all_threads) {
+                         thread_ids = _.unique(breakpoint_data.thread); // remove duplicates (gdb bug)
+                      }
+
+                      var thread_group_ids = breakpoint_data['thread-groups'];
+                      
+                      var number = breakpoint_data.number;
+
+                      var instruction_address = breakpoint_data.addr;
+                      var source_fullname = breakpoint_data.fullname;
+                      var source_line = breakpoint_data.line;
+
+                      // TODO check if the breakpoint is already created!!
+                      var breakpoint = new Breakpoint(number, this, {
+                          debugger_id: debugger_id,
+                          is_pending: is_pending,
+                          apply_to_all_threads: apply_to_all_threads,
+                          is_enabled: is_enabled,
+                          is_temporal: is_temporal,
+                          thread_ids: thread_ids,
+                          thread_group_ids: thread_group_ids,
+                          source_fullname: source_fullname,
+                          source_line: source_line,
+                          instruction_address: instruction_address
+                      });
+
+                  }, this);
+              });
    };
 
    /* 
