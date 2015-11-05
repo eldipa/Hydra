@@ -45,8 +45,13 @@ define(['event_handler'], function (event_handler) {
       }, this);
    };
 
+   var get_filename_from_fullname = function (fullname) {
+        return fullname.substr(fullname.lastIndexOf("/")+1);
+   };
+
    return {
       gdb_request: gdb_request,
-      _update_properties: _update_properties
+      _update_properties: _update_properties,
+      get_filename_from_fullname: get_filename_from_fullname
    };
 });

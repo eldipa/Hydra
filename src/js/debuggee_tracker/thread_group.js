@@ -17,7 +17,7 @@ define(["underscore", "shortcuts", 'event_handler'], function (_, shortcuts, eve
         var txt = [];
 
         if (this.executable != undefined) {
-            txt.push(this.executable.substr(this.executable.lastIndexOf("/")+1));
+            txt.push(shortcuts.get_filename_from_fullname(this.executable));
         }
 
         if (this.state === "started") {

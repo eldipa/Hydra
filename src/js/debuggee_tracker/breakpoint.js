@@ -2,8 +2,7 @@ define(["underscore", "shortcuts", 'event_handler'], function (_, shortcuts, eve
     'use strict';
 
     var Breakpoint = function (id, tracker, obj) {
-        this._properties = ["debugger_id", "is_pending", "apply_to_all_threads", "is_enabled", \
-                            "is_temporal", "thread_ids", "thread_group_ids", "source_fullname", "source_line", "instruction_address"];
+        this._properties = ["debugger_id", "is_pending", "apply_to_all_threads", "is_enabled", "is_temporal", "thread_ids", "thread_group_ids", "source_fullname", "source_line", "instruction_address"];
         this.update(obj);
 
         this.id = id;
@@ -13,7 +12,12 @@ define(["underscore", "shortcuts", 'event_handler'], function (_, shortcuts, eve
 
     Breakpoint.prototype.update = shortcuts._update_properties;
     Breakpoint.prototype.get_display_name = function () {
-        return "Breakpoint " + this.id;
+        var name =  "Breakpoint " + this.id + " at " + this.instruction_address;
+        if (this.source_fullname && this.source_line) {
+            name += " ("+shortcuts.get_filename_from_fullname(this.source_fullname)+" "+this.source_line+")";
+        }
+
+        return name;
     };
 
     return {Breakpoint: Breakpoint};

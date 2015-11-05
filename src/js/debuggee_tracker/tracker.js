@@ -1,9 +1,10 @@
-define(["underscore", "event_handler", "debuggee_tracker/debugger", "debuggee_tracker/thread_group", "debuggee_tracker/thread"], function (_, event_handler, debugger_module, thread_group_module, thread_module) {
+define(["underscore", "event_handler", "debuggee_tracker/debugger", "debuggee_tracker/thread_group", "debuggee_tracker/thread", "debuggee_tracker/breakpoint"], function (_, event_handler, debugger_module, thread_group_module, thread_module, breakpoint_module) {
    'use strict';
 
    var Debugger = debugger_module.Debugger;
    var ThreadGroup = thread_group_module.ThreadGroup;
    var Thread = thread_module.Thread;
+   var Breakpoint = breakpoint_module.Breakpoint;
 
    var DebuggeeTracker = function () {
       this.EH = event_handler.get_global_event_handler();
@@ -12,6 +13,8 @@ define(["underscore", "event_handler", "debuggee_tracker/debugger", "debuggee_tr
 
       this.thread_groups_by_debugger = {};
       this.threads_by_debugger = {};
+      this.breakpoints_by_debugger = {};
+
       this.subscription_ids_by_debugger = {};
 
       this.debuggers_by_id = {};
@@ -21,7 +24,8 @@ define(["underscore", "event_handler", "debuggee_tracker/debugger", "debuggee_tr
                       "_thread_group_added",   "_thread_group_removed",
                       "_thread_group_started", "_thread_group_exited",
                       "_thread_created",       "_thread_exited",
-                      "_running",              "_stopped");
+                      "_running",              "_stopped",
+                      "_breakpoint_modified");
 
       this.EH.subscribe('spawner.debugger-started', this._debugger_started);
       this.EH.subscribe('spawner.debugger-exited',  this._debugger_exited);
@@ -58,6 +62,7 @@ define(["underscore", "event_handler", "debuggee_tracker/debugger", "debuggee_tr
       var debugger_id = data['debugger-id'];
       this.thread_groups_by_debugger[debugger_id] = {};
       this.threads_by_debugger[debugger_id] = {};
+      this.breakpoints_by_debugger[debugger_id] = {};
 
       var debugger_obj = new Debugger(debugger_id, this, {});
       this.debuggers_by_id[debugger_id] = debugger_obj;
@@ -93,6 +98,7 @@ define(["underscore", "event_handler", "debuggee_tracker/debugger", "debuggee_tr
       _.each(this.subscription_ids_by_debugger[debugger_id], this.EH.unsubscribe, this.EH);
       delete this.subscription_ids_by_debugger[debugger_id];
       delete this.thread_groups_by_debugger[debugger_id];
+      delete this.breakpoints_by_debugger[debugger_id];
       delete this.threads_by_debugger[debugger_id];
       delete this.debuggers_by_id[debugger_id];
       
@@ -146,7 +152,9 @@ define(["underscore", "event_handler", "debuggee_tracker/debugger", "debuggee_tr
          EH.subscribe(topic_prefix + 'notify.thread-exited',  this._thread_exited),
 
          EH.subscribe(topic_prefix + 'exec.running', this._running),
-         EH.subscribe(topic_prefix + 'exec.stopped', this._stopped)
+         EH.subscribe(topic_prefix + 'exec.stopped', this._stopped),
+         
+         EH.subscribe(topic_prefix + 'notify.breakpoint-modified', this._breakpoint_modified)
       ];
 
       return subscription_ids;
@@ -340,7 +348,7 @@ define(["underscore", "event_handler", "debuggee_tracker/debugger", "debuggee_tr
       The response or results of this request will be processed asynchronously and
       it will update the thread_groups_object.
 
-      This will also update the threads of those thread groups.
+      This will also update the threads of those thread groups and their breakpoints.
    */
    DebuggeeTracker.prototype._request_an_update_thread_groups_info = function (thread_group_by_id, debugger_id) {
       var self = this;
@@ -376,8 +384,22 @@ define(["underscore", "event_handler", "debuggee_tracker/debugger", "debuggee_tr
                                             debugger_obj: debugger_obj,
                                             thread_group: thread_group,
                                             });
+
+                    var breakpoints_by_id = self.breakpoints_by_debugger[debugger_id];
+                    self._request_an_update_of_the_breakpoint_info(breakpoints_by_id, debugger_id);
                  });
             });
+   };
+   
+   /*
+      Request an update about the breakpoints of one particular debugger (with 
+      'debugger_id').
+      The response or results of this request will be processed asynchronously and
+      it will update the breakpoint objects.
+   */
+   DebuggeeTracker.prototype._request_an_update_of_the_breakpoint_info = function (breakpoint_by_id, debugger_id) {
+      var self = this;
+      var debugger_obj = this.debuggers_by_id[debugger_id];
       
       debugger_obj.execute("-break-list", [], 
               function (data) {
@@ -386,43 +408,103 @@ define(["underscore", "event_handler", "debuggee_tracker/debugger", "debuggee_tr
                       var type = breakpoint_data.type;
 
                       if (type !== "breakpoint") {
+                          console.log("Not supported Xpoint type '"+type+"', we only support 'breakpoint's.");
                           return;
                       }
 
-                      var is_pending = breakpoint_data.pending !== undefined;
-                      var apply_to_all_threads = breakpoint_data.thread === undefined;
-                      var is_enabled = breakpoint_data.enabled === 'y';
-                      var is_temporal = breakpoint_data.disp !== 'keep';
+                      
+                      var breakpoint_id = breakpoint_data.number;
+                      
+                      var attributes = self._parse_attributes_from_breakpoint_data(breakpoint_data, debugger_id);
+                      
+                      var breakpoint = breakpoint_by_id[breakpoint_id];
 
-                      var thread_ids = [];
-                      if (!apply_to_all_threads) {
-                         thread_ids = _.unique(breakpoint_data.thread); // remove duplicates (gdb bug)
+                      if (breakpoint === undefined) {
+                          breakpoint = new Breakpoint(breakpoint_id, this, attributes);
+                      }
+                      else {
+                          breakpoint.update(attributes);
                       }
 
-                      var thread_group_ids = breakpoint_data['thread-groups'];
-                      
-                      var number = breakpoint_data.number;
-
-                      var instruction_address = breakpoint_data.addr;
-                      var source_fullname = breakpoint_data.fullname;
-                      var source_line = breakpoint_data.line;
-
-                      // TODO check if the breakpoint is already created!!
-                      var breakpoint = new Breakpoint(number, this, {
-                          debugger_id: debugger_id,
-                          is_pending: is_pending,
-                          apply_to_all_threads: apply_to_all_threads,
-                          is_enabled: is_enabled,
-                          is_temporal: is_temporal,
-                          thread_ids: thread_ids,
-                          thread_group_ids: thread_group_ids,
-                          source_fullname: source_fullname,
-                          source_line: source_line,
-                          instruction_address: instruction_address
-                      });
-
+                      console.log("ALL " + breakpoint.get_display_name());
+                      self.notify("breakpoint_update", { 
+                                                event_data: breakpoint_data,
+                                                debugger_obj: debugger_obj,
+                                                breakpoint: breakpoint,
+                                                });
                   }, this);
               });
+   };
+
+   /*
+    * Update the status of a modified breakpoint (if exists).
+    * If the breakpoint dont exist, create it.
+    * */
+   DebuggeeTracker.prototype._breakpoint_modified = function (data) {
+       var debugger_id = data['debugger-id'];
+       var debugger_obj = this.debuggers_by_id[debugger_id];
+
+       var breakpoint_data = data.results.bkpt;
+          
+       var type = breakpoint_data.type;
+
+       if (type !== "breakpoint") {
+          console.log("Not supported Xpoint type '"+type+"', we only support 'breakpoint's.");
+          return;
+       }
+
+       var breakpoint_id = breakpoint_data.number;
+       var attributes = this._parse_attributes_from_breakpoint_data(breakpoint_data, debugger_id);
+        
+       var breakpoints_by_id = this.breakpoints_by_debugger[debugger_id];
+       var breakpoint = breakpoints_by_id[breakpoint_id];
+
+       if (breakpoint === undefined) {
+          breakpoint = new Breakpoint(breakpoint_id, this, attributes);
+       }
+       else {
+          breakpoint.update(attributes);
+       }
+                      
+       console.log("Mod " + breakpoint.get_display_name());
+       this.notify("breakpoint_update", { 
+                                event_data: breakpoint_data,
+                                debugger_obj: debugger_obj,
+                                breakpoint: breakpoint,
+                                });
+   };
+
+   DebuggeeTracker.prototype._parse_attributes_from_breakpoint_data = function (breakpoint_data, debugger_id) {
+          var is_pending = breakpoint_data.pending !== undefined;
+          var apply_to_all_threads = breakpoint_data.thread === undefined;
+          var is_enabled = breakpoint_data.enabled === 'y';
+          var is_temporal = breakpoint_data.disp !== 'keep';
+
+          var thread_ids = [];
+          if (!apply_to_all_threads) {
+             thread_ids = _.unique(breakpoint_data.thread); // remove duplicates (gdb bug)
+          }
+
+          var thread_group_ids = breakpoint_data['thread-groups'];
+          
+          var instruction_address = breakpoint_data.addr;
+          var source_fullname = breakpoint_data.fullname;
+          var source_line = breakpoint_data.line;
+
+          var attributes = {
+                  debugger_id: debugger_id,
+                  is_pending: is_pending,
+                  apply_to_all_threads: apply_to_all_threads,
+                  is_enabled: is_enabled,
+                  is_temporal: is_temporal,
+                  thread_ids: thread_ids,
+                  thread_group_ids: thread_group_ids,
+                  source_fullname: source_fullname,
+                  source_line: source_line,
+                  instruction_address: instruction_address
+              };
+
+          return attributes;
    };
 
    /* 

@@ -236,15 +236,19 @@ mal formado: contiene por duplicado el numero del thread implicado.
    {u'debugger-id': ...,
     u'klass': u'breakpoint-modified',
     u'results': {u'bkpt': {u'addr': u'0x...',
-                           ...
+                           u'disp': u'keep',
+                           u'enabled': u'y',
+                           u'file': u'three_pthreads.c',
+                           u'fullname': u'.../three_pthreads.c',
                            u'func': u'roll',
                            u'line': u'5',
                            u'number': u'1',
-                           ...
+                           u'original-location': u'roll',
                            u'thread-groups': [u'i1'],
                            u'times': u'1',
                            u'type': u'breakpoint'}},
-    ...}
+    ...
+    u'type': u'Notify'}
 
    >>> collector.get_next()                                 # doctest: +ELLIPSIS
    {u'debugger-id': ...,
@@ -567,7 +571,62 @@ bug https://sourceware.org/bugzilla/show_bug.cgi?id=14733
                              u'thread-groups': [u'i2']}]},
     ...}
    
-   ### request(gdb, "-break-list")                    # doctest: +ELLIPSIS
+   >>> request(gdb, "-break-list")                    # doctest: +ELLIPSIS
+   {u'debugger-id': ...,
+    u'klass': u'done',
+    u'results': {u'BreakpointTable': {u'body': [{u'addr': u'<MULTIPLE>',
+                                                 ...
+                                                 u'number': u'1',
+                                                 u'original-location': u'roll',
+                                                 ...},
+                                                {u'addr': u'0x...',
+                                                 ...
+                                                 u'func': u'roll',
+                                                 u'line': u'5',
+                                                 u'number': u'1.1',
+                                                 u'thread-groups': [u'i1']},
+                                                {u'addr': u'0x...',
+                                                 ...
+                                                 u'func': u'roll',
+                                                 u'line': u'5',
+                                                 u'number': u'1.2',
+                                                 u'thread-groups': [u'i2']},
+                                                {u'addr': u'<MULTIPLE>',
+                                                 ...
+                                                 u'number': u'2',
+                                                 u'original-location': u'roll',
+                                                 ...},
+                                                {u'addr': u'0x...',
+                                                 ...
+                                                 u'func': u'roll',
+                                                 u'line': u'5',
+                                                 u'number': u'2.1',
+                                                 u'thread-groups': [u'i1']},
+                                                {u'addr': u'0x...',
+                                                 ...
+                                                 u'func': u'roll',
+                                                 u'line': u'5',
+                                                 u'number': u'2.2',
+                                                 u'thread-groups': [u'i2']},
+                                                {u'addr': u'<MULTIPLE>',
+                                                 ...
+                                                 u'number': u'3',
+                                                 u'original-location': u'roll',
+                                                 ...},
+                                                {u'addr': u'0x...',
+                                                 ...
+                                                 u'func': u'roll',
+                                                 u'line': u'5',
+                                                 u'number': u'3.1',
+                                                 u'thread-groups': [u'i1']},
+                                                {u'addr': u'0x...',
+                                                 ...
+                                                 u'func': u'roll',
+                                                 u'line': u'5',
+                                                 u'number': u'3.2',
+                                                 u'thread-groups': [u'i2']}],
+    ...}
+
 
 Limpiamos todo:
 
