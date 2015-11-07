@@ -197,9 +197,10 @@ define(["underscore", "jquery", "jstree", "layout"], function (_, $, jstree, lay
                       if (file_exec_path) {
                           thread_group.load_file_exec_and_symbols(file_exec_path);
 
-                          // HACK, run the process
+                          // TODO XXX XXX  HACK, run the process
                           var debugger_obj = self.debuggee_tracker.get_debugger_with_id(debugger_id);
-                          debugger_obj.execute("start");
+                          debugger_obj.execute("-break-insert", ["-t", "main"]); // TODO restrict this breakpoint to the threa group 
+                          thread_group.execute("-exec-run");
                       }
                       else {
                           console.log("Loading nothing");

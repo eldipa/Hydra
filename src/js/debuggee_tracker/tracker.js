@@ -404,8 +404,17 @@ define(["underscore", "event_handler", "debuggee_tracker/debugger", "debuggee_tr
       debugger_obj.execute("-break-list", [], 
               function (data) {
                   var breaktpoint_data_rows = data.results.BreakpointTable.body;
+                  var last_breakpoint_type_seen = undefined;
+
                   _.each(breaktpoint_data_rows, function (breakpoint_data) {
                       var type = breakpoint_data.type;
+
+                      if (type === undefined) {
+                          type = last_breakpoint_type_seen;
+                      }
+                      else {
+                          last_breakpoint_type_seen = type;
+                      }
 
                       if (type !== "breakpoint") {
                           console.log("Not supported Xpoint type '"+type+"', we only support 'breakpoint's.");
@@ -444,34 +453,42 @@ define(["underscore", "event_handler", "debuggee_tracker/debugger", "debuggee_tr
        var debugger_id = data['debugger-id'];
        var debugger_obj = this.debuggers_by_id[debugger_id];
 
-       var breakpoint_data = data.results.bkpt;
+       var last_breakpoint_type_seen = undefined;
+       _.each(data.results.bkpts, function (breakpoint_data) {
+           var type = breakpoint_data.type;
           
-       var type = breakpoint_data.type;
+           if (type === undefined) {
+              type = last_breakpoint_type_seen;
+           }
+           else {
+              last_breakpoint_type_seen = type;
+           }
 
-       if (type !== "breakpoint") {
-          console.log("Not supported Xpoint type '"+type+"', we only support 'breakpoint's.");
-          return;
-       }
+           if (type !== "breakpoint") {
+              console.log("Not supported Xpoint type '"+type+"', we only support 'breakpoint's.");
+              return;
+           }
 
-       var breakpoint_id = breakpoint_data.number;
-       var attributes = this._parse_attributes_from_breakpoint_data(breakpoint_data, debugger_id);
-        
-       var breakpoints_by_id = this.breakpoints_by_debugger[debugger_id];
-       var breakpoint = breakpoints_by_id[breakpoint_id];
+           var breakpoint_id = breakpoint_data.number;
+           var attributes = this._parse_attributes_from_breakpoint_data(breakpoint_data, debugger_id);
+            
+           var breakpoints_by_id = this.breakpoints_by_debugger[debugger_id];
+           var breakpoint = breakpoints_by_id[breakpoint_id];
 
-       if (breakpoint === undefined) {
-          breakpoint = new Breakpoint(breakpoint_id, this, attributes);
-       }
-       else {
-          breakpoint.update(attributes);
-       }
-                      
-       console.log("Mod " + breakpoint.get_display_name());
-       this.notify("breakpoint_update", { 
-                                event_data: breakpoint_data,
-                                debugger_obj: debugger_obj,
-                                breakpoint: breakpoint,
-                                });
+           if (breakpoint === undefined) {
+              breakpoint = new Breakpoint(breakpoint_id, this, attributes);
+           }
+           else {
+              breakpoint.update(attributes);
+           }
+                          
+           console.log("Mod " + breakpoint.get_display_name());
+           this.notify("breakpoint_update", { 
+                                    event_data: breakpoint_data,
+                                    debugger_obj: debugger_obj,
+                                    breakpoint: breakpoint,
+                                    });
+       }, this);
    };
 
    DebuggeeTracker.prototype._parse_attributes_from_breakpoint_data = function (breakpoint_data, debugger_id) {
@@ -549,10 +566,14 @@ define(["underscore", "event_handler", "debuggee_tracker/debugger", "debuggee_tr
          }
       }
 
-      thread.update({state: thread_data.state,
-                            source_fullname: thread_data.frame.fullname,
-                            source_line: thread_data.frame.line,
-                            instruction_address: thread_data.frame.addr});
+      if (thread_data.state == "running") {
+          thread.update({state: thread_data.state}); // if it is running, we dont have a frame
+      } else {
+          thread.update({state: thread_data.state,
+                                source_fullname: thread_data.frame.fullname,
+                                source_line: thread_data.frame.line,
+                                instruction_address: thread_data.frame.addr});
+      }
       
       this.notify("thread_update", { 
                               event_data: thread_data,

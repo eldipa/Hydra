@@ -53,10 +53,9 @@ define(["underscore", "shortcuts", 'event_handler'], function (_, shortcuts, eve
             self.tracker._request_an_update_thread_groups_info(s, self.debugger_id);
         };
 
-        shortcuts.gdb_request(update_my_status_when_file_is_loaded, 
-                this.debugger_id, 
-                "-file-exec-and-symbols",
-                [filepath]
+        this.execute("-file-exec-and-symbols",
+                [filepath],
+                update_my_status_when_file_is_loaded
                 );
     };
 
@@ -73,7 +72,7 @@ define(["underscore", "shortcuts", 'event_handler'], function (_, shortcuts, eve
         var self_id_argument = "--thread-group " + this.id;
 
         if (self_id_argument_position === undefined) {
-            args.push(self_id_argument);
+            args.unshift(self_id_argument);
         }
         else {
             args[self_id_argument_position] = self_id_argument;
