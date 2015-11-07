@@ -1,62 +1,37 @@
-define([ 'jquery', 'layout', 'shortcuts', 'sigma' ], function($, layout,
-		shortcuts, sigma) {
+define([ 'jquery', 'layout', 'shortcuts', 'springy', 'springyui' ], function($, layout,
+		shortcuts, Springy, springyui) {
 
 	function FD_Redirector() {
 		this.super("FD Redirector")
 
-		this._$container = $('<div id="sig" style="top: 0;bottom: 0;left: 0;right: 0;position: absolute;"> No anda</div>');
+		this._$container = $('<canvas width="400" height="200"> Error al cargar Springy </canvas>');
 
 		this._$out_of_dom = this._$container;
-
-		var i, s, N = 100, E = 500, g = {
-			nodes : [],
-			edges : []
-		};
-
-		// Generate a random graph:
-		for (i = 0; i < N; i++)
-			g.nodes.push({
-				id : 'n' + i,
-				label : 'Node ' + i,
-				x : Math.random(),
-				y : Math.random(),
-				size : Math.random(),
-				color : '#666'
-			});
-
-		for (i = 0; i < E; i++)
-			g.edges.push({
-				id : 'e' + i,
-				source : 'n' + (Math.random() * N | 0),
-				target : 'n' + (Math.random() * N | 0),
-				size : Math.random(),
-				color : '#fff'
-			});
-
-	
-		// Instantiate sigma:
-
-		sigmaGraph = new sigma({
-			graph : g,
-			container : this._$container // 'sig' no parece funcionar tampoco
-		});
-
 		
 		
-	};
+		// make a new graph
+		this.graph = new Springy.Graph();
 
-	FD_Redirector.prototype.__proto__ = layout.Panel.prototype;
+		// make some nodes
+		var spruce = this.graph.newNode({label: 'Norway Spruce'});
+		var fir = this.graph.newNode({label: 'Sicilian Fir'});
+
+		// connect them with an edge
+		this.graph.newEdge(spruce, fir);
+		this.graph.newEdge(fir, spruce);
+		
+//		this._$container.springy({ graph: graph });
+
+	}
+	;
 
 	FD_Redirector.prototype.render = function() {
 		if (this._$out_of_dom) {
-//			if ($(this.box).css('position') === 'relative') {
-//				this._$out_of_dom.css('position', 'absolute');
-//			} else {
-//				this._$out_of_dom.css('position', '');
-//			}
 
 			this._$out_of_dom.appendTo(this.box);
 			this._$out_of_dom = null;
+			
+			this._$container.springy({ graph: this.graph });
 		}
 
 	};
@@ -66,6 +41,8 @@ define([ 'jquery', 'layout', 'shortcuts', 'sigma' ], function($, layout,
 			this._$out_of_dom = this._$container.detach();
 		}
 	};
+
+	FD_Redirector.prototype.__proto__ = layout.Panel.prototype;
 
 	return {
 		FD_Redirector : FD_Redirector
