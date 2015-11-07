@@ -33,19 +33,19 @@ thread del evento insert tenga repetido el thread sobre el cual se aplica el bre
    >>> b1                                                        # doctest: +ELLIPSIS
    {u'debugger-id': ...
     u'klass': u'done',
-    u'results': {u'bkpt': {u'addr': ...,
-                           u'disp': u'keep',
-                           u'enabled': u'y',
-                           u'file': u'example.c',
-                           u'fullname': ...,
-                           u'func': u'main',
-                           u'line': u'5',
-                           u'number': u'1',
-                           u'original-location': ...,
-                           u'thread': [u'1', u'1'],
-                           u'thread-groups': [u'i1'],
-                           u'times': u'0',
-                           u'type': u'breakpoint'}},
+    u'results': {u'bkpts': [{u'addr': ...,
+                             u'disp': u'keep',
+                             u'enabled': u'y',
+                             u'file': u'example.c',
+                             u'fullname': ...,
+                             u'func': u'main',
+                             u'line': u'5',
+                             u'number': u'1',
+                             u'original-location': ...,
+                             u'thread': [u'1', u'1'],
+                             u'thread-groups': [u'i1'],
+                             u'times': u'0',
+                             u'type': u'breakpoint'}]},
     u'token': ...,
     u'type': u'Sync'}
 
@@ -53,19 +53,19 @@ thread del evento insert tenga repetido el thread sobre el cual se aplica el bre
    >>> b2                                                        # doctest: +ELLIPSIS
    {u'debugger-id': ...
     u'klass': u'done',
-    u'results': {u'bkpt': {u'addr': ...,
-                           u'disp': u'keep',
-                           u'enabled': u'y',
-                           u'file': u'example.c',
-                           u'fullname': ...,
-                           u'func': u'main',
-                           u'line': u'10',
-                           u'number': u'2',
-                           u'original-location': ...,
-                           u'thread': [u'1', u'1'],
-                           u'thread-groups': [u'i1'],
-                           u'times': u'0',
-                           u'type': u'breakpoint'}},
+    u'results': {u'bkpts': [{u'addr': ...,
+                             u'disp': u'keep',
+                             u'enabled': u'y',
+                             u'file': u'example.c',
+                             u'fullname': ...,
+                             u'func': u'main',
+                             u'line': u'10',
+                             u'number': u'2',
+                             u'original-location': ...,
+                             u'thread': [u'1', u'1'],
+                             u'thread-groups': [u'i1'],
+                             u'times': u'0',
+                             u'type': u'breakpoint'}]},
     u'token': ...,
     u'type': u'Sync'}
 
@@ -77,7 +77,7 @@ se setea un breakpoint (para mas info, https://sourceware.org/gdb/onlinedocs/gdb
 
 ::
 
-   >>> bkpt = b1['results']['bkpt']
+   >>> bkpt = b1['results']['bkpts'][0]
    >>> bkpt['addr']                          # doctest: +PASS      
    u'0x08048426'
 
@@ -152,16 +152,16 @@ toda la info de debugging
    >>> b1                                                        # doctest: +ELLIPSIS
    {u'debugger-id': ...
     u'klass': u'done',
-    u'results': {u'bkpt': {u'addr': ...
-                           u'at': ...
-                           u'disp': u'keep',
-                           u'enabled': u'y',
-                           u'number': u'3',
-                           u'original-location': u'main',
-                           u'thread': [u'1', u'1'],
-                           u'thread-groups': [u'i1'],
-                           u'times': u'0',
-                           u'type': u'breakpoint'}},
+    u'results': {u'bkpts': [{u'addr': ...
+                             u'at': ...
+                             u'disp': u'keep',
+                             u'enabled': u'y',
+                             u'number': u'3',
+                             u'original-location': u'main',
+                             u'thread': [u'1', u'1'],
+                             u'thread-groups': [u'i1'],
+                             u'times': u'0',
+                             u'type': u'breakpoint'}]},
     u'token': ...
     u'type': u'Sync'}
 
@@ -210,7 +210,7 @@ Ahora veamos como se comportan los breakpoints en un ambiente multithreading
    
    >>> @collect
    ... def collector(data):
-   ...   if data['klass'].startswith('breakpoint-') or data['klass'].startswith("multiple-breakpoints"):
+   ...   if data['klass'].startswith('breakpoint-'):
    ...      return data
    ...   return None # discard
    
@@ -235,33 +235,33 @@ mal formado: contiene por duplicado el numero del thread implicado.
    >>> collector.get_next()                                 # doctest: +ELLIPSIS
    {u'debugger-id': ...,
     u'klass': u'breakpoint-modified',
-    u'results': {u'bkpt': {u'addr': u'0x...',
-                           u'disp': u'keep',
-                           u'enabled': u'y',
-                           u'file': u'three_pthreads.c',
-                           u'fullname': u'.../three_pthreads.c',
-                           u'func': u'roll',
-                           u'line': u'5',
-                           u'number': u'1',
-                           u'original-location': u'roll',
-                           u'thread-groups': [u'i1'],
-                           u'times': u'1',
-                           u'type': u'breakpoint'}},
+    u'results': {u'bkpts': [{u'addr': u'0x...',
+                             u'disp': u'keep',
+                             u'enabled': u'y',
+                             u'file': u'three_pthreads.c',
+                             u'fullname': u'.../three_pthreads.c',
+                             u'func': u'roll',
+                             u'line': u'5',
+                             u'number': u'1',
+                             u'original-location': u'roll',
+                             u'thread-groups': [u'i1'],
+                             u'times': u'1',
+                             u'type': u'breakpoint'}]},
     ...
     u'type': u'Notify'}
 
    >>> collector.get_next()                                 # doctest: +ELLIPSIS
    {u'debugger-id': ...,
     u'klass': u'breakpoint-modified',
-    u'results': {u'bkpt': {u'addr': u'0x...',
-                           ...
-                           u'func': u'roll',
-                           u'line': u'5',
-                           u'number': u'1',
-                           ...
-                           u'thread-groups': [u'i1'],
-                           u'times': u'2',
-                           u'type': u'breakpoint'}},
+    u'results': {u'bkpts': [{u'addr': u'0x...',
+                             ...
+                             u'func': u'roll',
+                             u'line': u'5',
+                             u'number': u'1',
+                             ...
+                             u'thread-groups': [u'i1'],
+                             u'times': u'2',
+                             u'type': u'breakpoint'}]},
     ...}
 
    >>> request(gdb, "-thread-info", [])       # doctest: +ELLIPSIS
@@ -293,16 +293,16 @@ mal formado: contiene por duplicado el numero del thread implicado.
    >>> request(gdb, "-break-insert", ["-p", "2", "6"])                      # doctest: +ELLIPSIS
    {u'debugger-id': ...,
     u'klass': u'done',
-    u'results': {u'bkpt': {u'addr': u'0x...',
-                           ...
-                           u'func': u'roll',
-                           u'line': u'6',
-                           u'number': u'2',
-                           ...
-                           u'thread': [u'2', u'2'],
-                           u'thread-groups': [u'i1'],
-                           u'times': u'0',
-                           u'type': u'breakpoint'}},
+    u'results': {u'bkpts': [{u'addr': u'0x...',
+                             ...
+                             u'func': u'roll',
+                             u'line': u'6',
+                             u'number': u'2',
+                             ...
+                             u'thread': [u'2', u'2'],
+                             u'thread-groups': [u'i1'],
+                             u'times': u'0',
+                             u'type': u'breakpoint'}]},
     ...}
 
    >>> request(gdb, '-exec-continue', ["--thread-group i1"])                    # doctest: +PASS
@@ -310,16 +310,16 @@ mal formado: contiene por duplicado el numero del thread implicado.
    >>> collector.get_next()                                 # doctest: +ELLIPSIS
    {u'debugger-id': ...,
     u'klass': u'breakpoint-modified',
-    u'results': {u'bkpt': {u'addr': u'0x...',
-                           ...
-                           u'func': u'roll',
-                           u'line': u'6',
-                           u'number': u'2',
-                           ...
-                           u'thread': [u'2', u'2'],
-                           u'thread-groups': [u'i1'],
-                           u'times': u'1',
-                           u'type': u'breakpoint'}},
+    u'results': {u'bkpts': [{u'addr': u'0x...',
+                             ...
+                             u'func': u'roll',
+                             u'line': u'6',
+                             u'number': u'2',
+                             ...
+                             u'thread': [u'2', u'2'],
+                             u'thread-groups': [u'i1'],
+                             u'times': u'1',
+                             u'type': u'breakpoint'}]},
     ...}
 
    >>> request(gdb, "-thread-info", [])       # doctest: +ELLIPSIS
@@ -364,14 +364,14 @@ Para ello necesitamos el flag "-f" o tendremos un error.
    >>> request(gdb, "-break-insert", ["-f", "roll"])       # doctest: +ELLIPSIS
    {u'debugger-id': ...,
     u'klass': u'done',
-    u'results': {u'bkpt': {u'addr': u'<PENDING>',
-                           u'disp': u'keep',
-                           u'enabled': u'y',
-                           u'number': u'1',
-                           u'original-location': u'roll',
-                           u'pending': u'roll',
-                           u'times': u'0',
-                           u'type': u'breakpoint'}},
+    u'results': {u'bkpts': [{u'addr': u'<PENDING>',
+                             u'disp': u'keep',
+                             u'enabled': u'y',
+                             u'number': u'1',
+                             u'original-location': u'roll',
+                             u'pending': u'roll',
+                             u'times': u'0',
+                             u'type': u'breakpoint'}]},
     u'token': ...,
     u'type': u'Sync'}
 
@@ -381,14 +381,14 @@ Podemos poner mas de un breakpoint en el mismo lugar:
    >>> request(gdb, "-break-insert", ["-f", "roll"])       # doctest: +ELLIPSIS
    {u'debugger-id': ...,
     u'klass': u'done',
-    u'results': {u'bkpt': {u'addr': u'<PENDING>',
-                           u'disp': u'keep',
-                           u'enabled': u'y',
-                           u'number': u'2',
-                           u'original-location': u'roll',
-                           u'pending': u'roll',
-                           u'times': u'0',
-                           u'type': u'breakpoint'}},
+    u'results': {u'bkpts': [{u'addr': u'<PENDING>',
+                             u'disp': u'keep',
+                             u'enabled': u'y',
+                             u'number': u'2',
+                             u'original-location': u'roll',
+                             u'pending': u'roll',
+                             u'times': u'0',
+                             u'type': u'breakpoint'}]},
     u'token': ...,
     u'type': u'Sync'}
 
@@ -423,29 +423,29 @@ son como sub-breakpoints (aka 1.1 y 1.2)
    >>> collector.get_next()                                 # doctest: +ELLIPSIS
    {u'debugger-id': ...,
     u'klass': u'breakpoint-modified',
-    u'results': {u'bkpt': {u'addr': u'0x...',
-                           ...
-                           u'func': u'roll',
-                           u'line': u'5',
-                           u'number': u'1',
-                           ...
-                           u'thread-groups': [u'i1'],
-                           u'times': u'0',
-                           u'type': u'breakpoint'}},
+    u'results': {u'bkpts': [{u'addr': u'0x...',
+                             ...
+                             u'func': u'roll',
+                             u'line': u'5',
+                             u'number': u'1',
+                             ...
+                             u'thread-groups': [u'i1'],
+                             u'times': u'0',
+                             u'type': u'breakpoint'}]},
     ...}
 
    >>> collector.get_next()                                 # doctest: +ELLIPSIS
    {u'debugger-id': ...,
     u'klass': u'breakpoint-modified',
-    u'results': {u'bkpt': {u'addr': u'0x...',
-                           ...
-                           u'func': u'roll',
-                           u'line': u'5',
-                           u'number': u'2',
-                           ...
-                           u'thread-groups': [u'i1'],
-                           u'times': u'0',
-                           u'type': u'breakpoint'}},
+    u'results': {u'bkpts': [{u'addr': u'0x...',
+                             ...
+                             u'func': u'roll',
+                             u'line': u'5',
+                             u'number': u'2',
+                             ...
+                             u'thread-groups': [u'i1'],
+                             u'times': u'0',
+                             u'type': u'breakpoint'}]},
     ...}
 
    >>> request(gdb, "-break-list")                    # doctest: +ELLIPSIS
@@ -482,18 +482,18 @@ Insertar otro breakpoint no cambia mucho:
    >>> request(gdb, "-break-insert", ["-f", "roll"])       # doctest: +ELLIPSIS
    {u'debugger-id': ...,
     u'klass': u'done',
-    u'results': {u'bkpt': {u'addr': u'0x...',
-                           u'disp': u'keep',
-                           u'enabled': u'y',
-                           u'file': u'three_pthreads.c',
-                           u'fullname': u'.../three_pthreads.c',
-                           u'func': u'roll',
-                           u'line': u'5',
-                           u'number': u'3',
-                           u'original-location': u'roll',
-                           u'thread-groups': [u'i1'],
-                           u'times': u'0',
-                           u'type': u'breakpoint'}},
+    u'results': {u'bkpts': [{u'addr': u'0x...',
+                             u'disp': u'keep',
+                             u'enabled': u'y',
+                             u'file': u'three_pthreads.c',
+                             u'fullname': u'.../three_pthreads.c',
+                             u'func': u'roll',
+                             u'line': u'5',
+                             u'number': u'3',
+                             u'original-location': u'roll',
+                             u'thread-groups': [u'i1'],
+                             u'times': u'0',
+                             u'type': u'breakpoint'}]},
     u'token': ...,
     u'type': u'Sync'}
 
@@ -501,9 +501,7 @@ La cosa cambia cuando agregamos otro inferior o thread-group. En este caso lo br
 los breakpoints seteados en un thread-group fueran breakpoints pendientes del nuevo inferior.
 Pero a diferencia de crear legitimos nuevos breakpoints, se crean subbreakpoints de la forma breakpoint_id.subbreakpoint_id
 
-En teoria los eventos deberian ser del tipo breakpoints-modified pero debido a un bug de GDB que daba esos eventos
-corruptos, se crea un nuevo evento del tipo multiple-breakpoints-modified
-bug https://sourceware.org/bugzilla/show_bug.cgi?id=14733
+Vease el bug https://sourceware.org/bugzilla/show_bug.cgi?id=14733
    
 ::
 
@@ -512,7 +510,7 @@ bug https://sourceware.org/bugzilla/show_bug.cgi?id=14733
 
    >>> collector.get_next()                                 # doctest: +ELLIPSIS
    {u'debugger-id': ...,
-    u'klass': u'multiple-breakpoints-modified',
+    u'klass': u'breakpoint-modified',
     u'results': {u'bkpts': [{u'addr': u'<MULTIPLE>',
                              u'disp': u'keep',
                              u'enabled': u'y',
@@ -541,7 +539,7 @@ bug https://sourceware.org/bugzilla/show_bug.cgi?id=14733
 
    >>> collector.get_next()                                 # doctest: +ELLIPSIS
    {u'debugger-id': ...,
-    u'klass': u'multiple-breakpoints-modified',
+    u'klass': u'breakpoint-modified',
     u'results': {u'bkpts': [{u'addr': u'<MULTIPLE>',
                              u'disp': u'keep',
                              u'enabled': u'y',
@@ -557,7 +555,7 @@ bug https://sourceware.org/bugzilla/show_bug.cgi?id=14733
 
    >>> collector.get_next()                                 # doctest: +ELLIPSIS
    {u'debugger-id': ...,
-    u'klass': u'multiple-breakpoints-modified',
+    u'klass': u'breakpoint-modified',
     u'results': {u'bkpts': [{u'addr': u'<MULTIPLE>',
                              u'disp': u'keep',
                              u'enabled': u'y',
