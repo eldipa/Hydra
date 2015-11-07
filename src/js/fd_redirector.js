@@ -8,22 +8,26 @@ define([ 'jquery', 'layout', 'shortcuts', 'springy', 'springyui' ], function($, 
 
 		this._$out_of_dom = this._$container;
 		
-		
+		//Ejemplo tipo hola mundo
 		// make a new graph
-		this.graph = new Springy.Graph();
+		graph = new Springy.Graph();
 
 		// make some nodes
-		var spruce = this.graph.newNode({label: 'Norway Spruce'});
-		var fir = this.graph.newNode({label: 'Sicilian Fir'});
+		var spruce = graph.newNode({label: 'Norway Spruce'});
+		var fir = graph.newNode({label: 'Sicilian Fir'});
 
 		// connect them with an edge
-		this.graph.newEdge(spruce, fir);
-		this.graph.newEdge(fir, spruce);
+		graph.newEdge(spruce, fir);
+		graph.newEdge(fir, spruce);
 		
-//		this._$container.springy({ graph: graph });
+		this._$container.springy({ graph: graph });
 
 	}
 	;
+	
+	FD_Redirector.prototype.getFDfromPID = function(pid){
+		//TODO
+	};
 
 	FD_Redirector.prototype.render = function() {
 		if (this._$out_of_dom) {
@@ -31,7 +35,6 @@ define([ 'jquery', 'layout', 'shortcuts', 'springy', 'springyui' ], function($, 
 			this._$out_of_dom.appendTo(this.box);
 			this._$out_of_dom = null;
 			
-			this._$container.springy({ graph: this.graph });
 		}
 
 	};

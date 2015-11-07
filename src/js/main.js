@@ -17,7 +17,6 @@ requirejs.config({
       shortcuts: 'shortcuts',
       jstree: 'external/jstree-3.1.1',
       debuggee_tracker_view: 'debuggee_tracker_view',
-      sigma: 'external/sigma.require',
       springy:  'external/springy',
       springyui: 'external/springyui',
       fd_redirector: 'fd_redirector'
@@ -38,9 +37,6 @@ requirejs.config({
       "jstree": {
          deps: ['jquery'],
          exports: "$",
-      },
-      "sigma": {
-          exports: 'sigma',
       }
    }
 
