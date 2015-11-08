@@ -51,7 +51,7 @@ requirejs.onResourceLoad = function(context, map, depArray) {
    }
 };
 
-requirejs(['ui', 'code_view', 'jquery', 'export_console', 'layout', 'layout_examples', 'jqueryui', 'ctxmenu', 'notify_js_console', 'debuggee_tracker/tracker', 'event_handler', 'debuggee_tracker_view', 'underscore', 'shortcuts', 'thread_follower'], function (ui, code_view, $, export_console, layout, layout_examples, jqueryui, ctxmenu, notify_js_console, debuggee_tracker, event_handler, debuggee_tracker_view, _, shortcuts, thread_follower) {
+requirejs(['ui', 'code_view', 'jquery', 'export_console', 'layout', 'layout_examples', 'jqueryui', 'ctxmenu', 'notify_js_console', 'debuggee_tracker/tracker', 'event_handler', 'debuggee_tracker_view', 'underscore', 'shortcuts', 'thread_follower', "breakpoints_view"], function (ui, code_view, $, export_console, layout, layout_examples, jqueryui, ctxmenu, notify_js_console, debuggee_tracker, event_handler, debuggee_tracker_view, _, shortcuts, thread_follower, breakpoints_view) {
    var EH = new event_handler.EventHandler();
    EH.init("(ui)");
    event_handler.set_global_event_handler(EH);
@@ -91,9 +91,13 @@ requirejs(['ui', 'code_view', 'jquery', 'export_console', 'layout', 'layout_exam
    var dbg_tracker = new debuggee_tracker.DebuggeeTracker();
    var dbg_tracker_view = new debuggee_tracker_view.DebuggeeTrackerView(dbg_tracker, aThreadFollower);
 
+   var bkps_view = new breakpoints_view.BreakpointsView(dbg_tracker);
+
    dbg_tracker.add_observer(aThreadFollower);
 
    visor.swap(dbg_tracker_view);
+   dbg_tracker_view.split(bkps_view, "bottom");
+
    old_code_editor.swap(aThreadFollower);
    root.render();
 

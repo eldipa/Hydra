@@ -154,7 +154,7 @@ define(["underscore", "event_handler", "debuggee_tracker/debugger", "debuggee_tr
          EH.subscribe(topic_prefix + 'exec.running', this._running),
          EH.subscribe(topic_prefix + 'exec.stopped', this._stopped),
          
-         EH.subscribe(topic_prefix + 'notify.breakpoint-modified', this._breakpoints_modified)
+         EH.subscribe(topic_prefix + 'notify.breakpoints-modified', this._breakpoints_modified)
       ];
 
       return subscription_ids;
@@ -397,7 +397,7 @@ define(["underscore", "event_handler", "debuggee_tracker/debugger", "debuggee_tr
       The response or results of this request will be processed asynchronously and
       it will update the breakpoint objects.
    */
-   DebuggeeTracker.prototype._request_an_update_of_the_breakpoint_info = function (breakpoint_by_id, debugger_id) {
+   DebuggeeTracker.prototype._request_an_update_of_the_breakpoint_info = function (breakpoints_by_id, debugger_id) {
       var self = this;
       var debugger_obj = this.debuggers_by_id[debugger_id];
       
@@ -426,10 +426,11 @@ define(["underscore", "event_handler", "debuggee_tracker/debugger", "debuggee_tr
                       
                       var attributes = self._parse_attributes_from_breakpoint_data(breakpoint_data, debugger_id);
                       
-                      var breakpoint = breakpoint_by_id[breakpoint_id];
+                      var breakpoint = breakpoints_by_id[breakpoint_id];
 
                       if (breakpoint === undefined) {
                           breakpoint = new Breakpoint(breakpoint_id, this, attributes);
+                          breakpoints_by_id[breakpoint_id] = breakpoint;
                       }
                       else {
                           breakpoint.update(attributes);
@@ -448,7 +449,7 @@ define(["underscore", "event_handler", "debuggee_tracker/debugger", "debuggee_tr
    /*
     * Update the status of a modified breakpoint (if exists).
     * If the breakpoint dont exist, create it.
-    * */
+    s* */
    DebuggeeTracker.prototype._breakpoints_modified = function (data) {
        var debugger_id = data['debugger-id'];
        var debugger_obj = this.debuggers_by_id[debugger_id];
@@ -477,6 +478,7 @@ define(["underscore", "event_handler", "debuggee_tracker/debugger", "debuggee_tr
 
            if (breakpoint === undefined) {
               breakpoint = new Breakpoint(breakpoint_id, this, attributes);
+              breakpoints_by_id[breakpoint_id] = breakpoint;
            }
            else {
               breakpoint.update(attributes);
@@ -490,6 +492,11 @@ define(["underscore", "event_handler", "debuggee_tracker/debugger", "debuggee_tr
                                     });
        }, this);
    };
+
+   /* Call this to update several breakpoints from the data. This method was designed to be called from
+    * the same object that modified the breakpoint through GDB.
+    * */
+   DebuggeeTracker.prototype.update_breakpoints_from = DebuggeeTracker.prototype._breakpoints_modified;
 
    DebuggeeTracker.prototype._parse_attributes_from_breakpoint_data = function (breakpoint_data, debugger_id) {
           var is_pending = breakpoint_data.pending !== undefined;

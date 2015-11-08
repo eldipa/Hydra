@@ -5,13 +5,22 @@ define(['event_handler'], function (event_handler) {
       return Math.floor(Math.random() * (max - min)) + min;
    };
 
-   var gdb_request = function (callback, gdb_id, command, args) {
+   /*
+    * Request the execution of the command 'command' with 'args' in the debugger gdb_id.
+    * If the on_non_error is not null, it must be a function that it will be called with the
+    * response of this request only if the class of the response is not "error".
+    * If on_error is not null, it will be called in the oposite condition.
+    * */
+   var gdb_request = function (on_non_error, gdb_id, command, args, on_error) {
       if (command[0] === '-') {
          var interpreter = "mi";
       }
       else {
          var interpreter = "console";
       }
+
+      var on_error = on_error || null;
+      var on_non_error = on_non_error || null;
 
       var args = args || [];
 
@@ -29,9 +38,18 @@ define(['event_handler'], function (event_handler) {
 
       var eh = event_handler.get_global_event_handler();
 
-      if (callback !== null) {
+      if (on_non_error !== null || on_error !== null) {
+         var callback = function (data) {
+             if (data.klass === "error" && on_error !== null) {
+                 return on_error(data);
+             }
+             else if (data.klass !== "error" && on_non_error !== null) {
+                 return on_non_error(data);
+             }
+         };
          eh.subscribe_for_once_call(response_topic, callback);
       }
+
       eh.publish(request_topic, request_for_command);
    };
 
