@@ -626,6 +626,90 @@ Vease el bug https://sourceware.org/bugzilla/show_bug.cgi?id=14733
     ...}
 
 
+Se pueden deshabilitar los breakpoints tanto los breakpoints multiples como los sub breakpoints
+En este ejemplo se deshabilitaran los breakpoints 2 y 3.2
+
+::
+
+   >>> request(gdb, "-break-disable", ["2"])                      # doctest: +PASS
+   >>> request(gdb, "-break-disable", ["3.2"])                    # doctest: +PASS
+
+   >>> request(gdb, "-break-list")                    # doctest: +ELLIPSIS
+   {u'debugger-id': ...,
+    u'klass': u'done',
+    u'results': {u'BreakpointTable': {u'body': [{...
+                                                {u'addr': u'<MULTIPLE>',
+                                                 ...
+                                                 u'enabled': u'n',
+                                                 u'number': u'2',
+                                                 u'original-location': u'roll',
+                                                 ...},
+                                                {u'addr': u'0x...',
+                                                 u'enabled': u'y',
+                                                 ...
+                                                 u'func': u'roll',
+                                                 u'line': u'5',
+                                                 u'number': u'2.1',
+                                                 u'thread-groups': [u'i1']},
+                                                {u'addr': u'0x...',
+                                                 u'enabled': u'y',
+                                                 ...
+                                                 u'func': u'roll',
+                                                 u'line': u'5',
+                                                 u'number': u'2.2',
+                                                 u'thread-groups': [u'i2']},
+                                                {u'addr': u'<MULTIPLE>',
+                                                 ...
+                                                 u'enabled': u'y',
+                                                 u'number': u'3',
+                                                 u'original-location': u'roll',
+                                                 ...},
+                                                {u'addr': u'0x...',
+                                                 u'enabled': u'y',
+                                                 ...
+                                                 u'func': u'roll',
+                                                 u'line': u'5',
+                                                 u'number': u'3.1',
+                                                 u'thread-groups': [u'i1']},
+                                                {u'addr': u'0x...',
+                                                 u'enabled': u'n',
+                                                 ...
+                                                 u'func': u'roll',
+                                                 u'line': u'5',
+                                                 u'number': u'3.2',
+                                                 u'thread-groups': [u'i2']}],
+    ...}
+
+Lo mismo podemos hacer para borrar los breakpoints sin embargo no podemos borrar subbreakpoints
+
+::
+
+   >>> request(gdb, "-break-delete", ["2"])                      # doctest: +PASS
+   >>> request(gdb, "-break-delete", ["3"])                      # doctest: +PASS
+
+   >>> request(gdb, "-break-list")                    # doctest: +ELLIPSIS
+   {u'debugger-id': ...,
+    u'klass': u'done',
+    u'results': {u'BreakpointTable': {u'body': [{u'addr': u'<MULTIPLE>',
+                                                 ...
+                                                 u'number': u'1',
+                                                 u'original-location': u'roll',
+                                                 ...},
+                                                {u'addr': u'0x...',
+                                                 ...
+                                                 u'func': u'roll',
+                                                 u'line': u'5',
+                                                 u'number': u'1.1',
+                                                 u'thread-groups': [u'i1']},
+                                                {u'addr': u'0x...',
+                                                 ...
+                                                 u'func': u'roll',
+                                                 u'line': u'5',
+                                                 u'number': u'1.2',
+                                                 u'thread-groups': [u'i2']}],
+    ...}
+
+
 Limpiamos todo:
 
 ::
