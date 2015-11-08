@@ -628,6 +628,8 @@ Vease el bug https://sourceware.org/bugzilla/show_bug.cgi?id=14733
 
 Se pueden deshabilitar los breakpoints tanto los breakpoints multiples como los sub breakpoints
 En este ejemplo se deshabilitaran los breakpoints 2 y 3.2
+En ningun momento se emite un evento asincronico de breakpoint modified. La unica manera de saber si
+realmente se cambiaron los breakpoints es preguntando con break-list.
 
 ::
 
@@ -681,6 +683,8 @@ En este ejemplo se deshabilitaran los breakpoints 2 y 3.2
     ...}
 
 Lo mismo podemos hacer para borrar los breakpoints sin embargo no podemos borrar subbreakpoints
+En ningun momento se emite un evento asincronico de breakpoint modified. La unica manera de saber si
+realmente se cambiaron los breakpoints es preguntando con break-list.
 
 ::
 
