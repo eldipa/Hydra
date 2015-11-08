@@ -19,9 +19,9 @@ Creamos un debugger y recolectaremos sus eventos (aunque filtraremos algunos)
    
    >>> @collect
    ... def collector(data):
-   ...   if data['klass'] == u'library-loaded' or data['klass'].startswith('breakpoint-') \
-   ...         or data['klass'].startswith("thread-group") or data['klass'].startswith('cmd-param-changed') \
-   ...         or data['klass'].startswith("multiple-breakpoints"):
+   ...   if data['klass'] == u'library-loaded' or data['klass'].startswith('breakpoints-') \
+   ...         or data['klass'].startswith('breakpoint-') or data['klass'].startswith("thread-group") \
+   ...         or data['klass'].startswith('cmd-param-changed'):
    ...      return None # discard
    ...   return data
    

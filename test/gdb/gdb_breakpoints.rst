@@ -210,7 +210,7 @@ Ahora veamos como se comportan los breakpoints en un ambiente multithreading
    
    >>> @collect
    ... def collector(data):
-   ...   if data['klass'].startswith('breakpoint-'):
+   ...   if data['klass'].startswith('breakpoints-') or data['klass'].startswith('breakpoint-'):
    ...      return data
    ...   return None # discard
    
@@ -234,7 +234,7 @@ mal formado: contiene por duplicado el numero del thread implicado.
 
    >>> collector.get_next()                                 # doctest: +ELLIPSIS
    {u'debugger-id': ...,
-    u'klass': u'breakpoint-modified',
+    u'klass': u'breakpoints-modified',
     u'results': {u'bkpts': [{u'addr': u'0x...',
                              u'disp': u'keep',
                              u'enabled': u'y',
@@ -252,7 +252,7 @@ mal formado: contiene por duplicado el numero del thread implicado.
 
    >>> collector.get_next()                                 # doctest: +ELLIPSIS
    {u'debugger-id': ...,
-    u'klass': u'breakpoint-modified',
+    u'klass': u'breakpoints-modified',
     u'results': {u'bkpts': [{u'addr': u'0x...',
                              ...
                              u'func': u'roll',
@@ -309,7 +309,7 @@ mal formado: contiene por duplicado el numero del thread implicado.
 
    >>> collector.get_next()                                 # doctest: +ELLIPSIS
    {u'debugger-id': ...,
-    u'klass': u'breakpoint-modified',
+    u'klass': u'breakpoints-modified',
     u'results': {u'bkpts': [{u'addr': u'0x...',
                              ...
                              u'func': u'roll',
@@ -422,7 +422,7 @@ son como sub-breakpoints (aka 1.1 y 1.2)
 
    >>> collector.get_next()                                 # doctest: +ELLIPSIS
    {u'debugger-id': ...,
-    u'klass': u'breakpoint-modified',
+    u'klass': u'breakpoints-modified',
     u'results': {u'bkpts': [{u'addr': u'0x...',
                              ...
                              u'func': u'roll',
@@ -436,7 +436,7 @@ son como sub-breakpoints (aka 1.1 y 1.2)
 
    >>> collector.get_next()                                 # doctest: +ELLIPSIS
    {u'debugger-id': ...,
-    u'klass': u'breakpoint-modified',
+    u'klass': u'breakpoints-modified',
     u'results': {u'bkpts': [{u'addr': u'0x...',
                              ...
                              u'func': u'roll',
@@ -510,7 +510,7 @@ Vease el bug https://sourceware.org/bugzilla/show_bug.cgi?id=14733
 
    >>> collector.get_next()                                 # doctest: +ELLIPSIS
    {u'debugger-id': ...,
-    u'klass': u'breakpoint-modified',
+    u'klass': u'breakpoints-modified',
     u'results': {u'bkpts': [{u'addr': u'<MULTIPLE>',
                              u'disp': u'keep',
                              u'enabled': u'y',
@@ -539,7 +539,7 @@ Vease el bug https://sourceware.org/bugzilla/show_bug.cgi?id=14733
 
    >>> collector.get_next()                                 # doctest: +ELLIPSIS
    {u'debugger-id': ...,
-    u'klass': u'breakpoint-modified',
+    u'klass': u'breakpoints-modified',
     u'results': {u'bkpts': [{u'addr': u'<MULTIPLE>',
                              u'disp': u'keep',
                              u'enabled': u'y',
@@ -555,7 +555,7 @@ Vease el bug https://sourceware.org/bugzilla/show_bug.cgi?id=14733
 
    >>> collector.get_next()                                 # doctest: +ELLIPSIS
    {u'debugger-id': ...,
-    u'klass': u'breakpoint-modified',
+    u'klass': u'breakpoints-modified',
     u'results': {u'bkpts': [{u'addr': u'<MULTIPLE>',
                              u'disp': u'keep',
                              u'enabled': u'y',

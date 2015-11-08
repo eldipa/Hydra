@@ -25,7 +25,7 @@ define(["underscore", "event_handler", "debuggee_tracker/debugger", "debuggee_tr
                       "_thread_group_started", "_thread_group_exited",
                       "_thread_created",       "_thread_exited",
                       "_running",              "_stopped",
-                      "_breakpoint_modified");
+                      "_breakpoints_modified");
 
       this.EH.subscribe('spawner.debugger-started', this._debugger_started);
       this.EH.subscribe('spawner.debugger-exited',  this._debugger_exited);
@@ -154,7 +154,7 @@ define(["underscore", "event_handler", "debuggee_tracker/debugger", "debuggee_tr
          EH.subscribe(topic_prefix + 'exec.running', this._running),
          EH.subscribe(topic_prefix + 'exec.stopped', this._stopped),
          
-         EH.subscribe(topic_prefix + 'notify.breakpoint-modified', this._breakpoint_modified)
+         EH.subscribe(topic_prefix + 'notify.breakpoint-modified', this._breakpoints_modified)
       ];
 
       return subscription_ids;
@@ -449,7 +449,7 @@ define(["underscore", "event_handler", "debuggee_tracker/debugger", "debuggee_tr
     * Update the status of a modified breakpoint (if exists).
     * If the breakpoint dont exist, create it.
     * */
-   DebuggeeTracker.prototype._breakpoint_modified = function (data) {
+   DebuggeeTracker.prototype._breakpoints_modified = function (data) {
        var debugger_id = data['debugger-id'];
        var debugger_obj = this.debuggers_by_id[debugger_id];
 
