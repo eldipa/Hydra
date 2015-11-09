@@ -1,4 +1,4 @@
-define(["underscore", "jquery", "jstree", "layout"], function (_, $, jstree, layout) {
+define(["underscore", "jquery", "jstree", "layout", "context_menu_for_tree_view"], function (_, $, jstree, layout, context_menu_for_tree_view_module) {
    'use strict';
     
    var BreakpointsView = function (debuggee_tracker) {
@@ -10,18 +10,25 @@ define(["underscore", "jquery", "jstree", "layout"], function (_, $, jstree, lay
       this.debuggee_tracker = debuggee_tracker;
       this.debuggee_tracker.add_observer(this);
 
-      this._$container.jstree({
-          'core' : {
-              "animation" : false,
-              "worker": true, 
-              "multiple": true,
-              "check_callback" : false,
-              "themes" : { "url": false, "dots": true, "name": "default-dark", "stripped": true},
-              "force_text": true,
-              'data' : this.get_data(),
-          },
-          "plugins" : ["checkbox"]
-      });
+      var results = context_menu_for_tree_view_module.build_jstree_with_a_context_menu(this._$container, [
+            null,
+            this._get_ctxmenu_for_debuggers(),
+            this._get_ctxmenu_for_main_breakpoints(),
+            this._get_ctxmenu_for_sub_breakpoints()
+          ],
+          {
+              'core' : {
+                  "animation" : false,
+                  "worker": true, 
+                  "multiple": true,
+                  "check_callback" : false,
+                  "themes" : { "url": false, "dots": true, "name": "default-dark", "stripped": true},
+                  "force_text": true,
+                  'data' : this.get_data(),
+              },
+              "plugins" : ["checkbox"]
+          }
+      );
 
       this.update_tree_data_debounced = _.debounce(_.bind(this.update_tree_data, this), 500);
    };
@@ -106,6 +113,50 @@ define(["underscore", "jquery", "jstree", "layout"], function (_, $, jstree, lay
 
       return tree_data;
    };
+
+   BreakpointsView.prototype._get_ctxmenu_for_debuggers = function () {
+       return [
+            {
+                text: "Enable all breakpoints"
+            },
+            {
+                text: "Disable all breakpoints"
+            },
+            {
+                text: "Remove all breakpoints",
+                end_menu_here: true
+            } 
+        ];
+   };
+   
+   BreakpointsView.prototype._get_ctxmenu_for_main_breakpoints = function () {
+       return [
+            {
+                text: "Enable breakpoint"
+            },
+            {
+                text: "Disable breakpoint"
+            },
+            {
+                text: "Remove breakpoint",
+                end_menu_here: true
+            } 
+        ];
+   };
+   
+   BreakpointsView.prototype._get_ctxmenu_for_sub_breakpoints = function () {
+       return [
+            {
+                text: "Enable breakpoint"
+            },
+            {
+                text: "Disable breakpoint",
+                end_menu_here: true
+            } 
+       ];
+   };
+
+
    
    return {BreakpointsView: BreakpointsView};
 });

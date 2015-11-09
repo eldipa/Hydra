@@ -385,9 +385,10 @@ define(["underscore", "event_handler", "debuggee_tracker/debugger", "debuggee_tr
                                             thread_group: thread_group,
                                             });
 
-                    var breakpoints_by_id = self.breakpoints_by_debugger[debugger_id];
-                    self._request_an_update_of_the_breakpoint_info(breakpoints_by_id, debugger_id);
                  });
+                
+                 var breakpoints_by_id = self.breakpoints_by_debugger[debugger_id];
+                 self._request_an_update_of_the_breakpoint_info(breakpoints_by_id, debugger_id);
             });
    };
    

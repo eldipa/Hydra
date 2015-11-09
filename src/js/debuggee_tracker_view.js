@@ -1,4 +1,4 @@
-define(["underscore", "jquery", "jstree", "layout"], function (_, $, jstree, layout) {
+define(["underscore", "jquery", "jstree", "layout", "context_menu_for_tree_view"], function (_, $, jstree, layout, context_menu_for_tree_view_module) {
    'use strict';
 
    var DebuggeeTrackerView = function (debuggee_tracker, thread_follower) {  //TODO thread_follower is a hack
@@ -14,22 +14,26 @@ define(["underscore", "jquery", "jstree", "layout"], function (_, $, jstree, lay
 
       this.update_tree_data_debounced = _.debounce(_.bind(this.update_tree_data, this), 500);
 
-      var _attach_ctxmenu_safe = _.throttle(_.bind(this._attach_ctxmenu, this), 500);
-      this._$container.on("after_open.jstree", function () {
-            _attach_ctxmenu_safe();
-         }).on("redraw.jstree", function () {
-            _attach_ctxmenu_safe();
-         }).jstree({
-        'core' : {
-          "animation" : false,
-          "worker": true, 
-          "multiple": false,
-          "check_callback" : false,
-          "themes" : { "url": false, "dots": true, "name": "default-dark", "stripped": true},
-          "force_text": true,
-          'data' : this.get_data(),
-        },
-      });
+      var results = context_menu_for_tree_view_module.build_jstree_with_a_context_menu(this._$container, [
+              this._get_ctxmenu_for_debuggee_tracker(),
+              this._get_ctxmenu_for_debuggers(),
+              this._get_ctxmenu_for_thread_groups(),
+              this._get_ctxmenu_for_threads()
+          ], 
+          {
+            'core' : {
+              "animation" : false,
+              "worker": true, 
+              "multiple": false,
+              "check_callback" : false,
+              "themes" : { "url": false, "dots": true, "name": "default-dark", "stripped": true},
+              "force_text": true,
+              'data' : this.get_data(),
+            },
+          }
+      );
+
+      this._get_data_from_selected = results.getter_for_data_from_selected;
 
    };
 
@@ -96,24 +100,6 @@ define(["underscore", "jquery", "jstree", "layout"], function (_, $, jstree, lay
       return tree_data;
    };
 
-   DebuggeeTrackerView.prototype._attach_ctxmenu = function () {
-      var $debuggers_first_level =      this._$container.children('ul').children('li');
-      var $thread_groups_second_level = $debuggers_first_level.children('ul').children('li');
-      var $threads_third_level =        $thread_groups_second_level.children('ul').children('li');
-
-      this._$container.data('ctxmenu_controller', this._get_ctxmenu_for_debuggee_tracker());
-      $debuggers_first_level.data('ctxmenu_controller', this._get_ctxmenu_for_debuggers());
-      $thread_groups_second_level.data('ctxmenu_controller', this._get_ctxmenu_for_thread_groups());
-      $threads_third_level.data('ctxmenu_controller', this._get_ctxmenu_for_threads());
-   };
-
-   DebuggeeTrackerView.prototype._get_data_from_selected = function () {
-      var nodes_selected = this._$container.jstree('get_selected');
-      var node_selected = nodes_selected[0]; //TODO we only support one of them for now
-
-      return this._$container.jstree(true).get_node(node_selected).data;
-   };
-
    DebuggeeTrackerView.prototype._get_ctxmenu_for_debuggee_tracker = function () {
       var self = this;
       return [{
@@ -128,17 +114,6 @@ define(["underscore", "jquery", "jstree", "layout"], function (_, $, jstree, lay
    DebuggeeTrackerView.prototype._get_ctxmenu_for_debuggers = function () {
       var self = this;
       return [{
-               immediate_action: function (ctx_event, element_ctxmenu_owner) {
-                  if (ctx_event.jstree_hack_done) {
-                     return;
-                  }
-                  ctx_event.jstree_hack_done = true;
-
-                  var node_id = $(element_ctxmenu_owner).attr('id');
-                  self._$container.jstree("deselect_all");
-                  self._$container.jstree("select_node", node_id);
-              },
-              },{
                text: 'Kill debugger',
                action: function (e) {
                   e.preventDefault();
@@ -160,17 +135,6 @@ define(["underscore", "jquery", "jstree", "layout"], function (_, $, jstree, lay
    DebuggeeTrackerView.prototype._get_ctxmenu_for_thread_groups = function () {
       var self = this;
       return [{
-               immediate_action: function (ctx_event, element_ctxmenu_owner) {
-                  if (ctx_event.jstree_hack_done) {
-                     return;
-                  }
-                  ctx_event.jstree_hack_done = true;
-                  
-                  var node_id = $(element_ctxmenu_owner).attr('id');
-                  self._$container.jstree("deselect_all");
-                  self._$container.jstree("select_node", node_id);
-              },
-              },{
                text: 'Remove thread group',
                action: function (e) {
                   e.preventDefault();
@@ -214,17 +178,6 @@ define(["underscore", "jquery", "jstree", "layout"], function (_, $, jstree, lay
    DebuggeeTrackerView.prototype._get_ctxmenu_for_threads = function () {
       var self = this;
       return [{
-               immediate_action: function (ctx_event, element_ctxmenu_owner) {
-                  if (ctx_event.jstree_hack_done) {
-                     return;
-                  }
-                  ctx_event.jstree_hack_done = true;
-                  
-                  var node_id = $(element_ctxmenu_owner).attr('id');
-                  self._$container.jstree("deselect_all");
-                  self._$container.jstree("select_node", node_id);
-              },
-              },{
                text: 'Follow',
                action: function (e) {
                   e.preventDefault();

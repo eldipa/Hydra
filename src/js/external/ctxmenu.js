@@ -102,6 +102,10 @@ define(['jquery', 'underscore'], function ($, _) {
                            if (typeof options.filter == 'function') {
                                    options.filter($menu.find('li:last'));
                            }
+
+                        if (data[i].end_menu_here) {
+                            break;
+                        }
                    }
                    return $menu;
            }
