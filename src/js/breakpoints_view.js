@@ -20,13 +20,18 @@ define(["underscore", "jquery", "jstree", "layout", "context_menu_for_tree_view"
               'core' : {
                   "animation" : false,
                   "worker": true, 
-                  "multiple": true,
+                  "multiple": false,
                   "check_callback" : false,
                   "themes" : { "url": false, "dots": true, "name": "default-dark", "stripped": true},
                   "force_text": true,
                   'data' : this.get_data(),
               },
-              "plugins" : ["checkbox"]
+              "plugins" : ["checkbox"],
+              'checkbox': {
+                  "whole_node": false,
+                  "keep_selected_style": false,
+                  "tie_selection": false, // <=== XXX HIGHLY EXPERIMENTAL XXX
+              }
           }
       );
 
