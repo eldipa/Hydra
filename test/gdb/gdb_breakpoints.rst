@@ -685,6 +685,8 @@ realmente se cambiaron los breakpoints es preguntando con break-list.
 Lo mismo podemos hacer para borrar los breakpoints sin embargo no podemos borrar subbreakpoints
 En ningun momento se emite un evento asincronico de breakpoint modified. La unica manera de saber si
 realmente se cambiaron los breakpoints es preguntando con break-list.
+(Salvo en los casos en que un breakpooint es borrado de manera asincronica, en ese caso si recivimos
+una notificacion.)
 
 ::
 

@@ -25,7 +25,7 @@ define(["underscore", "event_handler", "debuggee_tracker/debugger", "debuggee_tr
                       "_thread_group_started", "_thread_group_exited",
                       "_thread_created",       "_thread_exited",
                       "_running",              "_stopped",
-                      "_breakpoints_modified");
+                      "_breakpoints_modified", "_breakpoint_deleted");
 
       this.EH.subscribe('spawner.debugger-started', this._debugger_started);
       this.EH.subscribe('spawner.debugger-exited',  this._debugger_exited);
@@ -154,7 +154,8 @@ define(["underscore", "event_handler", "debuggee_tracker/debugger", "debuggee_tr
          EH.subscribe(topic_prefix + 'exec.running', this._running),
          EH.subscribe(topic_prefix + 'exec.stopped', this._stopped),
          
-         EH.subscribe(topic_prefix + 'notify.breakpoints-modified', this._breakpoints_modified)
+         EH.subscribe(topic_prefix + 'notify.breakpoints-modified', this._breakpoints_modified),
+         EH.subscribe(topic_prefix + 'notify.breakpoint-deleted', this._breakpoint_deleted)
       ];
 
       return subscription_ids;
@@ -498,6 +499,24 @@ define(["underscore", "event_handler", "debuggee_tracker/debugger", "debuggee_tr
     * the same object that modified the breakpoint through GDB.
     * */
    DebuggeeTracker.prototype.update_breakpoints_from = DebuggeeTracker.prototype._breakpoints_modified;
+
+   DebuggeeTracker.prototype._breakpoint_deleted = function (data) {
+       var debugger_id = data['debugger-id'];
+       var debugger_obj = this.debuggers_by_id[debugger_id];
+       
+       var breakpoint_id = data.results.id;
+
+       var breakpoints_by_id = this.breakpoints_by_debugger[debugger_id];
+       var breakpoint = breakpoints_by_id[breakpoint_id];
+
+       this.notify("breakpoint_deleted", { 
+                                event_data: data,
+                                debugger_obj: debugger_obj,
+                                breakpoint: breakpoint,
+                                });
+
+       delete breakpoints_by_id[breakpoint_id];
+   };
 
    DebuggeeTracker.prototype._parse_attributes_from_breakpoint_data = function (breakpoint_data, debugger_id) {
           var is_pending = breakpoint_data.pending !== undefined;
