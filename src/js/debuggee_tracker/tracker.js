@@ -358,6 +358,20 @@ define(["underscore", "event_handler", "debuggee_tracker/debugger", "debuggee_tr
       debugger_obj.execute("-list-thread-groups", ["--recurse", "1"], 
               function (data) {
                  var groups_data = data.results.groups;
+
+                 var thread_groups_by_id = self.thread_groups_by_debugger[debugger_id];
+
+                 var our_current_thread_group_ids = _.keys(thread_groups_by_id);
+                 var real_thread_group_ids = _.pluck(groups_data, "id");
+
+                 var removed_thread_group_ids = _.difference(our_current_thread_group_ids, real_thread_group_ids);
+
+                 // remove the old thread groups
+                 _.each(removed_thread_group_ids, function (removed_thread_group_id) {
+                     delete thread_groups_by_id[removed_thread_group_id];
+                 });
+
+                 // update (and add if necessary) the new thread groups
                  _.each(groups_data, function (group_data) {
                     var thread_group_id = group_data.id;
                     var thread_group = thread_group_by_id[thread_group_id];
@@ -379,14 +393,12 @@ define(["underscore", "event_handler", "debuggee_tracker/debugger", "debuggee_tr
 
                     var threads_data = group_data.threads;
                     _.each(threads_data, _.partial(self._update_thread_info, _, self.threads_by_debugger[debugger_id], thread_group, debugger_id), self);
-                    
-                    self.notify("thread_group_update", { 
-                                            event_data: group_data,
-                                            debugger_obj: debugger_obj,
-                                            thread_group: thread_group,
-                                            });
-
                  });
+                    
+                 self.notify("thread_group_update", { 
+                                        event_data: groups_data,
+                                        debugger_obj: debugger_obj
+                                        });
                 
                  var breakpoints_by_id = self.breakpoints_by_debugger[debugger_id];
                  self._request_an_update_of_the_breakpoint_info(breakpoints_by_id, debugger_id);
@@ -431,7 +443,7 @@ define(["underscore", "event_handler", "debuggee_tracker/debugger", "debuggee_tr
                       var breakpoint = breakpoints_by_id[breakpoint_id];
 
                       if (breakpoint === undefined) {
-                          breakpoint = new Breakpoint(breakpoint_id, this, attributes);
+                          breakpoint = new Breakpoint(breakpoint_id, self, attributes);
                           breakpoints_by_id[breakpoint_id] = breakpoint;
                       }
                       else {
