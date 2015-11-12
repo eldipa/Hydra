@@ -9,6 +9,7 @@ define([ 'jquery', 'layout', 'shortcuts', 'springy', 'springyui' ], function($, 
 		this._$out_of_dom = this._$container;
 		
 		//Ejemplo tipo hola mundo
+		
 		// make a new graph
 		graph = new Springy.Graph();
 
