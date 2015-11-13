@@ -44,7 +44,8 @@ define(["underscore", "jquery"], function (_, $) {
             var nodes_selected = $tree_container.jstree('get_selected');
             var node_selected = nodes_selected[0]; //TODO we only support one of them for now
 
-            return $tree_container.jstree(true).get_node(node_selected).data;
+            var node = $tree_container.jstree(true).get_node(node_selected)
+            return node.data;
         };
     };
 
