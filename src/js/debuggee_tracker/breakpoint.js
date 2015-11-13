@@ -39,6 +39,7 @@ define(["underscore", "shortcuts", 'event_handler'], function (_, shortcuts, eve
     Breakpoint.prototype._modify_the_breakpoint = function (break_cmd, is_enabled, include_all_of_my_subbreakpoints) {
         var self = this;
         var ids = null;
+        var bkpts_selected = [];
 
         if (include_all_of_my_subbreakpoints && self.is_multiple()) {
             var debugger_obj = self.tracker.get_debugger_with_id(self.debugger_id);
@@ -50,16 +51,21 @@ define(["underscore", "shortcuts", 'event_handler'], function (_, shortcuts, eve
                     });
 
             ids = _.map(me_and_my_subbreakpoints, function (bkpt) { return ""+bkpt.id; });
+            bkpts_selected = me_and_my_subbreakpoints;
         }
         else {
             ids = [""+this.id]; // just me
+            bkpts_selected = [this];
         }
 
-        shortcuts.gdb_request(function () { self.is_enabled = is_enabled; self.tracker.breakpoint_changed(); },
-                this.debugger_id, 
-                break_cmd,
-                ids
-                );
+        shortcuts.gdb_request(function () {
+                _.each(bkpts_selected, function (bkpt) { bkpt.is_enabled = is_enabled; });
+                self.tracker.breakpoint_changed(); 
+            },
+            this.debugger_id, 
+            break_cmd,
+            ids
+        );
     };
 
     Breakpoint.prototype.enable_you =  _.partial(Breakpoint.prototype._modify_the_breakpoint, "-break-enable", true, false);
