@@ -417,10 +417,21 @@ define(["underscore", "event_handler", "debuggee_tracker/debugger", "debuggee_tr
       
       debugger_obj.execute("-break-list", [], 
               function (data) {
-                  var breaktpoint_data_rows = data.results.BreakpointTable.body;
+                  var breakpoint_data_rows = data.results.BreakpointTable.body;
                   var last_breakpoint_type_seen = undefined;
 
-                  _.each(breaktpoint_data_rows, function (breakpoint_data) {
+                  var our_current_breakpoint_ids = _.keys(breakpoints_by_id);
+                  var real_breakpoint_ids = _.keys(_.filter(breakpoint_data_rows, function (bkpt_data) { return bkpt_data.type === "breakpoint"}));
+
+                  var removed_breakpoint_ids = _.difference(our_current_breakpoint_ids, real_breakpoint_ids);
+
+                  // remove old breakpoints
+                  _.each(removed_breakpoint_ids, function (removed_breakpoint_id) {
+                      delete breakpoints_by_id[removed_breakpoint_id];
+                  });
+
+                  // update (and create if necessary) new breakpoints
+                  _.each(breakpoint_data_rows, function (breakpoint_data) {
                       var type = breakpoint_data.type;
 
                       if (type === undefined) {
@@ -450,13 +461,12 @@ define(["underscore", "event_handler", "debuggee_tracker/debugger", "debuggee_tr
                           breakpoint.update(attributes);
                       }
 
-                      console.log("ALL " + breakpoint.get_display_name());
-                      self.notify("breakpoint_update", { 
-                                                event_data: breakpoint_data,
-                                                debugger_obj: debugger_obj,
-                                                breakpoint: breakpoint,
-                                                });
                   }, this);
+                  
+                  self.notify("breakpoints_update", { 
+                                            event_data: breakpoint_data_rows,
+                                            debugger_obj: debugger_obj,
+                                            });
               });
    };
 
@@ -498,7 +508,6 @@ define(["underscore", "event_handler", "debuggee_tracker/debugger", "debuggee_tr
               breakpoint.update(attributes);
            }
                           
-           console.log("Mod " + breakpoint.get_display_name());
            this.notify("breakpoint_update", { 
                                     event_data: breakpoint_data,
                                     debugger_obj: debugger_obj,
@@ -510,7 +519,14 @@ define(["underscore", "event_handler", "debuggee_tracker/debugger", "debuggee_tr
    /* Call this to update several breakpoints from the data. This method was designed to be called from
     * the same object that modified the breakpoint through GDB.
     * */
-   DebuggeeTracker.prototype.update_breakpoints_from = DebuggeeTracker.prototype._breakpoints_modified;
+   DebuggeeTracker.prototype.breakpoint_changed = function () {
+       this.notify("breakpoint_changed", {})
+   };
+
+   DebuggeeTracker.prototype.delete_breakpoint = function (bkpt) {
+       delete this.breakpoints_by_debugger[bkpt.debugger_id][bkpt.id];
+       this.notify("breakpoint_changed", {})
+   };
 
    DebuggeeTracker.prototype._breakpoint_deleted = function (data) {
        var debugger_id = data['debugger-id'];

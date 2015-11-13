@@ -25,7 +25,7 @@ define(["underscore", "shortcuts", 'event_handler'], function (_, shortcuts, eve
     };
     
     Breakpoint.prototype.is_subbreakpoint_of = function (bkpt) {
-        return this.your_main_breakpoint_id() === bkpt.id;
+        return this.is_subbreakpoint() && this.your_main_breakpoint_id() === bkpt.id;
     };
 
     Breakpoint.prototype.is_multiple = function () {
@@ -36,17 +36,47 @@ define(["underscore", "shortcuts", 'event_handler'], function (_, shortcuts, eve
         return /(\d+)\..+/.exec(this.id)[1]; // eg: returns the "1" of the "1.2"
     };
 
-    Breakpoint.prototype._modify_the_breakpoint = function (break_cmd) {
-        shortcuts.gdb_request(_.bind(this.tracker, this.tracker.update_breakpoints_from), 
+    Breakpoint.prototype._modify_the_breakpoint = function (break_cmd, is_enabled, include_all_of_my_subbreakpoints) {
+        var self = this;
+        var ids = null;
+
+        if (include_all_of_my_subbreakpoints && self.is_multiple()) {
+            var debugger_obj = self.tracker.get_debugger_with_id(self.debugger_id);
+            var breakpoints_by_id = debugger_obj.your_breakpoints_by_id();
+
+            var me_and_my_subbreakpoints = _.filter(breakpoints_by_id, 
+                    function (bkpt) {
+                        return bkpt.is_subbreakpoint_of(self) || bkpt === self;
+                    });
+
+            ids = _.map(me_and_my_subbreakpoints, function (bkpt) { return ""+bkpt.id; });
+        }
+        else {
+            ids = [""+this.id]; // just me
+        }
+
+        shortcuts.gdb_request(function () { self.is_enabled = is_enabled; self.tracker.breakpoint_changed(); },
                 this.debugger_id, 
                 break_cmd,
-                [""+this.id]
+                ids
                 );
     };
 
-    Breakpoint.prototype.enable_you =  _.bind(Breakpoint.prototype._modify_the_breakpoint, "-break-enable");
-    Breakpoint.prototype.disable_you = _.bind(Breakpoint.prototype._modify_the_breakpoint, "-break-disable");
-    Breakpoint.prototype.delete_you =  _.bind(Breakpoint.prototype._modify_the_breakpoint, "-break-delete");
+    Breakpoint.prototype.enable_you =  _.partial(Breakpoint.prototype._modify_the_breakpoint, "-break-enable", true, false);
+    Breakpoint.prototype.disable_you = _.partial(Breakpoint.prototype._modify_the_breakpoint, "-break-disable", false, false);
+    Breakpoint.prototype.enable_you_and_your_subbreakpoints =  _.partial(Breakpoint.prototype._modify_the_breakpoint, "-break-enable", true, true);
+    Breakpoint.prototype.disable_you_and_your_subbreakpoints = _.partial(Breakpoint.prototype._modify_the_breakpoint, "-break-disable", false, true);
+    Breakpoint.prototype.delete_you_and_your_subbreakpoints = function () {
+        var self = this;
+
+        // gdb by default will delete all the subbreakpoints of my, so we dont need to
+        // specify their ids.
+        shortcuts.gdb_request(function () { self.tracker.delete_breakpoint(self); },
+                this.debugger_id, 
+                "-break-delete",
+                [""+this.id]
+                );
+    }
 
     return {Breakpoint: Breakpoint};
 });
