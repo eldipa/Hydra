@@ -12,10 +12,12 @@ define(["underscore", "shortcuts", 'event_handler'], function (_, shortcuts, eve
 
     Breakpoint.prototype.update = shortcuts._update_properties;
     Breakpoint.prototype.get_display_name = function () {
-        var name =  "Breakpoint " + this.id + " at " + this.instruction_address;
+        var name = "";
         if (this.source_fullname && this.source_line) {
-            name += " ("+shortcuts.get_filename_from_fullname(this.source_fullname)+" "+this.source_line+")";
+            name += shortcuts.get_filename_from_fullname(this.source_fullname)+" "+this.source_line+" ";
         }
+
+        name += "at " + this.instruction_address;
 
         return name;
     };
