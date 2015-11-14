@@ -1,4 +1,4 @@
-define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore'], function (ace, $, layout, shortcuts, _, thread_button_bar_controller) {
+define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore'], function (ace, $, layout, shortcuts, _) {
     var get_text_of_gutter_line_number_from_number = function(session, row) {
         return "" + row; // This is the default
     };
