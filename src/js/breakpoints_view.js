@@ -1,4 +1,4 @@
-define(["underscore", "jquery", "jstree", "layout", "context_menu_for_tree_view"], function (_, $, jstree, layout, context_menu_for_tree_view_module) {
+define(["underscore", "jquery", "jstree", "layout", "context_menu_for_tree_view", "snippet"], function (_, $, jstree, layout, context_menu_for_tree_view_module, snippet) {
    'use strict';
     
    var BreakpointsView = function (debuggee_tracker) {
@@ -51,7 +51,47 @@ define(["underscore", "jquery", "jstree", "layout", "context_menu_for_tree_view"
       $(this._$container).jstree(true).settings.core.data = data;
       $(this._$container).jstree(true).refresh();
       $(this._$container).jstree(true).load_node('#');
-      
+
+      var self = this;
+      setTimeout(function () {
+          var s = snippet.create_snippet("int i = 0;", false);
+          //$(self._$container).append($(s));
+          setTimeout(function() {
+                /*var dcontainer = $('<div style="width: 100%; height: 17px; background-color: initial; font-family: monaco;" class="ace_editor ace-monokai ace_dark"></div>');
+                var dscroller = $('<div class="ace_scroller" style="left: 0px; right: 0px; bottom: 0px;"></div>');
+                var dcontent  = $('<div class="ace_content" style="margin-top: 0px; width: 700px; height: 48px; margin-left: 0px;"></div>');
+                var dlayer = $('<div class="ace_layer ace_text-layer" style="padding: 0px 4px;"></div>');
+
+                $(s).find('.ace_line').appendTo(dlayer);
+                dlayer.appendTo(dcontent);
+                dcontent.appendTo(dscroller);
+                dscroller.appendTo(dcontainer);
+
+                dcontainer.appendTo($(self._$container));
+                $(s).remove();
+                */
+                
+                /*
+                $(s).find('.ace_text-input').remove();
+                $(s).find('.ace_gutter').remove();
+                $(s).find('.ace_scrollbar-v').remove();
+                $(s).find('.ace_scrollbar-h').remove();
+                $(s).find('.ace_print-margin-layer').remove();
+                $(s).find('.ace_marker-layer').remove();
+                $(s).find('.ace_cursor-layer').remove();
+                */
+
+                $(s).children(":not(.ace_scroller)").remove();
+                $(s).children(".ace_scroller").children(":not(.ace_content)").remove();
+                $(s).children(".ace_scroller").children(".ace_content").children(":not(.ace_text-layer)").remove();
+
+                var cloned_without_event_handlers = $(s).clone(false, false);
+                $(s).remove();
+                cloned_without_event_handlers.appendTo($(self._$container));
+                
+          }, 300);
+      }, 1500);
+
       if (!this._$out_of_dom) {
          this.repaint($(this.box));
       }
