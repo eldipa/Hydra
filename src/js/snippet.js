@@ -1,9 +1,10 @@
 define(['ace', 'jquery', 'underscore'], function (ace, $, _) {
-    var create_snippet = function (code, when_ready_callback, opts) {
+    var create_snippet = function (code, opts) {
         var font_size = 11;
         var height = font_size + 3; //px
 
         var _$container = $('<div style="width: 100%; height: '+height+'px; background-color: initial; font-family: monaco;"></div>');
+        var placeholder = _$container.clone(false, false);
 
         var editor = ace.ace.edit(_$container.get()[0]);
       
@@ -23,6 +24,8 @@ define(['ace', 'jquery', 'underscore'], function (ace, $, _) {
         $(opts.temporal_in_dom_element || 'body').append(_$container);
 
         setTimeout(function() {
+                editor.destroy();
+
                 var container = $(_$container);
                 container.children(":not(.ace_scroller)").remove();
 
@@ -35,9 +38,11 @@ define(['ace', 'jquery', 'underscore'], function (ace, $, _) {
                 var cloned_without_event_handlers = container.clone(false, false);
                 container.remove();
 
-                when_ready_callback(cloned_without_event_handlers);
+                placeholder.replaceWith(cloned_without_event_handlers);
           }, 300); // TODO this is hardcoded!! we dont know how to build the snippet with ace synchronously.
                    // Our best shot is to wait some time and then we put the snippet into its final target.
+          
+          return placeholder;
     };
 
     return {create_snippet: create_snippet};

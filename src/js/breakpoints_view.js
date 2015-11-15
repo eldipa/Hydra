@@ -47,22 +47,15 @@ define(["underscore", "jquery", "jstree", "layout", "context_menu_for_tree_view"
    };
 
    BreakpointsView.prototype.update_tree_data = function () {
+      var self = this;
       var data = this.get_data();
+
       $(this._$container).jstree(true).settings.core.data = data;
       $(this._$container).jstree(true).refresh();
-      $(this._$container).jstree(true).load_node('#');
-
-      /*
-      var self = this;
-      setTimeout(function () {
-          var s = snippet.create_snippet("int i = 0;", function ($snippet) {
-              $snippet.appendTo($(self._$container));
-          }, 
-          {
-              is_assembly: false
-          });
-          
-      }, 1500);*/
+      $(this._$container).jstree(true).load_node('#', function () {
+          var s = snippet.create_snippet("int i = 0;", { is_assembly: false });
+          s.appendTo($(self._$container));
+      });
 
       if (!this._$out_of_dom) {
          this.repaint($(this.box));
