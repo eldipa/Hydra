@@ -473,7 +473,7 @@ define(["underscore", "event_handler", "debuggee_tracker/debugger", "debuggee_tr
    /*
     * Update the status of a modified breakpoint (if exists).
     * If the breakpoint dont exist, create it.
-    s* */
+    * */
    DebuggeeTracker.prototype._breakpoints_modified = function (data) {
        var debugger_id = data['debugger-id'];
        var debugger_obj = this.debuggers_by_id[debugger_id];
@@ -561,7 +561,11 @@ define(["underscore", "event_handler", "debuggee_tracker/debugger", "debuggee_tr
           
           var instruction_address = breakpoint_data.addr;
           var source_fullname = breakpoint_data.fullname;
-          var source_line = breakpoint_data.line;
+          var source_line_number = breakpoint_data.line;
+
+          if (source_line_number) {
+              source_line_number = parseInt(source_line_number);
+          }
 
           var attributes = {
                   debugger_id: debugger_id,
@@ -572,7 +576,7 @@ define(["underscore", "event_handler", "debuggee_tracker/debugger", "debuggee_tr
                   thread_ids: thread_ids,
                   thread_group_ids: thread_group_ids,
                   source_fullname: source_fullname,
-                  source_line: source_line,
+                  source_line_number: source_line_number,
                   instruction_address: instruction_address
               };
 
