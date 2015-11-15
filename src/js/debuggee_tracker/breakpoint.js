@@ -2,7 +2,7 @@ define(["underscore", "shortcuts", 'event_handler'], function (_, shortcuts, eve
     'use strict';
 
     var Breakpoint = function (id, tracker, obj) {
-        this._properties = ["debugger_id", "is_pending", "apply_to_all_threads", "is_enabled", "is_temporal", "thread_ids", "thread_group_ids", "source_fullname", "source_line_number", "instruction_address", "source_code_resolved", "is_source_code_resolved"];
+        this._properties = ["debugger_id", "is_pending", "apply_to_all_threads", "is_enabled", "is_temporal", "thread_ids", "thread_group_ids", "source_fullname", "source_line_number", "instruction_address", "code_resolved", "is_code_resolved"];
         
         this.id = id;
         this.tracker = tracker;
@@ -14,8 +14,8 @@ define(["underscore", "shortcuts", 'event_handler'], function (_, shortcuts, eve
     Breakpoint.prototype.update = function (attributes) {
         shortcuts._update_properties.call(this, attributes);
         
-        if (!this.is_pending && !this.is_multiple() && !this.is_source_code_resolved) {
-            this.resolve_source_code_where_you_are();
+        if (!this.is_pending && !this.is_multiple() && !this.is_code_resolved) {
+            this.resolve_code_where_you_are();
         }
     };
 
@@ -30,17 +30,21 @@ define(["underscore", "shortcuts", 'event_handler'], function (_, shortcuts, eve
         return name;
     };
 
-    Breakpoint.prototype.resolve_source_code_where_you_are = function () {
-        if (this.is_source_code_resolved) {
+    Breakpoint.prototype.are_you_set_on_source_code_line = function () {
+        return (this.source_line_number && this.source_fullname);
+    };
+
+    Breakpoint.prototype.resolve_code_where_you_are = function () {
+        if (this.is_code_resolved) {
             return; // i resolved the source code already
         }
 
-        if (this.source_line_number && this.source_fullname) {
+        if (this.are_you_set_on_source_code_line()) {
             var fs = require('fs');
             var code = fs.readFileSync(this.source_fullname, "ascii").split("\n")[this.source_line_number - 1];
             
-            this.source_code_resolved = code.trim();
-            this.is_source_code_resolved = true;
+            this.code_resolved = code.trim();
+            this.is_code_resolved = true;
             this.tracker.breakpoint_changed();
             return;
         }
@@ -53,8 +57,8 @@ define(["underscore", "shortcuts", 'event_handler'], function (_, shortcuts, eve
                     var instruction_object = instruction_objects[0]; // get only the first instruction
 
                     var code = instruction_object.inst;
-                    self.source_code_resolved = code.trim();
-                    self.is_source_code_resolved = true;
+                    self.code_resolved = code.trim();
+                    self.is_code_resolved = true;
                     self.tracker.breakpoint_changed();
                 },
                 this.debugger_id, 

@@ -45,15 +45,16 @@ define(["underscore", "jquery", "jstree", "layout", "context_menu_for_tree_view"
       this._$container.on("uncheck_node.jstree", bounded_change_handler_for_disable_bkpt).on("check_node.jstree", bounded_change_handler_for_enable_bkpt);
       this._$container.on("after_open.jstree", function (ev, node) {
           var node_in_dom = $("#"+node.node.id);
-          node_in_dom.find('a[source_code_resolved]').each(function (index, anchor) {
+          node_in_dom.find('a[code_resolved]').each(function (index, anchor) {
               var anchor = $(anchor);
-              var source_code_resolved = anchor.attr('source_code_resolved');
+              var code_resolved = anchor.attr('code_resolved');
+              var is_code_resolved_assembly = anchor.attr('is_code_resolved_assembly');
               
-              if (!source_code_resolved) {
+              if (!code_resolved) {
                   return;
               }
               
-              var s = snippet.create_snippet(source_code_resolved, { is_assembly: false });
+              var s = snippet.create_snippet(code_resolved, { is_assembly: is_code_resolved_assembly});
               s.appendTo(anchor);
           });
       });
@@ -133,9 +134,12 @@ define(["underscore", "jquery", "jstree", "layout", "context_menu_for_tree_view"
                                                     data: {debugger_id: debugger_obj.id, breakpoint_id: subbreakpoint.id},
                                                 };
 
-                                                if (subbreakpoint.is_source_code_resolved) {
+                                                if (subbreakpoint.is_code_resolved) {
+                                                    var code_resolved = subbreakpoint.code_resolved;
+                                                    
                                                     node_for_subbreakpoint.a_attr = {};
-                                                    node_for_subbreakpoint.a_attr.source_code_resolved = subbreakpoint.source_code_resolved;
+                                                    node_for_subbreakpoint.a_attr.code_resolved = code_resolved;
+                                                    node_for_subbreakpoint.a_attr.is_code_resolved_assembly = !subbreakpoint.are_you_set_on_source_code_line();
                                                 }
 
                                                 // third level: sub-breakpoints (like multiple breakpoints)
@@ -143,9 +147,12 @@ define(["underscore", "jquery", "jstree", "layout", "context_menu_for_tree_view"
                                             }, this);
                                 }
                                 else {
-                                    if (main_breakpoint.is_source_code_resolved) {
+                                    if (main_breakpoint.is_code_resolved) {
+                                        var code_resolved = main_breakpoint.code_resolved;
+
                                         node_for_breakpoint.a_attr = {};
-                                        node_for_breakpoint.a_attr.source_code_resolved = main_breakpoint.source_code_resolved;
+                                        node_for_breakpoint.a_attr.code_resolved = code_resolved;
+                                        node_for_breakpoint.a_attr.is_code_resolved_assembly = !main_breakpoint.are_you_set_on_source_code_line();
                                     }
 
                                     // for single (non-multiple) breakpoints we can be sure
