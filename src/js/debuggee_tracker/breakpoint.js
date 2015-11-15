@@ -39,25 +39,27 @@ define(["underscore", "shortcuts", 'event_handler'], function (_, shortcuts, eve
             var fs = require('fs');
             var code = fs.readFileSync(this.source_fullname, "ascii").split("\n")[this.source_line_number - 1];
             
-            this.source_code_resolved = code;
+            this.source_code_resolved = code.trim();
             this.is_source_code_resolved = true;
             this.tracker.breakpoint_changed();
             return;
         }
         else {
             var self = this;
+            var start_address = this.instruction_address;
+            var end_address = "0x"+(parseInt(start_address, 16) + 16).toString(16); // start_address + 16
             shortcuts.gdb_request(function (data) { 
                     var instruction_objects = data.results.asm_insns;
-                    var instruction_object = instruction_objects[0];
+                    var instruction_object = instruction_objects[0]; // get only the first instruction
 
                     var code = instruction_object.inst;
-                    self.source_code_resolved = code;
+                    self.source_code_resolved = code.trim();
                     self.is_source_code_resolved = true;
                     self.tracker.breakpoint_changed();
                 },
                 this.debugger_id, 
                 "-data-disassemble",
-                ["-s", this.instruction_address, "--", "0"]
+                ["-s", start_address, "-e", end_address, "--", "0"]
             );
         }
     };

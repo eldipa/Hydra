@@ -41,7 +41,22 @@ define(["underscore", "jquery", "jstree", "layout", "context_menu_for_tree_view"
       var bounded_change_handler_for_enable_bkpt = _.partial(bounded_change_handler_for, true);
       var bounded_change_handler_for_disable_bkpt = _.partial(bounded_change_handler_for, false);
 
+      var self = this;
       this._$container.on("uncheck_node.jstree", bounded_change_handler_for_disable_bkpt).on("check_node.jstree", bounded_change_handler_for_enable_bkpt);
+      this._$container.on("after_open.jstree", function (ev, node) {
+          var node_in_dom = $("#"+node.node.id);
+          node_in_dom.find('a[source_code_resolved]').each(function (index, anchor) {
+              var anchor = $(anchor);
+              var source_code_resolved = anchor.attr('source_code_resolved');
+              
+              if (!source_code_resolved) {
+                  return;
+              }
+              
+              var s = snippet.create_snippet(source_code_resolved, { is_assembly: false });
+              s.appendTo(anchor);
+          });
+      });
 
       this.update_tree_data_debounced = _.debounce(_.bind(this.update_tree_data, this), 500);
    };
@@ -52,10 +67,7 @@ define(["underscore", "jquery", "jstree", "layout", "context_menu_for_tree_view"
 
       $(this._$container).jstree(true).settings.core.data = data;
       $(this._$container).jstree(true).refresh();
-      $(this._$container).jstree(true).load_node('#', function () {
-          var s = snippet.create_snippet("int i = 0;", { is_assembly: false });
-          s.appendTo($(self._$container));
-      });
+      $(this._$container).jstree(true).load_node('#');
 
       if (!this._$out_of_dom) {
          this.repaint($(this.box));
@@ -115,16 +127,27 @@ define(["underscore", "jquery", "jstree", "layout", "context_menu_for_tree_view"
                                     // this breakpoint has multiple sub breakpoints
                                     node_for_breakpoint.children = _.map(subbreakpoints_of_this_main_breakpoint,
                                             function (subbreakpoint) {
-
-                                                // third level: sub-breakpoints (like multiple breakpoints)
-                                                return {
+                                                var node_for_subbreakpoint = {
                                                     text: subbreakpoint.get_display_name(),
                                                     state: { 'checked' : main_breakpoint.is_enabled && subbreakpoint.is_enabled },
                                                     data: {debugger_id: debugger_obj.id, breakpoint_id: subbreakpoint.id},
                                                 };
+
+                                                if (subbreakpoint.is_source_code_resolved) {
+                                                    node_for_subbreakpoint.a_attr = {};
+                                                    node_for_subbreakpoint.a_attr.source_code_resolved = subbreakpoint.source_code_resolved;
+                                                }
+
+                                                // third level: sub-breakpoints (like multiple breakpoints)
+                                                return node_for_subbreakpoint;
                                             }, this);
                                 }
                                 else {
+                                    if (main_breakpoint.is_source_code_resolved) {
+                                        node_for_breakpoint.a_attr = {};
+                                        node_for_breakpoint.a_attr.source_code_resolved = main_breakpoint.source_code_resolved;
+                                    }
+
                                     // for single (non-multiple) breakpoints we can be sure
                                     // of its state
                                     node_for_breakpoint.state = { 'checked' : main_breakpoint.is_enabled };
