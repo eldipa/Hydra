@@ -48,7 +48,7 @@ define(["underscore", "jquery", "jstree", "layout", "context_menu_for_tree_view"
           node_in_dom.find('a[code_resolved]').each(function (index, anchor) {
               var anchor = $(anchor);
               var code_resolved = anchor.attr('code_resolved');
-              var is_code_resolved_assembly = anchor.attr('is_code_resolved_assembly');
+              var is_code_resolved_assembly = anchor.attr('is_code_resolved_assembly') === "true";
               
               if (!code_resolved) {
                   return;
