@@ -33,8 +33,6 @@ define(["underscore", "shortcuts", 'event_handler'], function (_, shortcuts, eve
             }
         }
 
-        txt.push("(" + this.id + ")");
-
         return txt.join(" ");
     };
 
