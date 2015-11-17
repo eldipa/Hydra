@@ -2,7 +2,7 @@ define(["underscore", "shortcuts", 'event_handler'], function (_, shortcuts, eve
     'use strict';
 
     var Breakpoint = function (id, tracker, obj) {
-        this._properties = ["debugger_id", "is_pending", "apply_to_all_threads", "is_enabled", "is_temporal", "thread_ids", "thread_group_ids", "source_fullname", "source_line_number", "instruction_address", "code_resolved", "is_code_resolved"];
+        this._properties = ["debugger_id", "is_pending", "apply_to_all_threads", "is_enabled", "is_temporal", "thread_ids", "thread_group_ids", "source_fullname", "source_line_number", "instruction_address", "code_resolved", "is_code_resolved", "original_location"];
         
         this.id = id;
         this.tracker = tracker;
@@ -25,7 +25,12 @@ define(["underscore", "shortcuts", 'event_handler'], function (_, shortcuts, eve
             name += shortcuts.get_filename_from_fullname(this.source_fullname)+" "+this.source_line_number+" ";
         }
 
-        name += "at " + this.instruction_address;
+        if (this.is_multiple()) {
+            name += "at " + this.original_location;
+        }
+        else {
+            name += "at " + this.instruction_address;
+        }
 
         return name;
     };

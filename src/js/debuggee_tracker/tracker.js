@@ -551,6 +551,7 @@ define(["underscore", "event_handler", "debuggee_tracker/debugger", "debuggee_tr
           var apply_to_all_threads = breakpoint_data.thread === undefined;
           var is_enabled = breakpoint_data.enabled === 'y';
           var is_temporal = breakpoint_data.disp !== 'keep';
+          var original_location = breakpoint_data['original-location'] || "<??>";
 
           var thread_ids = [];
           if (!apply_to_all_threads) {
@@ -577,7 +578,8 @@ define(["underscore", "event_handler", "debuggee_tracker/debugger", "debuggee_tr
                   thread_group_ids: thread_group_ids,
                   source_fullname: source_fullname,
                   source_line_number: source_line_number,
-                  instruction_address: instruction_address
+                  instruction_address: instruction_address,
+                  original_location: original_location
               };
 
           return attributes;
