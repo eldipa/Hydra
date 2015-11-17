@@ -11,29 +11,64 @@ define([ 'jquery', 'layout', 'shortcuts', 'springy', 'springyui' ],
 				// Ejemplo tipo hola mundo
 
 				// make a new graph
-				graph = new Springy.Graph();
+				this.graph = new Springy.Graph();
+				this.nodes = []
 
-//				// make some nodes
-//				var spruce = graph.newNode({
-//					label : 'Norway Spruce'
-//				});
-//				var fir = graph.newNode({
-//					label : 'Sicilian Fir'
-//				});
-//
-//				// connect them with an edge
-//				graph.newEdge(spruce, fir);
-//				graph.newEdge(fir, spruce);
+				var emptyNode = this.graph.newNode({
+					label : 'EmpyNode'
+				});
+				this.nodes.push(emptyNode);
 				
+				//TODO Sacar este hardcode
 				this.getFDfromPID(2785);
+				
 
 				this._$container.springy({
-					graph : graph
+					graph : this.graph
 				});
 
 			}
 			;
 
+			
+			FD_Redirector.prototype.refreshGraph = function(DataOfFD, pid) {
+				
+				for (node in this.nodes){
+					this.graph.removeNode(this.nodes[node]);
+				}
+				
+				var pidNode = this.graph.newNode({
+					label : pid
+				})
+				
+				this.nodes.push(pidNode);
+				
+				for (fd in DataOfFD){
+					fdInfo = DataOfFD[fd];
+					
+					var newNode = this.graph.newNode({
+						label : fdInfo["NAME"]
+					});
+				
+					this.nodes.push(newNode);
+					
+					var mode = fdInfo["FD"].charAt(fdInfo["FD"].length -1)
+					
+					if( mode == "w" || mode == "u" )
+						this.graph.newEdge(pidNode, newNode);
+					
+					if( mode == "r" || mode == "u" )
+						this.graph.newEdge(newNode, pidNode);
+				}
+				
+				
+				this._$container.springy({
+					graph : this.graph
+				});
+				
+			}
+			
+			
 			// lsof retorna en esta forma: COMMAND PID USER FD TYPE DEVICE
 			// SIZE/OFF NODE NAME
 
@@ -41,6 +76,8 @@ define([ 'jquery', 'layout', 'shortcuts', 'springy', 'springyui' ],
 				var exec = require('child_process').exec, child;
 				
 				var fdInfo;
+				
+				var my_self = this;
 				
 				child = exec("lsof -p " + pid, function(error, stdout, stderr) {
 					
@@ -62,14 +99,14 @@ define([ 'jquery', 'layout', 'shortcuts', 'springy', 'springyui' ],
 							}
 						}
 					}
-					
-					console.log(info);
 
 					if (error !== null) {
 
 						console.log('lsof ERROR: ' + error);
 
 					}
+					
+					my_self.refreshGraph(info, pid);
 					
 				});
 
