@@ -13,17 +13,17 @@ define([ 'jquery', 'layout', 'shortcuts', 'springy', 'springyui' ],
 				// make a new graph
 				graph = new Springy.Graph();
 
-				// make some nodes
-				var spruce = graph.newNode({
-					label : 'Norway Spruce'
-				});
-				var fir = graph.newNode({
-					label : 'Sicilian Fir'
-				});
-
-				// connect them with an edge
-				graph.newEdge(spruce, fir);
-				graph.newEdge(fir, spruce);
+//				// make some nodes
+//				var spruce = graph.newNode({
+//					label : 'Norway Spruce'
+//				});
+//				var fir = graph.newNode({
+//					label : 'Sicilian Fir'
+//				});
+//
+//				// connect them with an edge
+//				graph.newEdge(spruce, fir);
+//				graph.newEdge(fir, spruce);
 				
 				this.getFDfromPID(2785);
 
@@ -34,7 +34,7 @@ define([ 'jquery', 'layout', 'shortcuts', 'springy', 'springyui' ],
 			}
 			;
 
-			// lsof retorna en eta forma: COMMAND PID USER FD TYPE DEVICE
+			// lsof retorna en esta forma: COMMAND PID USER FD TYPE DEVICE
 			// SIZE/OFF NODE NAME
 
 			FD_Redirector.prototype.getFDfromPID = function(pid) {
@@ -44,14 +44,26 @@ define([ 'jquery', 'layout', 'shortcuts', 'springy', 'springyui' ],
 				
 				child = exec("lsof -p " + pid, function(error, stdout, stderr) {
 					
-					fdInfo = stdout.split("\n");
+					stdoutByLines = stdout.split("\n");
 					
-					for(line in fdInfo){
-						var result = fdInfo[line].replace(/\s+/g,"\t").split("\t");
-						console.log(result);
+					var info = [];
+					
+					var names = ["COMMAND","PID","USER","FD","TYPE","DEVICE","SIZE/OFF","NODE","NAME"];
+					
+					for(line in stdoutByLines){
+						
+						if (!(line == 0 || line == stdoutByLines.length-1)){
+							
+							info.push({});
+							var result = stdoutByLines[line].replace(/\s+/g,"\t").split("\t");
+							
+							for (data in result){
+								info[info.length -1][names[data]] = result[data];
+							}
+						}
 					}
 					
-//					console.log(fdInfo);
+					console.log(info);
 
 					if (error !== null) {
 
