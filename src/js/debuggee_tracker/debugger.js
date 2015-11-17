@@ -51,5 +51,30 @@ define(["underscore", "shortcuts", 'event_handler'], function (_, shortcuts, eve
                 args
                 );
     };
+
+    Debugger.prototype._modify_all_your_breakpoints = function (command) {
+        if (command !== "enable" && command !== "disable" && command !== "delete") {
+            throw new Error("Unknow command '"+command+"' to execute over the breakpoints of this debugger '"+this.debugger_id+"'");
+        }
+
+        _.each(this.tracker.breakpoints_by_debugger[this.id], function (bkpt) {
+            if (!bkpt.is_subbreakpoint()) {
+                if (command == "enable") {
+                    bkpt.enable_you_and_your_subbreakpoints();
+                }
+                else if (command == "disable") {
+                    bkpt.disable_you_and_your_subbreakpoints();
+                }
+                else if (command == "delete") {
+                    bkpt.delete_you_and_your_subbreakpoints();
+                }
+            }
+        });
+    };
+
+    Debugger.prototype.enable_all_your_breakpoints = _.partial(Debugger.prototype._modify_all_your_breakpoints, "enable");
+    Debugger.prototype.disable_all_your_breakpoints = _.partial(Debugger.prototype._modify_all_your_breakpoints, "disable");
+    Debugger.prototype.delete_all_your_breakpoints = _.partial(Debugger.prototype._modify_all_your_breakpoints, "delete");
+
     return {Debugger: Debugger};
 });
