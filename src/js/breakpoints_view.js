@@ -111,11 +111,13 @@ define(["underscore", "jquery", "jstree", "layout", "context_menu_for_tree_view"
                   return {
                         text: debugger_obj.get_display_name(),
                         data: {debugger_id: debugger_obj.id},
+                        icon: false,
                         children: _.map(main_breakpoints,
                             function (main_breakpoint) {
 
                                 var node_for_breakpoint = {
                                     text: main_breakpoint.get_display_name(),
+                                    icon: false,
                                     data: {debugger_id: debugger_obj.id, breakpoint_id: main_breakpoint.id},
                                 };
 
@@ -131,6 +133,7 @@ define(["underscore", "jquery", "jstree", "layout", "context_menu_for_tree_view"
                                                 var node_for_subbreakpoint = {
                                                     text: subbreakpoint.get_display_name(),
                                                     state: { 'checked' : main_breakpoint.is_enabled && subbreakpoint.is_enabled },
+                                                    icon: false,
                                                     data: {debugger_id: debugger_obj.id, breakpoint_id: subbreakpoint.id},
                                                 };
 
@@ -179,7 +182,7 @@ define(["underscore", "jquery", "jstree", "layout", "context_menu_for_tree_view"
                    var debugger_id = self._get_data_from_selected().debugger_id;
                    var debugger_obj = self.debuggee_tracker.get_debugger_with_id(debugger_id);
 
-                   debugger_obj.execute("-break-enable", []); // TODO all? otherwise, do a for loop
+                   debugger_obj.enable_all_your_breakpoints();
                 }
             },
             {
@@ -189,7 +192,7 @@ define(["underscore", "jquery", "jstree", "layout", "context_menu_for_tree_view"
                    var debugger_id = self._get_data_from_selected().debugger_id;
                    var debugger_obj = self.debuggee_tracker.get_debugger_with_id(debugger_id);
 
-                   debugger_obj.execute("-break-disable", []); // TODO all? otherwise, do a for loop
+                   debugger_obj.disable_all_your_breakpoints();
                 }
             },
             {
@@ -199,7 +202,7 @@ define(["underscore", "jquery", "jstree", "layout", "context_menu_for_tree_view"
                    var debugger_id = self._get_data_from_selected().debugger_id;
                    var debugger_obj = self.debuggee_tracker.get_debugger_with_id(debugger_id);
 
-                   debugger_obj.execute("-break-delete", []); // TODO all? otherwise, do a for loop
+                   debugger_obj.delete_all_your_breakpoints();
                 },
 
                 end_menu_here: true

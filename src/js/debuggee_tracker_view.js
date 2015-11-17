@@ -79,12 +79,14 @@ define(["underscore", "jquery", "jstree", "layout", "context_menu_for_tree_view"
             // first level
             return {text: debugger_obj.get_display_name(),
                     data: {debugger_id: debugger_obj.id},
+                    icon: false,
                     children: _.map(thread_groups_by_id,
                            function (thread_group) {
                               
                               // second level          
                               return {text: thread_group.get_display_name(),
                                       data: {debugger_id: debugger_obj.id, thread_group_id: thread_group.id},
+                                      icon: 'fa fa-bug',
                                       children: _.map(thread_group.your_threads_by_id(),
                                           function (thread) {
 
