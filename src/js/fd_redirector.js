@@ -8,8 +8,6 @@ define([ 'jquery', 'layout', 'shortcuts', 'springy', 'springyui' ],
 
 				this._$out_of_dom = this._$container;
 
-				// Ejemplo tipo hola mundo
-
 				// make a new graph
 				this.graph = new Springy.Graph();
 				this.nodes = []
@@ -19,11 +17,6 @@ define([ 'jquery', 'layout', 'shortcuts', 'springy', 'springyui' ],
 					label : 'EmpyNode'
 				});
 				this.nodes.push(emptyNode);
-				
-				//TODO Sacar este hardcode
-//				this.followPID(2601);
-//				this.refresh();
-				
 
 				this._$container.springy({
 					graph : this.graph
@@ -39,6 +32,8 @@ define([ 'jquery', 'layout', 'shortcuts', 'springy', 'springyui' ],
 			
 			FD_Redirector.prototype.refreshGraph = function(DataOfFD) {
 				
+				var ignorar = ["DIR", "REG"];
+				
 				for (node in this.nodes){
 					this.graph.removeNode(this.nodes[node]);
 				}
@@ -51,6 +46,9 @@ define([ 'jquery', 'layout', 'shortcuts', 'springy', 'springyui' ],
 				
 				for (fd in DataOfFD){
 					fdInfo = DataOfFD[fd];
+					
+					if (ignorar.indexOf(fdInfo["TYPE"]) != -1)
+						continue;
 					
 					var newNode = this.graph.newNode({
 						label : fdInfo["NAME"]
