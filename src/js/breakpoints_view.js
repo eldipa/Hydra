@@ -37,11 +37,13 @@ define(["underscore", "jquery", "jstree", "layout", "context_menu_for_tree_view"
 
       this._get_data_from_selected = results.getter_for_data_from_selected;
 
+
       var bounded_change_handler_for = _.bind(this.change_breakpoint_state_handler_for, this);
       var bounded_change_handler_for_enable_bkpt = _.partial(bounded_change_handler_for, true);
       var bounded_change_handler_for_disable_bkpt = _.partial(bounded_change_handler_for, false);
 
       var self = this;
+
       this._$container.on("uncheck_node.jstree", bounded_change_handler_for_disable_bkpt).on("check_node.jstree", bounded_change_handler_for_enable_bkpt);
       this._$container.on("after_open.jstree", function (ev, node) {
           var node_in_dom = $("#"+node.node.id);
@@ -66,9 +68,15 @@ define(["underscore", "jquery", "jstree", "layout", "context_menu_for_tree_view"
       var self = this;
       var data = this.get_data();
 
+      this._loading_the_data = true;
+
       $(this._$container).jstree(true).settings.core.data = data;
       $(this._$container).jstree(true).refresh();
-      $(this._$container).jstree(true).load_node('#');
+      $(this._$container).jstree(true).load_node('#', function (x, is_loaded) {
+          if (is_loaded) {
+              self._loading_the_data = false;
+          }
+      });
 
       if (!this._$out_of_dom) {
          this.repaint($(this.box));
@@ -302,6 +310,11 @@ define(["underscore", "jquery", "jstree", "layout", "context_menu_for_tree_view"
    };
 
    BreakpointsView.prototype.change_breakpoint_state_handler_for = function (enable_breakpoint, ev, d) {
+      if (this._loading_the_data) {
+          return; // the user is not changing the breakpoint, we are just refreshing the data and
+                  // we are getting call as a side effect of jstree update.
+      }
+
       var data = d.node.data;
 
       var debugger_id = data.debugger_id;
@@ -310,16 +323,29 @@ define(["underscore", "jquery", "jstree", "layout", "context_menu_for_tree_view"
       var breakpoint_id = data.breakpoint_id;
 
       if (breakpoint_id === undefined) {
-          // TODO enable/disable globally
-          console.log(d);
+          if (enable_breakpoint) {
+              debugger_obj.enable_all_your_breakpoints();
+          }
+          else {
+              debugger_obj.disable_all_your_breakpoints();
+          }
       }
       else {
           var breakpoint = debugger_obj.get_breakpoint_with_id(breakpoint_id);
+
+          // If we are trying to enable a subbreakpoint, we need to make sure that
+          // its main breakpoint is enabled, otherwise the subbreakpoint enabling
+          // will not take any effect (and it will be confusing for the user)
+          if (enable_breakpoint && breakpoint.is_subbreakpoint()) {
+             var main_breakpoint = debugger_obj.get_breakpoint_with_id(breakpoint.your_main_breakpoint_id());
+             main_breakpoint.enable_you();
+          }
+
           if (enable_breakpoint) {
-              //breakpoint.enable_you();
+              breakpoint.enable_you_and_your_subbreakpoints();
           }
           else {
-              //breakpoint.disable_you();
+              breakpoint.disable_you_and_your_subbreakpoints();
           }
       }
   };
