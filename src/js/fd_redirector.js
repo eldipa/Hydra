@@ -4,7 +4,7 @@ define([ 'jquery', 'layout', 'shortcuts', 'springy', 'springyui' ],
 			function FD_Redirector() {
 				this.super("FD Redirector")
 
-				this._$container = $('<canvas width="400" height="200"> Error al cargar Springy </canvas>');
+				this._$container = $('<canvas width="800" height="400"> Error al cargar Springy </canvas>');
 
 				this._$out_of_dom = this._$container;
 
@@ -13,14 +13,16 @@ define([ 'jquery', 'layout', 'shortcuts', 'springy', 'springyui' ],
 				// make a new graph
 				this.graph = new Springy.Graph();
 				this.nodes = []
-
+				this.FDInfo = []
+				
 				var emptyNode = this.graph.newNode({
 					label : 'EmpyNode'
 				});
 				this.nodes.push(emptyNode);
 				
 				//TODO Sacar este hardcode
-				this.getFDfromPID(2785);
+//				this.followPID(2601);
+//				this.refresh();
 				
 
 				this._$container.springy({
@@ -29,16 +31,20 @@ define([ 'jquery', 'layout', 'shortcuts', 'springy', 'springyui' ],
 
 			}
 			;
+			
+			FD_Redirector.prototype.followPID = function (pid) {
+				this.pid = pid
+			}
 
 			
-			FD_Redirector.prototype.refreshGraph = function(DataOfFD, pid) {
+			FD_Redirector.prototype.refreshGraph = function(DataOfFD) {
 				
 				for (node in this.nodes){
 					this.graph.removeNode(this.nodes[node]);
 				}
 				
 				var pidNode = this.graph.newNode({
-					label : pid
+					label : this.pid
 				})
 				
 				this.nodes.push(pidNode);
@@ -49,7 +55,7 @@ define([ 'jquery', 'layout', 'shortcuts', 'springy', 'springyui' ],
 					var newNode = this.graph.newNode({
 						label : fdInfo["NAME"]
 					});
-				
+					
 					this.nodes.push(newNode);
 					
 					var mode = fdInfo["FD"].charAt(fdInfo["FD"].length -1)
@@ -72,14 +78,12 @@ define([ 'jquery', 'layout', 'shortcuts', 'springy', 'springyui' ],
 			// lsof retorna en esta forma: COMMAND PID USER FD TYPE DEVICE
 			// SIZE/OFF NODE NAME
 
-			FD_Redirector.prototype.getFDfromPID = function(pid) {
+			FD_Redirector.prototype.refresh = function() {
 				var exec = require('child_process').exec, child;
-				
-				var fdInfo;
-				
+
 				var my_self = this;
 				
-				child = exec("lsof -p " + pid, function(error, stdout, stderr) {
+				child = exec("lsof -p " + this.pid, function(error, stdout, stderr) {
 					
 					stdoutByLines = stdout.split("\n");
 					
@@ -106,7 +110,9 @@ define([ 'jquery', 'layout', 'shortcuts', 'springy', 'springyui' ],
 
 					}
 					
-					my_self.refreshGraph(info, pid);
+					my_self.FDInfo = info;
+					
+					my_self.refreshGraph(info);
 					
 				});
 
