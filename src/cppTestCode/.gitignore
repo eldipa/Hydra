@@ -10,3 +10,4 @@ simplified_unix_tools/echo
 simplified_unix_tools/true
 stdinTest
 threads/two_pthreads
+threads/three_pthreads

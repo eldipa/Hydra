@@ -17,7 +17,7 @@ define(["underscore", "shortcuts", 'event_handler'], function (_, shortcuts, eve
         var txt = [];
 
         if (this.executable != undefined) {
-            txt.push(this.executable.substr(this.executable.lastIndexOf("/")+1));
+            txt.push(shortcuts.get_filename_from_fullname(this.executable));
         }
 
         if (this.state === "started") {
@@ -32,8 +32,6 @@ define(["underscore", "shortcuts", 'event_handler'], function (_, shortcuts, eve
                 txt.push("Exit code: " + this.exit_code);
             }
         }
-
-        txt.push("(" + this.id + ")");
 
         return txt.join(" ");
     };
@@ -53,15 +51,36 @@ define(["underscore", "shortcuts", 'event_handler'], function (_, shortcuts, eve
             self.tracker._request_an_update_thread_groups_info(s, self.debugger_id);
         };
 
-        shortcuts.gdb_request(update_my_status_when_file_is_loaded, 
-                this.debugger_id, 
-                "-file-exec-and-symbols",
-                [filepath]
+        this.execute("-file-exec-and-symbols",
+                [filepath],
+                update_my_status_when_file_is_loaded
                 );
     };
 
     ThreadGroup.prototype.your_threads_by_id = function () {
         return this.threads_by_id;
+    };
+
+    ThreadGroup.prototype.get_thread_with_id = function (thread_id) {
+        return this.threads_by_id[thread_id];
+    };
+
+    ThreadGroup.prototype.execute = function (command, args, callback, self_id_argument_position) {
+        args = args || [];
+        var self_id_argument = "--thread-group " + this.id;
+
+        if (self_id_argument_position === undefined) {
+            args.unshift(self_id_argument);
+        }
+        else {
+            args[self_id_argument_position] = self_id_argument;
+        }
+
+        shortcuts.gdb_request(callback || null, 
+                this.debugger_id, 
+                command,
+                args
+                );
     };
 
     return {ThreadGroup: ThreadGroup};

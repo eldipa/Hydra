@@ -19,6 +19,7 @@ class Gdb(object):
         self.ev = publish_subscribe.eventHandler.EventHandler(name=name_prefix + "[input])")
 
         self._start_gdb_output_reader(name_prefix + "[output])")
+        self._configure_gdb()
         self._load_base_py_modules_into_gdb_process()
 
         self._subscribe_to_interested_events_for_me()
@@ -112,6 +113,11 @@ class Gdb(object):
     def _start_gdb_output_reader(self, name):
         self.reader = outputReader.OutputReader(self.gdbOutput, self.gdb_pid, name)
         self.reader.start()
+
+    def _configure_gdb(self):
+        self.gdbInput.write('set non-stop on\n')
+        self.gdbInput.write('set target-async on\n')
+        self.gdbInput.flush()
 
     def _load_base_py_modules_into_gdb_process(self):
         ''' Load the basic python modules into GDB. Those are the framework which

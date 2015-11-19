@@ -1,4 +1,4 @@
-define(['jquery', 'layout', 'code_view', 'varViewer', 'widgets/buttons', 'listview_panel', 'standarInput'], function ($, layout, code_view, varViewer, buttons, listview_panel, standarInput) {
+define(['jquery', 'layout', 'code_editor', 'varViewer', 'widgets/buttons', 'listview_panel', 'standarInput'], function ($, layout, code_editor, varViewer, buttons, listview_panel, standarInput) {
    var Panel = layout.Panel;
    var Tabbed = layout.Tabbed;
    var ListViewPanel = listview_panel.ListViewPanel;
@@ -18,7 +18,7 @@ define(['jquery', 'layout', 'code_view', 'varViewer', 'widgets/buttons', 'listvi
       
       // we create the principal objects for the ui.
       // first, the code view so we can render source code
-      var view = new code_view.CodeView();
+      var view = new code_editor.CodeEditor();
 
       
       // Panel to render the log
@@ -107,6 +107,7 @@ define(['jquery', 'layout', 'code_view', 'varViewer', 'widgets/buttons', 'listvi
          });
 
 
+         /*
          event_handler.subscribe("notification-gdb."+session_id+".exec.stopped", function (data) {
                if (data.results && data.results.frame && data.results.frame.line && data.results.frame.fullname) {
                   // load file
@@ -119,11 +120,14 @@ define(['jquery', 'layout', 'code_view', 'varViewer', 'widgets/buttons', 'listvi
                   view.gotoLine(line);
                }
          });
+         */
 
+         /*
          event_handler.subscribe("notification-gdb."+session_id+".notify.thread-group-exited", function (data) {
                // TODO (issue #70) end
                view.cleanCurrentLine();
          });
+         */
 
          // Loggeamos lo que pasa en la "consola" del gdb.
          event_handler.subscribe("stream-gdb."+session_id+".console", function (data) {
@@ -146,6 +150,7 @@ define(['jquery', 'layout', 'code_view', 'varViewer', 'widgets/buttons', 'listvi
          // TODO (issue #36), poner un breakpoint es relativamente facil, pero eliminarlos no.
          // ya que se hace a traves de un "breakpoint id" o bien, un "clear all breakpoints"
          // por linea. De igual manera hay que mantener un registro.
+         /*
          event_handler.subscribe("notification-gdb."+session_id+".notify.breakpoint-created", function (data) {
                //TODO (issue #65) ver los breakpoints de "ace"
                //TODO (issue #64) hacer que las lineas de breakpoint sean mas llamativas
@@ -153,6 +158,7 @@ define(['jquery', 'layout', 'code_view', 'varViewer', 'widgets/buttons', 'listvi
                var bkpt = data.results.bkpt;
                view.setBreakpoint(bkpt.line-0);
          });
+         */
 
 
          // TODO (issue #66) esto viene de a "pares", una suscripcion que espera un evento sync con
@@ -161,6 +167,7 @@ define(['jquery', 'layout', 'code_view', 'varViewer', 'widgets/buttons', 'listvi
          // dicho evento y por ende dicha callback.
          //
          // Es una especie de "invocacion" pseudo-sincronica.
+         /*
          var TOKEN = 99;
          var file_list_source_ID = event_handler.subscribe("result-gdb."+session_id+"."+TOKEN+".done", function (data) {
                var token = data.token;
@@ -182,9 +189,11 @@ define(['jquery', 'layout', 'code_view', 'varViewer', 'widgets/buttons', 'listvi
                event_handler.unsubscribe(file_list_source_ID);
          });
          event_handler.publish(session_id + ".direct-command", TOKEN+"-file-list-exec-source-file");
+         */
       });
 
 
+      /*
       view.attach_menu([
                   {
                      header: 'On this line'
@@ -198,10 +207,11 @@ define(['jquery', 'layout', 'code_view', 'varViewer', 'widgets/buttons', 'listvi
                      }
                   },
       ]);
+      */
 
       // TODO (issue #67) cuando se hace un click en un boton, este queda seleccionado
       // y no es desmarcado hasta que se hace click en otro lado!
-      var main_button_bar = new buttons.Buttons([
+      /* var main_button_bar = new buttons.Buttons([
             {
                label: "Run",
                text: false,
@@ -262,14 +272,16 @@ define(['jquery', 'layout', 'code_view', 'varViewer', 'widgets/buttons', 'listvi
                   event_handler.publish("debugger.exit", "all");
                },
             }], true);
+            */
 
       // TODO (issue #69) hacer que las lineas de separacion del split sean mas finas y que se engrosen
       // mientras este el mouse encima de ellas.
       
-      var S1 = new layout.Stacked("vertically");
+      /*var S1 = new layout.Stacked("vertically");
       view.swap(S1);
       S1.add_child(main_button_bar, {position: "top", grow: 0, shrink: 0});
       S1.add_child(view, {position: "bottom", grow: 1, shrink: 1});
+      */
 
       root.render();
 
@@ -289,7 +301,7 @@ define(['jquery', 'layout', 'code_view', 'varViewer', 'widgets/buttons', 'listvi
     	});
       
       
-      return {root: root, visor: visor};
+      return {root: root, visor: visor, code_editor: view};
    };
 
    return {

@@ -287,6 +287,9 @@ each asynchronous message / stream / result separately.
 
 As an example, this is the message after setting a breakpoint
 
+Workaround: handle the GDB's bug https://sourceware.org/bugzilla/show_bug.cgi?id=14733
+We change the bkpt= by bkpts=, from a tuple/dict to a list of them.
+
 ::
 
    >>> o = Output()
@@ -297,7 +300,7 @@ As an example, this is the message after setting a breakpoint
    ('done', 'Sync')
    >>> len(record.results)
    1
-   >>> record.results['bkpt']             #doctest: +NORMALIZE_WHITESPACE
+   >>> record.results['bkpts'][0]             #doctest: +NORMALIZE_WHITESPACE
    {'addr': '0x08048564',
    'disp': 'keep',
    'enabled': 'y',
@@ -311,17 +314,17 @@ As an example, this is the message after setting a breakpoint
    'type': 'breakpoint'}
    >>> record                          #doctest: +NORMALIZE_WHITESPACE
    {'klass': 'done',
-    'results': {'bkpt': {'addr': '0x08048564',
-                         'disp': 'keep',
-                         'enabled': 'y',
-                         'file': 'myprog.c',
-                         'fullname': '/home/nickrob/myprog.c',
-                         'func': 'main',
-                         'line': '68',
-                         'number': '1',
-                         'thread-groups': ['i1'],
-                         'times': '0',
-                         'type': 'breakpoint'}},
+    'results': {'bkpts': [{'addr': '0x08048564',
+                           'disp': 'keep',
+                           'enabled': 'y',
+                           'file': 'myprog.c',
+                           'fullname': '/home/nickrob/myprog.c',
+                           'func': 'main',
+                           'line': '68',
+                           'number': '1',
+                           'thread-groups': ['i1'],
+                           'times': '0',
+                           'type': 'breakpoint'}]},
     'token': None,
     'type': 'Sync'}
 
@@ -365,4 +368,154 @@ Or, when a execution is stopped
    ('argc', '1')
    >>> main_args[1]['name'], main_args[1]['value']
    ('argv', '0xbfc4d4d4')
+
+
+Workaround: handle the GDB's bug https://sourceware.org/bugzilla/show_bug.cgi?id=14733
+We change the bkpt= by bkpts=, from a tuple/dict to a list of them. In order to keep consistent names,
+we change the event's name breakpoint-modified to breakpoints-modified
+
+::
+   >>> text = '=breakpoint-modified,bkpt={number="1",type="breakpoint",disp="keep",enabled="y",addr="<MULTIPLE>",times="1",original-location="roll"},{number="1.1",enabled="y",addr="0x08048563",func="roll",file="two_pthreads.c",fullname="/threads/two_pthreads.c",line="5",thread-groups=["i1"]},{number="1.2",enabled="y",addr="0x08048563",func="roll",file="two_pthreads.c",fullname="/threads/two_pthreads.c",line="5",thread-groups=["i2"]}\n'
+
+   >>> record = o.parse_line(text)
+   >>> record.klass, record.type
+   ('breakpoints-modified', 'Notify')
+
+   >>> record
+   {'klass': 'breakpoints-modified',
+    'results': {'bkpts': [{'addr': '<MULTIPLE>',
+                           'disp': 'keep',
+                           'enabled': 'y',
+                           'number': '1',
+                           'original-location': 'roll',
+                           'times': '1',
+                           'type': 'breakpoint'},
+                          {'addr': '0x08048563',
+                           'enabled': 'y',
+                           'file': 'two_pthreads.c',
+                           'fullname': '/threads/two_pthreads.c',
+                           'func': 'roll',
+                           'line': '5',
+                           'number': '1.1',
+                           'thread-groups': ['i1']},
+                          {'addr': '0x08048563',
+                           'enabled': 'y',
+                           'file': 'two_pthreads.c',
+                           'fullname': '/threads/two_pthreads.c',
+                           'func': 'roll',
+                           'line': '5',
+                           'number': '1.2',
+                           'thread-groups': ['i2']}]},
+    'token': None,
+    'type': 'Notify'}
+
+
+Due the same bug, we need to modify the event BreakpointTable which lists the breakpoints and if some of them are in
+the same address, this will trigger the same bug.
+Here is the fix:
+
+::
+
+   >>> text = '^done,BreakpointTable={nr_rows="3",nr_cols="6",hdr=[{width="7",alignment="-1",col_name="number",colhdr="Num"},{width="14",alignment="-1",col_name="type",colhdr="Type"},{width="4",alignment="-1",col_name="disp",colhdr="Disp"},{width="3",alignment="-1",col_name="enabled",colhdr="Enb"},{width="18",alignment="-1",col_name="addr",colhdr="Address"},{width="40",alignment="2",col_name="what",colhdr="What"}],body=[bkpt={number="1",type="breakpoint",disp="keep",enabled="y",addr="<MULTIPLE>",times="0",original-location="roll"},{number="1.1",enabled="y",addr="0x00000000004006a9",func="roll",file="three_pthreads.c",fullname="/threads/three_pthreads.c",line="5",thread-groups=["i1"]},{number="1.2",enabled="y",addr="0x00000000004006a9",func="roll",file="three_pthreads.c",fullname="/threads/three_pthreads.c",line="5",thread-groups=["i2"]},bkpt={number="2",type="breakpoint",disp="keep",enabled="y",addr="<MULTIPLE>",times="0",original-location="roll"},{number="2.1",enabled="y",addr="0x00000000004006a9",func="roll",file="three_pthreads.c",fullname="/threads/three_pthreads.c",line="5",thread-groups=["i1"]},{number="2.2",enabled="y",addr="0x00000000004006a9",func="roll",file="three_pthreads.c",fullname="/threads/three_pthreads.c",line="5",thread-groups=["i2"]},bkpt={number="3",type="breakpoint",disp="keep",enabled="y",addr="<MULTIPLE>",times="0",original-location="roll"},{number="3.1",enabled="y",addr="0x00000000004006a9",func="roll",file="three_pthreads.c",fullname="/threads/three_pthreads.c",line="5",thread-groups=["i1"]},{number="3.2",enabled="y",addr="0x00000000004006a9",func="roll",file="three_pthreads.c",fullname="/threads/three_pthreads.c",line="5",thread-groups=["i2"]}]}\n'
+   
+   >>> record = o.parse_line(text)
+   >>> record
+   {'klass': 'done',
+    'results': {'BreakpointTable': {'body': [{'addr': '<MULTIPLE>',
+                                              'disp': 'keep',
+                                              'enabled': 'y',
+                                              'number': '1',
+                                              'original-location': 'roll',
+                                              'times': '0',
+                                              'type': 'breakpoint'},
+                                             {'addr': '0x00000000004006a9',
+                                              'enabled': 'y',
+                                              'file': 'three_pthreads.c',
+                                              'fullname': '/threads/three_pthreads.c',
+                                              'func': 'roll',
+                                              'line': '5',
+                                              'number': '1.1',
+                                              'thread-groups': ['i1']},
+                                             {'addr': '0x00000000004006a9',
+                                              'enabled': 'y',
+                                              'file': 'three_pthreads.c',
+                                              'fullname': '/threads/three_pthreads.c',
+                                              'func': 'roll',
+                                              'line': '5',
+                                              'number': '1.2',
+                                              'thread-groups': ['i2']},
+                                             {'addr': '<MULTIPLE>',
+                                              'disp': 'keep',
+                                              'enabled': 'y',
+                                              'number': '2',
+                                              'original-location': 'roll',
+                                              'times': '0',
+                                              'type': 'breakpoint'},
+                                             {'addr': '0x00000000004006a9',
+                                              'enabled': 'y',
+                                              'file': 'three_pthreads.c',
+                                              'fullname': '/threads/three_pthreads.c',
+                                              'func': 'roll',
+                                              'line': '5',
+                                              'number': '2.1',
+                                              'thread-groups': ['i1']},
+                                             {'addr': '0x00000000004006a9',
+                                              'enabled': 'y',
+                                              'file': 'three_pthreads.c',
+                                              'fullname': '/threads/three_pthreads.c',
+                                              'func': 'roll',
+                                              'line': '5',
+                                              'number': '2.2',
+                                              'thread-groups': ['i2']},
+                                             {'addr': '<MULTIPLE>',
+                                              'disp': 'keep',
+                                              'enabled': 'y',
+                                              'number': '3',
+                                              'original-location': 'roll',
+                                              'times': '0',
+                                              'type': 'breakpoint'},
+                                             {'addr': '0x00000000004006a9',
+                                              'enabled': 'y',
+                                              'file': 'three_pthreads.c',
+                                              'fullname': '/threads/three_pthreads.c',
+                                              'func': 'roll',
+                                              'line': '5',
+                                              'number': '3.1',
+                                              'thread-groups': ['i1']},
+                                             {'addr': '0x00000000004006a9',
+                                              'enabled': 'y',
+                                              'file': 'three_pthreads.c',
+                                              'fullname': '/threads/three_pthreads.c',
+                                              'func': 'roll',
+                                              'line': '5',
+                                              'number': '3.2',
+                                              'thread-groups': ['i2']}],
+                                    'hdr': [{'alignment': '-1',
+                                             'col_name': 'number',
+                                             'colhdr': 'Num',
+                                             'width': '7'},
+                                            {'alignment': '-1',
+                                             'col_name': 'type',
+                                             'colhdr': 'Type',
+                                             'width': '14'},
+                                            {'alignment': '-1',
+                                             'col_name': 'disp',
+                                             'colhdr': 'Disp',
+                                             'width': '4'},
+                                            {'alignment': '-1',
+                                             'col_name': 'enabled',
+                                             'colhdr': 'Enb',
+                                             'width': '3'},
+                                            {'alignment': '-1',
+                                             'col_name': 'addr',
+                                             'colhdr': 'Address',
+                                             'width': '18'},
+                                            {'alignment': '2',
+                                             'col_name': 'what',
+                                             'colhdr': 'What',
+                                             'width': '40'}],
+                                    'nr_cols': '6',
+                                    'nr_rows': '3'}},
+    'token': None,
+    'type': 'Sync'}
 

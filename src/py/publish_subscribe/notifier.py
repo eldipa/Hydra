@@ -310,30 +310,11 @@ def main():
    script_home = os.path.abspath(os.path.dirname(__file__))
    parent = os.path.pardir
 
-   # TODO This shouldn't be hardcoded!
-   config_file = os.path.join(script_home, parent, parent, parent, "config", "global.cfg")
+   sys.path.append(os.path.abspath(os.path.join(script_home, "../")))
+   import globalconfig
 
-   config = ConfigParser.SafeConfigParser(
-         defaults = {
-            'name': 'notifier',
-            'pid_file': os.path.join(script_home, "notifier.pid"),
-            'foreground': "no",
-
-            'listen_queue_len': "10",
-            'wait_on_address': "localhost",
-            'wait_on_port': "5555",
-
-            'log_level': "LOG_ERR",
-            
-            'show_stats': "no",
-            'stats_file': '',
-            }
-         )
-
-   config.read([config_file])
-   if not config.has_section("notifier"):
-      config.add_section("notifier")
-
+   globalconfig.load_global_config()
+   config = globalconfig.get_global_config()
 
    syslog.openlog(config.get("notifier", "name"), logoption=syslog.LOG_PID)
    syslog.setlogmask(syslog.LOG_UPTO(getattr(syslog, config.get("notifier", "log_level"))))

@@ -6,7 +6,7 @@ class ParsingError(Exception):
       begin = (error_found_at-30) if error_found_at >= 30 else 0
       end   = (error_found_at+30)
 
-      msg = "%s. Found near:\n  %s" % (message, raw[begin:end])
+      msg = "%s. Found near:\n  %s\n%s\nOriginal message:\n  %s" % (message, raw[begin:end], " -" * 40, raw)
       Exception.__init__(self, msg)
 
 class UnexpectedToken(ParsingError):
@@ -47,7 +47,10 @@ class Result:
       return offset
 
    def as_native(self):
-      return [self.variable.as_native(), self.value.as_native()]
+      return {self.variable.as_native(): self.value.as_native()}
+
+   def as_native_key_value(self):
+      return (self.variable.as_native(), self.value.as_native())
 
    def __repr__(self):
       return str(self.variable) + " = " + _attributes_as_string(self.value)
@@ -155,7 +158,7 @@ class Tuple:
    def as_native(self):
       native = {}
       for result in self.value:
-         key, val = result.as_native()
+         key, val = result.as_native_key_value()
          if key in native:
             if isinstance(native[key], list):
                native[key].append(val)
@@ -243,7 +246,7 @@ class AsyncOutput:
    def as_native(self):
       native = {}
       for result in self.results:
-         key, val = result.as_native()
+         key, val = result.as_native_key_value()
          if key in native:
             if isinstance(native[key], list):
                native[key].append(val)
@@ -346,7 +349,7 @@ class ResultRecord:
    def as_native(self):
       native = {}
       for result in self.results:
-         key, val = result.as_native()
+         key, val = result.as_native_key_value()
          if key in native:
             if isinstance(native[key], list):
                native[key].append(val)
@@ -380,6 +383,8 @@ class Output:
       assert line[-1] == '\n'
 
       #import pdb; pdb.set_trace()        #     :)  
+      #if "BreakpointTable" in line:
+      #   import pdb; pdb.set_trace()        #     :)  
 
       #XXX the space between the string and the newline is not specified in the
       # GDB's documentation. However it's seems to be necessary.
@@ -392,6 +397,23 @@ class Output:
          out.parse(line, 0)
          return out.as_native()
 
+      # ###############
+      # Workaround: handle the GDB's bug https://sourceware.org/bugzilla/show_bug.cgi?id=14733
+      if "BreakpointTable={" in line:
+         # We remove the "bkpt=" string to trick the system and transform the body of the BreakpointTable 
+         # into an array or list of dictionaries.
+         line = line.replace("bkpt=", "")
+
+      if "^done,bkpt={" in line:
+         line = line.replace("^done,bkpt={", "^done,bkpts=[{")
+         line = line[:-1] + "]\n"
+      elif "=breakpoint-modified,bkpt={" in line:
+         line = line.replace("=breakpoint-modified,bkpt={", "=breakpoints-modified,bkpts=[{")
+         line = line[:-1] + "]\n"
+
+      #
+      ################
+              
       token = DIGITS.match(line)
       offset = 0
       if token:
@@ -409,7 +431,9 @@ class Output:
 
       offset = out.parse(line, offset)
 
-      assert len(line) == offset + 1
+      if len(line) != offset + 1:
+          raise ParsingError("Length line %i is different from the last parsed offset %i" % (len(line), offset+1),
+                  line, offset)
 
       record = out.as_native()
       record.token = token

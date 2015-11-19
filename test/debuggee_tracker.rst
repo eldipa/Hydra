@@ -1,5 +1,4 @@
-Nota: para correr estos tests la UI no debe instanciar ningun objeto DebuggeeTracker ya
-que terminara interfiriendo con los tests.
+Nota: para correr estos tests la UI y el notifier deben estar levantados.
 
 
 El objeto debugge_tracker mantiene el estado de los debuggers, threads and thread groups

@@ -21,6 +21,11 @@
 .ui-widget .ui-widget {
 	font-size: 1em;
 }
+
+.ui-widget .ui-widget .ui-button-icon-only {
+	font-size: 0.80em;
+}
+
 .ui-widget input,
 .ui-widget select,
 .ui-widget textarea,

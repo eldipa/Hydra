@@ -2,7 +2,7 @@ define(["underscore", "shortcuts", 'event_handler'], function (_, shortcuts, eve
     'use strict';
 
     var Thread = function (id, tracker, obj) {
-        this._properties = ["thread_group_id", "state", "source_fullname", "source_line",  "instruction_address"];
+        this._properties = ["debugger_id", "thread_group_id", "state", "source_fullname", "source_line",  "instruction_address"];
 
         this.update(obj);
         this.id = id;
@@ -17,6 +17,27 @@ define(["underscore", "shortcuts", 'event_handler'], function (_, shortcuts, eve
         return "Thread "+this.id+" ("+this.state+")";
     };
 
+    Thread.prototype.get_thread_group_you_belong = function () {
+        return this.tracker.get_debugger_with_id(this.debugger_id).get_thread_group_with_id(this.thread_group_id);
+    };
+
+    Thread.prototype.execute = function (command, args, callback, self_id_argument_position) {
+        args = args || [];
+        var self_id_argument = "--thread " + this.id;
+
+        if (self_id_argument_position === undefined) {
+            args.push(self_id_argument);
+        }
+        else {
+            args[self_id_argument_position] = self_id_argument;
+        }
+
+        shortcuts.gdb_request(callback || null,
+                this.debugger_id, 
+                command,
+                args
+                );
+    };
 
     return {Thread: Thread};
 });
