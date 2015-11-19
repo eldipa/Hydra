@@ -28,7 +28,7 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
 
     ThreadFollower.prototype.follow = function (thread_to_follow) {
         this.thread_followed = thread_to_follow;
-        this.fd_redirector.followPID(thread_to_follow.get_thread_group_you_belong().process_id);
+        this.fd_redirector.follow(thread_to_follow);
         this.fd_redirector.refresh();
         this.see_your_thread_and_update_yourself();
     }; 
