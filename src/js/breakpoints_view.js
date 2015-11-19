@@ -25,7 +25,7 @@ define(["underscore", "jquery", "jstree", "layout", "context_menu_for_tree_view"
                   "check_callback" : false,
                   "themes" : { "url": false, "dots": true, "name": "default-dark", "stripped": true},
                   "force_text": true,
-                  'data' : this.get_data(),
+                  'data' : this.get_data_from_tracker(),
               },
               "plugins" : ["checkbox", "state"],
               'checkbox': {
@@ -38,7 +38,7 @@ define(["underscore", "jquery", "jstree", "layout", "context_menu_for_tree_view"
 		  events: 'open_node.jstree close_node.jstree',
                   filter: function (state) {
                       if (state.checkbox) {
-                          delete state.checkbox; // remove the 'checkbox' state before restoring, we already encoded the checked/unchecked state in the get_data method (which represent the state of GDB)
+                          delete state.checkbox; // remove the 'checkbox' state before restoring, we already encoded the checked/unchecked state in the get_data_from_tracker method (which represent the state of GDB)
                       }
                       return state;
                   }
@@ -77,7 +77,7 @@ define(["underscore", "jquery", "jstree", "layout", "context_menu_for_tree_view"
 
    BreakpointsView.prototype.update_tree_data = function () {
       var self = this;
-      var data = this.get_data();
+      var data = this.get_data_from_tracker();
 
       this._loading_the_data = true;
 
@@ -114,7 +114,7 @@ define(["underscore", "jquery", "jstree", "layout", "context_menu_for_tree_view"
       }
    };
 
-   BreakpointsView.prototype.get_data = function () {
+   BreakpointsView.prototype.get_data_from_tracker = function () {
       var debuggee_tracker = this.debuggee_tracker;
       var debuggers_by_id =  debuggee_tracker.get_all_debuggers();
 
