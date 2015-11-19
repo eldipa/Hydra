@@ -51,7 +51,8 @@ define([ 'jquery', 'layout', 'shortcuts', 'springy', 'springyui' ],
 						continue;
 					
 					var newNode = this.graph.newNode({
-						label : fdInfo["NAME"]
+						label : "FD: " + fdInfo["FD"] + " " + "NAME: " + fdInfo["NAME"],
+						info : fdInfo
 					});
 					
 					this.nodes.push(newNode);
@@ -64,11 +65,6 @@ define([ 'jquery', 'layout', 'shortcuts', 'springy', 'springyui' ],
 					if( mode == "r" || mode == "u" )
 						this.graph.newEdge(newNode, pidNode);
 				}
-				
-				
-				this._$container.springy({
-					graph : this.graph
-				});
 				
 			}
 			
