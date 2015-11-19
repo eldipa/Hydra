@@ -92,7 +92,7 @@ define(["underscore", "jquery", "jstree", "layout", "context_menu_for_tree_view"
                 text: debugger_obj.get_display_name(),
                 data: {debugger_id: debugger_obj.id},
                 icon: false,
-                id: [debugger_obj.id].join("/"),
+                id: [debugger_obj.id].join("_"),
                 children: _.map(thread_groups_by_id,
                        function (thread_group) {
                           
@@ -101,7 +101,7 @@ define(["underscore", "jquery", "jstree", "layout", "context_menu_for_tree_view"
                               text: thread_group.get_display_name(),
                               data: {debugger_id: debugger_obj.id, thread_group_id: thread_group.id},
                               icon: 'fa fa-bug',
-                              id: [debugger_obj.id, thread_group.id].join("/"),
+                              id: [debugger_obj.id, thread_group.id].join("_"),
                               children: _.map(thread_group.your_threads_by_id(),
                                   function (thread) {
 
@@ -109,7 +109,7 @@ define(["underscore", "jquery", "jstree", "layout", "context_menu_for_tree_view"
                                      return {
                                          text: thread.get_display_name(),
                                          data: {debugger_id: debugger_obj.id, thread_group_id: thread_group.id, thread_id: thread.id},
-                                         id: [debugger_obj.id, thread_group.id, thread.id].join("/")
+                                         id: [debugger_obj.id, thread_group.id, thread.id].join("_")
                                      };
                                   }, this)
                              };

@@ -130,14 +130,14 @@ define(["underscore", "jquery", "jstree", "layout", "context_menu_for_tree_view"
                         text: debugger_obj.get_display_name(),
                         data: {debugger_id: debugger_obj.id},
                         icon: false,
-                        id: [debugger_obj.id].join("/"),
+                        id: [debugger_obj.id].join("_"),
                         children: _.map(main_breakpoints,
                             function (main_breakpoint) {
 
                                 var node_for_breakpoint = {
                                     text: main_breakpoint.get_display_name(),
                                     icon: false,
-                                    id: [debugger_obj.id, main_breakpoint.id].join("/"),
+                                    id: [debugger_obj.id, main_breakpoint.id].join("_"),
                                     data: {debugger_id: debugger_obj.id, breakpoint_id: main_breakpoint.id},
                                 };
 
@@ -154,7 +154,7 @@ define(["underscore", "jquery", "jstree", "layout", "context_menu_for_tree_view"
                                                     text: subbreakpoint.get_display_name(),
                                                     state: { 'checked' : main_breakpoint.is_enabled && subbreakpoint.is_enabled },
                                                     icon: false,
-                                                    id: [debugger_obj.id, main_breakpoint.id, subbreakpoint.id].join("/"),
+                                                    id: [debugger_obj.id, main_breakpoint.id, subbreakpoint.id].join("_"),
                                                     data: {debugger_id: debugger_obj.id, breakpoint_id: subbreakpoint.id},
                                                 };
 
