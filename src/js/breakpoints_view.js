@@ -81,7 +81,6 @@ define(["underscore", "jquery", "jstree", "layout", "context_menu_for_tree_view"
       this._loading_the_data = true;
 
       $(this._$container).jstree(true).settings.core.data = data;
-      $(this._$container).jstree(true).refresh();
       $(this._$container).jstree(true).load_node('#', function (x, is_loaded) {
           if (is_loaded) {
               self._loading_the_data = false;

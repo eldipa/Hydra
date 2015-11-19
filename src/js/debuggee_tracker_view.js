@@ -1,4 +1,4 @@
-define(["underscore", "jquery", "jstree", "layout", "context_menu_for_tree_view"], function (_, $, jstree, layout, context_menu_for_tree_view_module) {
+define(["underscore", "jquery", "jstree", "layout", "context_menu_for_tree_view", "shortcuts"], function (_, $, jstree, layout, context_menu_for_tree_view_module, shortcuts) {
    'use strict';
 
    var DebuggeeTrackerView = function (debuggee_tracker, thread_follower) {  //TODO thread_follower is a hack
@@ -30,6 +30,11 @@ define(["underscore", "jquery", "jstree", "layout", "context_menu_for_tree_view"
               "force_text": true,
               'data' : this.get_data(),
             },
+            "plugins" : ["state"],
+            'state' : {
+                "key": shortcuts.randint().toString(),
+                events: 'open_node.jstree close_node.jstree',
+            }
           }
       );
 
@@ -44,10 +49,16 @@ define(["underscore", "jquery", "jstree", "layout", "context_menu_for_tree_view"
    };
 
    DebuggeeTrackerView.prototype.update_tree_data = function () {
+      var self = this;
+
       var data = this.get_data();
       $(this._$container).jstree(true).settings.core.data = data;
-      $(this._$container).jstree(true).refresh();
-      
+      $(this._$container).jstree(true).load_node('#', function (x, is_loaded) {
+          if (is_loaded) {
+              $(self._$container).jstree(true).restore_state();
+          }
+      });
+
       if (!this._$out_of_dom) {
          this.repaint($(this.box));
       }
@@ -77,26 +88,33 @@ define(["underscore", "jquery", "jstree", "layout", "context_menu_for_tree_view"
             var thread_groups_by_id = debugger_obj.your_thread_groups_by_id();
 
             // first level
-            return {text: debugger_obj.get_display_name(),
-                    data: {debugger_id: debugger_obj.id},
-                    icon: false,
-                    children: _.map(thread_groups_by_id,
-                           function (thread_group) {
-                              
-                              // second level          
-                              return {text: thread_group.get_display_name(),
-                                      data: {debugger_id: debugger_obj.id, thread_group_id: thread_group.id},
-                                      icon: 'fa fa-bug',
-                                      children: _.map(thread_group.your_threads_by_id(),
-                                          function (thread) {
+            return {
+                text: debugger_obj.get_display_name(),
+                data: {debugger_id: debugger_obj.id},
+                icon: false,
+                id: [debugger_obj.id].join("/"),
+                children: _.map(thread_groups_by_id,
+                       function (thread_group) {
+                          
+                          // second level          
+                          return {
+                              text: thread_group.get_display_name(),
+                              data: {debugger_id: debugger_obj.id, thread_group_id: thread_group.id},
+                              icon: 'fa fa-bug',
+                              id: [debugger_obj.id, thread_group.id].join("/"),
+                              children: _.map(thread_group.your_threads_by_id(),
+                                  function (thread) {
 
-                                             // third level
-                                             return {text: thread.get_display_name(),
-                                                     data: {debugger_id: debugger_obj.id, thread_group_id: thread_group.id, thread_id: thread.id}};
-                                          }, this)
+                                     // third level
+                                     return {
+                                         text: thread.get_display_name(),
+                                         data: {debugger_id: debugger_obj.id, thread_group_id: thread_group.id, thread_id: thread.id},
+                                         id: [debugger_obj.id, thread_group.id, thread.id].join("/")
                                      };
-                           }, this)
-                   };
+                                  }, this)
+                             };
+                       }, this)
+               };
          }, this);
 
       return tree_data;
