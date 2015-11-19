@@ -70,6 +70,7 @@ define(['event_handler'], function (event_handler) {
    return {
       gdb_request: gdb_request,
       _update_properties: _update_properties,
-      get_filename_from_fullname: get_filename_from_fullname
+      get_filename_from_fullname: get_filename_from_fullname,
+      randint: randint
    };
 });

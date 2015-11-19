@@ -1,4 +1,4 @@
-define(["underscore", "jquery", "jstree", "layout", "context_menu_for_tree_view", "snippet"], function (_, $, jstree, layout, context_menu_for_tree_view_module, snippet) {
+define(["underscore", "jquery", "jstree", "layout", "context_menu_for_tree_view", "snippet", "shortcuts"], function (_, $, jstree, layout, context_menu_for_tree_view_module, snippet, shortcuts) {
    'use strict';
     
    var BreakpointsView = function (debuggee_tracker) {
@@ -26,11 +26,21 @@ define(["underscore", "jquery", "jstree", "layout", "context_menu_for_tree_view"
                   "force_text": true,
                   'data' : this.get_data(),
               },
-              "plugins" : ["checkbox"],
+              "plugins" : ["checkbox", "state"],
               'checkbox': {
                   "whole_node": false,
                   "keep_selected_style": false,
                   "tie_selection": false, // <=== XXX HIGHLY EXPERIMENTAL XXX
+              },
+              'state' : {
+                  "key": shortcuts.randint().toString(),
+		  events: 'open_node.jstree close_node.jstree',
+                  filter: function (state) {
+                      if (state.checkbox) {
+                          delete state.checkbox; // remove the 'checkbox' state before restoring, we already encoded the checked/unchecked state in the get_data method (which represent the state of GDB)
+                      }
+                      return state;
+                  }
               }
           }
       );
@@ -75,6 +85,7 @@ define(["underscore", "jquery", "jstree", "layout", "context_menu_for_tree_view"
       $(this._$container).jstree(true).load_node('#', function (x, is_loaded) {
           if (is_loaded) {
               self._loading_the_data = false;
+              $(self._$container).jstree(true).restore_state();
           }
       });
 
@@ -120,12 +131,14 @@ define(["underscore", "jquery", "jstree", "layout", "context_menu_for_tree_view"
                         text: debugger_obj.get_display_name(),
                         data: {debugger_id: debugger_obj.id},
                         icon: false,
+                        id: [debugger_obj.id].join("/"),
                         children: _.map(main_breakpoints,
                             function (main_breakpoint) {
 
                                 var node_for_breakpoint = {
                                     text: main_breakpoint.get_display_name(),
                                     icon: false,
+                                    id: [debugger_obj.id, main_breakpoint.id].join("/"),
                                     data: {debugger_id: debugger_obj.id, breakpoint_id: main_breakpoint.id},
                                 };
 
@@ -142,6 +155,7 @@ define(["underscore", "jquery", "jstree", "layout", "context_menu_for_tree_view"
                                                     text: subbreakpoint.get_display_name(),
                                                     state: { 'checked' : main_breakpoint.is_enabled && subbreakpoint.is_enabled },
                                                     icon: false,
+                                                    id: [debugger_obj.id, main_breakpoint.id, subbreakpoint.id].join("/"),
                                                     data: {debugger_id: debugger_obj.id, breakpoint_id: subbreakpoint.id},
                                                 };
 
