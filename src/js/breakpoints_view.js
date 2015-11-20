@@ -3,9 +3,7 @@ define(["underscore", "jquery", "jstree", "layout", "context_menu_for_tree_view"
     
    var BreakpointsView = function (debuggee_tracker) {
       this.super("BreakpointsView");
-
-      this._$container = $('<div style="height: 100%; width: 100%"></div>');
-      this._$out_of_dom = this._$container;
+      this.build_and_initialize_panel_container('<div style="height: 100%; width: 100%"></div>');
       
       this.debuggee_tracker = debuggee_tracker;
       this.debuggee_tracker.add_observer(this);
