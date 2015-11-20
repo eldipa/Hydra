@@ -4,6 +4,7 @@ define(['layout/panel', 'layout/tabbed', 'layout/root', 'layout/splitted', 'layo
       Panel: panel.Panel,
       Tabbed: tabbed.Tabbed,
       as_tree: panel.as_tree,
-      Stacked: stacked.Stacked
+      Stacked: stacked.Stacked,
+      implement_render_and_unlink_methods: panel.implement_render_and_unlink_methods
    };
 });

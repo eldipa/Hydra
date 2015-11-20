@@ -89,7 +89,7 @@ define(["underscore", "jquery", "jstree", "layout", "context_menu_for_tree_view"
           }
       });
 
-      if (!this._$out_of_dom) {
+      if (this.is_in_the_dom()) {
          this.repaint($(this.box));
       }
    };
@@ -99,20 +99,7 @@ define(["underscore", "jquery", "jstree", "layout", "context_menu_for_tree_view"
    };
    
    BreakpointsView.prototype.__proto__ = layout.Panel.prototype;
-
-   BreakpointsView.prototype.render = function() {
-      if (this._$out_of_dom) {
-         this._$out_of_dom.appendTo(this.box);
-         this._$out_of_dom = null;
-      }
-      
-   };
-
-   BreakpointsView.prototype.unlink = function() {
-      if (!this.$out_of_dom) {
-         this.$out_of_dom = this._$container.detach();
-      }
-   };
+   layout.implement_render_and_unlink_methods(BreakpointsView.prototype);
 
    BreakpointsView.prototype.get_data_from_tracker = function () {
       var debuggee_tracker = this.debuggee_tracker;

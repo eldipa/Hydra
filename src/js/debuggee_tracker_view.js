@@ -3,11 +3,9 @@ define(["underscore", "jquery", "jstree", "layout", "context_menu_for_tree_view"
 
    var DebuggeeTrackerView = function (debuggee_tracker, thread_follower) {  //TODO thread_follower is a hack
       this.super("DebuggeeTrackerView");
+      this.build_and_initialize_panel_container('<div style="height: 100%; width: 100%"></div>');
 
       this.thread_follower = thread_follower;
-
-      this._$container = $('<div style="height: 100%; width: 100%"></div>');
-      this._$out_of_dom = this._$container;
 
       this.debuggee_tracker = debuggee_tracker;
       this.debuggee_tracker.add_observer(this);
@@ -44,6 +42,7 @@ define(["underscore", "jquery", "jstree", "layout", "context_menu_for_tree_view"
    };
 
    DebuggeeTrackerView.prototype.__proto__ = layout.Panel.prototype;
+   layout.implement_render_and_unlink_methods(DebuggeeTrackerView.prototype);
 
    DebuggeeTrackerView.prototype.update = function (data, topic, tracker) {
       this.update_tree_data_debounced();
@@ -60,25 +59,10 @@ define(["underscore", "jquery", "jstree", "layout", "context_menu_for_tree_view"
           }
       });
 
-      if (!this._$out_of_dom) {
+      if (this.is_in_the_dom()) {
          this.repaint($(this.box));
       }
    };
-
-   DebuggeeTrackerView.prototype.render = function() {
-      if (this._$out_of_dom) {
-         this._$out_of_dom.appendTo(this.box);
-         this._$out_of_dom = null;
-      }
-      
-   };
-
-   DebuggeeTrackerView.prototype.unlink = function() {
-      if (!this.$out_of_dom) {
-         this.$out_of_dom = this._$container.detach();
-      }
-   };
-
 
    DebuggeeTrackerView.prototype.get_data = function () {
       var debuggee_tracker = this.debuggee_tracker;
