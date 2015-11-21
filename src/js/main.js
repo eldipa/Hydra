@@ -69,7 +69,7 @@ requirejs(['ui', 'code_view', 'jquery', 'export_console', 'layout', 'layout_exam
           fadeSpeed: 100,
           above: 'auto',
           preventDoubleContext: true,
-          compress: false
+          compress: true
    });
 
    // Create a dynamic context menu. On click, this will travel the DOM from the clicked
