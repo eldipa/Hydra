@@ -12,6 +12,17 @@ define(["underscore", "jquery", "jstree", "layout", "context_menu_for_tree_view"
 
       this.update_tree_data_debounced = _.debounce(_.bind(this.update_tree_data, this), 500);
 
+      this.build_tree();
+   };
+
+   DebuggeeTrackerView.prototype.__proto__ = layout.Panel.prototype;
+   layout.implement_render_and_unlink_methods(DebuggeeTrackerView.prototype);
+
+   DebuggeeTrackerView.prototype.update = function (data, topic, tracker) {
+      this.update_tree_data_debounced();
+   };
+
+   DebuggeeTrackerView.prototype.build_tree = function () {
       this._jstree_key = shortcuts.randint().toString();
       var results = context_menu_for_tree_view_module.build_jstree_with_a_context_menu(this._$container, [
               this._get_ctxmenu_for_debuggee_tracker(),
@@ -27,7 +38,7 @@ define(["underscore", "jquery", "jstree", "layout", "context_menu_for_tree_view"
               "check_callback" : false,
               "themes" : { "url": false, "dots": true, "name": "default-dark", "stripped": true},
               "force_text": true,
-              'data' : this.get_data(),
+              'data' : this.get_data_from_tracker(),
             },
             "plugins" : ["state"],
             'state' : {
@@ -38,20 +49,12 @@ define(["underscore", "jquery", "jstree", "layout", "context_menu_for_tree_view"
       );
 
       this._get_data_from_selected = results.getter_for_data_from_selected;
-
-   };
-
-   DebuggeeTrackerView.prototype.__proto__ = layout.Panel.prototype;
-   layout.implement_render_and_unlink_methods(DebuggeeTrackerView.prototype);
-
-   DebuggeeTrackerView.prototype.update = function (data, topic, tracker) {
-      this.update_tree_data_debounced();
    };
 
    DebuggeeTrackerView.prototype.update_tree_data = function () {
       var self = this;
 
-      var data = this.get_data();
+      var data = this.get_data_from_tracker();
       $(this._$container).jstree(true).settings.core.data = data;
       $(this._$container).jstree(true).load_node('#', function (x, is_loaded) {
           if (is_loaded) {
@@ -64,7 +67,7 @@ define(["underscore", "jquery", "jstree", "layout", "context_menu_for_tree_view"
       }
    };
 
-   DebuggeeTrackerView.prototype.get_data = function () {
+   DebuggeeTrackerView.prototype.get_data_from_tracker = function () {
       var debuggee_tracker = this.debuggee_tracker;
       var debuggers_by_id =  debuggee_tracker.get_all_debuggers();
 

@@ -8,6 +8,38 @@ define(["underscore", "jquery", "jstree", "layout", "context_menu_for_tree_view"
       this.debuggee_tracker = debuggee_tracker;
       this.debuggee_tracker.add_observer(this);
 
+      this.build_tree();
+
+      this.update_tree_data_debounced = _.debounce(_.bind(this.update_tree_data, this), 500);
+   };
+
+   BreakpointsView.prototype.update_tree_data = function () {
+      var self = this;
+      var data = this.get_data_from_tracker();
+
+      this._loading_the_data = true;
+
+      $(this._$container).jstree(true).settings.core.data = data;
+      $(this._$container).jstree(true).load_node('#', function (x, is_loaded) {
+          if (is_loaded) {
+              self._loading_the_data = false;
+              $(self._$container).jstree(true).restore_state();
+          }
+      });
+
+      if (this.is_in_the_dom()) {
+         this.repaint($(this.box));
+      }
+   };
+   
+   BreakpointsView.prototype.update = function (data, topic, tracker) {
+      this.update_tree_data_debounced();
+   };
+   
+   BreakpointsView.prototype.__proto__ = layout.Panel.prototype;
+   layout.implement_render_and_unlink_methods(BreakpointsView.prototype);
+
+   BreakpointsView.prototype.build_tree = function () {
       this._jstree_key = shortcuts.randint().toString();
       var results = context_menu_for_tree_view_module.build_jstree_with_a_context_menu(this._$container, [
             null,
@@ -46,14 +78,16 @@ define(["underscore", "jquery", "jstree", "layout", "context_menu_for_tree_view"
 
       this._get_data_from_selected = results.getter_for_data_from_selected;
 
+      this.add_handlers_for_enabling_breakpoint_from_node_checkbox();
+   };
 
-      var bounded_change_handler_for = _.bind(this.change_breakpoint_state_handler_for, this);
-      var bounded_change_handler_for_enable_bkpt = _.partial(bounded_change_handler_for, true);
-      var bounded_change_handler_for_disable_bkpt = _.partial(bounded_change_handler_for, false);
+   BreakpointsView.prototype.add_handlers_for_enabling_breakpoint_from_node_checkbox = function () {
+      var bounded_on_change_node_state_handler_for = _.bind(this.change_breakpoint_state_handler_for, this);
+      var bounded_on_change_node_state_for_enable_bkpt = _.partial(bounded_on_change_node_state_handler_for, true);
+      var bounded_on_change_node_state_for_disable_bkpt = _.partial(bounded_on_change_node_state_handler_for, false);
 
       var self = this;
-
-      this._$container.on("uncheck_node.jstree", bounded_change_handler_for_disable_bkpt).on("check_node.jstree", bounded_change_handler_for_enable_bkpt);
+      this._$container.on("uncheck_node.jstree", bounded_on_change_node_state_for_disable_bkpt).on("check_node.jstree", bounded_on_change_node_state_for_enable_bkpt);
       this._$container.on("after_open.jstree", function (ev, node) {
           var node_in_dom = $("#"+node.node.id);
           node_in_dom.find('a[code_resolved]').each(function (index, anchor) {
@@ -69,35 +103,7 @@ define(["underscore", "jquery", "jstree", "layout", "context_menu_for_tree_view"
               s.appendTo(anchor);
           });
       });
-
-      this.update_tree_data_debounced = _.debounce(_.bind(this.update_tree_data, this), 500);
    };
-
-   BreakpointsView.prototype.update_tree_data = function () {
-      var self = this;
-      var data = this.get_data_from_tracker();
-
-      this._loading_the_data = true;
-
-      $(this._$container).jstree(true).settings.core.data = data;
-      $(this._$container).jstree(true).load_node('#', function (x, is_loaded) {
-          if (is_loaded) {
-              self._loading_the_data = false;
-              $(self._$container).jstree(true).restore_state();
-          }
-      });
-
-      if (this.is_in_the_dom()) {
-         this.repaint($(this.box));
-      }
-   };
-   
-   BreakpointsView.prototype.update = function (data, topic, tracker) {
-      this.update_tree_data_debounced();
-   };
-   
-   BreakpointsView.prototype.__proto__ = layout.Panel.prototype;
-   layout.implement_render_and_unlink_methods(BreakpointsView.prototype);
 
    BreakpointsView.prototype.get_data_from_tracker = function () {
       var debuggee_tracker = this.debuggee_tracker;
