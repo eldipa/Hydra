@@ -33,8 +33,8 @@ jQuery.fn.springy = function(params) {
 	var edgeFont = "8px Verdana, sans-serif";
 	var stiffness = params.stiffness || 400.0;
 	var repulsion = params.repulsion || 400.0;
-	var damping = params.damping || 0.5;
-	var minEnergyThreshold = params.minEnergyThreshold || 0.00001;
+	var damping = params.damping || 0.1;
+	var minEnergyThreshold = params.minEnergyThreshold || 0.1;
 	var nodeSelected = params.nodeSelected || null;
 	var nodeImages = {};
 	var edgeLabelsUpright = true;
@@ -117,9 +117,10 @@ jQuery.fn.springy = function(params) {
 		if (dragged !== null && dragged.node !== null) {
 			dragged.point.p.x = p.x;
 			dragged.point.p.y = p.y;
+			renderer.start();
 		}
 
-		renderer.start();
+		
 	});
 
 	jQuery(window).bind('mouseup',function(e) {
