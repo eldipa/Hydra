@@ -124,13 +124,19 @@ define([ 'jquery', 'layout', 'shortcuts', 'springy', 'springyui', 'event_handler
 
         for (fd in DataOfFD) {
             fdInfo = DataOfFD[fd];
+            var image = undefined;
 
             if (ignorar.indexOf(fdInfo["TYPE"]) != -1)
                 continue;
+            
+            
+            if (fdInfo["FD"].charAt(0) == 0 || fdInfo["FD"].charAt(0) == 1)
+                image = {src : "./IN_AND_OUT.png", width: 120, height: 32} ;
 
             var newNode = this.graph.newNode({
                 label : "FD: " + fdInfo["FD"] + " " + "NAME: " + fdInfo["NAME"],
-                info : fdInfo
+                info : fdInfo,
+                image : image
             });
 
             this.nodes.push(newNode);
