@@ -17,6 +17,7 @@ define([ 'jquery', 'layout', 'shortcuts', 'springy', 'springyui', 'event_handler
 
         this.pid = 0;
         this.debugger_id = 0;
+        this.thread = null;
 
         var my_self = this;
 
@@ -64,17 +65,15 @@ define([ 'jquery', 'layout', 'shortcuts', 'springy', 'springyui', 'event_handler
                                 // Vero el modo de apertura del
                                 // archivo
                                 var modos_posibles = {
-                                    "r" : 0,
-                                    "w" : 1,
-                                    "u" : 2
+                                    "r" : "0",
+                                    "w" : "1",
+                                    "u" : "2"
                                 };
                                 var modo = modos_posibles[my_self.selectedNodeInfo["FD"].slice(-1)];
 
-                                console.log(fd);
-                                console.log(modo);
+                                
                                 if (file_path) {
-                                    console.log(file_path);
-                                    shortcuts.gdb_request(my_self.refresh, this.debugger_id,
+                                    shortcuts.gdb_request(null, my_self.debugger_id,
                                             "gdb-module-stdfd-redirect-redirect_target_to_destine_file", [ fd,
                                                     file_path, modo ]);
                                 } else {
@@ -85,7 +84,17 @@ define([ 'jquery', 'layout', 'shortcuts', 'springy', 'springyui', 'event_handler
                         }
                     }
 
-                } ];
+                },
+                {
+                    text : "Enable Plugin",
+                    action : function(e) {
+                        e.preventDefault();
+//                        my_self.thread.execute("python import gdb_module_loader; gdb_module_loader.get_module_loader().load('stdioRedirect')");
+//                        my_self.thread.execute("gdb-module-stdfd-redirect-activate");
+                        shortcuts.gdb_request(null, my_self.debugger_id, "python import gdb_module_loader; gdb_module_loader.get_module_loader().load('stdioRedirect')", []);
+                        shortcuts.gdb_request(null, my_self.debugger_id, "gdb-module-stdfd-redirect-activate", []);
+                    }
+                }];
 
         this._$container.data('ctxmenu_controller', menu_description);
 
@@ -95,6 +104,7 @@ define([ 'jquery', 'layout', 'shortcuts', 'springy', 'springyui', 'event_handler
     FD_Redirector.prototype.follow = function(thread) {
         this.pid = thread.get_thread_group_you_belong().process_id;
         this.debugger_id = thread.get_thread_group_you_belong().debugger_id;
+        this.thread = thread;
     }
 
     FD_Redirector.prototype.refreshGraph = function(DataOfFD) {
