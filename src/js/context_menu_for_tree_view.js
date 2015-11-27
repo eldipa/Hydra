@@ -1,14 +1,15 @@
 define(["underscore", "jquery"], function (_, $) {
-    var attach_context_menues_for_each_layer = function ($tree_container, menu_descriptions) {
+    var attach_context_menues_and_observable_gettersfor_each_layer = function ($tree_container, getters_of_observables) {
         var $current_layer = $tree_container;
 
-        _.each(menu_descriptions, function (context_menu_description) {
-            if (context_menu_description) {
-                $current_layer.data('ctxmenu_controller', context_menu_description);
+        _.each(getters_of_observables, function (getter) {
+            if (getter) {
+                $current_layer.data('observable_getter', getter);
             }
 
             $current_layer = $current_layer.children('ul').children('li');
         });
+
     };
 
     var create_immediate_action_to_hack_jstree = function ($tree_container) {
@@ -24,21 +25,6 @@ define(["underscore", "jquery"], function (_, $) {
         };
     };
 
-    var enhance_menu_descriptions_to_hack_jstree_inplace = function ($tree_container, menu_descriptions) {
-        var immediate_action_to_hack_jstree = create_immediate_action_to_hack_jstree($tree_container);
-        _.each(menu_descriptions, function (context_menu_description, index) {
-            if (!context_menu_description) {
-                return;
-            }
-
-            if (index !== 0) {
-                context_menu_description.unshift({
-                    immediate_action: immediate_action_to_hack_jstree
-                });
-            }
-        });
-    };
-    
     var build_getter_for_data_from_selected = function ($tree_container) {
         return function () {
             var nodes_selected = $tree_container.jstree('get_selected');
@@ -49,19 +35,19 @@ define(["underscore", "jquery"], function (_, $) {
         };
     };
 
-    var build_jstree_with_a_context_menu = function ($tree_container, menu_descriptions, jstree_options, after_open_callback, redraw_callback) {
-        enhance_menu_descriptions_to_hack_jstree_inplace($tree_container, menu_descriptions);
+    var build_jstree_with_a_context_menu = function ($tree_container, getters_of_observables, jstree_options, after_open_callback, redraw_callback) {
+        var immediate_action_to_hack_jstree = create_immediate_action_to_hack_jstree($tree_container);
         
-        var bounded_constructor  = _.bind(attach_context_menues_for_each_layer, this, $tree_container, menu_descriptions);
-        var _attach_ctxmenu_safe = _.throttle(bounded_constructor, 500);
+        var bounded_constructor  = _.bind(attach_context_menues_and_observable_gettersfor_each_layer, this, $tree_container, getters_of_observables);
+        var _attach_safe = _.throttle(bounded_constructor, 500);
 
         $tree_container.on("after_open.jstree", function () {
-              _attach_ctxmenu_safe();
+              _attach_safe();
               if (after_open_callback) {
                   after_open_callback();
               }
            }).on("redraw.jstree", function () {
-              _attach_ctxmenu_safe();
+              _attach_safe();
               if (redraw_callback) {
                   redraw_callback();
               }
@@ -69,6 +55,7 @@ define(["underscore", "jquery"], function (_, $) {
 
         return {
             getter_for_data_from_selected: build_getter_for_data_from_selected($tree_container),
+            immediate_action_to_hack_jstree: immediate_action_to_hack_jstree
         };
     };
 

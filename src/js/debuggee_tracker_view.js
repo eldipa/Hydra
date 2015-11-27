@@ -23,13 +23,39 @@ define(["underscore", "jquery", "jstree", "layout", "context_menu_for_tree_view"
    };
 
    DebuggeeTrackerView.prototype.build_tree = function () {
+      var self = this;
+
       this._jstree_key = shortcuts.randint().toString();
       var results = context_menu_for_tree_view_module.build_jstree_with_a_context_menu(this._$container, [
-              this._get_ctxmenu_for_debuggee_tracker(),
-              this._get_ctxmenu_for_debuggers(),
-              this._get_ctxmenu_for_thread_groups(),
-              this._get_ctxmenu_for_threads()
-          ], 
+            function (e, elem_owner) {
+                return {observable: self, context: self};
+            },
+            function (e, elem_owner) {
+                self._immediate_action_to_hack_jstree(e, elem_owner);
+                var debugger_id =  self._get_data_from_selected().debugger_id;
+                var debugger_obj = self.debuggee_tracker.get_debugger_with_id(debugger_id);
+                return {observable: debugger_obj, context: self};
+            },
+            function (e, elem_owner) {
+                self._immediate_action_to_hack_jstree(e, elem_owner);
+                var ids = self._get_data_from_selected();
+                var debugger_id = ids['debugger_id'];
+                var thread_group_id = ids['thread_group_id'];
+
+                var thread_group = self.debuggee_tracker.get_debugger_with_id(debugger_id).get_thread_group_with_id(thread_group_id);
+                return {observable: thread_group, context: self};
+            },
+            function (e, elem_owner) {
+                self._immediate_action_to_hack_jstree(e, elem_owner);
+                var ids = self._get_data_from_selected();
+                var debugger_id = ids['debugger_id'];
+                var thread_group_id = ids['thread_group_id'];
+                var thread_id = ids['thread_id'];
+
+                var thread = self.debuggee_tracker.get_debugger_with_id(debugger_id).get_thread_group_with_id(thread_group_id).get_thread_with_id(thread_id);
+                return {observable: thread, context: self};
+            }
+          ],
           {
             'core' : {
               "animation" : false,
@@ -49,6 +75,7 @@ define(["underscore", "jquery", "jstree", "layout", "context_menu_for_tree_view"
       );
 
       this._get_data_from_selected = results.getter_for_data_from_selected;
+      this._immediate_action_to_hack_jstree = results.immediate_action_to_hack_jstree;
    };
 
    DebuggeeTrackerView.prototype.update_tree_data = function () {
@@ -108,95 +135,13 @@ define(["underscore", "jquery", "jstree", "layout", "context_menu_for_tree_view"
       return tree_data;
    };
 
-   DebuggeeTrackerView.prototype._get_ctxmenu_for_debuggee_tracker = function () {
+   DebuggeeTrackerView.prototype.get_display_controller = function () {
       var self = this;
       return [{
                text: 'Add debugger',
                action: function (e) {
                   e.preventDefault();
                   self.debuggee_tracker.add_debugger();
-               },
-              }];
-   };
-
-   DebuggeeTrackerView.prototype._get_ctxmenu_for_debuggers = function () {
-      var self = this;
-      return [{
-               text: 'Kill debugger',
-               action: function (e) {
-                  e.preventDefault();
-                  var debugger_id = self._get_data_from_selected().debugger_id;
-                  var debugger_obj = self.debuggee_tracker.get_debugger_with_id(debugger_id);
-                  debugger_obj.kill();
-               },
-              },{
-               text: 'Add thread group',
-               action: function (e) {
-                  e.preventDefault();
-                  var debugger_id = self._get_data_from_selected().debugger_id;
-                  var debugger_obj = self.debuggee_tracker.get_debugger_with_id(debugger_id);
-                  debugger_obj.add_thread_group();
-               },
-              }];
-   };
-
-   DebuggeeTrackerView.prototype._get_ctxmenu_for_thread_groups = function () {
-      var self = this;
-      return [{
-               text: 'Remove thread group',
-               action: function (e) {
-                  e.preventDefault();
-                  var ids = self._get_data_from_selected();
-                  var debugger_id = ids['debugger_id'];
-                  var thread_group_id = ids['thread_group_id'];
-
-                  var thread_group = self.debuggee_tracker.get_debugger_with_id(debugger_id).get_thread_group_with_id(thread_group_id);
-                  thread_group.remove();
-               },
-              },{
-               text: 'Load sources', //TODO attach (and others)
-               action: function (e) {
-                  e.preventDefault();
-                  var ids = self._get_data_from_selected();
-                  var debugger_id = ids['debugger_id'];
-                  var thread_group_id = ids['thread_group_id'];
-
-                  var thread_group = self.debuggee_tracker.get_debugger_with_id(debugger_id).get_thread_group_with_id(thread_group_id);
-
-                  var input_file_dom = $('<input style="display:none;" type="file" />');
-                  input_file_dom.change(function(evt) {
-                      var file_exec_path = "" + $(this).val();
-                      if (file_exec_path) {
-                          thread_group.load_file_exec_and_symbols(file_exec_path);
-
-                          // TODO XXX XXX  HACK, run the process
-                          var debugger_obj = self.debuggee_tracker.get_debugger_with_id(debugger_id);
-                          debugger_obj.execute("-break-insert", ["-t", "main"]); // TODO restrict this breakpoint to the threa group 
-                          thread_group.execute("-exec-run");
-                      }
-                      else {
-                          console.log("Loading nothing");
-                      }
-                  });
-                  input_file_dom.trigger('click');
-               },
-              }];
-   };
-
-   DebuggeeTrackerView.prototype._get_ctxmenu_for_threads = function () {
-      var self = this;
-      return [{
-               text: 'Follow',
-               action: function (e) {
-                  e.preventDefault();
-                  var ids = self._get_data_from_selected();
-                  var debugger_id = ids['debugger_id'];
-                  var thread_group_id = ids['thread_group_id'];
-                  var thread_id = ids['thread_id'];
-
-                  var thread = self.debuggee_tracker.get_debugger_with_id(debugger_id).get_thread_group_with_id(thread_group_id).get_thread_with_id(thread_id);
-
-                  self.thread_follower.follow(thread);
                },
               }];
    };

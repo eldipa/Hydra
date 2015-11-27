@@ -40,12 +40,39 @@ define(["underscore", "jquery", "jstree", "layout", "context_menu_for_tree_view"
    layout.implement_render_and_unlink_methods(BreakpointsView.prototype);
 
    BreakpointsView.prototype.build_tree = function () {
+      var self = this;
+
       this._jstree_key = shortcuts.randint().toString();
       var results = context_menu_for_tree_view_module.build_jstree_with_a_context_menu(this._$container, [
             null,
-            this._get_ctxmenu_for_debuggers(),
-            this._get_ctxmenu_for_main_breakpoints(),
-            this._get_ctxmenu_for_sub_breakpoints()
+            function (e, elem_owner) {
+                self._immediate_action_to_hack_jstree(e, elem_owner);
+                var debugger_id =  self._get_data_from_selected().debugger_id;
+                var debugger_obj = self.debuggee_tracker.get_debugger_with_id(debugger_id);
+                return {observable: debugger_obj, context: self};
+            },
+            function (e, elem_owner) {
+                self._immediate_action_to_hack_jstree(e, elem_owner);
+                var data = self._get_data_from_selected();
+
+                var debugger_id   = data.debugger_id;
+                var breakpoint_id = data.breakpoint_id;
+                
+                var debugger_obj = self.debuggee_tracker.get_debugger_with_id(debugger_id);
+                var breakpoint = debugger_obj.get_breakpoint_with_id(breakpoint_id);
+                return {observable: breakpoint, context: self};
+            },
+            function (e, elem_owner) {
+                self._immediate_action_to_hack_jstree(e, elem_owner);
+                var data = self._get_data_from_selected();
+
+                var debugger_id   = data.debugger_id;
+                var breakpoint_id = data.breakpoint_id;
+                
+                var debugger_obj = self.debuggee_tracker.get_debugger_with_id(debugger_id);
+                var breakpoint = debugger_obj.get_breakpoint_with_id(breakpoint_id);
+                return {observable: breakpoint, context: self};
+            }
           ],
           {
               'core' : {
@@ -76,7 +103,12 @@ define(["underscore", "jquery", "jstree", "layout", "context_menu_for_tree_view"
           }
       );
 
+      setTimeout(function () {
+          $(self._$container).jstree(true).save_state();
+      }, 100);
+
       this._get_data_from_selected = results.getter_for_data_from_selected;
+      this._immediate_action_to_hack_jstree = results.immediate_action_to_hack_jstree;
 
       this.add_handlers_for_enabling_breakpoint_from_node_checkbox();
    };
@@ -183,135 +215,6 @@ define(["underscore", "jquery", "jstree", "layout", "context_menu_for_tree_view"
               }, this);
 
       return tree_data;
-   };
-
-   BreakpointsView.prototype._get_ctxmenu_for_debuggers = function () {
-       var self = this;
-       return [
-            {
-                text: "Enable all breakpoints",
-                action: function (e) {
-                   e.preventDefault();
-                   var debugger_id = self._get_data_from_selected().debugger_id;
-                   var debugger_obj = self.debuggee_tracker.get_debugger_with_id(debugger_id);
-
-                   debugger_obj.enable_all_your_breakpoints();
-                }
-            },
-            {
-                text: "Disable all breakpoints",
-                action: function (e) {
-                   e.preventDefault();
-                   var debugger_id = self._get_data_from_selected().debugger_id;
-                   var debugger_obj = self.debuggee_tracker.get_debugger_with_id(debugger_id);
-
-                   debugger_obj.disable_all_your_breakpoints();
-                }
-            },
-            {
-                text: "Remove all breakpoints",
-                action: function (e) {
-                   e.preventDefault();
-                   var debugger_id = self._get_data_from_selected().debugger_id;
-                   var debugger_obj = self.debuggee_tracker.get_debugger_with_id(debugger_id);
-
-                   debugger_obj.delete_all_your_breakpoints();
-                },
-
-                end_menu_here: true
-            } 
-        ];
-   };
-   
-   BreakpointsView.prototype._get_ctxmenu_for_main_breakpoints = function () {
-       var self = this;
-       return [
-            {
-                text: "Enable breakpoint",
-                action: function (e) {
-                   e.preventDefault();
-                   var data = self._get_data_from_selected();
-
-                   var debugger_id   = data.debugger_id;
-                   var breakpoint_id = data.breakpoint_id;
-                
-                   var debugger_obj = self.debuggee_tracker.get_debugger_with_id(debugger_id);
-                   var breakpoint = debugger_obj.get_breakpoint_with_id(breakpoint_id);
-
-                   breakpoint.enable_you_and_your_subbreakpoints();
-                }
-            },
-            {
-                text: "Disable breakpoint",
-                action: function (e) {
-                   e.preventDefault();
-                   var data = self._get_data_from_selected();
-
-                   var debugger_id   = data.debugger_id;
-                   var breakpoint_id = data.breakpoint_id;
-                
-                   var debugger_obj = self.debuggee_tracker.get_debugger_with_id(debugger_id);
-                   var breakpoint = debugger_obj.get_breakpoint_with_id(breakpoint_id);
-
-                   breakpoint.disable_you_and_your_subbreakpoints();
-                }
-            },
-            {
-                text: "Remove breakpoint",
-                action: function (e) {
-                   e.preventDefault();
-                   var data = self._get_data_from_selected();
-
-                   var debugger_id   = data.debugger_id;
-                   var breakpoint_id = data.breakpoint_id;
-                
-                   var debugger_obj = self.debuggee_tracker.get_debugger_with_id(debugger_id);
-                   var breakpoint = debugger_obj.get_breakpoint_with_id(breakpoint_id);
-
-                   breakpoint.delete_you_and_your_subbreakpoints();
-                },
-
-                end_menu_here: true
-            } 
-        ];
-   };
-   
-   BreakpointsView.prototype._get_ctxmenu_for_sub_breakpoints = function () {
-       var self = this;
-       return [
-            {
-                text: "Enable breakpoint",
-                action: function (e) {
-                   e.preventDefault();
-                   var data = self._get_data_from_selected();
-
-                   var debugger_id   = data.debugger_id;
-                   var breakpoint_id = data.breakpoint_id;
-                
-                   var debugger_obj = self.debuggee_tracker.get_debugger_with_id(debugger_id);
-                   var breakpoint = debugger_obj.get_breakpoint_with_id(breakpoint_id);
-
-                   breakpoint.enable_you();
-                }
-            },
-            {
-                text: "Disable breakpoint",
-                action: function (e) {
-                   e.preventDefault();
-                   var data = self._get_data_from_selected();
-
-                   var debugger_id   = data.debugger_id;
-                   var breakpoint_id = data.breakpoint_id;
-                
-                   var debugger_obj = self.debuggee_tracker.get_debugger_with_id(debugger_id);
-                   var breakpoint = debugger_obj.get_breakpoint_with_id(breakpoint_id);
-
-                   breakpoint.disable_you();
-                },
-
-                end_menu_here: true
-            } 
-       ];
    };
 
    BreakpointsView.prototype.change_breakpoint_state_handler_for = function (enable_breakpoint, ev, d) {

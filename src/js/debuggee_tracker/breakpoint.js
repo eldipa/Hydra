@@ -32,7 +32,64 @@ define(["underscore", "shortcuts", 'event_handler'], function (_, shortcuts, eve
             name += "at " + this.instruction_address;
         }
 
+        if (this.is_temporal) {
+            name += " (temporal)"
+        }
+
         return name;
+    };
+
+    Breakpoint.prototype.get_display_fullname = function () {
+        return "Breakpoint " + this.get_display_name();
+    };
+
+    Breakpoint.prototype.get_display_details = function () {
+        return [
+            {
+                name:   'Enabled:',
+                widget: { message: this.is_enabled + "", type: 'static'}
+            },
+            {
+                name:   'Apply to:',
+                widget: { message: this.apply_to_all_threads ? "all threads" : this.thread_ids.join(" "), type: 'static'}
+            }
+        ];
+    };
+
+    Breakpoint.prototype.get_display_controller = function () {
+        var self = this;
+        var controller = [   
+            {
+                text: "Enable breakpoint",
+                action: function (e) {
+                   e.preventDefault();
+                   self.enable_you_and_your_subbreakpoints();
+                }
+            },
+            {
+                text: "Disable breakpoint",
+                action: function (e) {
+                   e.preventDefault();
+                   self.disable_you_and_your_subbreakpoints();
+                }
+            }];
+        
+        if (this.is_subbreakpoint()) {
+            controller[controller.length-1].end_menu_here = true;
+        }
+        else {
+            controller.push({
+                text: "Remove breakpoint",
+                action: function (e) {
+                   e.preventDefault();
+                   self.delete_you_and_your_subbreakpoints();
+                },
+
+                end_menu_here: true
+            });
+        }
+        
+        return controller;
     };
 
     Breakpoint.prototype.are_you_set_on_source_code_line = function () {

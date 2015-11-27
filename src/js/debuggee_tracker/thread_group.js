@@ -35,6 +35,40 @@ define(["underscore", "shortcuts", 'event_handler'], function (_, shortcuts, eve
 
         return txt.join(" ");
     };
+    
+    ThreadGroup.prototype.get_display_controller = function () {
+        var self = this;
+        return [{
+               text: 'Remove thread group',
+               action: function (e) {
+                  e.preventDefault();
+                  self.remove();
+               },
+              },{
+               text: 'Load sources', //TODO attach (and others)
+               action: function (e) {
+                  e.preventDefault();
+                  var debugger_id = self.debugger_id;
+
+                  var input_file_dom = $('<input style="display:none;" type="file" />');
+                  input_file_dom.change(function(evt) {
+                      var file_exec_path = "" + $(this).val();
+                      if (file_exec_path) {
+                          self.load_file_exec_and_symbols(file_exec_path);
+
+                          // TODO XXX XXX  HACK, run the process
+                          var debugger_obj = self.tracker.get_debugger_with_id(debugger_id);
+                          debugger_obj.execute("-break-insert", ["-t", "main"]); // TODO restrict this breakpoint to the threa group 
+                          self.execute("-exec-run");
+                      }
+                      else {
+                          console.log("Loading nothing");
+                      }
+                  });
+                  input_file_dom.trigger('click');
+               },
+              }];
+    };
 
     ThreadGroup.prototype.remove = function () {
         shortcuts.gdb_request(null, 

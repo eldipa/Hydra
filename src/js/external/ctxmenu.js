@@ -152,19 +152,20 @@ define(['jquery', 'underscore'], function ($, _) {
 
            var old_dynamic_context_id = null;
 
-           /* For the dom-element-target clicked, if he has a ctxmenu_attrname; 
+           /* For the dom-element-target clicked, if he has a observable_attrname
             * and for its parents, from the closer parent to the more
-            * far ancester, and only if they have a ctxmenu_attrname:
-            *     - collect the content of their ctxmenu_attrname which
-            *     should be an array of dictionaries with the description
-            *     of the context menu (see the help of this lib)
+            * far ancester, and only if they have a observable_attrname:
+            *     - collect the content of their observable_attrname which
+            *     should be a function to return an observable object (and its context object)
             *     - then, build a context menu with the concatenation of the 
-            *     submenus collected
+            *     submenus collected from the observables invoking to each one the method get_display_controller
+            *     which must return an array of dictionaries with the description
+            *     of the context menu (see the help of this lib)
             *
             * See addContext
             **/
            function addDynamicContext(selector) {
-                   var ctxmenu_attrname = 'ctxmenu_controller';
+                   var observable_attrname = 'observable_getter';
                    $(document).on('contextmenu', selector, function (e) {
                       e.preventDefault();
                       e.stopPropagation();
@@ -172,24 +173,53 @@ define(['jquery', 'underscore'], function ($, _) {
                       var $target = $(e.target);
                       var $parents = $target.parents(); 
 
+                      var observable_getter = null;
+                      var tmp = null;
+                      var current_observable = null;
+                      var current_context = null;
+
                       var controllers = [];
                       if($target.length === 1) {
-                         var subctxmenu = $target.data(ctxmenu_attrname);
-                         if (subctxmenu) { 
-                            controllers.push({
-                               element: $target[0],
-                               subctxmenu: subctxmenu 
-                            });
+                         observable_getter = $target.data(observable_attrname);
+                         if (observable_getter) {
+                             tmp = observable_getter(e, $target[0]);
+                         }
+
+                         if (tmp) {
+                             current_observable = tmp.observable;
+                             current_context = tmp.context;
+
+                             var subctxmenu = current_observable.get_display_controller(current_context);
+                             if (subctxmenu) { 
+                                controllers.push({
+                                   element: $target[0],
+                                   subctxmenu: subctxmenu 
+                                });
+                             }
                          }
                       }
 
                       $parents.each(function () {
-                         var subctxmenu = $(this).data(ctxmenu_attrname);
-                         if (subctxmenu) { 
-                            controllers.push({
-                               element: $(this)[0],
-                               subctxmenu: subctxmenu
-                            });
+                         observable_getter = null;
+                         current_observable = null;
+                         tmp = null;
+
+                         observable_getter = $(this).data(observable_attrname);
+                         if (observable_getter) {
+                             tmp = observable_getter(e, $(this)[0]);
+                         }
+
+                         if (tmp) {
+                             current_observable = tmp.observable;
+                             current_context = tmp.context;
+
+                             var subctxmenu = current_observable.get_display_controller(current_context);
+                             if (subctxmenu) { 
+                                controllers.push({
+                                   element: $(this)[0],
+                                   subctxmenu: subctxmenu
+                                });
+                             }
                          }
                       });
 

@@ -16,6 +16,22 @@ define(["underscore", "shortcuts", 'event_handler'], function (_, shortcuts, eve
     Thread.prototype.get_display_name = function () {
         return "Thread "+this.id+" ("+this.state+")";
     };
+    
+    Thread.prototype.get_display_controller = function (from_who) {
+        if (from_who.thread_follower) {  // a hack?? TODO review this
+            var self = this;
+            return [{
+                   text: 'Follow',
+                   action: function (e) {
+                      e.preventDefault();
+                      from_who.thread_follower.follow(self);
+                   },
+                  }];
+        }
+        else {
+            return [];
+        }
+    };
 
     Thread.prototype.get_thread_group_you_belong = function () {
         return this.tracker.get_debugger_with_id(this.debugger_id).get_thread_group_with_id(this.thread_group_id);
