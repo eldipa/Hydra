@@ -51,7 +51,7 @@ requirejs.onResourceLoad = function(context, map, depArray) {
    }
 };
 
-requirejs(['ui', 'code_view', 'jquery', 'export_console', 'layout', 'layout_examples', 'jqueryui', 'ctxmenu', 'notify_js_console', 'debuggee_tracker/tracker', 'event_handler', 'debuggee_tracker_view', 'underscore', 'shortcuts', 'thread_follower', "breakpoints_view"], function (ui, code_view, $, export_console, layout, layout_examples, jqueryui, ctxmenu, notify_js_console, debuggee_tracker, event_handler, debuggee_tracker_view, _, shortcuts, thread_follower, breakpoints_view) {
+requirejs(['ui', 'code_view', 'jquery', 'export_console', 'layout', 'layout_examples', 'jqueryui', 'ctxmenu', 'notify_js_console', 'debuggee_tracker/tracker', 'event_handler', 'debuggee_tracker_view', 'underscore', 'shortcuts', 'thread_follower', "breakpoints_view", "details_view"], function (ui, code_view, $, export_console, layout, layout_examples, jqueryui, ctxmenu, notify_js_console, debuggee_tracker, event_handler, debuggee_tracker_view, _, shortcuts, thread_follower, breakpoints_view, details_view) {
    var EH = new event_handler.EventHandler();
    EH.init("(ui)");
    event_handler.set_global_event_handler(EH);
@@ -80,6 +80,9 @@ requirejs(['ui', 'code_view', 'jquery', 'export_console', 'layout', 'layout_exam
    // Copy the messages to the "console" and shows them to the UI
    notify_js_console.start_redirection();
 
+
+
+
    //layout_examples.init_short_examples();
    var l = ui.init(EH);
    var root = l.root;
@@ -93,13 +96,55 @@ requirejs(['ui', 'code_view', 'jquery', 'export_console', 'layout', 'layout_exam
 
    var bkps_view = new breakpoints_view.BreakpointsView(dbg_tracker);
 
+   var det_view = new details_view.DetailsView();
+
    dbg_tracker.add_observer(aThreadFollower);
 
    visor.swap(dbg_tracker_view);
    dbg_tracker_view.split(bkps_view, "bottom");
+   dbg_tracker_view.parent().split(det_view, "bottom");
 
    old_code_editor.swap(aThreadFollower);
    root.render();
+
+   det_view.update_view();
+
+   /*
+   $(document).on('click', 'body', function (e) {
+        var observable_attrname = 'observable_getter';
+        
+        e.preventDefault();
+
+        var $target = $(e.target);
+                      
+        var observable_getter = null;
+        if($target.length === 1) {
+            observable_getter = $target.data(observable_attrname);
+        }
+
+        if (!observable_getter) {
+            var $parents = $target.parents(); 
+            $parents.each(function () {
+                if (!observable_getter) {  // TODO cambiar este for-each por un for-each-until
+                    observable_getter = $(this).data(observable_attrname);
+                }
+            });
+        }
+    
+        if (observable_getter) {
+            setTimeout(function () {
+                var observable = observable_getter(e);
+                det_view.observe(observable);
+            }, 100); // delay this so we can make sure that observable_getter will work
+                     // dont forget that we are been calling in a click event. This event
+                     // is highly probably been used by the "view" to select the object too
+                     // and it is probably that selection that will be returned by observable_getter
+                     // so we need to call observable_getter later so we can make sure that the
+                     // view and the observable_getter will work correctly
+        } 
+   });
+
+   */
 
    //process_view.start();
    //require('nw.gui').Window.get().reload(3);
