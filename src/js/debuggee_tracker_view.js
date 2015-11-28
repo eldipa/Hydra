@@ -1,4 +1,4 @@
-define(["underscore", "jquery", "jstree", "layout", "context_menu_for_tree_view", "shortcuts"], function (_, $, jstree, layout, context_menu_for_tree_view_module, shortcuts) {
+define(["underscore", "jquery", "jstree", "layout", "jstree_attach_observable_getters", "shortcuts"], function (_, $, jstree, layout, jstree_attach_observable_getters, shortcuts) {
    'use strict';
 
    var DebuggeeTrackerView = function (debuggee_tracker, thread_follower) {  //TODO thread_follower is a hack
@@ -26,7 +26,7 @@ define(["underscore", "jquery", "jstree", "layout", "context_menu_for_tree_view"
       var self = this;
 
       this._jstree_key = shortcuts.randint().toString();
-      var results = context_menu_for_tree_view_module.build_jstree_with_observable_getters_attached(this._$container, [
+      var results = jstree_attach_observable_getters.build_jstree_with_observable_getters_attached(this._$container, [
             function (e, elem_owner) {
                 return {observable: self, context: self};
             },

@@ -1,4 +1,4 @@
-define(["underscore", "jquery", "jstree", "layout", "context_menu_for_tree_view", "snippet", "shortcuts"], function (_, $, jstree, layout, context_menu_for_tree_view_module, snippet, shortcuts) {
+define(["underscore", "jquery", "jstree", "layout", "jstree_attach_observable_getters", "snippet", "shortcuts"], function (_, $, jstree, layout, jstree_attach_observable_getters, snippet, shortcuts) {
    'use strict';
     
    var BreakpointsView = function (debuggee_tracker) {
@@ -43,7 +43,7 @@ define(["underscore", "jquery", "jstree", "layout", "context_menu_for_tree_view"
       var self = this;
 
       this._jstree_key = shortcuts.randint().toString();
-      var results = context_menu_for_tree_view_module.build_jstree_with_observable_getters_attached(this._$container, [
+      var results = jstree_attach_observable_getters.build_jstree_with_observable_getters_attached(this._$container, [
             null,
             function (e, elem_owner) {
                 self._immediate_action_to_hack_jstree(e, elem_owner);
