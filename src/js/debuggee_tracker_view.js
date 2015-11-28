@@ -26,7 +26,7 @@ define(["underscore", "jquery", "jstree", "layout", "context_menu_for_tree_view"
       var self = this;
 
       this._jstree_key = shortcuts.randint().toString();
-      var results = context_menu_for_tree_view_module.build_jstree_with_a_context_menu(this._$container, [
+      var results = context_menu_for_tree_view_module.build_jstree_with_observable_getters_attached(this._$container, [
             function (e, elem_owner) {
                 return {observable: self, context: self};
             },
