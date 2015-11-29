@@ -1,6 +1,6 @@
-define(["underscore", "shortcuts", 'event_handler'], function (_, shortcuts, event_handler) {
+define(["underscore", "shortcuts", 'event_handler', 'ko'], function (_, shortcuts, event_handler, ko) {
     'use strict';
-
+    
     var Breakpoint = function (id, tracker, obj) {
         this._properties = ["debugger_id", "is_pending", "apply_to_all_threads", "is_enabled", "is_temporal", "thread_ids", "thread_group_ids", "source_fullname", "source_line_number", "instruction_address", "code_resolved", "is_code_resolved", "original_location"];
         
@@ -9,6 +9,8 @@ define(["underscore", "shortcuts", 'event_handler'], function (_, shortcuts, eve
         this.EH = event_handler.get_global_event_handler();
         
         this.update(obj);
+
+        ko.track(this);
     };
 
     Breakpoint.prototype.update = function (attributes) {
@@ -44,16 +46,10 @@ define(["underscore", "shortcuts", 'event_handler'], function (_, shortcuts, eve
     };
 
     Breakpoint.prototype.get_display_details = function () {
-        return [
-            {
-                name:   'Enabled:',
-                widget: { message: this.is_enabled + "", type: 'static'}
-            },
-            {
-                name:   'Apply to:',
-                widget: { message: this.apply_to_all_threads ? "all threads" : this.thread_ids.join(" "), type: 'static'}
-            }
-        ];
+        var js = ['Enabled: <span data-bind="text: is_enabled"></span>',
+                  'Apply to: <span data-bind="text: apply_to_all_threads"></span>'].join("<br />");
+
+        return js;
     };
 
     Breakpoint.prototype.get_display_controller = function () {

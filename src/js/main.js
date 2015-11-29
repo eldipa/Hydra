@@ -5,7 +5,9 @@ requirejs.config({
    paths: {
       jquery: 'external/jquery-2.1.0',
       d3: 'external/d3.v3.min',
-      ko: 'external/knockout-3.0.0',
+      knockout: 'external/knockout-3.0.0',
+      knockout_es5_plugin: 'external/knockout-es5',
+      ko: 'external/ko',
       ace_internals: 'external/ace/ace',
       ace: 'external/ace',
       ctxmenu: 'external/ctxmenu',
@@ -34,6 +36,9 @@ requirejs.config({
       "jstree": {
          deps: ['jquery'],
          exports: "$",
+      },
+      "knockout": {
+         exports: "ko",
       }
    }
 
@@ -109,17 +114,20 @@ requirejs(['ui', 'code_view', 'jquery', 'export_console', 'layout', 'layout_exam
 
    det_view.update_view();
 
-   /*
    $(document).on('click', 'body', function (e) {
         var observable_attrname = 'observable_getter';
         
         e.preventDefault();
 
         var $target = $(e.target);
-                      
+    
+        var tmp = null;        
         var observable_getter = null;
         if($target.length === 1) {
             observable_getter = $target.data(observable_attrname);
+            if (observable_getter) {
+                tmp = observable_getter(e, $target[0]);
+            }
         }
 
         if (!observable_getter) {
@@ -127,14 +135,16 @@ requirejs(['ui', 'code_view', 'jquery', 'export_console', 'layout', 'layout_exam
             $parents.each(function () {
                 if (!observable_getter) {  // TODO cambiar este for-each por un for-each-until
                     observable_getter = $(this).data(observable_attrname);
+                    if (observable_getter) {
+                        tmp = observable_getter(e, $(this)[0]);
+                    }
                 }
             });
         }
     
         if (observable_getter) {
             setTimeout(function () {
-                var observable = observable_getter(e);
-                det_view.observe(observable);
+                det_view.observe(tmp.observable, tmp.context);
             }, 100); // delay this so we can make sure that observable_getter will work
                      // dont forget that we are been calling in a click event. This event
                      // is highly probably been used by the "view" to select the object too
@@ -144,7 +154,6 @@ requirejs(['ui', 'code_view', 'jquery', 'export_console', 'layout', 'layout_exam
         } 
    });
 
-   */
 
    //process_view.start();
    //require('nw.gui').Window.get().reload(3);

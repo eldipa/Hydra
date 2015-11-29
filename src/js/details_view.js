@@ -1,4 +1,4 @@
-define(["underscore", "jquery", "layout", "shortcuts", "fields"], function (_, $, layout, shortcuts, fields) {
+define(["underscore", "jquery", "layout", "shortcuts", "fields", "ko"], function (_, $, layout, shortcuts, fields, ko) {
    'use strict';
 
    var DetailsView = function () {
@@ -17,6 +17,10 @@ define(["underscore", "jquery", "layout", "shortcuts", "fields"], function (_, $
        }
 
        if (new_target.get_display_name && new_target.get_display_details && new_target.get_display_fullname /* TODO add more conditions */) {
+           if (this.target_observed === new_target) {
+               return;
+           }
+
            this.target_observed = new_target; // target accepted
            this.update_view();
        }
@@ -31,16 +35,9 @@ define(["underscore", "jquery", "layout", "shortcuts", "fields"], function (_, $
            // TODO clean the view
        }
        else {
-           var model = {
-              fieldsets: [
-                    {
-                    name:   this.target_observed.get_display_fullname(),
-                    fields: this.target_observed.get_display_details(),
-                    //description: "Example of fields."
-                    }]   
-           };
-
-           fields.view_it(model, this._$container.get()[0], true);
+           var js = this.target_observed.get_display_details();
+           this._$container.html(js);
+           ko.applyBindings(this.target_observed, this._$container.get()[0]);
        }
    };
 
