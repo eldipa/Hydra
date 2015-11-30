@@ -14,6 +14,10 @@ define(["underscore", "jquery"], function (_, $) {
 
     var create_immediate_action_to_hack_jstree = function ($tree_container) {
         return function (ctx_event, dom_node_owner) {
+            if (!ctx_event || !dom_node_owner) {
+                throw new Error("Missing arguments in the function to hack jstree.");
+            }
+
             if (ctx_event.jstree_hack_done) {
                 return;
             }
@@ -28,6 +32,11 @@ define(["underscore", "jquery"], function (_, $) {
     var build_getter_for_data_from_selected = function ($tree_container) {
         return function () {
             var nodes_selected = $tree_container.jstree('get_selected');
+
+            if (nodes_selected.length === 0) { // for some reason, jstree hasn't selected nodes so we need to do this to avoid a crash
+                return null; 
+            }
+
             var node_selected = nodes_selected[0]; //TODO we only support one of them for now
 
             var node = $tree_container.jstree(true).get_node(node_selected)

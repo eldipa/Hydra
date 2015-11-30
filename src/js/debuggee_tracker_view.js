@@ -32,13 +32,24 @@ define(["underscore", "jquery", "jstree", "layout", "jstree_attach_observable_ge
             },
             function (e, elem_owner) {
                 self._immediate_action_to_hack_jstree(e, elem_owner);
-                var debugger_id =  self._get_data_from_selected().debugger_id;
+                var ids = self._get_data_from_selected();
+
+                if (ids === null || ids === undefined) {
+                    return null;
+                }
+
+                var debugger_id =  ids.debugger_id;
                 var debugger_obj = self.debuggee_tracker.get_debugger_with_id(debugger_id);
                 return {observable: debugger_obj, context: self};
             },
             function (e, elem_owner) {
                 self._immediate_action_to_hack_jstree(e, elem_owner);
                 var ids = self._get_data_from_selected();
+
+                if (ids === null || ids === undefined) {
+                    return null;
+                }
+
                 var debugger_id = ids['debugger_id'];
                 var thread_group_id = ids['thread_group_id'];
 
@@ -48,6 +59,11 @@ define(["underscore", "jquery", "jstree", "layout", "jstree_attach_observable_ge
             function (e, elem_owner) {
                 self._immediate_action_to_hack_jstree(e, elem_owner);
                 var ids = self._get_data_from_selected();
+
+                if (ids === null || ids === undefined) {
+                    return null;
+                }
+
                 var debugger_id = ids['debugger_id'];
                 var thread_group_id = ids['thread_group_id'];
                 var thread_id = ids['thread_id'];

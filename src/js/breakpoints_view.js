@@ -47,13 +47,23 @@ define(["underscore", "jquery", "jstree", "layout", "jstree_attach_observable_ge
             null,
             function (e, elem_owner) {
                 self._immediate_action_to_hack_jstree(e, elem_owner);
-                var debugger_id =  self._get_data_from_selected().debugger_id;
+                var data = self._get_data_from_selected();
+
+                if (data === null || data === undefined) {
+                    return null;
+                }
+
+                var debugger_id =  data.debugger_id;
                 var debugger_obj = self.debuggee_tracker.get_debugger_with_id(debugger_id);
                 return {observable: debugger_obj, context: self};
             },
             function (e, elem_owner) {
                 self._immediate_action_to_hack_jstree(e, elem_owner);
                 var data = self._get_data_from_selected();
+
+                if (data === null || data === undefined) {
+                    return null;
+                }
 
                 var debugger_id   = data.debugger_id;
                 var breakpoint_id = data.breakpoint_id;
@@ -65,6 +75,10 @@ define(["underscore", "jquery", "jstree", "layout", "jstree_attach_observable_ge
             function (e, elem_owner) {
                 self._immediate_action_to_hack_jstree(e, elem_owner);
                 var data = self._get_data_from_selected();
+
+                if (data === null || data === undefined) {
+                    return null;
+                }
 
                 var debugger_id   = data.debugger_id;
                 var breakpoint_id = data.breakpoint_id;

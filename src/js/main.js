@@ -130,10 +130,10 @@ requirejs(['ui', 'code_view', 'jquery', 'export_console', 'layout', 'layout_exam
             }
         }
 
-        if (!observable_getter) {
+        if (!tmp) {
             var $parents = $target.parents(); 
             $parents.each(function () {
-                if (!observable_getter) {  // TODO cambiar este for-each por un for-each-until
+                if (!tmp) {  // TODO cambiar este for-each por un for-each-until
                     observable_getter = $(this).data(observable_attrname);
                     if (observable_getter) {
                         tmp = observable_getter(e, $(this)[0]);
@@ -142,15 +142,16 @@ requirejs(['ui', 'code_view', 'jquery', 'export_console', 'layout', 'layout_exam
             });
         }
     
-        if (observable_getter) {
-            setTimeout(function () {
+        if (tmp) {
                 det_view.observe(tmp.observable, tmp.context);
+            /*setTimeout(function () {
             }, 100); // delay this so we can make sure that observable_getter will work
                      // dont forget that we are been calling in a click event. This event
                      // is highly probably been used by the "view" to select the object too
                      // and it is probably that selection that will be returned by observable_getter
                      // so we need to call observable_getter later so we can make sure that the
                      // view and the observable_getter will work correctly
+            */
         } 
    });
 
