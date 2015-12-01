@@ -116,10 +116,10 @@ define(["underscore", "jquery", "jstree", "layout", "jstree_attach_observable_ge
               }
           }
       );
-
-      setTimeout(function () {
+      
+      _.defer(function () {
           $(self._$container).jstree(true).save_state();
-      }, 100);
+      });
 
       this._get_data_from_selected = results.getter_for_data_from_selected;
       this._immediate_action_to_hack_jstree = results.immediate_action_to_hack_jstree;
@@ -234,7 +234,7 @@ define(["underscore", "jquery", "jstree", "layout", "jstree_attach_observable_ge
    BreakpointsView.prototype.change_breakpoint_state_handler_for = function (enable_breakpoint, ev, d) {
       if (this._loading_the_data) {
           return; // the user is not changing the breakpoint, we are just refreshing the data and
-                  // we are getting call as a side effect of jstree update.
+                  // we are getting call us as a side effect of the jstree update.
       }
 
       var data = d.node.data;
