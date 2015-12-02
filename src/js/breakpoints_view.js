@@ -1,4 +1,4 @@
-define(["underscore", "jquery", "jstree", "layout", "jstree_attach_observable_getters", "snippet", "shortcuts", "observation"], function (_, $, jstree, layout, jstree_attach_observable_getters, snippet, shortcuts, observation) {
+define(["underscore", "jquery", "jstree", "layout", "jstree_builder", "snippet", "shortcuts", "observation"], function (_, $, jstree, layout, jstree_builder, snippet, shortcuts, observation) {
    'use strict';
     
    var BreakpointsView = function (debuggee_tracker) {
@@ -44,7 +44,7 @@ define(["underscore", "jquery", "jstree", "layout", "jstree_attach_observable_ge
       var Observation = observation.Observation;
 
       this._jstree_key = shortcuts.randint().toString();
-      var results = jstree_attach_observable_getters.build_jstree_with_observable_getters_attached(this._$container, [
+      var results = jstree_builder.build_jstree_with_do_observation_functions_attached(this._$container, [
             null,
             function (e, elem_owner) {
                 self._immediate_action_to_hack_jstree(e, elem_owner);

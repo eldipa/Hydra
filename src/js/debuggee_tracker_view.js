@@ -1,4 +1,4 @@
-define(["underscore", "jquery", "jstree", "layout", "jstree_attach_observable_getters", "shortcuts", "observation"], function (_, $, jstree, layout, jstree_attach_observable_getters, shortcuts, observation) {
+define(["underscore", "jquery", "jstree", "layout", "jstree_builder", "shortcuts", "observation"], function (_, $, jstree, layout, jstree_builder, shortcuts, observation) {
    'use strict';
 
    var DebuggeeTrackerView = function (debuggee_tracker, thread_follower) {  //TODO thread_follower is a hack
@@ -27,7 +27,7 @@ define(["underscore", "jquery", "jstree", "layout", "jstree_attach_observable_ge
       var Observation = observation.Observation;
 
       this._jstree_key = shortcuts.randint().toString();
-      var results = jstree_attach_observable_getters.build_jstree_with_observable_getters_attached(this._$container, [
+      var results = jstree_builder.build_jstree_with_do_observation_functions_attached(this._$container, [
             function (e, elem_owner) {
                 return new Observation({target: self, context: self});
             },

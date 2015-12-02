@@ -1,8 +1,8 @@
 define(["underscore", "jquery"], function (_, $) {
-    var attach_observable_getters_for_each_layer = function ($tree_container, getters_of_observables) {
+    var attach_do_observation_func_to_each_layer = function ($tree_container, do_observation_functions) {
         var $current_layer = $tree_container;
 
-        _.each(getters_of_observables, function (getter) {
+        _.each(do_observation_functions, function (getter) {
             if (getter) {
                 $current_layer.data('do_observation', getter);
             }
@@ -44,10 +44,10 @@ define(["underscore", "jquery"], function (_, $) {
         };
     };
 
-    var build_jstree_with_observable_getters_attached = function ($tree_container, getters_of_observables, jstree_options, after_open_callback, redraw_callback) {
+    var build_jstree_with_do_observation_functions_attached = function ($tree_container, do_observation_functions, jstree_options, after_open_callback, redraw_callback) {
         var immediate_action_to_hack_jstree = create_immediate_action_to_hack_jstree($tree_container);
         
-        var bounded_constructor  = _.bind(attach_observable_getters_for_each_layer, this, $tree_container, getters_of_observables);
+        var bounded_constructor  = _.bind(attach_do_observation_func_to_each_layer, this, $tree_container, do_observation_functions);
         var _attach_safe = _.throttle(bounded_constructor, 500);
 
         $tree_container.on("after_open.jstree", function () {
@@ -70,6 +70,6 @@ define(["underscore", "jquery"], function (_, $) {
 
 
     return {
-        build_jstree_with_observable_getters_attached: build_jstree_with_observable_getters_attached
+        build_jstree_with_do_observation_functions_attached: build_jstree_with_do_observation_functions_attached,
     };
 });
