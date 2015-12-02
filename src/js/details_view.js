@@ -39,6 +39,8 @@ define(["underscore", "jquery", "layout", "shortcuts", "fields", "ko"], function
            // TODO clean the view
        }
        else {
+           ko.cleanNode(this._$container.get()[0]);
+
            var js = this.target_observed.get_display_details();
            this._$container.html(js);
            ko.applyBindings(this.target_observed, this._$container.get()[0]);
