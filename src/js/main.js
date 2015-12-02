@@ -121,29 +121,29 @@ requirejs(['ui', 'code_view', 'jquery', 'export_console', 'layout', 'layout_exam
 
         var $target = $(e.target);
     
-        var tmp = null;        
+        var observation= null;        
         var observable_getter = null;
         if($target.length === 1) {
             observable_getter = $target.data(observable_attrname);
             if (observable_getter) {
-                tmp = observable_getter(e, $target[0]);
+                observation = observable_getter(e, $target[0]);
             }
         }
 
-        if (!tmp) {
+        if (!observation) {
             var $parents = $target.parents(); 
             $parents.each(function () {
-                if (!tmp) {  // TODO cambiar este for-each por un for-each-until
+                if (!observation) {  // TODO cambiar este for-each por un for-each-until
                     observable_getter = $(this).data(observable_attrname);
                     if (observable_getter) {
-                        tmp = observable_getter(e, $(this)[0]);
+                        observation  = observable_getter(e, $(this)[0]);
                     }
                 }
             });
         }
     
-        if (tmp) {
-                det_view.observe(tmp.observable, tmp.context);
+        if (observation) {
+                det_view.observe(observation);
             /*setTimeout(function () {
             }, 100); // delay this so we can make sure that observable_getter will work
                      // dont forget that we are been calling in a click event. This event

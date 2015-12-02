@@ -1,4 +1,4 @@
-define(["underscore", "jquery", "jstree", "layout", "jstree_attach_observable_getters", "shortcuts"], function (_, $, jstree, layout, jstree_attach_observable_getters, shortcuts) {
+define(["underscore", "jquery", "jstree", "layout", "jstree_attach_observable_getters", "shortcuts", "observation"], function (_, $, jstree, layout, jstree_attach_observable_getters, shortcuts, observation) {
    'use strict';
 
    var DebuggeeTrackerView = function (debuggee_tracker, thread_follower) {  //TODO thread_follower is a hack
@@ -24,11 +24,12 @@ define(["underscore", "jquery", "jstree", "layout", "jstree_attach_observable_ge
 
    DebuggeeTrackerView.prototype.build_tree = function () {
       var self = this;
+      var Observation = observation.Observation;
 
       this._jstree_key = shortcuts.randint().toString();
       var results = jstree_attach_observable_getters.build_jstree_with_observable_getters_attached(this._$container, [
             function (e, elem_owner) {
-                return {observable: self, context: self};
+                return new Observation({target: self, context: self});
             },
             function (e, elem_owner) {
                 self._immediate_action_to_hack_jstree(e, elem_owner);
@@ -40,7 +41,7 @@ define(["underscore", "jquery", "jstree", "layout", "jstree_attach_observable_ge
 
                 var debugger_id =  ids.debugger_id;
                 var debugger_obj = self.debuggee_tracker.get_debugger_with_id(debugger_id);
-                return {observable: debugger_obj, context: self};
+                return new Observation({target: debugger_obj, context: self});
             },
             function (e, elem_owner) {
                 self._immediate_action_to_hack_jstree(e, elem_owner);
@@ -54,7 +55,7 @@ define(["underscore", "jquery", "jstree", "layout", "jstree_attach_observable_ge
                 var thread_group_id = ids['thread_group_id'];
 
                 var thread_group = self.debuggee_tracker.get_debugger_with_id(debugger_id).get_thread_group_with_id(thread_group_id);
-                return {observable: thread_group, context: self};
+                return new Observation({target: thread_group, context: self});
             },
             function (e, elem_owner) {
                 self._immediate_action_to_hack_jstree(e, elem_owner);
@@ -69,7 +70,7 @@ define(["underscore", "jquery", "jstree", "layout", "jstree_attach_observable_ge
                 var thread_id = ids['thread_id'];
 
                 var thread = self.debuggee_tracker.get_debugger_with_id(debugger_id).get_thread_group_with_id(thread_group_id).get_thread_with_id(thread_id);
-                return {observable: thread, context: self};
+                return new Observation({target: thread, context: self});
             }
           ],
           {

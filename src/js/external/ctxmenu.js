@@ -174,7 +174,7 @@ define(['jquery', 'underscore'], function ($, _) {
                       var $parents = $target.parents(); 
 
                       var observable_getter = null;
-                      var tmp = null;
+                      var observation = null;
                       var current_observable = null;
                       var current_context = null;
 
@@ -182,19 +182,19 @@ define(['jquery', 'underscore'], function ($, _) {
                       if($target.length === 1) {
                          observable_getter = $target.data(observable_attrname);
                          if (observable_getter) {
-                             tmp = observable_getter(e, $target[0]);
-                         }
+                             observation = observable_getter(e, $target[0]);
 
-                         if (tmp) {
-                             current_observable = tmp.observable;
-                             current_context = tmp.context;
+                             if (observation) {
+                                 current_observable = observation.target;
+                                 current_context = observation.context;
 
-                             var subctxmenu = current_observable.get_display_controller(current_context);
-                             if (subctxmenu) { 
-                                controllers.push({
-                                   element: $target[0],
-                                   subctxmenu: subctxmenu 
-                                });
+                                 var subctxmenu = current_observable.get_display_controller(current_context);
+                                 if (subctxmenu) { 
+                                    controllers.push({
+                                       element: $target[0],
+                                       subctxmenu: subctxmenu 
+                                    });
+                                 }
                              }
                          }
                       }
@@ -202,23 +202,23 @@ define(['jquery', 'underscore'], function ($, _) {
                       $parents.each(function () {
                          observable_getter = null;
                          current_observable = null;
-                         tmp = null;
+                         observation = null;
 
                          observable_getter = $(this).data(observable_attrname);
                          if (observable_getter) {
-                             tmp = observable_getter(e, $(this)[0]);
-                         }
+                             observation = observable_getter(e, $(this)[0]);
 
-                         if (tmp) {
-                             current_observable = tmp.observable;
-                             current_context = tmp.context;
+                             if (observation) {
+                                 current_observable = observation.target;;
+                                 current_context = observation.context;
 
-                             var subctxmenu = current_observable.get_display_controller(current_context);
-                             if (subctxmenu) { 
-                                controllers.push({
-                                   element: $(this)[0],
-                                   subctxmenu: subctxmenu
-                                });
+                                 var subctxmenu = current_observable.get_display_controller(current_context);
+                                 if (subctxmenu) { 
+                                    controllers.push({
+                                       element: $(this)[0],
+                                       subctxmenu: subctxmenu
+                                    });
+                                 }
                              }
                          }
                       });

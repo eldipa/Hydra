@@ -11,7 +11,9 @@ define(["underscore", "jquery", "layout", "shortcuts", "fields", "ko"], function
    DetailsView.prototype.__proto__ = layout.Panel.prototype;
    layout.implement_render_and_unlink_methods(DetailsView.prototype);
 
-   DetailsView.prototype.observe = function (new_target) {
+   DetailsView.prototype.observe = function (observation) {
+       var new_target = observation.target;
+
        if (!new_target) {
            return;
        }

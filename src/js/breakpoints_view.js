@@ -1,4 +1,4 @@
-define(["underscore", "jquery", "jstree", "layout", "jstree_attach_observable_getters", "snippet", "shortcuts"], function (_, $, jstree, layout, jstree_attach_observable_getters, snippet, shortcuts) {
+define(["underscore", "jquery", "jstree", "layout", "jstree_attach_observable_getters", "snippet", "shortcuts", "observation"], function (_, $, jstree, layout, jstree_attach_observable_getters, snippet, shortcuts, observation) {
    'use strict';
     
    var BreakpointsView = function (debuggee_tracker) {
@@ -41,6 +41,7 @@ define(["underscore", "jquery", "jstree", "layout", "jstree_attach_observable_ge
 
    BreakpointsView.prototype.build_tree = function () {
       var self = this;
+      var Observation = observation.Observation;
 
       this._jstree_key = shortcuts.randint().toString();
       var results = jstree_attach_observable_getters.build_jstree_with_observable_getters_attached(this._$container, [
@@ -55,7 +56,7 @@ define(["underscore", "jquery", "jstree", "layout", "jstree_attach_observable_ge
 
                 var debugger_id =  data.debugger_id;
                 var debugger_obj = self.debuggee_tracker.get_debugger_with_id(debugger_id);
-                return {observable: debugger_obj, context: self};
+                return new Observation({target: debugger_obj, context: self});
             },
             function (e, elem_owner) {
                 self._immediate_action_to_hack_jstree(e, elem_owner);
@@ -70,7 +71,7 @@ define(["underscore", "jquery", "jstree", "layout", "jstree_attach_observable_ge
                 
                 var debugger_obj = self.debuggee_tracker.get_debugger_with_id(debugger_id);
                 var breakpoint = debugger_obj.get_breakpoint_with_id(breakpoint_id);
-                return {observable: breakpoint, context: self};
+                return new Observation({target: breakpoint, context: self});
             },
             function (e, elem_owner) {
                 self._immediate_action_to_hack_jstree(e, elem_owner);
@@ -85,7 +86,7 @@ define(["underscore", "jquery", "jstree", "layout", "jstree_attach_observable_ge
                 
                 var debugger_obj = self.debuggee_tracker.get_debugger_with_id(debugger_id);
                 var breakpoint = debugger_obj.get_breakpoint_with_id(breakpoint_id);
-                return {observable: breakpoint, context: self};
+                return new Observation({target: breakpoint, context: self});
             }
           ],
           {
