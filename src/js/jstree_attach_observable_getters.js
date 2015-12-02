@@ -4,7 +4,7 @@ define(["underscore", "jquery"], function (_, $) {
 
         _.each(getters_of_observables, function (getter) {
             if (getter) {
-                $current_layer.data('observable_getter', getter);
+                $current_layer.data('do_observation', getter);
             }
 
             $current_layer = $current_layer.children('ul').children('li');

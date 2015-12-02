@@ -165,7 +165,7 @@ define(['jquery', 'underscore'], function ($, _) {
             * See addContext
             **/
            function addDynamicContext(selector) {
-                   var observable_attrname = 'observable_getter';
+                   var observable_attrname = 'do_observation';
                    $(document).on('contextmenu', selector, function (e) {
                       e.preventDefault();
                       e.stopPropagation();
@@ -173,16 +173,16 @@ define(['jquery', 'underscore'], function ($, _) {
                       var $target = $(e.target);
                       var $parents = $target.parents(); 
 
-                      var observable_getter = null;
+                      var do_observation = null;
                       var observation = null;
                       var current_observable = null;
                       var current_context = null;
 
                       var controllers = [];
                       if($target.length === 1) {
-                         observable_getter = $target.data(observable_attrname);
-                         if (observable_getter) {
-                             observation = observable_getter(e, $target[0]);
+                         do_observation = $target.data(observable_attrname);
+                         if (do_observation) {
+                             observation = do_observation(e, $target[0]);
 
                              if (observation) {
                                  current_observable = observation.target;
@@ -200,13 +200,13 @@ define(['jquery', 'underscore'], function ($, _) {
                       }
 
                       $parents.each(function () {
-                         observable_getter = null;
+                         do_observation = null;
                          current_observable = null;
                          observation = null;
 
-                         observable_getter = $(this).data(observable_attrname);
-                         if (observable_getter) {
-                             observation = observable_getter(e, $(this)[0]);
+                         do_observation = $(this).data(observable_attrname);
+                         if (do_observation) {
+                             observation = do_observation(e, $(this)[0]);
 
                              if (observation) {
                                  current_observable = observation.target;;

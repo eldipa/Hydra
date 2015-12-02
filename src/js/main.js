@@ -115,18 +115,18 @@ requirejs(['ui', 'code_view', 'jquery', 'export_console', 'layout', 'layout_exam
    det_view.update_view();
 
    $(document).on('click', 'body', function (e) {
-        var observable_attrname = 'observable_getter';
+        var observable_attrname = 'do_observation';
         
         e.preventDefault();
 
         var $target = $(e.target);
     
         var observation= null;        
-        var observable_getter = null;
+        var do_observation = null;
         if($target.length === 1) {
-            observable_getter = $target.data(observable_attrname);
-            if (observable_getter) {
-                observation = observable_getter(e, $target[0]);
+            do_observation = $target.data(observable_attrname);
+            if (do_observation) {
+                observation = do_observation(e, $target[0]);
             }
         }
 
@@ -134,9 +134,9 @@ requirejs(['ui', 'code_view', 'jquery', 'export_console', 'layout', 'layout_exam
             var $parents = $target.parents(); 
             $parents.each(function () {
                 if (!observation) {  // TODO cambiar este for-each por un for-each-until
-                    observable_getter = $(this).data(observable_attrname);
-                    if (observable_getter) {
-                        observation  = observable_getter(e, $(this)[0]);
+                    do_observation = $(this).data(observable_attrname);
+                    if (do_observation) {
+                        observation  = do_observation(e, $(this)[0]);
                     }
                 }
             });
@@ -145,12 +145,12 @@ requirejs(['ui', 'code_view', 'jquery', 'export_console', 'layout', 'layout_exam
         if (observation) {
                 det_view.observe(observation);
             /*setTimeout(function () {
-            }, 100); // delay this so we can make sure that observable_getter will work
+            }, 100); // delay this so we can make sure that do_observation will work
                      // dont forget that we are been calling in a click event. This event
                      // is highly probably been used by the "view" to select the object too
-                     // and it is probably that selection that will be returned by observable_getter
-                     // so we need to call observable_getter later so we can make sure that the
-                     // view and the observable_getter will work correctly
+                     // and it is probably that selection that will be returned by do_observation
+                     // so we need to call do_observation later so we can make sure that the
+                     // view and the do_observation will work correctly
             */
         } 
    });
