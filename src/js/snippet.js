@@ -19,11 +19,16 @@ define(['ace', 'jquery', 'underscore'], function (ace, $, _) {
         var ace_mode = opts.is_assembly? "ace/mode/assembly_x86" : "ace/mode/c_cpp";
         editor.getSession().setMode(ace_mode);
 
-        editor.setValue(code);
+        _.defer(function () {
+            $(opts.temporal_in_dom_element || 'body').append(_$container);
 
-        $(opts.temporal_in_dom_element || 'body').append(_$container);
+            var remain_calls = 2; // Hack, we get 2 calls to afterRender and only in the last we must to replace the placeholder with the editor's content.
+            editor.renderer.on("afterRender", function() {
+                remain_calls -= 1;
+                if (remain_calls !== 0) {
+                    return;
+                }
 
-        setTimeout(function() {
                 editor.destroy();
 
                 var container = $(_$container);
@@ -39,10 +44,12 @@ define(['ace', 'jquery', 'underscore'], function (ace, $, _) {
                 container.remove();
 
                 placeholder.replaceWith(cloned_without_event_handlers);
-          }, 300); // TODO this is hardcoded!! we dont know how to build the snippet with ace synchronously.
-                   // Our best shot is to wait some time and then we put the snippet into its final target.
-          
-          return placeholder;
+            });
+
+            editor.setValue(code);
+        });
+        
+        return placeholder;
     };
 
     return {create_snippet: create_snippet};
