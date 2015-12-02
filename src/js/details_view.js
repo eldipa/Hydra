@@ -25,8 +25,10 @@ define(["underscore", "jquery", "layout", "shortcuts", "fields", "ko"], function
            this.update_view();
        }
        else {
-           // TODO We should add a warning here: the new target is NOT accepted
-           console.log("UPPSSSS");
+           // TODO We should add a warning here?: the new target is NOT accepted
+           // Answer: i don't think so
+           //
+           // console.log("Nothing to show");
        }
    };
 

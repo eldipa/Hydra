@@ -1,4 +1,4 @@
-define(["underscore", "shortcuts", 'event_handler', 'ko'], function (_, shortcuts, event_handler, ko) {
+define(["underscore", "shortcuts", 'event_handler', 'ko', 'snippet'], function (_, shortcuts, event_handler, ko, snippet) {
     'use strict';
     
     var Breakpoint = function (id, tracker, obj) {
@@ -124,6 +124,17 @@ define(["underscore", "shortcuts", 'event_handler', 'ko'], function (_, shortcut
                 ["-s", start_address, "-e", end_address, "--", "0"]
             );
         }
+    };
+
+    Breakpoint.prototype.append_code_resolved_snippet_if_possible_to = function (dom_element) {
+        if (!this.code_resolved) {
+            return;
+        }
+
+        var is_code_resolved_assembly = !this.are_you_set_on_source_code_line();
+
+        var s = snippet.create_snippet(this.code_resolved, { is_assembly: is_code_resolved_assembly});
+        s.appendTo($(dom_element));
     };
 
     Breakpoint.prototype.is_subbreakpoint = function () {

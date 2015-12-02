@@ -136,17 +136,15 @@ define(["underscore", "jquery", "jstree", "layout", "jstree_attach_observable_ge
       this._$container.on("uncheck_node.jstree", bounded_on_change_node_state_for_disable_bkpt).on("check_node.jstree", bounded_on_change_node_state_for_enable_bkpt);
       this._$container.on("after_open.jstree", function (ev, node) {
           var node_in_dom = $("#"+node.node.id);
-          node_in_dom.find('a[code_resolved]').each(function (index, anchor) {
+          node_in_dom.find('a[mark_for_resolve_code]').each(function (index, anchor) {
               var anchor = $(anchor);
-              var code_resolved = anchor.attr('code_resolved');
-              var is_code_resolved_assembly = anchor.attr('is_code_resolved_assembly') === "true";
-              
-              if (!code_resolved) {
-                  return;
-              }
-              
-              var s = snippet.create_snippet(code_resolved, { is_assembly: is_code_resolved_assembly});
-              s.appendTo(anchor);
+              var debugger_id = anchor.attr('debugger_id');
+              var breakpoint_id = anchor.attr('breakpoint_id');
+
+              var debugger_obj = self.debuggee_tracker.get_debugger_with_id(debugger_id);
+              var breakpoint = debugger_obj.get_breakpoint_with_id(breakpoint_id);
+
+              breakpoint.append_code_resolved_snippet_if_possible_to(anchor);
           });
       });
    };
@@ -196,26 +194,20 @@ define(["underscore", "jquery", "jstree", "layout", "jstree_attach_observable_ge
                                                     data: {debugger_id: debugger_obj.id, breakpoint_id: subbreakpoint.id},
                                                 };
 
-                                                if (subbreakpoint.is_code_resolved) {
-                                                    var code_resolved = subbreakpoint.code_resolved;
-                                                    
-                                                    node_for_subbreakpoint.a_attr = {};
-                                                    node_for_subbreakpoint.a_attr.code_resolved = code_resolved;
-                                                    node_for_subbreakpoint.a_attr.is_code_resolved_assembly = !subbreakpoint.are_you_set_on_source_code_line();
-                                                }
+                                                node_for_subbreakpoint.a_attr = {};
+                                                node_for_subbreakpoint.a_attr.mark_for_resolve_code = true;
+                                                node_for_subbreakpoint.a_attr.debugger_id = debugger_obj.id;
+                                                node_for_subbreakpoint.a_attr.breakpoint_id = subbreakpoint.id;
 
                                                 // third level: sub-breakpoints (like multiple breakpoints)
                                                 return node_for_subbreakpoint;
                                             }, this);
                                 }
                                 else {
-                                    if (main_breakpoint.is_code_resolved) {
-                                        var code_resolved = main_breakpoint.code_resolved;
-
-                                        node_for_breakpoint.a_attr = {};
-                                        node_for_breakpoint.a_attr.code_resolved = code_resolved;
-                                        node_for_breakpoint.a_attr.is_code_resolved_assembly = !main_breakpoint.are_you_set_on_source_code_line();
-                                    }
+                                    node_for_breakpoint.a_attr = {};
+                                    node_for_breakpoint.a_attr.mark_for_resolve_code = true;
+                                    node_for_breakpoint.a_attr.debugger_id = debugger_obj.id;
+                                    node_for_breakpoint.a_attr.breakpoint_id = main_breakpoint.id;
 
                                     // for single (non-multiple) breakpoints we can be sure
                                     // of its state
