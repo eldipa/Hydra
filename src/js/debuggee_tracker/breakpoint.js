@@ -46,10 +46,15 @@ define(["underscore", "shortcuts", 'event_handler', 'ko', 'snippet'], function (
     };
 
     Breakpoint.prototype.get_display_details = function () {
-        var js = ['Enabled: <span data-bind="text: is_enabled"></span>',
+        var js = ['<span data-bind="text: get_display_fullname()"></span>',
+                  '<div id="code_snippet"></div>', // TODO poner esto en un IF para sacar si no hay codigo
+                  'Enabled: <span data-bind="text: is_enabled"></span>',
+                  'Temporal: <span data-bind="text: is_temporal"></span>',
                   'Apply to: <span data-bind="text: apply_to_all_threads"></span>'].join("<br />");
 
-        return js;
+        var $elem = $(js);
+        this.append_code_resolved_snippet_if_possible_to($elem[2]);
+        return $elem;
     };
 
     Breakpoint.prototype.get_display_controller = function () {
@@ -131,10 +136,12 @@ define(["underscore", "shortcuts", 'event_handler', 'ko', 'snippet'], function (
             return;
         }
 
+        var dom_element = $(dom_element);
         var is_code_resolved_assembly = !this.are_you_set_on_source_code_line();
 
         var s = snippet.create_snippet(this.code_resolved, { is_assembly: is_code_resolved_assembly});
-        s.appendTo($(dom_element));
+        s.appendTo(dom_element);
+        return dom_element;
     };
 
     Breakpoint.prototype.is_subbreakpoint = function () {

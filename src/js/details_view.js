@@ -27,7 +27,7 @@ define(["underscore", "jquery", "layout", "shortcuts", "fields", "ko"], function
            this.update_view();
        }
        else {
-           // TODO We should add a warning here?: the new target is NOT accepted
+           // We should add a warning here?: the new target is NOT accepted
            // Answer: i don't think so
            //
            // console.log("Nothing to show");
@@ -36,13 +36,15 @@ define(["underscore", "jquery", "layout", "shortcuts", "fields", "ko"], function
 
    DetailsView.prototype.update_view = function () {
        if (!this.target_observed) {
-           // TODO clean the view
+           // clean the view?
+           // Answer: i don't think so
        }
        else {
            ko.cleanNode(this._$container.get()[0]);
+           this._$container.empty();
 
-           var js = this.target_observed.get_display_details();
-           this._$container.html(js);
+           var $elem = $(this.target_observed.get_display_details());
+           this._$container.append($elem);
            ko.applyBindings(this.target_observed, this._$container.get()[0]);
        }
    };

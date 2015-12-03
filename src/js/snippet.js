@@ -29,21 +29,24 @@ define(['ace', 'jquery', 'underscore'], function (ace, $, _) {
                     return;
                 }
 
-                editor.destroy();
 
-                var container = $(_$container);
-                container.children(":not(.ace_scroller)").remove();
+                _.defer(function () {
+                    editor.destroy();
 
-                var scroller = container.children(".ace_scroller");
-                scroller.children(":not(.ace_content)").remove();
+                    var container = $(_$container);
+                    container.children(":not(.ace_scroller)").remove();
 
-                var content = scroller.children(".ace_content");
-                content.children(":not(.ace_text-layer)").remove();
+                    var scroller = container.children(".ace_scroller");
+                    scroller.children(":not(.ace_content)").remove();
 
-                var cloned_without_event_handlers = container.clone(false, false);
-                container.remove();
+                    var content = scroller.children(".ace_content");
+                    content.children(":not(.ace_text-layer)").remove();
 
-                placeholder.replaceWith(cloned_without_event_handlers);
+                    var cloned_without_event_handlers = container.clone(false, false);
+                    container.remove();
+
+                    placeholder.replaceWith(cloned_without_event_handlers);
+                });
             });
 
             editor.setValue(code);
