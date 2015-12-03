@@ -224,7 +224,7 @@ define(['jquery', 'underscore'], function ($, _) {
                       });
 
                       var menu_data = [];
-                      for(var i = 0; i < controllers.length; i++) {
+                      for(var i = 0; i < controllers.length  &&  i < 1; i++) {
                          var dom_element = controllers[i].element;
                          var submenu = controllers[i].subctxmenu;
 
