@@ -69,8 +69,8 @@ define(['jquery', 'layout', 'code_editor', 'varViewer', 'widgets/buttons', 'list
       view.split(visor, "right");
       root.render();
       
-      
-      view.parent().split(stdoutlog, "bottom");
+      view.parent().set_percentage(75);
+      view.split(stdoutlog, "bottom");
       root.render();
       
       stdoutlog.parent().split(stdinTextInput, "bottom");

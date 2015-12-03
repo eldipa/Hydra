@@ -14,6 +14,48 @@ define(["underscore", "shortcuts", 'event_handler'], function (_, shortcuts, eve
     Debugger.prototype.get_display_name = function () {
         return "GDB " + this.id;
     };
+    
+    Debugger.prototype.get_display_controller = function () {
+        var self = this;
+        var controller = [
+              {
+               text: 'Kill debugger',
+               action: function (e) {
+                  e.preventDefault();
+                  self.kill();
+               },
+              },{
+               text: 'Add thread group',
+               action: function (e) {
+                  e.preventDefault();
+                  self.add_thread_group();
+               },
+              },
+            {
+                text: "Enable all breakpoints",
+                action: function (e) {
+                   e.preventDefault();
+                   self.enable_all_your_breakpoints();
+                }
+            },
+            {
+                text: "Disable all breakpoints",
+                action: function (e) {
+                   e.preventDefault();
+                   self.disable_all_your_breakpoints();
+                }
+            },
+            {
+                text: "Remove all breakpoints",
+                action: function (e) {
+                   e.preventDefault();
+                   self.delete_all_your_breakpoints();
+                },
+            } 
+        ];
+
+        return controller;
+    };
 
     Debugger.prototype.add_thread_group = function () {
         shortcuts.gdb_request(null, 

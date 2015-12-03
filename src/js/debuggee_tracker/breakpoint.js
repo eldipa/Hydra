@@ -1,6 +1,6 @@
-define(["underscore", "shortcuts", 'event_handler'], function (_, shortcuts, event_handler) {
+define(["underscore", "shortcuts", 'event_handler', 'ko', 'snippet'], function (_, shortcuts, event_handler, ko, snippet) {
     'use strict';
-
+    
     var Breakpoint = function (id, tracker, obj) {
         this._properties = ["debugger_id", "is_pending", "apply_to_all_threads", "is_enabled", "is_temporal", "thread_ids", "thread_group_ids", "source_fullname", "source_line_number", "instruction_address", "code_resolved", "is_code_resolved", "original_location"];
         
@@ -9,6 +9,8 @@ define(["underscore", "shortcuts", 'event_handler'], function (_, shortcuts, eve
         this.EH = event_handler.get_global_event_handler();
         
         this.update(obj);
+
+        ko.track(this);
     };
 
     Breakpoint.prototype.update = function (attributes) {
@@ -32,7 +34,63 @@ define(["underscore", "shortcuts", 'event_handler'], function (_, shortcuts, eve
             name += "at " + this.instruction_address;
         }
 
+        if (this.is_temporal) {
+            name += " (temporal)"
+        }
+
         return name;
+    };
+
+    Breakpoint.prototype.get_display_fullname = function () {
+        return "Breakpoint " + this.get_display_name();
+    };
+
+    Breakpoint.prototype.get_display_details = function () {
+        var js = ['<span data-bind="text: get_display_fullname()"></span>',
+                  '<div id="code_snippet"></div>', // TODO poner esto en un IF para sacar si no hay codigo
+                  'Enabled: <span data-bind="text: is_enabled"></span>',
+                  'Temporal: <span data-bind="text: is_temporal"></span>',
+                  'Apply to: <span data-bind="text: apply_to_all_threads"></span>'].join("<br />");
+
+        var $elem = $(js);
+        this.append_code_resolved_snippet_if_possible_to($elem[2]);
+        return $elem;
+    };
+
+    Breakpoint.prototype.get_display_controller = function () {
+        var self = this;
+        var controller = [   
+            {
+                text: "Enable breakpoint",
+                action: function (e) {
+                   e.preventDefault();
+                   self.enable_you_and_your_subbreakpoints();
+                }
+            },
+            {
+                text: "Disable breakpoint",
+                action: function (e) {
+                   e.preventDefault();
+                   self.disable_you_and_your_subbreakpoints();
+                }
+            }];
+        
+        if (this.is_subbreakpoint()) {
+            controller[controller.length-1].end_menu_here = true;
+        }
+        else {
+            controller.push({
+                text: "Remove breakpoint",
+                action: function (e) {
+                   e.preventDefault();
+                   self.delete_you_and_your_subbreakpoints();
+                },
+
+                end_menu_here: true
+            });
+        }
+        
+        return controller;
     };
 
     Breakpoint.prototype.are_you_set_on_source_code_line = function () {
@@ -71,6 +129,19 @@ define(["underscore", "shortcuts", 'event_handler'], function (_, shortcuts, eve
                 ["-s", start_address, "-e", end_address, "--", "0"]
             );
         }
+    };
+
+    Breakpoint.prototype.append_code_resolved_snippet_if_possible_to = function (dom_element) {
+        if (!this.code_resolved) {
+            return;
+        }
+
+        var dom_element = $(dom_element);
+        var is_code_resolved_assembly = !this.are_you_set_on_source_code_line();
+
+        var s = snippet.create_snippet(this.code_resolved, { is_assembly: is_code_resolved_assembly});
+        s.appendTo(dom_element);
+        return dom_element;
     };
 
     Breakpoint.prototype.is_subbreakpoint = function () {

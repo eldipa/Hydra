@@ -5,7 +5,9 @@ requirejs.config({
    paths: {
       jquery: 'external/jquery-2.1.0',
       d3: 'external/d3.v3.min',
-      ko: 'external/knockout-3.0.0',
+      knockout: 'external/knockout-3.0.0',
+      knockout_es5_plugin: 'external/knockout-es5',
+      ko: 'external/ko',
       ace_internals: 'external/ace/ace',
       ace: 'external/ace',
       ctxmenu: 'external/ctxmenu',
@@ -34,6 +36,9 @@ requirejs.config({
       "jstree": {
          deps: ['jquery'],
          exports: "$",
+      },
+      "knockout": {
+         exports: "ko",
       }
    }
 
@@ -51,7 +56,7 @@ requirejs.onResourceLoad = function(context, map, depArray) {
    }
 };
 
-requirejs(['ui', 'code_view', 'jquery', 'export_console', 'layout', 'layout_examples', 'jqueryui', 'ctxmenu', 'notify_js_console', 'debuggee_tracker/tracker', 'event_handler', 'debuggee_tracker_view', 'underscore', 'shortcuts', 'thread_follower', "breakpoints_view"], function (ui, code_view, $, export_console, layout, layout_examples, jqueryui, ctxmenu, notify_js_console, debuggee_tracker, event_handler, debuggee_tracker_view, _, shortcuts, thread_follower, breakpoints_view) {
+requirejs(['ui', 'code_view', 'jquery', 'export_console', 'layout', 'layout_examples', 'jqueryui', 'ctxmenu', 'notify_js_console', 'debuggee_tracker/tracker', 'event_handler', 'debuggee_tracker_view', 'underscore', 'shortcuts', 'thread_follower', "breakpoints_view", "details_view"], function (ui, code_view, $, export_console, layout, layout_examples, jqueryui, ctxmenu, notify_js_console, debuggee_tracker, event_handler, debuggee_tracker_view, _, shortcuts, thread_follower, breakpoints_view, details_view) {
    var EH = new event_handler.EventHandler();
    EH.init("(ui)");
    event_handler.set_global_event_handler(EH);
@@ -80,6 +85,9 @@ requirejs(['ui', 'code_view', 'jquery', 'export_console', 'layout', 'layout_exam
    // Copy the messages to the "console" and shows them to the UI
    notify_js_console.start_redirection();
 
+
+
+
    //layout_examples.init_short_examples();
    var l = ui.init(EH);
    var root = l.root;
@@ -93,86 +101,63 @@ requirejs(['ui', 'code_view', 'jquery', 'export_console', 'layout', 'layout_exam
 
    var bkps_view = new breakpoints_view.BreakpointsView(dbg_tracker);
 
+   var det_view = new details_view.DetailsView();
+
    dbg_tracker.add_observer(aThreadFollower);
 
    visor.swap(dbg_tracker_view);
    dbg_tracker_view.split(bkps_view, "bottom");
+   dbg_tracker_view.parent().split(det_view, "bottom");
 
    old_code_editor.swap(aThreadFollower);
    root.render();
 
+   det_view.update_view();
+
+   $(document).on('click', 'body', function (e) {
+        var observable_attrname = 'do_observation';
+        
+        e.preventDefault();
+
+        var $target = $(e.target);
+    
+        var observation= null;        
+        var do_observation = null;
+        if($target.length === 1) {
+            do_observation = $target.data(observable_attrname);
+            if (do_observation) {
+                observation = do_observation(e, $target[0]);
+            }
+        }
+
+        if (!observation) {
+            var $parents = $target.parents(); 
+            $parents.each(function () {
+                if (!observation) {  // TODO cambiar este for-each por un for-each-until
+                    do_observation = $(this).data(observable_attrname);
+                    if (do_observation) {
+                        observation  = do_observation(e, $(this)[0]);
+                    }
+                }
+            });
+        }
+    
+        if (observation) {
+                det_view.observe(observation);
+            /*setTimeout(function () {
+            }, 100); // delay this so we can make sure that do_observation will work
+                     // dont forget that we are been calling in a click event. This event
+                     // is highly probably been used by the "view" to select the object too
+                     // and it is probably that selection that will be returned by do_observation
+                     // so we need to call do_observation later so we can make sure that the
+                     // view and the do_observation will work correctly
+            */
+        } 
+   });
+
+
    //process_view.start();
    //require('nw.gui').Window.get().reload(3);
-   /*
-   var model = {
-      fieldsets: [
-         {
-            name: "Foo category",
-            description: "Example of fields.",
-            fields: [
-                {
-                   name: "Name:",
-                   widget: {type: 'text', placeholder: 'Your name here'}
-                },
-                {
-                   name: "Password:",
-                   widget: {type: 'password', help: "use lower and upper letters with numbers and signs"}
-                },
-                {
-                   name: "Your opinion:",
-                   widget: {type: 'textarea'}
-                },
-                {
-                   widget: {type: 'checkbox', help:'beware!!!', message:"yes?"}
-                },
-                {
-                   name: "Your money:",
-                   widget: {type: 'static', message:"1244$", help:"it's constant :)"}
-                },
-                {
-                   name: "Select one:",
-                   widget: {type: 'select', options: [1, 2]}
-                },
-                {
-                   name: "Select more!:",
-                   widget: {type: 'multiselect', help:"use CTRL to select more than one", options: [1, 2, 3, 4]}
-                },
-               ]
-         },
-         
-         {
-            name: 'Campos B',
-            classes: '',
-            fields: [
-                {
-                   name: "Nombre:",
-                   widget: {tag: 'input'}
-                },
-                {
-                   name: "Apellido:",
-                   widget: {tag: 'input'}
-                },
-               ]
-         },
-         {
-            classes: '',
-            fields: [
-                {
-                   name: "Nombre:",
-                   widget: {tag: 'input'}
-                },
-                {
-                   name: "Apellido:",
-                   widget: {tag: 'input'}
-                },
-               ]
-         }
-         
-         ]
-   };
-   fields.view_it(model, '.main', true);
-   */
-
    /*
    var v = new pgraph.ProcessGraph();
    v.enable(main);

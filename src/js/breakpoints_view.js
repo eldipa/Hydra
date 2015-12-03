@@ -1,21 +1,93 @@
-define(["underscore", "jquery", "jstree", "layout", "context_menu_for_tree_view", "snippet", "shortcuts"], function (_, $, jstree, layout, context_menu_for_tree_view_module, snippet, shortcuts) {
+define(["underscore", "jquery", "jstree", "layout", "jstree_builder", "snippet", "shortcuts", "observation"], function (_, $, jstree, layout, jstree_builder, snippet, shortcuts, observation) {
    'use strict';
     
    var BreakpointsView = function (debuggee_tracker) {
       this.super("BreakpointsView");
-
-      this._$container = $('<div style="height: 100%; width: 100%"></div>');
-      this._$out_of_dom = this._$container;
+      this.build_and_initialize_panel_container('<div style="height: 100%; width: 100%"></div>');
       
       this.debuggee_tracker = debuggee_tracker;
       this.debuggee_tracker.add_observer(this);
 
+      this.build_tree();
+
+      this.update_tree_data_debounced = _.debounce(_.bind(this.update_tree_data, this), 500);
+   };
+
+   BreakpointsView.prototype.update_tree_data = function () {
+      var self = this;
+      var data = this.get_data_from_tracker();
+
+      this._loading_the_data = true;
+
+      $(this._$container).jstree(true).settings.core.data = data;
+      $(this._$container).jstree(true).load_node('#', function (x, is_loaded) {
+          if (is_loaded) {
+              self._loading_the_data = false;
+              $(self._$container).jstree(true).restore_state();
+          }
+      });
+
+      if (this.is_in_the_dom()) {
+         this.repaint($(this.box));
+      }
+   };
+   
+   BreakpointsView.prototype.update = function (data, topic, tracker) {
+      this.update_tree_data_debounced();
+   };
+   
+   BreakpointsView.prototype.__proto__ = layout.Panel.prototype;
+   layout.implement_render_and_unlink_methods(BreakpointsView.prototype);
+
+   BreakpointsView.prototype.build_tree = function () {
+      var self = this;
+      var Observation = observation.Observation;
+
       this._jstree_key = shortcuts.randint().toString();
-      var results = context_menu_for_tree_view_module.build_jstree_with_a_context_menu(this._$container, [
+      var results = jstree_builder.build_jstree_with_do_observation_functions_attached(this._$container, [
             null,
-            this._get_ctxmenu_for_debuggers(),
-            this._get_ctxmenu_for_main_breakpoints(),
-            this._get_ctxmenu_for_sub_breakpoints()
+            function (e, elem_owner) {
+                self._immediate_action_to_hack_jstree(e, elem_owner);
+                var data = self._get_data_from_selected();
+
+                if (data === null || data === undefined) {
+                    return null;
+                }
+
+                var debugger_id =  data.debugger_id;
+                var debugger_obj = self.debuggee_tracker.get_debugger_with_id(debugger_id);
+                return new Observation({target: debugger_obj, context: self});
+            },
+            function (e, elem_owner) {
+                self._immediate_action_to_hack_jstree(e, elem_owner);
+                var data = self._get_data_from_selected();
+
+                if (data === null || data === undefined) {
+                    return null;
+                }
+
+                var debugger_id   = data.debugger_id;
+                var breakpoint_id = data.breakpoint_id;
+                
+                var debugger_obj = self.debuggee_tracker.get_debugger_with_id(debugger_id);
+                var breakpoint = debugger_obj.get_breakpoint_with_id(breakpoint_id);
+                return new Observation({target: breakpoint, context: self});
+            },
+            function (e, elem_owner) {
+                self._immediate_action_to_hack_jstree(e, elem_owner);
+                var data = self._get_data_from_selected();
+
+                if (data === null || data === undefined) {
+                    return null;
+                }
+
+                var debugger_id   = data.debugger_id;
+                var breakpoint_id = data.breakpoint_id;
+                
+                var debugger_obj = self.debuggee_tracker.get_debugger_with_id(debugger_id);
+                var breakpoint = debugger_obj.get_breakpoint_with_id(breakpoint_id);
+                return new Observation({target: breakpoint, context: self});
+            }
           ],
           {
               'core' : {
@@ -25,7 +97,7 @@ define(["underscore", "jquery", "jstree", "layout", "context_menu_for_tree_view"
                   "check_callback" : false,
                   "themes" : { "url": false, "dots": true, "name": "default-dark", "stripped": true},
                   "force_text": true,
-                  'data' : this.get_data(),
+                  'data' : this.get_data_from_tracker(),
               },
               "plugins" : ["checkbox", "state"],
               'checkbox': {
@@ -38,83 +110,47 @@ define(["underscore", "jquery", "jstree", "layout", "context_menu_for_tree_view"
 		  events: 'open_node.jstree close_node.jstree',
                   filter: function (state) {
                       if (state.checkbox) {
-                          delete state.checkbox; // remove the 'checkbox' state before restoring, we already encoded the checked/unchecked state in the get_data method (which represent the state of GDB)
+                          delete state.checkbox; // remove the 'checkbox' state before restoring, we already encoded the checked/unchecked state in the get_data_from_tracker method (which represent the state of GDB)
                       }
                       return state;
                   }
               }
           }
       );
+      
+      _.defer(function () {
+          $(self._$container).jstree(true).save_state();
+      });
 
       this._get_data_from_selected = results.getter_for_data_from_selected;
+      this._immediate_action_to_hack_jstree = results.immediate_action_to_hack_jstree;
 
+      this.add_handlers_for_enabling_breakpoint_from_node_checkbox();
+   };
 
-      var bounded_change_handler_for = _.bind(this.change_breakpoint_state_handler_for, this);
-      var bounded_change_handler_for_enable_bkpt = _.partial(bounded_change_handler_for, true);
-      var bounded_change_handler_for_disable_bkpt = _.partial(bounded_change_handler_for, false);
+   BreakpointsView.prototype.add_handlers_for_enabling_breakpoint_from_node_checkbox = function () {
+      var bounded_on_change_node_state_handler_for = _.bind(this.change_breakpoint_state_handler_for, this);
+      var bounded_on_change_node_state_for_enable_bkpt = _.partial(bounded_on_change_node_state_handler_for, true);
+      var bounded_on_change_node_state_for_disable_bkpt = _.partial(bounded_on_change_node_state_handler_for, false);
 
       var self = this;
-
-      this._$container.on("uncheck_node.jstree", bounded_change_handler_for_disable_bkpt).on("check_node.jstree", bounded_change_handler_for_enable_bkpt);
+      this._$container.on("uncheck_node.jstree", bounded_on_change_node_state_for_disable_bkpt).on("check_node.jstree", bounded_on_change_node_state_for_enable_bkpt);
       this._$container.on("after_open.jstree", function (ev, node) {
           var node_in_dom = $("#"+node.node.id);
-          node_in_dom.find('a[code_resolved]').each(function (index, anchor) {
+          node_in_dom.find('a[mark_for_resolve_code]').each(function (index, anchor) {
               var anchor = $(anchor);
-              var code_resolved = anchor.attr('code_resolved');
-              var is_code_resolved_assembly = anchor.attr('is_code_resolved_assembly') === "true";
-              
-              if (!code_resolved) {
-                  return;
-              }
-              
-              var s = snippet.create_snippet(code_resolved, { is_assembly: is_code_resolved_assembly});
-              s.appendTo(anchor);
+              var debugger_id = anchor.attr('debugger_id');
+              var breakpoint_id = anchor.attr('breakpoint_id');
+
+              var debugger_obj = self.debuggee_tracker.get_debugger_with_id(debugger_id);
+              var breakpoint = debugger_obj.get_breakpoint_with_id(breakpoint_id);
+
+              breakpoint.append_code_resolved_snippet_if_possible_to(anchor);
           });
       });
-
-      this.update_tree_data_debounced = _.debounce(_.bind(this.update_tree_data, this), 500);
    };
 
-   BreakpointsView.prototype.update_tree_data = function () {
-      var self = this;
-      var data = this.get_data();
-
-      this._loading_the_data = true;
-
-      $(this._$container).jstree(true).settings.core.data = data;
-      $(this._$container).jstree(true).load_node('#', function (x, is_loaded) {
-          if (is_loaded) {
-              self._loading_the_data = false;
-              $(self._$container).jstree(true).restore_state();
-          }
-      });
-
-      if (!this._$out_of_dom) {
-         this.repaint($(this.box));
-      }
-   };
-   
-   BreakpointsView.prototype.update = function (data, topic, tracker) {
-      this.update_tree_data_debounced();
-   };
-   
-   BreakpointsView.prototype.__proto__ = layout.Panel.prototype;
-
-   BreakpointsView.prototype.render = function() {
-      if (this._$out_of_dom) {
-         this._$out_of_dom.appendTo(this.box);
-         this._$out_of_dom = null;
-      }
-      
-   };
-
-   BreakpointsView.prototype.unlink = function() {
-      if (!this.$out_of_dom) {
-         this.$out_of_dom = this._$container.detach();
-      }
-   };
-
-   BreakpointsView.prototype.get_data = function () {
+   BreakpointsView.prototype.get_data_from_tracker = function () {
       var debuggee_tracker = this.debuggee_tracker;
       var debuggers_by_id =  debuggee_tracker.get_all_debuggers();
 
@@ -159,26 +195,20 @@ define(["underscore", "jquery", "jstree", "layout", "context_menu_for_tree_view"
                                                     data: {debugger_id: debugger_obj.id, breakpoint_id: subbreakpoint.id},
                                                 };
 
-                                                if (subbreakpoint.is_code_resolved) {
-                                                    var code_resolved = subbreakpoint.code_resolved;
-                                                    
-                                                    node_for_subbreakpoint.a_attr = {};
-                                                    node_for_subbreakpoint.a_attr.code_resolved = code_resolved;
-                                                    node_for_subbreakpoint.a_attr.is_code_resolved_assembly = !subbreakpoint.are_you_set_on_source_code_line();
-                                                }
+                                                node_for_subbreakpoint.a_attr = {};
+                                                node_for_subbreakpoint.a_attr.mark_for_resolve_code = true;
+                                                node_for_subbreakpoint.a_attr.debugger_id = debugger_obj.id;
+                                                node_for_subbreakpoint.a_attr.breakpoint_id = subbreakpoint.id;
 
                                                 // third level: sub-breakpoints (like multiple breakpoints)
                                                 return node_for_subbreakpoint;
                                             }, this);
                                 }
                                 else {
-                                    if (main_breakpoint.is_code_resolved) {
-                                        var code_resolved = main_breakpoint.code_resolved;
-
-                                        node_for_breakpoint.a_attr = {};
-                                        node_for_breakpoint.a_attr.code_resolved = code_resolved;
-                                        node_for_breakpoint.a_attr.is_code_resolved_assembly = !main_breakpoint.are_you_set_on_source_code_line();
-                                    }
+                                    node_for_breakpoint.a_attr = {};
+                                    node_for_breakpoint.a_attr.mark_for_resolve_code = true;
+                                    node_for_breakpoint.a_attr.debugger_id = debugger_obj.id;
+                                    node_for_breakpoint.a_attr.breakpoint_id = main_breakpoint.id;
 
                                     // for single (non-multiple) breakpoints we can be sure
                                     // of its state
@@ -194,139 +224,10 @@ define(["underscore", "jquery", "jstree", "layout", "context_menu_for_tree_view"
       return tree_data;
    };
 
-   BreakpointsView.prototype._get_ctxmenu_for_debuggers = function () {
-       var self = this;
-       return [
-            {
-                text: "Enable all breakpoints",
-                action: function (e) {
-                   e.preventDefault();
-                   var debugger_id = self._get_data_from_selected().debugger_id;
-                   var debugger_obj = self.debuggee_tracker.get_debugger_with_id(debugger_id);
-
-                   debugger_obj.enable_all_your_breakpoints();
-                }
-            },
-            {
-                text: "Disable all breakpoints",
-                action: function (e) {
-                   e.preventDefault();
-                   var debugger_id = self._get_data_from_selected().debugger_id;
-                   var debugger_obj = self.debuggee_tracker.get_debugger_with_id(debugger_id);
-
-                   debugger_obj.disable_all_your_breakpoints();
-                }
-            },
-            {
-                text: "Remove all breakpoints",
-                action: function (e) {
-                   e.preventDefault();
-                   var debugger_id = self._get_data_from_selected().debugger_id;
-                   var debugger_obj = self.debuggee_tracker.get_debugger_with_id(debugger_id);
-
-                   debugger_obj.delete_all_your_breakpoints();
-                },
-
-                end_menu_here: true
-            } 
-        ];
-   };
-   
-   BreakpointsView.prototype._get_ctxmenu_for_main_breakpoints = function () {
-       var self = this;
-       return [
-            {
-                text: "Enable breakpoint",
-                action: function (e) {
-                   e.preventDefault();
-                   var data = self._get_data_from_selected();
-
-                   var debugger_id   = data.debugger_id;
-                   var breakpoint_id = data.breakpoint_id;
-                
-                   var debugger_obj = self.debuggee_tracker.get_debugger_with_id(debugger_id);
-                   var breakpoint = debugger_obj.get_breakpoint_with_id(breakpoint_id);
-
-                   breakpoint.enable_you_and_your_subbreakpoints();
-                }
-            },
-            {
-                text: "Disable breakpoint",
-                action: function (e) {
-                   e.preventDefault();
-                   var data = self._get_data_from_selected();
-
-                   var debugger_id   = data.debugger_id;
-                   var breakpoint_id = data.breakpoint_id;
-                
-                   var debugger_obj = self.debuggee_tracker.get_debugger_with_id(debugger_id);
-                   var breakpoint = debugger_obj.get_breakpoint_with_id(breakpoint_id);
-
-                   breakpoint.disable_you_and_your_subbreakpoints();
-                }
-            },
-            {
-                text: "Remove breakpoint",
-                action: function (e) {
-                   e.preventDefault();
-                   var data = self._get_data_from_selected();
-
-                   var debugger_id   = data.debugger_id;
-                   var breakpoint_id = data.breakpoint_id;
-                
-                   var debugger_obj = self.debuggee_tracker.get_debugger_with_id(debugger_id);
-                   var breakpoint = debugger_obj.get_breakpoint_with_id(breakpoint_id);
-
-                   breakpoint.delete_you_and_your_subbreakpoints();
-                },
-
-                end_menu_here: true
-            } 
-        ];
-   };
-   
-   BreakpointsView.prototype._get_ctxmenu_for_sub_breakpoints = function () {
-       var self = this;
-       return [
-            {
-                text: "Enable breakpoint",
-                action: function (e) {
-                   e.preventDefault();
-                   var data = self._get_data_from_selected();
-
-                   var debugger_id   = data.debugger_id;
-                   var breakpoint_id = data.breakpoint_id;
-                
-                   var debugger_obj = self.debuggee_tracker.get_debugger_with_id(debugger_id);
-                   var breakpoint = debugger_obj.get_breakpoint_with_id(breakpoint_id);
-
-                   breakpoint.enable_you();
-                }
-            },
-            {
-                text: "Disable breakpoint",
-                action: function (e) {
-                   e.preventDefault();
-                   var data = self._get_data_from_selected();
-
-                   var debugger_id   = data.debugger_id;
-                   var breakpoint_id = data.breakpoint_id;
-                
-                   var debugger_obj = self.debuggee_tracker.get_debugger_with_id(debugger_id);
-                   var breakpoint = debugger_obj.get_breakpoint_with_id(breakpoint_id);
-
-                   breakpoint.disable_you();
-                },
-
-                end_menu_here: true
-            } 
-       ];
-   };
-
    BreakpointsView.prototype.change_breakpoint_state_handler_for = function (enable_breakpoint, ev, d) {
       if (this._loading_the_data) {
           return; // the user is not changing the breakpoint, we are just refreshing the data and
-                  // we are getting call as a side effect of jstree update.
+                  // we are getting call us as a side effect of the jstree update.
       }
 
       var data = d.node.data;

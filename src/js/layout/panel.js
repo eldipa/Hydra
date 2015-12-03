@@ -271,12 +271,37 @@ define([], function () {
    // Placeholder, see root.js
    Panel.prototype.attach = function () { throw new Error("Not loaded"); };
 
+   var implement_render_and_unlink_methods = function (prototype) {
+       prototype.build_and_initialize_panel_container = function (dom_element_or_string) {
+           this._$container = $(dom_element_or_string);
+           this._$out_of_dom = this._$container;
+       };
+
+       prototype.render = function() {
+           if (this._$out_of_dom) {
+               this._$out_of_dom.appendTo(this.box);
+               this._$out_of_dom = null;
+           }
+       };
+
+       prototype.unlink = function () {
+           if (!this.$out_of_dom) {
+               this.$out_of_dom = this._$container.detach();
+           }
+       };
+
+       prototype.is_in_the_dom = function () {
+           return !this.$out_of_dom;
+       };
+   };
+
    return {
       NullParent: NullParent,
       as_tree: as_tree,
       Panel: Panel,
       new_tmp_panel: new_tmp_panel,
       new_empty_panel: new_tmp_panel, //alias
-      Parent: Parent
+      Parent: Parent,
+      implement_render_and_unlink_methods: implement_render_and_unlink_methods
    };
 });
