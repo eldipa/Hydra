@@ -6,10 +6,10 @@
 .nav-header {
 	display: block;
 	padding: 3px 15px;
-	font-size: 11px;
+	/*font-size: 11px;*/
 	font-weight: bold;
-	line-height: 20px;
-	color: #999;
+	/*line-height: 20px;
+	color: #999;*/
 	text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
 }
 .dropdown-menu {
@@ -23,19 +23,17 @@
 	padding: 5px 0;
 	margin: 2px 0 0;
 	list-style: none;
-	background-color: #ffffff;
+	background-color: rgba(43, 44, 50, 0.85);
 	border: 1px solid #ccc;
 	border: 1px solid rgba(0, 0, 0, 0.2);
-	font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-	font-size: 14px;
+	/*font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+	font-size: 14px;*/
 	*border-right-width: 2px;
 	*border-bottom-width: 2px;
 	-webkit-border-radius: 6px;
 	-moz-border-radius: 6px;
 	border-radius: 6px;
-	-webkit-box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
-	-moz-box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
-	box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+	box-shadow: 3px 3px 10px rgba(0, 236, 255, 0.2);
 	-webkit-background-clip: padding-box;
 	-moz-background-clip: padding;
 	background-clip: padding-box;

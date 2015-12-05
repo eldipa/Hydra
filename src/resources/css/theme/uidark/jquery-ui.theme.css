@@ -16,10 +16,10 @@
 ----------------------------------*/
 .ui-widget {
 	font-family: Segoe UI,Arial,sans-serif;
-	font-size: 1.1em;
+	font-size: 0.95em;
 }
 .ui-widget .ui-widget {
-	font-size: 1em;
+	font-size: 0.95em;
 }
 
 .ui-widget .ui-widget .ui-button-icon-only {
@@ -31,7 +31,7 @@
 .ui-widget textarea,
 .ui-widget button {
 	font-family: Segoe UI,Arial,sans-serif;
-	font-size: 1em;
+	font-size: 0.8em;
 }
 .ui-widget-content {
 	border: 1px solid #666666;
