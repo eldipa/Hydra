@@ -487,7 +487,7 @@ define(["jquery", "underscore"], function ($, _) {
    };
 
    ListView.prototype._show_coordinates_and_sizes = function () {
-      console.log("BufPos: "+this.buffer_position+" BufHeight: "+this.get_max_buffer_height()+" View: "+this.view_height+" CurrScroll: "+this.current_scroll_top+" VHeight: "+this.virtual_height+"");
+      console.debug("BufPos: "+this.buffer_position+" BufHeight: "+this.get_max_buffer_height()+" View: "+this.view_height+" CurrScroll: "+this.current_scroll_top+" VHeight: "+this.virtual_height+"");
    };
    
    /*

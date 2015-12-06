@@ -48,7 +48,7 @@ define(['jquery', 'underscore'], function ($, _) {
 
            function buildMenu(data, id, subMenu, ctx_event) {
                    var subClass = (subMenu) ? ' dropdown-context-sub' : '',
-                           compressed = options.compress ? ' compressed-context' : '',
+                           compressed = (options.compress ? ' compressed-context' : '') + " ui-widget",
                            $menu = $('<ul class="dropdown-menu dropdown-context' + subClass + compressed+'" id="dropdown-' + id + '"></ul>');
            var i = 0, linkTarget = '';
            var element_ctxmenu_owner = null;
@@ -63,7 +63,7 @@ define(['jquery', 'underscore'], function ($, _) {
                         data[i].immediate_action(ctx_event, element_ctxmenu_owner);
                       }
                       catch (e) {
-                        console.log(e);
+                        console.warn(e);
                       }
 
                       continue;
@@ -81,7 +81,7 @@ define(['jquery', 'underscore'], function ($, _) {
                                            linkTarget = ' target="'+data[i].target+'"';
                                    }
                                    if (typeof data[i].subMenu !== 'undefined') {
-                                           $sub = ('<li class="dropdown-submenu"><a tabindex="-1" href="' + data[i].href + '">' + data[i].text + '</a></li>');
+                                           $sub = $('<li class="dropdown-submenu"><a tabindex="-1" href="' + data[i].href + '">' + data[i].text + '</a></li>');
                                    } else {
                                            $sub = $('<li><a tabindex="-1" href="' + data[i].href + '"'+linkTarget+'>' + data[i].text + '</a></li>');
                                    }

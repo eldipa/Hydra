@@ -2,17 +2,51 @@ define(['jquery', 'notify', 'underscore',], function ($, _notused, _) {
    'use strict';
 
    var redirected_stream = {
-      log:   false,
-      error: false,
-      info:  false,
       debug: false,
+      info:  false,
+      log:   false,
+      warn:  false,
+      error: false,
    };
    
    var notification_class_by_stream = {
+      debug: 'debug',
       info:  'info',
+      log:   'debug',
+      warn:  'warn',
       error: 'error',
-      debug: 'info',
-      log:   'info',
+   };
+
+   var init = function (notify_configuration) {
+      var style_name = "hydra-info";
+      $.notify.addStyle(style_name, {
+          html: "<div><div class='ui-widget'><i class='fa fa-info-circle'></i><span data-notify-text></span></div></div>",
+      });
+      
+      var style_name = "hydra-warn";
+      $.notify.addStyle(style_name, {
+          html: "<div><div class='ui-widget'><i class='fa fa-warning'></i><span data-notify-text></span></div></div>",
+      });
+      
+      var style_name = "hydra-error";
+      $.notify.addStyle(style_name, {
+          html: "<div><div class='ui-widget'><i class='fa fa-bug'></i><span data-notify-text></span></div></div>",
+      });
+      
+      var style_name = "hydra-success";
+      $.notify.addStyle(style_name, {
+          html: "<div><div class='ui-widget'><i class='fa fa-check-circle'></i><span data-notify-text></span></div></div>",
+      });
+      
+      var style_name = "hydra-debug";
+      $.notify.addStyle(style_name, {
+          html: "<div><div class='ui-widget'><i class='fa fa-bug'></i><span data-notify-text></span></div></div>",
+      });
+
+      if (notify_configuration) {
+         $.notify.defaults(notify_configuration);
+      }
+
    };
 
    var start_redirection = function () {
@@ -37,12 +71,13 @@ define(['jquery', 'notify', 'underscore',], function ($, _notused, _) {
 
    var create_redirect_function = function (notification_class, old_function) {
       return function () {
-         $.notify.apply(undefined, [arguments[0], notification_class]);
+         $.notify.apply(undefined, [arguments[0], {style: "hydra-"+notification_class, className: notification_class}]);
          return old_function.apply(this, arguments);
       }
    };
 
    return {
+      init: init,
       start_redirection: start_redirection,
       stop_redirection:  stop_redirection,
    };

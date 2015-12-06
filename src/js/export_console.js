@@ -34,7 +34,7 @@ define(["underscore"], function (_) {
             if (err === 'EADDRINUSE') {
                attempts++;
                if (attempts > 10) {    // 10*1000 = 10 seconds
-                  console.log("ERROR: " + err);
+                  console.error("ERROR: " + err);
                }
                else {
                   setTimeout(function () {

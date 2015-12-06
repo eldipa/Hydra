@@ -30,7 +30,7 @@ define(["underscore", "jquery", "layout", "shortcuts", "fields", "ko"], function
            // We should add a warning here?: the new target is NOT accepted
            // Answer: i don't think so
            //
-           // console.log("Nothing to show");
+           // console.debug("Nothing to show");
        }
    };
 

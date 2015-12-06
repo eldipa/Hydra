@@ -42,7 +42,7 @@ define(['jquery', 'layout/panel', 'jqueryui'], function ($, P, _) {
             var rel_offset = (new_bar_position[position_name] - container_position[position_name]) / $container[dimension_name]();
 
             if(rel_offset < 0.0001 || rel_offset > 0.9999) {
-               console.log("The bar is moving "+position_name+"--"+opposite_position_name+" too far: Bar new position " + new_bar_position[position_name] + " Container position " + container_position[position_name]);
+               console.warn("Upss, the bar was moved too far. Try it again.");
             }
             else {
                var percentage = (rel_offset * 100);

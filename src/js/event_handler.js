@@ -202,8 +202,8 @@ define(function () {
 
    EventHandler.prototype.dispatch = function (event) {
       if(this.log_to_console) {
-         console.log("Dispatch: ");
-         console.log(event);
+         console.debug("Dispatch: ");
+         console.debug(event);
       }
 
       // we build the topic chain:
@@ -217,8 +217,8 @@ define(function () {
          topic_chain.push( subtopics.slice(0, i+1).join('.') );
       }
       if(this.log_to_console) {
-         console.log("Topic chain:");
-         console.log(topic_chain);
+         console.debug("Topic chain:");
+         console.debug(topic_chain);
       }
    
       // we call the callbacks for each topic in the topic chain.
@@ -227,16 +227,15 @@ define(function () {
          var topic = topic_chain[j];
          var callbacks = this.callbacks_by_topic[topic] || [];
          if(this.log_to_console) {
-            console.log(" on '" + topic + "': ");
-            console.log(callbacks);
+            console.debug(" on '" + topic + "': ");
+            console.debug(callbacks);
          }
          for(var i = 0; i < callbacks.length; i++) {
             try {
                callbacks[i](JSON.parse(event.data));
             }
             catch (e) {
-               // TODO
-               console.log("Error in callback (topic: "+topic+"): " + e + "\n" + e.stack);
+               console.warn("Error in callback (topic: "+topic+"): " + e + "\n" + e.stack);
             }
          }
       }
