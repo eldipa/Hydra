@@ -83,10 +83,8 @@ requirejs(['ui', 'code_view', 'jquery', 'export_console', 'layout', 'layout_exam
    ctxmenu.attachDynamic('body', undefined);
   
    // Copy the messages to the "console" and shows them to the UI
+   notify_js_console.init({autoHide: false})
    notify_js_console.start_redirection();
-
-
-
 
    //layout_examples.init_short_examples();
    var l = ui.init(EH);

@@ -442,7 +442,7 @@ define(["underscore", "event_handler", "debuggee_tracker/debugger", "debuggee_tr
                       }
 
                       if (type !== "breakpoint") {
-                          console.log("Not supported Xpoint type '"+type+"', we only support 'breakpoint's.");
+                          console.warn("Not supported Xpoint type '"+type+"', we only support 'breakpoint's.");
                           return;
                       }
 
@@ -490,7 +490,7 @@ define(["underscore", "event_handler", "debuggee_tracker/debugger", "debuggee_tr
            }
 
            if (type !== "breakpoint") {
-              console.log("Not supported Xpoint type '"+type+"', we only support 'breakpoint's.");
+              console.warn("Not supported Xpoint type '"+type+"', we only support 'breakpoint's.");
               return;
            }
 
@@ -671,7 +671,7 @@ define(["underscore", "event_handler", "debuggee_tracker/debugger", "debuggee_tr
          try {
             this.observers[i].update(data_object, event_topic, this);
          } catch(e) {
-            console.log("" + e);
+            console.warn("" + e);
          }
       }
    };
