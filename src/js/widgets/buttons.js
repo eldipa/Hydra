@@ -1,7 +1,6 @@
-define(['jquery', 'jqueryui', 'layout/panel'], function ($, _, panel) {
-   var Buttons = function (buttons_description, as_a_set) {
-      this.super("Buttons");
-      this._$container = $('<div></div>');
+define(['jquery', 'jqueryui'], function ($, _unused_) {
+   var create_button_bar = function (buttons_description, as_a_set) {
+      var $container = $('<div></div>');
 
       for (var i = 0; i < buttons_description.length; ++i) {
          var desc = buttons_description[i];
@@ -17,32 +16,17 @@ define(['jquery', 'jqueryui', 'layout/panel'], function ($, _, panel) {
             $button.click(action);
          }
 
-         this._$container.append($button);
+         $container.append($button);
       }
 
       if (as_a_set) {
-         this._$container.buttonset();
+         $container.buttonset();
       }
-
-      this._$out_of_dom = this._$container;
+        
+      return $container;
    };
-
-   Buttons.prototype.__proto__ = panel.Panel.prototype;
-   
-   Buttons.prototype.render = function () {
-      if (this._$out_of_dom) {
-         this._$out_of_dom.appendTo(this.box);
-         this._$out_of_dom = null;
-      }
-   };
-   
-   Buttons.prototype.unlink = function () {
-      if (!this._$out_of_dom) {
-         this._$out_of_dom = this._$container.detach();
-      }
-   }; 
 
    return {
-      Buttons: Buttons,
+      create_button_bar: create_button_bar,
    };
 });

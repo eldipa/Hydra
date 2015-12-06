@@ -1,4 +1,4 @@
-define(['jquery', 'layout', 'code_editor', 'varViewer', 'widgets/buttons', 'listview_panel', 'standarInput'], function ($, layout, code_editor, varViewer, buttons, listview_panel, standarInput) {
+define(['jquery', 'layout', 'code_editor', 'varViewer', 'listview_panel', 'standarInput'], function ($, layout, code_editor, varViewer, listview_panel, standarInput) {
    var Panel = layout.Panel;
    var Tabbed = layout.Tabbed;
    var ListViewPanel = listview_panel.ListViewPanel;

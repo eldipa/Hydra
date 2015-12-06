@@ -17,8 +17,6 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'widgets/buttons']
         this.super("Thread Button Bar Controller");
         this.thread_follower = thread_follower;
 
-        this.is_out_of_dom = true;
-
         this.mode = {
             is_targeting_all_threads: false,
             is_running: false,
@@ -30,7 +28,11 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'widgets/buttons']
 
         this.create_toolbars();
         this.select_toolbar();
+        
+        this._$container = this.selected_toolbar;
+        this._$out_of_dom = this._$container;
 
+        
         //this.selected_toolbar = this.toolbar_to_control_a_stopped_thread_in_reverse_mode;
         //this.selected_toolbar = this.toolbar_to_control_a_stopped_thread_in_assembly_mode;
         //TODO wrong labels this.selected_toolbar = this.toolbar_to_control_a_stopped_thread_in_assembly_and_reverse_mode;
@@ -48,11 +50,15 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'widgets/buttons']
     ThreadButtonBarController.prototype.leave_reverse_mode = create_method_to_control_mode("is_in_reverse_mode", false);
 
     ThreadButtonBarController.prototype.update_toolbar = function () {
-        this.selected_toolbar.unlink();
+        var is_in_dom = this.is_in_the_dom();
+
+        if (is_in_the_dom) {
+            this.unlink();
+        }
+
         this.select_toolbar();
 
-        if (!this.is_out_of_dom) {
-            this.selected_toolbar.render();
+        if (is_in_the_dom) {
         }
     };
 
@@ -75,17 +81,7 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'widgets/buttons']
     };
 
     ThreadButtonBarController.prototype.__proto__ = layout.Panel.prototype;
-
-    ThreadButtonBarController.prototype.render = function () {
-        this.selected_toolbar.box = this.box;
-        this.is_out_of_dom = false;
-        return this.selected_toolbar.render();
-    };
-   
-    ThreadButtonBarController.prototype.unlink = function () {
-        this.is_out_of_dom = true;
-        return this.selected_toolbar.unlink();
-    };
+    layout.implement_render_and_unlink_methods(ThreadButtonBarController.prototype);
 
 
     ThreadButtonBarController.prototype._args_for_reversing_mode = function () {
@@ -173,16 +169,16 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'widgets/buttons']
             ];
 
 
-        var toolbar_to_control_a_stopped_thread = new buttons.Buttons(button_descriptions_for_src_stopped_mode, true);
-        var toolbar_to_control_a_stopped_thread_in_reverse_mode = new buttons.Buttons(this._create_button_descriptions_for_reverse_mode_from(button_descriptions_for_src_stopped_mode), true);
+        var toolbar_to_control_a_stopped_thread = buttons.create_button_bar(button_descriptions_for_src_stopped_mode, true);
+        var toolbar_to_control_a_stopped_thread_in_reverse_mode = buttons.create_button_bar(this._create_button_descriptions_for_reverse_mode_from(button_descriptions_for_src_stopped_mode), true);
 
         var button_descriptions_in_assembly_mode = this._create_button_descriptions_for_assembly_mode(button_descriptions_for_src_stopped_mode)
-        var toolbar_to_control_a_stopped_thread_in_assembly_mode = new buttons.Buttons(button_descriptions_in_assembly_mode, true);
-        var toolbar_to_control_a_stopped_thread_in_assembly_and_reverse_mode = new buttons.Buttons(this._create_button_descriptions_for_reverse_mode_from(button_descriptions_in_assembly_mode), true);
+        var toolbar_to_control_a_stopped_thread_in_assembly_mode = buttons.create_button_bar(button_descriptions_in_assembly_mode, true);
+        var toolbar_to_control_a_stopped_thread_in_assembly_and_reverse_mode = buttons.create_button_bar(this._create_button_descriptions_for_reverse_mode_from(button_descriptions_in_assembly_mode), true);
         
         var button_descriptions_in_running_mode = this._create_button_descriptions_for_running_mode(button_descriptions_for_src_stopped_mode);
-        var toolbar_to_control_a_running_thread = new buttons.Buttons(button_descriptions_in_running_mode, true);
-        var toolbar_to_control_a_running_thread_in_reverse_mode = new buttons.Buttons(this._create_button_descriptions_for_reverse_mode_from(button_descriptions_in_running_mode), true);
+        var toolbar_to_control_a_running_thread = buttons.create_button_bar(button_descriptions_in_running_mode, true);
+        var toolbar_to_control_a_running_thread_in_reverse_mode = buttons.create_button_bar(this._create_button_descriptions_for_reverse_mode_from(button_descriptions_in_running_mode), true);
 
         // By is_running first,  TODO add is_targeting_all_threads!!!
         // by is_in_assembly second,
@@ -209,6 +205,7 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'widgets/buttons']
                 },
             },
         };
+        
     };
 
     ThreadButtonBarController.prototype._create_button_descriptions_for_reverse_mode_from = function (button_descriptions_prototype, position_of_disabled_buttons) {
