@@ -1,6 +1,8 @@
 define(['jquery', 'notify', 'underscore',], function ($, _notused, _) {
    'use strict';
 
+   var util = require('util');
+
    var redirected_stream = {
       debug: false,
       info:  false,
@@ -20,27 +22,27 @@ define(['jquery', 'notify', 'underscore',], function ($, _notused, _) {
    var init = function (notify_configuration) {
       var style_name = "hydra-info";
       $.notify.addStyle(style_name, {
-          html: "<div><div class='ui-widget'><i class='fa fa-info-circle'></i><span data-notify-text></span></div></div>",
+          html: "<div><div class='ui-widget'><i class='fa fa-fw fa-info-circle'></i><span data-notify-text></span></div></div>",
       });
       
       var style_name = "hydra-warn";
       $.notify.addStyle(style_name, {
-          html: "<div><div class='ui-widget'><i class='fa fa-warning'></i><span data-notify-text></span></div></div>",
+          html: "<div><div class='ui-widget'><i class='fa fa-fw fa-warning'></i><span data-notify-text></span></div></div>",
       });
       
       var style_name = "hydra-error";
       $.notify.addStyle(style_name, {
-          html: "<div><div class='ui-widget'><i class='fa fa-bug'></i><span data-notify-text></span></div></div>",
+          html: "<div><div class='ui-widget'><i class='fa fa-fw fa-bug'></i><span data-notify-text></span></div></div>",
       });
       
       var style_name = "hydra-success";
       $.notify.addStyle(style_name, {
-          html: "<div><div class='ui-widget'><i class='fa fa-check-circle'></i><span data-notify-text></span></div></div>",
+          html: "<div><div class='ui-widget'><i class='fa fa-fw fa-check-circle'></i><span data-notify-text></span></div></div>",
       });
       
       var style_name = "hydra-debug";
       $.notify.addStyle(style_name, {
-          html: "<div><div class='ui-widget'><i class='fa fa-bug'></i><span data-notify-text></span></div></div>",
+          html: "<div><div class='ui-widget'><i class='fa fa-fw fa-bug'></i><span data-notify-text></span></div></div>",
       });
 
       if (notify_configuration) {
@@ -71,7 +73,19 @@ define(['jquery', 'notify', 'underscore',], function ($, _notused, _) {
 
    var create_redirect_function = function (notification_class, old_function) {
       return function () {
-         $.notify.apply(undefined, [arguments[0], {style: "hydra-"+notification_class, className: notification_class}]);
+         var to_print = arguments[0];
+         if (util.isObject(to_print)) {
+             to_print = util.inspect(to_print, {depth: 1});
+         }
+         else {
+             to_print = "" + to_print;
+         }
+
+         if (!to_print) {
+             to_print = "."; // transform an empty string to a non-empty otherwise notifyjs will not print it
+         }
+
+         $.notify.apply(undefined, [to_print, {style: "hydra-"+notification_class, className: notification_class}]);
          return old_function.apply(this, arguments);
       }
    };

@@ -1,14 +1,13 @@
 .notifyjs-container .fa {
   position: absolute;
-  top: 40%;
-  margin-top: -4%;
+  margin-top: 2px;
   margin-left: -19px;
 }
 
 .notifyjs-hydra-debug-base, .notifyjs-hydra-info-base, .notifyjs-hydra-warn-base, .notifyjs-hydra-error-base {
   font-weight: bold;
   padding: 8px 15px 8px 14px;
-  background-color: #fcf8e3;
+  background-color: rgba(41, 42, 47, 0.91);
   border: 1px solid #ffffff;
   border-radius: 4px;
   white-space: nowrap;
@@ -17,32 +16,27 @@
 
 .notifyjs-hydra-debug-error, .notifyjs-hydra-info-error, .notifyjs-hydra-warn-error, .notifyjs-hydra-error-error {
   color: #FF6161;
-  background-color: #000000;
   border-color: #990000;
 }
 
 .notifyjs-hydra-debug-info, .notifyjs-hydra-info-info, .notifyjs-hydra-warn-info, .notifyjs-hydra-error-info {
   color: #7DD7E7;
-  background-color: #000000;
   border-color: #BCE8F1;
 }
 
 .notifyjs-hydra-debug-warn, .notifyjs-hydra-info-warn, .notifyjs-hydra-warn-warn, .notifyjs-hydra-error-warn {
   color: #E47E40;
-  background-color: #000000;
   border-color: #FFA500;
 }
 
 .notifyjs-hydra-debug-debug, .notifyjs-hydra-info-debug, .notifyjs-hydra-debug-debug, .notifyjs-hydra-error-debug {
   color: #FF43F5;
-  background-color: #000000;
   border-color: #F46CE3;
 }
 
 /* not used */
 .notifyjs-hydra-debug-success, .notifyjs-hydra-info-success, .notifyjs-hydra-warn-success, .notifyjs-hydra-error-success {
   color: #468847;
-  background-color: #DFF0D8;
   border-color: #D6E9C6;
 }
 
