@@ -56,7 +56,7 @@ requirejs.onResourceLoad = function(context, map, depArray) {
    }
 };
 
-requirejs(['ui', 'code_view', 'jquery', 'export_console', 'layout', 'layout_examples', 'jqueryui', 'ctxmenu', 'notify_js_console', 'debuggee_tracker/tracker', 'event_handler', 'debuggee_tracker_view', 'underscore', 'shortcuts', 'thread_follower', "breakpoints_view", "details_view"], function (ui, code_view, $, export_console, layout, layout_examples, jqueryui, ctxmenu, notify_js_console, debuggee_tracker, event_handler, debuggee_tracker_view, _, shortcuts, thread_follower, breakpoints_view, details_view) {
+requirejs(['ui', 'code_view', 'jquery', 'export_console', 'layout', 'layout_examples', 'jqueryui', 'ctxmenu', 'notify_js_console', 'debuggee_tracker/tracker', 'event_handler', 'debuggee_tracker_view', 'underscore', 'shortcuts', 'thread_follower', "breakpoints_view", "details_view", "global_toolbar"], function (ui, code_view, $, export_console, layout, layout_examples, jqueryui, ctxmenu, notify_js_console, debuggee_tracker, event_handler, debuggee_tracker_view, _, shortcuts, thread_follower, breakpoints_view, details_view, glob) {
    var EH = new event_handler.EventHandler();
    EH.init("(ui)");
    event_handler.set_global_event_handler(EH);
@@ -83,8 +83,14 @@ requirejs(['ui', 'code_view', 'jquery', 'export_console', 'layout', 'layout_exam
    ctxmenu.attachDynamic('body', undefined);
   
    // Copy the messages to the "console" and shows them to the UI
-   notify_js_console.init({autoHide: false})
+   notify_js_console.init();
    notify_js_console.start_redirection();
+
+   // Global toolbar (for develop mode only)
+   var global_toolbar = new glob.GlobalToolbar();
+   var root_for_global_bar = global_toolbar.attach($('body'));
+   root_for_global_bar.render();
+
 
    //layout_examples.init_short_examples();
    var l = ui.init(EH);
@@ -96,7 +102,7 @@ requirejs(['ui', 'code_view', 'jquery', 'export_console', 'layout', 'layout_exam
 
    var dbg_tracker = new debuggee_tracker.DebuggeeTracker();
    var dbg_tracker_view = new debuggee_tracker_view.DebuggeeTrackerView(dbg_tracker, aThreadFollower);
-
+ 
    var bkps_view = new breakpoints_view.BreakpointsView(dbg_tracker);
 
    var det_view = new details_view.DetailsView();
@@ -108,6 +114,7 @@ requirejs(['ui', 'code_view', 'jquery', 'export_console', 'layout', 'layout_exam
    dbg_tracker_view.parent().split(det_view, "bottom");
 
    old_code_editor.swap(aThreadFollower);
+
    root.render();
 
    det_view.update_view();
