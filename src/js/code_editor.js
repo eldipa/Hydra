@@ -1,6 +1,10 @@
 define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore'], function (ace, $, layout, shortcuts, _) {
-    var get_text_of_gutter_line_number_from_number = function(session, row) {
-        return "" + row; // This is the default
+    var get_text_of_gutter_line_number_from_number = function(session, ace_row_number) {
+        return "" + (ace_row_number+1);
+    };
+
+    var ace_row_lookup_from_line_number = function(line_number) {
+        return Number(line_number)-1;
     };
 
     var CodeEditor = function () {
@@ -54,37 +58,57 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore'], function (ace, $,
         this.load_code_from_string(assembly_code);
     };
 
-    CodeEditor.prototype.go_to_line = function (line_number) {
-        this.editor.scrollToLine(line_number, false, false);
-        this.editor.gotoLine(line_number, 0, false);
+    CodeEditor.prototype.go_to_line = function (line_number_or_address) {
+        var ace_row_number = this.ace_row_lookup_from_gutter_line(line_number_or_address);
+
+        this.editor.scrollToLine(ace_row_number, false, false);
+        this.editor.gotoLine(ace_row_number, 0, false);
     };
 
-    CodeEditor.prototype.highlight_lines = function (css_classes, start_line_number, end_line_number) {
-        var end_line_number = end_line_number || start_line_number;
+    CodeEditor.prototype._highlight_ace_range = function (hightlight, stringBuilder, range, left, top, config) {
+        var hightlight_classes = hightlight.css_classes;
+        var note = hightlight.note;
 
-        var range = new ace.range.Range(start_line_number, 0, end_line_number, 10);
+        var note_str = "";
+        if (note) {
+            var note_elem = $('<span style="pointer-events: auto;"></span>');
+            note_elem.text(note.text);
+            note_str = note_elem.prop('outerHTML');
+        }
+
+        var clazz = "code-editor-marker " + hightlight_classes;
+        var extraStyle = "text-align: right;";
+
+        var height = config.lineHeight;
+        
+        if (range.start.row != range.end.row)
+            height += ((range.end.row - config.firstRowScreen) * config.lineHeight) - top;
+
+        stringBuilder.push(
+            "<div class='", clazz, "' style='",
+            "height:", height, "px;",
+            "top:", top, "px;",
+            "left:0;right:0;", extraStyle || "", "'>"+note_str+"</div>"
+        );
+    };
+
+    CodeEditor.prototype.highlight_lines = function (hightlight, start_line_number_or_address, end_line_number_or_address) {
+        var start = this.ace_row_lookup_from_gutter_line(start_line_number_or_address);
+
+        if (end_line_number_or_address === null || end_line_number_or_address === undefined) {
+            var end = start;
+        }
+        else {
+            var end = this.ace_row_lookup_from_gutter_line(end_line_number_or_address);
+        }
+
+        var range = new ace.range.Range(start, 0, end, 10);
         //var marker_id = this.edit_session.addMarker(range, "code-editor-marker " + css_classes, "fullLine");
 
-        var marker_id = this.edit_session.addMarker(range, "", 
-                function (stringBuilder, range, left, top, config) {
-                    var clazz = "code-editor-marker " + css_classes; // My stuff
-                    var extraStyle = "text-align: right;";           // My stuff
+        var marker_id = this.edit_session.addMarker(range, "", _.partial(this._highlight_ace_range, hightlight));
 
-                    var height = config.lineHeight;
-                    
-                    if (range.start.row != range.end.row)
-                        height += ((range.end.row - config.firstRowScreen) * config.lineHeight) - top;
-
-                    stringBuilder.push(
-                        "<div class='", clazz, "' style='",
-                        "height:", height, "px;",
-                        "top:", top, "px;",
-                        "left:0;right:0;", extraStyle || "", "'><span>XXXX</span></div>"
-                    );
-                });
-
-        console.log(start_line_number);
-        console.log(end_line_number);
+        console.log(start);
+        console.log(end);
         return {marker_id: marker_id};
     };
 
@@ -92,8 +116,13 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore'], function (ace, $,
         this.edit_session.removeMarker(highlight.marker_id);
     };
 
-    CodeEditor.prototype.highlight_thread_current_line = function (line_number) {
-        return this.highlight_lines("code-editor-thread-current-line", line_number);
+    CodeEditor.prototype.highlight_thread_current_line = function (line_number_or_address) {
+        return this.highlight_lines({
+            css_classes: "code-editor-thread-current-line",
+            note: {
+                text: "XXXXX",
+            }
+        }, line_number_or_address);
     };
 
     
@@ -121,26 +150,42 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore'], function (ace, $,
            },
            getText: get_text_of_gutter_line_number_from_number
         };
+
+        this.ace_row_lookup_from_gutter_line = ace_row_lookup_from_line_number;
     };
 
     CodeEditor.prototype.use_the_common_decimal_gutter = function () {
         if (this.edit_session.gutterRenderer.getText !== get_text_of_gutter_line_number_from_number) {
-            this.update_gutter_with(get_text_of_gutter_line_number_from_number);
+            this.update_gutter_with(get_text_of_gutter_line_number_from_number, ace_row_lookup_from_gutter_line);
         }
     };
 
-    CodeEditor.prototype.use_the_gutter_for_hexa_addresses = function (addresses_by_line_number) {
-        var get_text_of_gutter_line_number_from_address = function(session, row) {
-            return addresses_by_line_number[row]; // Returns a String
+    CodeEditor.prototype.use_the_gutter_for_hexa_addresses = function (addresses_by_ace_row_number) {
+        var get_text_of_gutter_line_number_from_address = function(session, ace_row_number) {
+            return addresses_by_ace_row_number[ace_row_number]; // Returns a String
         };
 
-        this.update_gutter_with(get_text_of_gutter_line_number_from_address);
+        var ace_row_lookup_from_address = function (address) {
+            return _.indexOf(addresses_by_ace_row_number, address, true); // Return -1 if fails: TODO what we should do in that case?
+        };
+
+        this.update_gutter_with(get_text_of_gutter_line_number_from_address, ace_row_lookup_from_address);
     }
 
-    CodeEditor.prototype.update_gutter_with = function (get_text_for_gutter) {
+    // The get_text_for_gutter function maps each ace row (from 0 to N-1) to a nice and meaningful text for
+    // the gutter:
+    //   - String numbers from 1 to N when the loaded code is a source code
+    //   - String hexadecimal addresses from A to B (where A < B) whe the loaded code is in assembly.
+    //
+    // The inverse_for_ace_row_lookup reverts the operation. Given a string from the gutter (string numbers or string
+    // hexadecimal addresses) returns the corresponding row number in the ace editor (a number from 0 to N-1).
+    //
+    CodeEditor.prototype.update_gutter_with = function (get_text_for_gutter, inverse_for_ace_row_lookup) {
         this.editor.renderer.setShowGutter(false);
         this.edit_session.gutterRenderer.getText = get_text_for_gutter;
         this.editor.renderer.setShowGutter(true);
+
+        this.ace_row_lookup_from_gutter_line = inverse_for_ace_row_lookup;
     }
    
     CodeEditor.prototype.load_code_from_file = function (filename, encoding) {

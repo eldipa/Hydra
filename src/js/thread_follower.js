@@ -86,7 +86,7 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
     };
 
     ThreadFollower.prototype.update_current_line = function (line_number) {
-        line_number = Number(line_number) - 1;
+        line_number = Number(line_number);
         this.code_editor.go_to_line(line_number);
 
         if (this.current_line_highlight) {
