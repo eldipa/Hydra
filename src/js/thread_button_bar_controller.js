@@ -110,7 +110,7 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'widgets/buttons']
         var button_descriptions_for_src_stopped_mode = [
              {
                label: "Continue",
-               text: false,
+               text: true,
                icons: {primary: 'fa fa-play'},
                action: function (ev) {
                   ev.preventDefault();
@@ -121,9 +121,9 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'widgets/buttons']
                },
             },
             {
-               label: "Next",
-               text: false,
-               icons: {primary: 'fa fa-step-forward'},
+               label: "Step over",
+               text: true,
+               icons: {primary: 'fa fa-mail-forward'},
                action: function (ev) {
                   ev.preventDefault();
                   var args = self._args_for_reversing_mode();
@@ -138,8 +138,8 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'widgets/buttons']
                },
             }, 
             {
-               label: "Step",
-               text: false,
+               label: "Step in",
+               text: true,
                icons: {primary: 'fa fa-sign-in'},
                action: function (ev) {
                   ev.preventDefault();
@@ -155,9 +155,9 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'widgets/buttons']
                },
             }, 
             {
-               label: "Finish",
-               text: false,
-               icons: {primary: 'fa fa-forward'},
+               label: "Step out",
+               text: true,
+               icons: {primary: 'fa fa-external-link'},
                action: function (ev) {
                   ev.preventDefault();
                   var args = self._args_for_reversing_mode();
