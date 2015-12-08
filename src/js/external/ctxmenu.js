@@ -270,14 +270,18 @@ define(['jquery', 'underscore'], function ($, _) {
                                    /* ***** */
 
                                    if ((e.pageY + autoH) > $('html').height()) {
+                                           var top  = e.pageY /*- 20*/ - autoH - 3;
+                                           var left = e.pageX /*- 13*/ - autoW - 3;
                                            $dd.addClass('dropdown-context-up').css({
-                                                   top: e.pageY - 20 - autoH,
-                                                   left: e.pageX - 13 - autoW
+                                                   top:  top,
+                                                   left: left
                                            }).fadeIn(options.fadeSpeed);
                                    } else {
+                                           var top  = e.pageY /*+ 10*/;
+                                           var left = e.pageX /*- 13*/ - autoW;
                                            $dd.css({
-                                                   top: e.pageY + 10,
-                                                   left: e.pageX - 13 - autoW
+                                                   top:  top,
+                                                   left: left
                                            }).fadeIn(options.fadeSpeed);
                                    }
                            }
