@@ -285,13 +285,13 @@ define([], function () {
        };
 
        prototype.unlink = function () {
-           if (!this.$out_of_dom) {
-               this.$out_of_dom = this._$container.detach();
+           if (!this._$out_of_dom) {
+               this._$out_of_dom = this._$container.detach();
            }
        };
 
        prototype.is_in_the_dom = function () {
-           return !this.$out_of_dom;
+           return !this._$out_of_dom;
        };
    };
 
