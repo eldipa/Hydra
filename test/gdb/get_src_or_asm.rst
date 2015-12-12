@@ -70,6 +70,24 @@ del codigo que se esta ejecutando y el numero de linea.
     u'token': ...,
     u'type': u'Sync'}
 
+Podemos ver que datos nos da el backtrace o stacktrace. En este caso el file y la linea
+del codigo fuente:
+
+::   
+    
+    >>> request(gdb, "-stack-list-frames", ["--no-frame-filters"]) # doctest: +ELLIPSIS
+    {u'debugger-id': ...,
+     u'klass': u'done',
+     u'results': {u'stack': [{u'frame': {u'addr': u'0x...',
+                                         u'file': u'example.c',
+                                         u'fullname': u'.../example.c',
+                                         u'func': u'main',
+                                         u'level': u'0',
+                                         u'line': u'5'}}]},
+     u'token': ...,
+     u'type': u'Sync'}
+
+
 Pero que pasa si tenemos el ejecutable sin la informacion necesaria para debuggear?
 
 ::
@@ -148,6 +166,21 @@ es no poner el mapeo entre el codigo binario y el codigo fuente.
     u'type': u'Sync'}
 
 
+Veamos como su stacktrace contiene el simbolo y la direccion de la funcion pero no tiene
+ni linea ni source file:
+
+::   
+    
+    >>> request(gdb, "-stack-list-frames", ["--no-frame-filters"]) # doctest: +ELLIPSIS
+    {u'debugger-id': ...,
+     u'klass': u'done',
+     u'results': {u'stack': [{u'frame': {u'addr': u'0x...',
+                                         u'func': u'main',
+                                         u'level': u'0'}}]},
+     u'token': ...,
+     u'type': u'Sync'}
+
+
 Pero esto no es todo. Si el ejecutable esta strippeado, no hay ningun simbolo. 
 La funcion "main" no existe como tal por que no existe el tag "main"!
 La unica alternativa es averiguar cual es el entry point y arrancar por ahi.
@@ -219,6 +252,20 @@ Obviamente no tenemos ni el source ni la linea. Ni siquiera el nombre de la func
                                u'target-id': u'...'}]},
     u'token': ...,
     u'type': u'Sync'}
+
+Veamos como su stacktrace es mas reducida pero aun asi tenemos la direccion del frame:
+
+::   
+    
+    >>> request(gdb, "-stack-list-frames", ["--no-frame-filters"]) # doctest: +ELLIPSIS
+    {u'debugger-id': ...,
+     u'klass': u'done',
+     u'results': {u'stack': [{u'frame': {u'addr': u'0x...',
+                                         u'func': u'??',
+                                         u'level': u'0'}}]},
+     u'token': ...,
+     u'type': u'Sync'}
+
 
 Limiamos todo:
 
