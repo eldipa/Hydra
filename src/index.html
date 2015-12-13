@@ -1,25 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <script>
-      var splash_window = require('nw.gui').Window.open("splash.html", {
-            frame: false,
-            toolbar: false,
-            show: true,
-            width: 260,
-            height: 233,
-            position: "center",
-            resizable: false,
-            "always-on-top": true
-         });
-    </script>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="">
     <meta name="author" content="">
 
-    <title>Starter Template for Bootstrap</title>
+    <title>Hydra</title>
 
     <!-- Bootstrap core CSS -->
     <link href="resources/css/bootstrap.css" rel="stylesheet">
@@ -33,35 +21,17 @@
     <link title="uidark"  href="resources/css/theme/uidark/jquery-ui.theme.css"  rel="stylesheet">
     <link title="uidark"  href="resources/css/theme/uidark/notify-uidark.css"  rel="stylesheet">
 
+    <link href="resources/css/panel.css" rel="stylesheet">
     <link href="resources/css/splitted.css" rel="stylesheet">
     <link href="resources/css/stacked.css" rel="stylesheet">
     <link href="resources/css/scrollbar.css" rel="stylesheet">
     
     <link href="resources/css/icons/font-awesome-4.4.0.min.css" rel="stylesheet">
 
-    <style>
-/* Allow Font Awesome Icons in lieu of jQuery UI and only apply when using a FA icon */
-.ui-icon[class*=" fa-"] {
-    /* Remove the jQuery UI Icon */
-    background: none repeat scroll 0 0 transparent;
-    /* Remove the jQuery UI Text Indent */
-    text-indent: 0; 
-    /* Bump it up - jQuery UI is -8px */
-    margin-top: -0.5em;
-}
 
-/* Allow use of icon-large to be properly aligned */
-.ui-icon.icon-large {
-    margin-top: -0.75em;
-}
+    <link href="resources/css/fonts-awesome-jquery-ui-fix.css" rel="stylesheet">
+    <link href="resources/css/jstree-multiline-fix.css" rel="stylesheet">
 
-.ui-button-icon-only .ui-icon[class*=" fa-"] {
-    /* Bump it - jQuery UI is -8px */
-    margin-left: -9px;
-}
-
-
-    </style>
     <style>
 
        /* The selections of ACE require this */
@@ -92,23 +62,9 @@
           z-index: 999;
        }
 
-       /* The bar of a Splitted should be transparent */
-       .bar_of_splitted_transparent {
-          background: transparent !important;
-          border: 1px solid transparent !important;
-       }
-
        /* Disallow the selection of the text */
        * {
           -webkit-user-select: none;
-       }
-
-       /* Add-Remove this class to trigger a repaint without triggering
-          a reflow. This will fix some issues in webkit:
-          http://stackoverflow.com/questions/3485365/
-            how-can-i-force-webkit-to-redraw-repaint-to-propagate-style-changes */
-       .repaint_toogleable_fix {
-          fill: #000000;
        }
 
        /* Fonts for the code editors */
@@ -136,33 +92,10 @@
           background: linear-gradient(to right, rgba(0,0,0,0) , rgb(95, 162, 219));
        }
 
-       /* Used this so jstree can support multiline texts in the nodes */
-       .jstree-default a { 
-            white-space:normal !important; height: auto; 
-        }
-        .jstree-anchor {
-            height: auto !important;
-        }
-        .jstree-default li > ins { 
-            vertical-align:top; 
-        }
-        .jstree-leaf {
-            height: auto;
-        }
-        .jstree-leaf a{
-            height: auto !important;
-        }
-
     </style>
-
   </head>
 
   <body class="ui-widget-content" style="border: 0px;">
-
-
-    <!-- Bootstrap core JavaScript
-    ================================================== -->
-    <!-- Placed at the end of the document so the pages load faster -->
     <script data-main="js/main.js" src="js/external/require.js"></script>
     <script>
        (function () {

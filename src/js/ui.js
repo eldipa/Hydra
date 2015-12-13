@@ -285,22 +285,6 @@ define(['jquery', 'layout', 'code_editor', 'varViewer', 'listview_panel', 'stand
 
       root.render();
 
-      var fs = require('fs');
-      fs.readFile('../config/start.cfg', 'utf8', function (err,data) {
-    	  if (err) {
-    	    return console.log(err);
-    	  }
-    	  var aux = data.split(',');
-    	  if (aux.length != 2) {
-    		  aux=["load","stdinTest"];
-    	  }
-    	  if (aux[0] == "load"){
-    		  aux[1] = "cppTestCode/" + aux[1];
-    	  }
-    	  event_handler.publish("debugger." + aux[0],  aux[1]);
-    	});
-      
-      
       return {root: root, visor: visor, code_editor: view};
    };
 

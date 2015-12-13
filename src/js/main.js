@@ -44,18 +44,6 @@ requirejs.config({
 
 });
 
-var __modules_loaded_count = 0;
-var __status_element = window.splash_window.window.document.getElementById("status");
-requirejs.onResourceLoad = function(context, map, depArray) {
-   __modules_loaded_count += 1;
-   try {
-      __status_element.innerHTML = "Loading... ["+__modules_loaded_count+" modules done].";
-   } catch (e) {
-      console.error("" + e);
-      __status_element = window.splash_window.window.document.getElementById("status");
-   }
-};
-
 requirejs(['ui', 'code_view', 'jquery', 'export_console', 'layout', 'layout_examples', 'jqueryui', 'ctxmenu', 'notify_js_console', 'debuggee_tracker/tracker', 'event_handler', 'debuggee_tracker_view', 'underscore', 'shortcuts', 'thread_follower', "breakpoints_view", "details_view", "global_toolbar"], function (ui, code_view, $, export_console, layout, layout_examples, jqueryui, ctxmenu, notify_js_console, debuggee_tracker, event_handler, debuggee_tracker_view, _, shortcuts, thread_follower, breakpoints_view, details_view, glob) {
    var EH = new event_handler.EventHandler();
    EH.init("(ui)");
@@ -189,13 +177,8 @@ requirejs(['ui', 'code_view', 'jquery', 'export_console', 'layout', 'layout_exam
          [0, 2]
             ]);*/
    // Hide and close the splash window and show this one
-   window.splash_window.hide();
+   EH.publish("ui.loaded", {'what': "Done"});
    require('nw.gui').Window.get().show();
-   
-   // release the memory
-   __status_element = null;
-   window.splash_window.close(true);
-   window.splash_window = null;
 },
 function (err) {
    alert("Error during the import (" + err.requireType + ").\nFailed modules: " + err.requireModules + "\n");
