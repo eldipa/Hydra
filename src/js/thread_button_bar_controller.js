@@ -186,8 +186,9 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'widgets/buttons',
 
         var button_descriptions_for_src_stopped_mode = [
              {
-               label: "Continue",
+               label: "Resume",
                text: true,
+               tooltip: "Resume the execution.",
                icons: {primary: 'fa fa-play'},
                action: function (ev) {
                   ev.preventDefault();
@@ -200,6 +201,7 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'widgets/buttons',
             {
                label: "Step over",
                text: true,
+               tooltip: "Step over the next instruction.",
                icons: {primary: 'fa fa-mail-forward'},
                action: function (ev) {
                   ev.preventDefault();
@@ -215,8 +217,9 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'widgets/buttons',
                },
             }, 
             {
-               label: "Step in",
+               label: "Step into",
                text: true,
+               tooltip: "Step into the next instruction.",
                icons: {primary: 'fa fa-sign-in'},
                action: function (ev) {
                   ev.preventDefault();
@@ -234,6 +237,7 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'widgets/buttons',
             {
                label: "Step out",
                text: true,
+               tooltip: "Step out of the current function.",
                icons: {primary: 'fa fa-external-link'},
                action: function (ev) {
                   ev.preventDefault();
@@ -285,12 +289,17 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'widgets/buttons',
     };
 
     ThreadButtonBarController.prototype._create_button_descriptions_for_reverse_mode_from = function (button_descriptions_prototype, position_of_disabled_buttons) {
+        var note = "(backward)";
         var button_descriptions = [];
         for (var i = 0; i < button_descriptions_prototype.length; ++i) {
             var desc = this._copy_button_description(button_descriptions_prototype[i]);
             desc.icons.primary += " fa-flip-horizontal";
 
             button_descriptions.push(desc);
+            
+            if (desc.tooltip.indexOf(note) === -1) {
+                desc.tooltip += " " + note;
+            }
         }
 
         return button_descriptions;
@@ -300,10 +309,8 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'widgets/buttons',
         var button_descriptions = [];
         for (var i = 0; i < button_descriptions_prototype.length; ++i) {
             var desc = this._copy_button_description(button_descriptions_prototype[i]);
-            if (i !== 0) {
-                //desc.label += " instruction"; 
-            } // Continue/Interrupt 
-
+            
+            desc.tooltip = desc.tooltip.replace("instruction", "assembly instruction");
             button_descriptions.push(desc);
         }
 
@@ -320,6 +327,7 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'widgets/buttons',
         }
 
         button_descriptions[0].label = "Interrupt";
+        button_descriptions[0].tooltip = "Interrupt the current execution.";
         button_descriptions[0].icons.primary = "fa fa-pause";
 
         this._configure_disable_buttons_inplace([1, 2, 3], button_descriptions, button_descriptions_prototype);
@@ -328,12 +336,16 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'widgets/buttons',
     };
 
     ThreadButtonBarController.prototype._configure_disable_buttons_inplace = function (position_of_disabled_buttons, button_descriptions, button_descriptions_prototype) {
+        var note = "(not allowed)";
         for (var i = 0; i < position_of_disabled_buttons.length; ++i) {
             var pos = position_of_disabled_buttons[i];
 
             var desc = this._copy_button_description(button_descriptions_prototype[pos]);
             desc.disabled = true;
-            //desc.label += " (not allowed)"
+
+            if (desc.tooltip.indexOf(note) === -1) {
+                desc.tooltip += " " + note;
+            }
 
             button_descriptions[pos] = desc;
         }

@@ -16,6 +16,7 @@ define(['jquery', 'jqueryui'], function ($, _unused_) {
          var desc = buttons_description[i];
 
          var label = desc.label || "";
+         var tooltip = desc.tooltip || "";
          var action = desc.action || null;
 
          var $button = $('<button style="'+button_style+'">'+label+'</button>');
@@ -24,6 +25,10 @@ define(['jquery', 'jqueryui'], function ($, _unused_) {
 
          if (action) {
             $button.click(action);
+         }
+
+         if (tooltip) {
+             $button.attr("title", $.trim(tooltip));
          }
 
          $container.append($button);

@@ -7,6 +7,7 @@ define(['jquery', 'layout', 'shortcuts', 'underscore', 'widgets/buttons'], funct
              {
                label: "DevTools",
                text: false,
+               tooltip: "Open the Developer Tools.",
                icons: {primary: 'fa fa-fw fa-wrench'},
                action: function (ev) {
                   ev.preventDefault();
@@ -18,6 +19,7 @@ define(['jquery', 'layout', 'shortcuts', 'underscore', 'widgets/buttons'], funct
             },{
                label: "Refresh UI",
                text: false,
+               tooltip: "Reload everything in the UI.",
                icons: {primary: 'fa fa-fw fa-refresh'},
                action: function (ev) {
                   var W = require('nw.gui').Window.get();
