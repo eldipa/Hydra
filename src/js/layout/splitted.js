@@ -39,7 +39,8 @@ define(['jquery', 'layout/panel', 'jqueryui'], function ($, P, _) {
 
             var container_position = $container.position();
 
-            var rel_offset = (new_bar_position[position_name] - container_position[position_name]) / $container[dimension_name]();
+            var delta = (new_bar_position[position_name] - container_position[position_name]);
+            var rel_offset = delta / $container[dimension_name]();
 
             if(rel_offset < 0.0001 || rel_offset > 0.9999) {
                console.warn("Upss, the bar was moved too far. Try it again.");
