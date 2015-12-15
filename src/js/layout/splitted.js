@@ -241,12 +241,12 @@ define(['jquery', 'layout/panel', 'jqueryui'], function ($, P, _) {
       }
       for (var pos in this._children) {
          if (pos === 'left' || pos === 'top') {
-            var panel_side = this._$container.children(this._get_class_for_child(pos))
-            this._children[pos].box = panel_side.children();
+            var panel_side = this._$container.children(this._get_class_for_child(pos));
+            var panel_box  = panel_side.children(".panel_of_splitted_conteiner");
          }
          else {
             var panel_side = this._$container.children('.'+pos+'_side_panel_and_bar_of_splitted').children(this._get_class_for_child(pos));
-            this._children[pos].box = panel_side.children();
+            var panel_box  = panel_side.children(".panel_of_splitted_conteiner");
          }
 
          if (this._children[pos].is_container()) {
@@ -256,13 +256,46 @@ define(['jquery', 'layout/panel', 'jqueryui'], function ($, P, _) {
             panel_side.addClass("ui-widget-content").addClass("ui-corner-all");
          }
 
+         this._children[pos].box = panel_box;
+
+         this._render_header_of(pos, panel_side, panel_box);
          this._children[pos].render();
       }
    };
 
+   Splitted.prototype._render_header_of = function (pos, panel_side, panel_box) {
+         var header_box = panel_side.children('.header_of_panel');
+         var panel_box_css = {};
+         panel_box_css['height'] = "100%";
+         if (this._children[pos].render_header) {
+             if (header_box.length === 0) {
+                 header_box = $('<div class="header_of_panel"></div>');
+                 panel_side.prepend(header_box);
+             }
+
+             this._children[pos].render_header(header_box);
+
+             var size_fix = header_box.outerHeight();
+             panel_box_css['height'] = "calc(100% - "+size_fix+"px)";
+
+         }
+         else {
+             if (header_box.length >= 1) {
+                 header_box.remove();
+             }
+             
+         }
+
+         panel_box.css(panel_box_css);
+    };
+
    Splitted.prototype.unlink = function () {
       for (var pos in this._children) {
          this._children[pos].unlink();
+
+         if (this._children[pos].render_header && this._children[pos].unlink_header) {
+             this._children[pos].unlink_header();
+         }
       }
 
       if (!this._$out_of_dom) {

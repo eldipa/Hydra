@@ -1,4 +1,4 @@
-define(['jquery', 'layout', 'underscore', 'widgets/switch_theme', 'code_view', 'process_graph'], function ($, layout, _, switch_theme_widget, code_view, pgraph) {
+define(['jquery', 'layout', 'underscore', 'widgets/switch_theme', 'code_view', 'process_graph', 'observation'], function ($, layout, _, switch_theme_widget, code_view, pgraph, observation) {
    var init_short_examples = function () {
       var self = this;
       var $body = $('body');
@@ -17,39 +17,46 @@ define(['jquery', 'layout', 'underscore', 'widgets/switch_theme', 'code_view', '
       console.info("Example: " + examples[current_example_number].name);
       
       // Load a context menu to control what example show.
-      $body.data('ctxmenu_controller', [
-            {
-               text: 'Next example',
-               action: function (e) {
-                  e.preventDefault();
+      var test_driver = {
+          get_display_controller: function () {
+              return [
+              {
+                  text: 'Next example',
+                  action: function (e) {
+                      e.preventDefault();
 
-                  current_root_panel.remove(); // clean up
+                      current_root_panel.remove(); // clean up
 
-                  // run the next example
-                  current_example_number = (current_example_number + 1) % examples.length;
-                  current_example = examples[current_example_number].example;
-                  current_root_panel = current_example();
-                  console.info("Example: " + examples[current_example_number].name);
-               }
-            },
-            {
-               text: 'Previous example',
-               action: function (e) {
-                  e.preventDefault();
-
-                  current_root_panel.remove(); // clean up
-
-                  // run the previous example
-                  current_example_number = (current_example_number - 1) % examples.length;
-                  if (current_example_number < 0) {
-                     current_example_number = examples.length - 1;
+                      // run the next example
+                      current_example_number = (current_example_number + 1) % examples.length;
+                      current_example = examples[current_example_number].example;
+                      current_root_panel = current_example();
+                      console.info("Example: " + examples[current_example_number].name);
                   }
-                  current_example = examples[current_example_number].example;
-                  current_root_panel = current_example();
-                  console.info("Example: " + examples[current_example_number].name);
-               }
-            }
-      ]);
+              },
+              {
+                  text: 'Previous example',
+                  action: function (e) {
+                      e.preventDefault();
+
+                      current_root_panel.remove(); // clean up
+
+                      // run the previous example
+                      current_example_number = (current_example_number - 1) % examples.length;
+                      if (current_example_number < 0) {
+                          current_example_number = examples.length - 1;
+                      }
+                      current_example = examples[current_example_number].example;
+                      current_root_panel = current_example();
+                      console.info("Example: " + examples[current_example_number].name);
+                  }
+              }
+              ];
+          }
+      };
+
+      var Observation = observation.Observation;
+      $('body').data('do_observation', function () { return new Observation({target: test_driver, context: test_driver}); });
    };
    
    /* 
@@ -175,6 +182,10 @@ define(['jquery', 'layout', 'underscore', 'widgets/switch_theme', 'code_view', '
       var on_top = Text('red', 'top-text', 150);
       var on_left = Text('green', 'left-text', 100);
       var on_center = Text('blue', 'center-text', 0);
+
+      on_left.render_header = function (header_box) {
+          header_box.text("=Header=");
+      };
 
       var root = on_center.attach($('body'));
       on_center.split(on_top, "top");
@@ -515,24 +526,30 @@ define(['jquery', 'layout', 'underscore', 'widgets/switch_theme', 'code_view', '
       var $body = $('body');
       
       var current_test_number = 0;
-      $body.data('ctxmenu_controller', [
-            {
-               text: 'Next step',
-               action: function (e) {
-                  e.preventDefault();
-                  
-                  // run the next test
-                  current_test_number = (current_test_number + 1);
-                  if (current_test_number >= tests.length) {
-                     console.info("No more tests to run.");
-                     return;
-                  }
-            
-                  tests[current_test_number]();
-                  console.info("Test " + current_test_number);
-               }
-            }
-      ]);
+      var test_driver = {
+          get_display_controller: function () {
+              return [
+                    {
+                       text: 'Next step',
+                       action: function (e) {
+                          e.preventDefault();
+                          
+                          // run the next test
+                          current_test_number = (current_test_number + 1);
+                          if (current_test_number >= tests.length) {
+                             console.info("No more tests to run.");
+                             return;
+                          }
+                    
+                          tests[current_test_number]();
+                          console.info("Test " + current_test_number);
+                       }
+                    }
+              ];
+          }
+      };
+      var Observation = observation.Observation;
+      $('body').data('do_observation', function () { return new Observation({target: test_driver, context: test_driver}); });
 
       var hello_msg;
       var bye_bye_msg;
