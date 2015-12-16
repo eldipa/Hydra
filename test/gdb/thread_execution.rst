@@ -193,6 +193,48 @@ Ahora, todos los threads salvo el tercero deberian estar frenados debido a cada 
     u'token': ...,
     u'type': u'Sync'}
 
+Que pasa ahora si pedimos el backtrace? Tenemos que explicitar como primer argumento
+el hilo que queremos analizar y solo se podra ver el backtrace de los hilos stoppeados.
+
+::
+
+    >>> request(gdb, "-stack-list-frames", ["--thread 1", "--no-frame-filters"]) # doctest: +ELLIPSIS
+    {u'debugger-id': ...,
+     u'klass': u'done',
+     u'results': {u'stack': [{u'frame': {...
+                                         u'func': u'main',
+                                         u'level': u'0',
+                                         u'line': u'14'}}]},
+     ...}
+    
+    >>> request(gdb, "-stack-list-frames", ["--thread 2", "--no-frame-filters"]) # doctest: +ELLIPSIS
+    {u'debugger-id': ...,
+     u'klass': u'done',
+     u'results': {u'stack': [{u'frame': {...
+                                         u'func': u'roll',
+                                         u'level': u'0',
+                                         u'line': u'5'}},
+                             ...]},
+     ...}
+
+    >>> request(gdb, "-stack-list-frames", ["--thread 3", "--no-frame-filters"]) # doctest: +ELLIPSIS
+    {u'debugger-id': ...,
+     u'klass': u'error',
+     u'results': {u'msg': u'Target is executing.'},
+     u'token': ...,
+     u'type': u'Sync'}
+    
+    >>> request(gdb, "-stack-list-frames", ["--thread 4", "--no-frame-filters"]) # doctest: +ELLIPSIS
+    {u'debugger-id': ...,
+     u'klass': u'done',
+     u'results': {u'stack': [{u'frame': {...
+                                         u'func': u'roll',
+                                         u'level': u'0',
+                                         u'line': u'5'}},
+                             ...]},
+     ...}
+
+
 Ahora solo nos concetraremos en manipular al primer proceso viendo como este afecta a sus
 propios hilos y los hilos del proceso 2.
 
