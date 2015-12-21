@@ -55,5 +55,9 @@ define(["underscore", "shortcuts", 'event_handler'], function (_, shortcuts, eve
                 );
     };
 
+    Thread.prototype.get_stacktrace = function (on_success) {
+        this.execute("-stack-list-frames", ["SELF", "--no-frame-filters"], on_success, 0);
+    };
+
     return {Thread: Thread};
 });
