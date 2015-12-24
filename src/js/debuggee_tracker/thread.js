@@ -48,11 +48,15 @@ define(["underscore", "shortcuts", 'event_handler'], function (_, shortcuts, eve
             args[self_id_argument_position] = self_id_argument;
         }
 
-        shortcuts.gdb_request(callback || null,
+        var response = shortcuts.gdb_request(
                 this.debugger_id, 
                 command,
                 args
                 );
+
+        if (callback) {
+            response.then(callback);
+        }
     };
 
     Thread.prototype.get_stacktrace = function (on_success) {
