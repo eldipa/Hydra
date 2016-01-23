@@ -58,7 +58,7 @@ define(["underscore", "shortcuts", 'event_handler'], function (_, shortcuts, eve
     };
 
     Debugger.prototype.add_thread_group = function () {
-        shortcuts.gdb_request( 
+        shortcuts.gdb_request(null, 
             this.id, 
             "-add-inferior",
             []
@@ -87,15 +87,11 @@ define(["underscore", "shortcuts", 'event_handler'], function (_, shortcuts, eve
 
     Debugger.prototype.execute = function (command, args, callback, self_id_argument_position) {
         args = args || [];
-        var response = shortcuts.gdb_request( 
+        shortcuts.gdb_request(callback || null, 
                 this.id, 
                 command,
                 args
                 );
-
-        if (callback) {
-            response.then(callback);
-        }
     };
 
     Debugger.prototype._modify_all_your_breakpoints = function (command) {

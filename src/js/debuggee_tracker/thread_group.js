@@ -71,7 +71,7 @@ define(["underscore", "shortcuts", 'event_handler'], function (_, shortcuts, eve
     };
 
     ThreadGroup.prototype.remove = function () {
-        shortcuts.gdb_request(
+        shortcuts.gdb_request(null, 
                 this.debugger_id, 
                 "-remove-inferior",
                 [""+this.id]
@@ -110,17 +110,11 @@ define(["underscore", "shortcuts", 'event_handler'], function (_, shortcuts, eve
             args[self_id_argument_position] = self_id_argument;
         }
 
-        var response = shortcuts.gdb_request( 
+        shortcuts.gdb_request(callback || null, 
                 this.debugger_id, 
                 command,
                 args
                 );
-
-        console.log(command);
-        console.log(args);
-        if (callback) {
-            response.then(callback);
-        }
     };
 
     return {ThreadGroup: ThreadGroup};
