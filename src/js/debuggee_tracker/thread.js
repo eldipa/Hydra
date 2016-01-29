@@ -1,5 +1,7 @@
-define(["underscore", "shortcuts", 'event_handler'], function (_, shortcuts, event_handler) {
+define(["underscore", "shortcuts", 'event_handler', 'debuggee_tracker/frame'], function (_, shortcuts, event_handler, frame_module) {
     'use strict';
+
+    var Frame = frame_module.Frame;
 
     var Thread = function (id, tracker, obj) {
         this._properties = ["debugger_id", "thread_group_id", "state", "source_fullname", "source_line",  "instruction_address"];
@@ -55,8 +57,31 @@ define(["underscore", "shortcuts", 'event_handler'], function (_, shortcuts, eve
                 );
     };
 
-    Thread.prototype.get_stacktrace = function (on_success) {
-        this.execute("-stack-list-frames", ["SELF", "--no-frame-filters"], on_success, 0);
+    Thread.prototype.get_stack_frames = function (on_success) {
+        var create_frames_and_run_callback_on_success = function create_frames_and_run_callback_on_success(data) {
+            var frames = _.pluck(data.results.stack, 'frame');
+
+            var processed_frames = _.map(frames, function (frame) {
+                var processed_frame = {};
+
+                processed_frame.function_name = frame.func;
+                processed_frame.instruction_address = frame.addr;
+                processed_frame.level = parseInt(frame.level);
+
+                console.log(frame);
+                if (frame.fullname) {
+                    processed_frame.source_fullname = frame.fullname;
+                    processed_frame.source_line_number = parseInt(frame.line);
+                }
+
+                return new Frame(processed_frame);
+            });
+
+            processed_frames = _.sortBy(processed_frames, 'level');
+            on_success(processed_frames);
+        };
+
+        this.execute("-stack-list-frames", ["SELF", "--no-frame-filters"], create_frames_and_run_callback_on_success, 0);
     };
 
     return {Thread: Thread};

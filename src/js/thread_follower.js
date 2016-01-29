@@ -83,6 +83,15 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
             //TODO request to GDB to dissamble few (how much?) instructions around 'instruction_address'.
             //then call update_yourself_from_dissabled_code
         }
+
+        // Request an update of the thread's stack
+        this.thread_followed.get_stack_frames(_.bind(this.update_stack_frames, this));
+    };
+
+    ThreadFollower.prototype.update_stack_frames = function (frames) {
+        _.each(frames, function (f) {
+            console.log(f.get_display_fullname());
+        });
     };
 
     ThreadFollower.prototype.update_current_line = function (line_number) {
