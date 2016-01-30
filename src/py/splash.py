@@ -6,15 +6,19 @@ import time
 # It was helpful also https://code.activestate.com/recipes/577271-tkinter-splash-screen/
 
 class Splash(object):
-    def __init__(self, file, event_to_wait, wait_timeout):
+    def __init__(self, file, event_to_wait, loading_event_signal, loading_event_holder, wait_timeout):
         self.__log = None
         self.__file = file
         self.__event_to_wait = event_to_wait
+        self.__loading_event_signal = loading_event_signal
+        self.__loading_event_holder = loading_event_holder
         self.__wait_timeout = wait_timeout
 
     def __enter__(self):
         self.__splash_opened = True
         root = tkinter.Tk()
+
+        self.__time_when_entered = time.time()
 
         # Hide the root while it is built.
         root.withdraw()
@@ -78,7 +82,17 @@ class Splash(object):
         if not self.__splash_opened:
             return
 
-        self.__event_to_wait.wait(self.__wait_timeout)
+        remain_timeout = self.__wait_timeout - (time.time() - self.__time_when_entered)
+        while not self.__event_to_wait.is_set() and remain_timeout > 0:
+            self.__loading_event_signal.acquire()
+            try:
+                self.__loading_event_signal.wait(remain_timeout)
+                self.update_state(self.__loading_event_holder['ev'])
+                remain_timeout = self.__wait_timeout - (time.time() - self.__time_when_entered)
+            except:
+                remain_timeout = 0   # exit now
+            finally:
+                self.__loading_event_signal.release()
 
         # Free used resources in reverse order.
         del self.__splash
