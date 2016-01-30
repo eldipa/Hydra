@@ -11,6 +11,7 @@ from sys import stdin
 from re import match
 import syslog
 import threading
+import signal
 
 if (not match(".*/src$", os.getcwd())):
     print "ESTE MAIN SE DEBE LLAMAR DESDE LA CARPETA SRC"
@@ -22,13 +23,19 @@ import gdb.gdbSpawner
 import publish_subscribe.eventHandler
 
 try:
+    spawner = ui_process = None
+
     globalconfig.load_global_config()
     cfg = globalconfig.get_global_config()
 
     syslog.openlog(cfg.get("gdbspawner", "name"), logoption=syslog.LOG_PID)
     syslog.setlogmask(syslog.LOG_UPTO(getattr(syslog, cfg.get("gdbspawner", "log_level"))))
+
+    node_webkit_path = cfg.get("ui", "node-webkit-path")
+    udev_lib_path =    cfg.get("ui", "udev-lib-path")
     
     is_ui_loaded = threading.Event()
+    is_ui_closed = threading.Event()
     loading_event_signal = threading.Condition()
     last_loading_event = {'ev': None}
 
@@ -49,17 +56,21 @@ try:
         os.system("python py/publish_subscribe/notifier.py start")
 
         ev = publish_subscribe.eventHandler.EventHandler(name="splash")
-        ev.subscribe("ui.loaded",  the_ui_is_loaded, return_subscription_id=True, send_and_wait_echo=True),
-        ev.subscribe("ui.loading", add_new_loading_event, return_subscription_id=True, send_and_wait_echo=True),
+        ev.subscribe("ui.closed",  lambda d: is_ui_closed.set(), return_subscription_id=True, send_and_wait_echo=True)
+        ev.subscribe("ui.loaded",  the_ui_is_loaded, return_subscription_id=True, send_and_wait_echo=True)
+        ev.subscribe("ui.loading", add_new_loading_event, return_subscription_id=True, send_and_wait_echo=True)
 
         sp.update_state("Loading the Interface...")
-        ui_process = subprocess.Popen(['./scripts/run_ui.sh'], shell=True)
+        env = os.environ.copy()
+        env['LD_LIBRARY_PATH'] = env.get('LD_LIBRARY_PATH', "") + ":" + udev_lib_path
+        ui_process = subprocess.Popen([node_webkit_path, "."], shell=False, env=env)
 
         spawner = gdb.gdbSpawner.GdbSpawner()
 
+    is_ui_closed.wait()
     # esperar quit
-    while(stdin.readline() not in ["quit\n","q\n"]):
-        print "Entrada invalida, ingrese quit o q para salir"
+    #while(stdin.readline() not in ["quit\n","q\n"]):
+    #    print "Entrada invalida, ingrese quit o q para salir"
 
 except Exception as inst:
     print type(inst)    
@@ -67,13 +78,11 @@ except Exception as inst:
     print inst
 
 finally:
-    
-    spawner.shutdown()
+    if spawner:
+        spawner.shutdown()
     
     os.system("python py/publish_subscribe/notifier.py stop")
  
-    if ui_process:
-        os.system("killall nw")  # XXX this is too much
-        
-    
+    if ui_process and ui_process.poll() is None:
+        ui_process.send_signal(signal.SIGKILL) 
 

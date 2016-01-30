@@ -59,6 +59,7 @@ requirejs(['event_handler'], function (event_handler) {
          console.error("" + e);
       }
    };
+
 },
 function (err) {
    alert("Error during the import (" + err.requireType + ").\nFailed modules: " + err.requireModules + "\n");
@@ -195,9 +196,23 @@ requirejs(['ui', 'code_view', 'jquery', 'export_console', 'layout', 'layout_exam
          [0, 1],
          [0, 2]
             ]);*/
+   
+   // When the main window get closed, notify this to the backend
+   var main_window = require('nw.gui').Window.get();
+   main_window.on('close', function() {
+      // Hide the window to give user the feeling of closing immediately
+      this.hide();
+
+      // Notify
+      EH.publish("ui.closed", {});
+
+      // Close the main window (force == true).
+      this.close(true);
+   });
+   
    // Hide and close the splash window and show this one
+   main_window.show();
    EH.publish("ui.loaded", {'what': "Done"});
-   require('nw.gui').Window.get().show();
 },
 function (err) {
    alert("Error during the import (" + err.requireType + ").\nFailed modules: " + err.requireModules + "\n");
