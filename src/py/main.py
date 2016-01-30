@@ -31,8 +31,8 @@ try:
     syslog.openlog(cfg.get("gdbspawner", "name"), logoption=syslog.LOG_PID)
     syslog.setlogmask(syslog.LOG_UPTO(getattr(syslog, cfg.get("gdbspawner", "log_level"))))
 
-    node_webkit_path = cfg.get("ui", "node-webkit-path")
-    udev_lib_path =    cfg.get("ui", "udev-lib-path")
+    node_webkit_executable_path = cfg.get("ui", "node-webkit-executable-path")
+    udev_lib_path = cfg.get("ui", "udev-lib-path")
     
     is_ui_loaded = threading.Event()
     is_ui_closed = threading.Event()
@@ -63,7 +63,7 @@ try:
         sp.update_state("Loading the Interface...")
         env = os.environ.copy()
         env['LD_LIBRARY_PATH'] = env.get('LD_LIBRARY_PATH', "") + ":" + udev_lib_path
-        ui_process = subprocess.Popen([node_webkit_path, "."], shell=False, env=env)
+        ui_process = subprocess.Popen([node_webkit_executable_path, "."], shell=False, env=env)
 
         spawner = gdb.gdbSpawner.GdbSpawner()
 

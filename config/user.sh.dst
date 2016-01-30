@@ -1,4 +1,0 @@
-# Copy to 'user.sh' to take effect configure the 'run_ui' script
-
-NW_EXEC=/home/YOU/NWs/nwjs-v0.12.2-linux-ia32/nw
-UDEV_LIB_PATH=/opt/google/chrome/

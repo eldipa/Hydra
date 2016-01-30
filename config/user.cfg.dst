@@ -1,5 +1,8 @@
 # This is just an example
 # Copy to 'user.cfg' to override the configuration of 'global.cfg'
+[ui]
+node-webkit-executable-path = /home/YOU/node-webkit-directory/nw
+udev-lib-path = /home/YOU/udev-lib-directory/
 
 [gdb]
 use-gdb-system = False
