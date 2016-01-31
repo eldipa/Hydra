@@ -9,11 +9,15 @@ class GdbSpawner(object):
     def __init__(self): 
         cfg = globalconfig.get_global_config()
         name = cfg.get('gdbspawner', 'name')
+        count_gdbs_at_begin = cfg.getint('gdbspawner', 'count_gdbs_at_begin')
         
         self.gdb_by_its_pid = {}
         
         self.ev = publish_subscribe.eventHandler.EventHandler(name=name)
         self._subscribe_to_interested_events_for_me()
+
+        for i in range(count_gdbs_at_begin):
+            self._spawn_a_gdb(None)
         
 
     def _subscribe_to_interested_events_for_me(self):
