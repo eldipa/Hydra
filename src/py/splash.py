@@ -82,17 +82,18 @@ class Splash(object):
         if not self.__splash_opened:
             return
 
-        remain_timeout = self.__wait_timeout - (time.time() - self.__time_when_entered)
-        while not self.__event_to_wait.is_set() and remain_timeout > 0:
-            self.__loading_event_signal.acquire()
-            try:
-                self.__loading_event_signal.wait(remain_timeout)
-                self.update_state(self.__loading_event_holder['ev'])
-                remain_timeout = self.__wait_timeout - (time.time() - self.__time_when_entered)
-            except:
-                remain_timeout = 0   # exit now
-            finally:
-                self.__loading_event_signal.release()
+        if exc_type is None:
+            remain_timeout = self.__wait_timeout - (time.time() - self.__time_when_entered)
+            while not self.__event_to_wait.is_set() and remain_timeout > 0:
+                self.__loading_event_signal.acquire()
+                try:
+                    self.__loading_event_signal.wait(remain_timeout)
+                    self.update_state(self.__loading_event_holder['ev'])
+                    remain_timeout = self.__wait_timeout - (time.time() - self.__time_when_entered)
+                except:
+                    remain_timeout = 0   # exit now
+                finally:
+                    self.__loading_event_signal.release()
 
         # Free used resources in reverse order.
         del self.__splash

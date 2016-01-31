@@ -12,6 +12,7 @@ from re import match
 import syslog
 import threading
 import signal
+import traceback
 
 if (not match(".*/src$", os.getcwd())):
     print "ESTE MAIN SE DEBE LLAMAR DESDE LA CARPETA SRC"
@@ -51,6 +52,14 @@ try:
         is_ui_loaded.set()
         add_new_loading_event({'what': "Interface loaded"})
 
+    def on_termination_signal(signum, frame):
+        is_ui_loaded.set()
+        is_ui_closed.set()
+
+    signal.signal(signal.SIGINT, on_termination_signal)
+    signal.signal(signal.SIGTERM, on_termination_signal)
+    signal.signal(signal.SIGHUP, on_termination_signal)
+
     with splash.Splash("resources/splash.png", event_to_wait=is_ui_loaded, loading_event_signal=loading_event_signal, loading_event_holder=last_loading_event, wait_timeout=15) as sp:
         sp.update_state("Loading the Notifier...")
         os.system("python py/publish_subscribe/notifier.py start")
@@ -67,15 +76,12 @@ try:
 
         spawner = gdb.gdbSpawner.GdbSpawner()
 
-    is_ui_closed.wait()
-    # esperar quit
-    #while(stdin.readline() not in ["quit\n","q\n"]):
-    #    print "Entrada invalida, ingrese quit o q para salir"
+    while not is_ui_closed.wait(15):
+        pass
 
 except Exception as inst:
-    print type(inst)    
-    print inst.args     
-    print inst
+    print type(inst)
+    print traceback.format_exc()
 
 finally:
     if spawner:
