@@ -50,7 +50,7 @@
 	*margin: -5px 0 5px;
 	overflow: hidden;
 	background-color: #e5e5e5;
-	border-bottom: 1px solid #ffffff;
+	border-bottom: 1px solid #C7C7C7;
 }
 .dropdown-menu a {
 	display: block;
@@ -197,7 +197,7 @@
 	font-size: 13px;
 	}
 .compressed-context .divider{
-	margin: 5px 1px;
+	margin: 2px 1px;
 	}
 .compressed-context .nav-header{
 	padding:1px 13px;
