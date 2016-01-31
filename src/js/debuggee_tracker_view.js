@@ -132,7 +132,7 @@ define(["underscore", "jquery", "jstree", "layout", "jstree_builder", "shortcuts
                           return {
                               text: thread_group.get_display_name(),
                               data: {debugger_id: debugger_obj.id, thread_group_id: thread_group.id},
-                              icon: 'fa fa-bug',
+                              icon: false,
                               id: [this._jstree_key, debugger_obj.id, thread_group.id].join("_"),
                               children: _.map(thread_group.your_threads_by_id(),
                                   function (thread) {
@@ -141,7 +141,8 @@ define(["underscore", "jquery", "jstree", "layout", "jstree_builder", "shortcuts
                                      return {
                                          text: thread.get_display_name(),
                                          data: {debugger_id: debugger_obj.id, thread_group_id: thread_group.id, thread_id: thread.id},
-                                         id: [this._jstree_key, debugger_obj.id, thread_group.id, thread.id].join("_")
+                                         id: [this._jstree_key, debugger_obj.id, thread_group.id, thread.id].join("_"),
+                                         icon: (thread.state === "running")? 'fa fa-spinner fa-pulse' : 'fa fa-circle'
                                      };
                                   }, this)
                              };

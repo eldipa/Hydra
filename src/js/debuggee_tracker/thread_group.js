@@ -19,17 +19,24 @@ define(["underscore", "shortcuts", 'event_handler'], function (_, shortcuts, eve
         if (this.executable != undefined) {
             txt.push(shortcuts.get_filename_from_fullname(this.executable));
         }
+        else {
+            return "nothing loaded";
+        }
 
         if (this.state === "started") {
-            txt.push("--running");
             if (this.executable != undefined && this.process_id !== undefined) {
-                txt.push("Process id: " + this.process_id);
+                txt.push("[PID: " + this.process_id + "]");
+            }
+            else {
+                txt.push("[running]");
             }
         }
         else {
-            txt.push("--not running");
             if (this.exit_code !== undefined) {
-                txt.push("Exit code: " + this.exit_code);
+                txt.push("[Exit code: " + this.exit_code + "]");
+            }
+            else {
+                txt.push("[not running]");
             }
         }
 
