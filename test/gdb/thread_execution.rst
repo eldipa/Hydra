@@ -278,7 +278,6 @@ Veamos de hacer un step. Esto deberia poner en running al thread 2 y luego stopp
 Dado que estamos en modo non-stop, solo el thread 2 se frenara mientras que el thread 1
 seguira en running. (y los thread del segundo proceso inalterados)
 
-Lo mismo si hacemos un next.
 
 ::
 
@@ -328,6 +327,10 @@ Lo mismo si hacemos un next.
                                ...}]},
     u'token': ...,
     u'type': u'Sync'}
+
+Lo mismo si hacemos un next.
+
+::
 
    >>> request(gdb, "-exec-next", ["--thread 2"])                        # doctest: +PASS
    >>> collector.get_next()                           # doctest: +ELLIPSIS
