@@ -377,7 +377,7 @@ define(["underscore", "event_handler", "debuggee_tracker/debugger", "debuggee_tr
                     var thread_group = thread_group_by_id[thread_group_id];
 
                     if (thread_group === undefined) {
-                       thread_group = new ThreadGroup(thread_group_id, this, {debugger_id: debugger_id});
+                       thread_group = new ThreadGroup(thread_group_id, self, {debugger_id: debugger_id});
                        thread_group_by_id[thread_group_id] = thread_group; 
                     }
 
