@@ -18,19 +18,26 @@ define(["underscore", "shortcuts", 'event_handler'], function (_, shortcuts, eve
     Debugger.prototype.get_display_controller = function () {
         var self = this;
         var controller = [
-              {
-               text: 'Kill debugger',
-               action: function (e) {
-                  e.preventDefault();
-                  self.kill();
-               },
-              },{
+            {
                text: 'Add thread group',
                action: function (e) {
                   e.preventDefault();
                   self.add_thread_group();
                },
-              },
+            },
+            {
+                divider: true
+            },
+            {
+               text: 'Kill debugger',
+               action: function (e) {
+                  e.preventDefault();
+                  self.kill();
+               },
+            },
+            {
+                divider: true
+            },
             {
                 text: "Enable all breakpoints",
                 action: function (e) {

@@ -39,12 +39,6 @@ define(["underscore", "shortcuts", 'event_handler'], function (_, shortcuts, eve
     ThreadGroup.prototype.get_display_controller = function () {
         var self = this;
         return [{
-               text: 'Remove thread group',
-               action: function (e) {
-                  e.preventDefault();
-                  self.remove();
-               },
-              },{
                text: 'Load sources', //TODO attach (and others)
                action: function (e) {
                   e.preventDefault();
@@ -66,6 +60,16 @@ define(["underscore", "shortcuts", 'event_handler'], function (_, shortcuts, eve
                       }
                   });
                   input_file_dom.trigger('click');
+               },
+              },
+              {
+                divider: true
+              },
+              {
+               text: 'Remove thread group',
+               action: function (e) {
+                  e.preventDefault();
+                  self.remove();
                },
               }];
     };
