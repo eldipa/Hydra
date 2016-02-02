@@ -1,13 +1,17 @@
-define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'thread_button_bar_controller'], function (ace, $, layout, shortcuts, _, code_editor, thread_button_bar_controller) {
+define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'thread_button_bar_controller', 'stack_view'], function (ace, $, layout, shortcuts, _, code_editor, thread_button_bar_controller, stack_view) {
     var ThreadFollower = function () {
         this.super("Thread Follower");
 
         this.code_editor = new code_editor.CodeEditor();
         this.button_bar = new thread_button_bar_controller.ThreadButtonBarController(this);
 
-        this.stacked_view = new layout.Stacked("vertically");
-        this.stacked_view.add_child(this.button_bar, {position: "top", grow: 0, shrink: 0});
-        this.stacked_view.add_child(this.code_editor, {position: "bottom", grow: 1, shrink: 1});
+        this.view = new layout.Stacked("vertically");
+        this.view.add_child(this.button_bar, {position: "top", grow: 0, shrink: 0});
+        this.view.add_child(this.code_editor, {position: "bottom", grow: 1, shrink: 1});
+
+        this.stack_view = new stack_view.StackView();
+        this.view.split(this.stack_view, 'right');
+        this.view = this.view.parent();
 
         this.current_loaded_file = "";
         this.current_line_highlight = null;
@@ -16,12 +20,12 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
     ThreadFollower.prototype.__proto__ = layout.Panel.prototype;
 
     ThreadFollower.prototype.render = function () {
-        this.stacked_view.box = this.box;
-        return this.stacked_view.render();
+        this.view.box = this.box;
+        return this.view.render();
     };
    
     ThreadFollower.prototype.unlink = function () {
-        return this.stacked_view.unlink();
+        return this.view.unlink();
     };
 
     ThreadFollower.prototype.follow = function (thread_to_follow) {
@@ -85,7 +89,7 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
         }
 
         // Request an update of the thread's stack
-        this.thread_followed.get_stack_frames(_.bind(this.update_stack_frames, this));
+        this.thread_followed.get_stack_frames(_.bind(this.stack_view.update_tree_data_from_frames, this.stack_view));
     };
 
     ThreadFollower.prototype.update_stack_frames = function (frames) {
