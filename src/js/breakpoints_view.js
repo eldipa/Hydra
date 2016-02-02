@@ -14,18 +14,8 @@ define(["underscore", "jquery", "jstree", "layout", "jstree_builder", "snippet",
    };
 
    BreakpointsView.prototype.update_tree_data = function () {
-      var self = this;
       var data = this.get_data_from_tracker();
-
-      this._loading_the_data = true;
-
-      $(this._$container).jstree(true).settings.core.data = data;
-      $(this._$container).jstree(true).load_node('#', function (x, is_loaded) {
-          if (is_loaded) {
-              self._loading_the_data = false;
-              $(self._$container).jstree(true).restore_state();
-          }
-      });
+      this._update_tree_data(data);
 
       if (this.is_in_the_dom()) {
          this.repaint($(this.box));
@@ -124,6 +114,8 @@ define(["underscore", "jquery", "jstree", "layout", "jstree_builder", "snippet",
 
       this._get_data_from_selected = results.getter_for_data_from_selected;
       this._immediate_action_to_hack_jstree = results.immediate_action_to_hack_jstree;
+      this._update_tree_data = results.update_tree_data;
+      this._is_loading_data_in_the_tree = results.is_loading_data_in_the_tree;
 
       this.add_handlers_for_enabling_breakpoint_from_node_checkbox();
    };
@@ -225,7 +217,7 @@ define(["underscore", "jquery", "jstree", "layout", "jstree_builder", "snippet",
    };
 
    BreakpointsView.prototype.change_breakpoint_state_handler_for = function (enable_breakpoint, ev, d) {
-      if (this._loading_the_data) {
+      if (this._is_loading_data_in_the_tree()) {
           return; // the user is not changing the breakpoint, we are just refreshing the data and
                   // we are getting call us as a side effect of the jstree update.
       }

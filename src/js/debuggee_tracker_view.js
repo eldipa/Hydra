@@ -28,10 +28,10 @@ define(["underscore", "jquery", "jstree", "layout", "jstree_builder", "shortcuts
 
       this._jstree_key = shortcuts.randint().toString();
       var results = jstree_builder.build_jstree_with_do_observation_functions_attached(this._$container, [
-            function (e, elem_owner) {
-                return new Observation({target: self, context: self});
+            function (e, elem_owner) {                              // Level 0: Debuggee Tracker itself
+                return new Observation({target: self, context: self}); 
             },
-            function (e, elem_owner) {
+            function (e, elem_owner) {                              // Level 1: Debuggers (GDB)
                 self._immediate_action_to_hack_jstree(e, elem_owner);
                 var ids = self._get_data_from_selected();
 
@@ -43,7 +43,7 @@ define(["underscore", "jquery", "jstree", "layout", "jstree_builder", "shortcuts
                 var debugger_obj = self.debuggee_tracker.get_debugger_with_id(debugger_id);
                 return new Observation({target: debugger_obj, context: self});
             },
-            function (e, elem_owner) {
+            function (e, elem_owner) {                              // Level 2: Thread Groups (processes)
                 self._immediate_action_to_hack_jstree(e, elem_owner);
                 var ids = self._get_data_from_selected();
 
@@ -57,7 +57,7 @@ define(["underscore", "jquery", "jstree", "layout", "jstree_builder", "shortcuts
                 var thread_group = self.debuggee_tracker.get_debugger_with_id(debugger_id).get_thread_group_with_id(thread_group_id);
                 return new Observation({target: thread_group, context: self});
             },
-            function (e, elem_owner) {
+            function (e, elem_owner) {                              // Level 3: Threads
                 self._immediate_action_to_hack_jstree(e, elem_owner);
                 var ids = self._get_data_from_selected();
 
@@ -93,18 +93,13 @@ define(["underscore", "jquery", "jstree", "layout", "jstree_builder", "shortcuts
 
       this._get_data_from_selected = results.getter_for_data_from_selected;
       this._immediate_action_to_hack_jstree = results.immediate_action_to_hack_jstree;
+      this._update_tree_data = results.update_tree_data;
+      this._is_loading_data_in_the_tree = results.is_loading_data_in_the_tree;
    };
 
    DebuggeeTrackerView.prototype.update_tree_data = function () {
-      var self = this;
-
       var data = this.get_data_from_tracker();
-      $(this._$container).jstree(true).settings.core.data = data;
-      $(this._$container).jstree(true).load_node('#', function (x, is_loaded) {
-          if (is_loaded) {
-              $(self._$container).jstree(true).restore_state();
-          }
-      });
+      this._update_tree_data(data);
 
       if (this.is_in_the_dom()) {
          this.repaint($(this.box));
