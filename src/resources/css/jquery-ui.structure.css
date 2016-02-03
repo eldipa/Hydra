@@ -258,11 +258,11 @@ button.ui-button-icons-only {
 }
 .ui-button-text-icon-primary .ui-button-text,
 .ui-button-text-icons .ui-button-text {
-	padding: .4em 1em .4em 2.1em;
+	padding: .01em 0.8em .3em 2em;
 }
 .ui-button-text-icon-secondary .ui-button-text,
 .ui-button-text-icons .ui-button-text {
-	padding: .4em 2.1em .4em 1em;
+	padding: .01em 0.8em .3em 2em
 }
 .ui-button-text-icons .ui-button-text {
 	padding-left: 2.1em;
