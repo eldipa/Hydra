@@ -12,6 +12,7 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
         this.stack_view = new stack_view.StackView();
         this.view.split(this.stack_view, 'right');
         this.view = this.view.parent();
+        this.view.set_percentage(70);
 
         this.current_loaded_file = "";
         this.current_line_highlight = null;
@@ -30,6 +31,8 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
 
     ThreadFollower.prototype.follow = function (thread_to_follow) {
         this.thread_followed = thread_to_follow;
+        this.stack_view.follow(thread_to_follow);
+
         this.see_your_thread_and_update_yourself();
     }; 
 
@@ -90,12 +93,6 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
 
         // Request an update of the thread's stack
         this.thread_followed.get_stack_frames(_.bind(this.stack_view.update_tree_data_from_frames, this.stack_view));
-    };
-
-    ThreadFollower.prototype.update_stack_frames = function (frames) {
-        _.each(frames, function (f) {
-            console.log(f.get_display_fullname());
-        });
     };
 
     ThreadFollower.prototype.update_current_line = function (line_number) {

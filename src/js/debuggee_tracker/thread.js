@@ -38,6 +38,10 @@ define(["underscore", "shortcuts", 'event_handler', 'debuggee_tracker/frame'], f
     Thread.prototype.get_thread_group_you_belong = function () {
         return this.tracker.get_debugger_with_id(this.debugger_id).get_thread_group_with_id(this.thread_group_id);
     };
+    
+    Thread.prototype.get_debugger_you_belong = function () {
+        return this.tracker.get_debugger_with_id(this.debugger_id);
+    };
 
     Thread.prototype.execute = function (command, args, callback, self_id_argument_position) {
         args = args || [];
@@ -45,10 +49,15 @@ define(["underscore", "shortcuts", 'event_handler', 'debuggee_tracker/frame'], f
 
         if (self_id_argument_position === undefined) {
             args.push(self_id_argument);
+            
+            if (this.frame_level) {
+                args.push("--frame " + this.frame_level);
+            }
         }
         else {
             args[self_id_argument_position] = self_id_argument;
         }
+
 
         shortcuts.gdb_request(callback || null,
                 this.debugger_id, 
@@ -68,7 +77,6 @@ define(["underscore", "shortcuts", 'event_handler', 'debuggee_tracker/frame'], f
                 processed_frame.instruction_address = frame.addr;
                 processed_frame.level = parseInt(frame.level);
 
-                console.log(frame);
                 if (frame.fullname) {
                     processed_frame.source_fullname = frame.fullname;
                     processed_frame.source_line_number = parseInt(frame.line);

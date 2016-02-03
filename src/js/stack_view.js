@@ -1,10 +1,16 @@
 define(["underscore", "jquery", "layout", "shortcuts", "jstree", "jstree_builder", "observation"], function (_, $, layout, shortcuts, jstree, jstree_builder, observation) {
    'use strict';
 
-   var StackView = function () {
+   var StackView = function (thread) {
        this.super("StackView");
        this.build_and_initialize_panel_container('<div style="height: 100%; width: 100%"></div>');
        this.build_tree();
+
+       this.follow(thread);
+   };
+
+   StackView.prototype.follow = function (thread) {
+       this.thread_followed = thread;
    };
 
    StackView.prototype.__proto__ = layout.Panel.prototype;
@@ -19,9 +25,14 @@ define(["underscore", "jquery", "layout", "shortcuts", "jstree", "jstree_builder
             null,                                                   // Level 0: myself (nothing)
             function (e, elem_owner) {                              // Level 1: Stack frame
                 self._immediate_action_to_hack_jstree(e, elem_owner);
-                var ids = self._get_data_from_selected();
+                var data = self._get_data_from_selected();
+                var frame_level = "" + (data.level);
+
+                //self.thread_followed.get_debugger_you_belong().execute('-stack-select-frame', [frame_level]);
+                self.thread_followed.get_debugger_you_belong().execute('up');
+                //self.thread_followed.frame_level = frame_level;
                 
-                return new Observation({target: debugger_obj, context: self});
+                return null;
             }
           ],
           {

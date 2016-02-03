@@ -59,6 +59,7 @@ define(["underscore", "shortcuts", 'event_handler'], function (_, shortcuts, eve
 
                           // TODO XXX XXX  HACK, run the process
                           var debugger_obj = self.tracker.get_debugger_with_id(debugger_id);
+                          //debugger_obj.execute("tty",  ["/dev/pts/8"]); // TODO restrict this breakpoint to the threa group 
                           debugger_obj.execute("-break-insert", ["-t", "main"]); // TODO restrict this breakpoint to the threa group 
                           self.execute("-exec-run");
                       }
