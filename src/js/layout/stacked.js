@@ -33,6 +33,10 @@ define(['jquery', 'layout/panel', 'jqueryui'], function ($, P, _) {
 
 
    Stacked.prototype.__proto__ = Parent.prototype;
+   
+   Stacked.prototype.is_container = function () {
+      return false;
+   };
 
    Stacked.prototype._add_child = function (panel, opts) {
       var position = opts.position;

@@ -19,6 +19,10 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
     };
 
     ThreadFollower.prototype.__proto__ = layout.Panel.prototype;
+   
+    ThreadFollower.prototype.is_container = function () {
+        return true;
+    };
 
     ThreadFollower.prototype.render = function () {
         this.view.box = this.box;
