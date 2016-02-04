@@ -49,15 +49,10 @@ define(["underscore", "shortcuts", 'event_handler', 'debuggee_tracker/frame'], f
 
         if (self_id_argument_position === undefined) {
             args.push(self_id_argument);
-            
-            if (this.frame_level) {
-                args.push("--frame " + this.frame_level);
-            }
         }
         else {
             args[self_id_argument_position] = self_id_argument;
         }
-
 
         shortcuts.gdb_request(callback || null,
                 this.debugger_id, 
