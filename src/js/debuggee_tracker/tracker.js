@@ -633,7 +633,8 @@ define(["underscore", "event_handler", "debuggee_tracker/debugger", "debuggee_tr
           thread.update({state: thread_data.state,
                                 source_fullname: thread_data.frame.fullname,
                                 source_line: thread_data.frame.line,
-                                instruction_address: thread_data.frame.addr});
+                                instruction_address: thread_data.frame.addr,
+                                frame_level: parseInt(thread_data.frame.level)});
       }
       
       this.notify("thread_update", { 
