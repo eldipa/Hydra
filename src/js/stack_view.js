@@ -29,7 +29,7 @@ define(["underscore", "jquery", "layout", "shortcuts", "jstree", "jstree_builder
                 var frame_level = "" + (data.level);
 
                 //self.thread_followed.get_debugger_you_belong().execute('-stack-select-frame', [frame_level]);
-                self.thread_followed.get_debugger_you_belong().execute('up');
+                //self.thread_followed.get_debugger_you_belong().execute('up');
                 //self.thread_followed.frame_level = frame_level;
                 
                 return null;
