@@ -1,4 +1,4 @@
-define(['jquery', 'layout', 'code_editor', 'varViewer', 'widgets/buttons', 'listview_panel', 'standarInput'], function ($, layout, code_editor, varViewer, buttons, listview_panel, standarInput) {
+define(['jquery', 'layout', 'code_editor', 'varViewer', 'widgets/buttons', 'listview_panel', 'standarInput', 'processView'], function ($, layout, code_editor, varViewer, buttons, listview_panel, standarInput, processView) {
    var Panel = layout.Panel;
    var Tabbed = layout.Tabbed;
    var ListViewPanel = listview_panel.ListViewPanel;
@@ -29,14 +29,16 @@ define(['jquery', 'layout', 'code_editor', 'varViewer', 'widgets/buttons', 'list
          this.push({dom_element: $newContent});
       };
 
-      // Panel to render the stdout
-      var stdoutlog = new ListViewPanel();
-      stdoutlog.autoscroll(true);
-      stdoutlog.feed = function (data) {
-         var line = "["+data.timestamp+"]@["+data.pid+"]: "+data.output+"";
-         var $newContent = $('<p>'+line+'</p>');
-         this.push({dom_element: $newContent});
-      };
+//      // Panel to render the stdout
+//      var stdoutlog = new ListViewPanel();
+//      stdoutlog.autoscroll(true);
+//      stdoutlog.feed = function (data) {
+//         var line = "["+data.timestamp+"]@["+data.pid+"]: "+data.output+"";
+//         var $newContent = $('<p>'+line+'</p>');
+//         this.push({dom_element: $newContent});
+//      };
+      
+      var processGraph = new processView.ProcessView();
 
       // Panel to render the syscall log
       var syscalllog = new ListViewPanel();
@@ -70,10 +72,11 @@ define(['jquery', 'layout', 'code_editor', 'varViewer', 'widgets/buttons', 'list
       root.render();
       
       view.parent().set_percentage(75);
-      view.split(stdoutlog, "bottom");
+//      view.split(stdoutlog, "bottom");
+      view.split(processGraph, "bottom");
       root.render();
       
-      stdoutlog.parent().split(stdinTextInput, "bottom");
+      processGraph.parent().split(stdinTextInput, "bottom");
       root.render();
 
       //stdoutlog.split(syscalllog, "bottom")
@@ -82,7 +85,7 @@ define(['jquery', 'layout', 'code_editor', 'varViewer', 'widgets/buttons', 'list
 
       root.render();
       view.parent().set_percentage(80); //TODO (issue #62) por que hay que hacer un render() antes de un set_percentage()?
-      stdoutlog.parent().set_percentage(80); //TODO (issue #62) por que hay que hacer un render() antes de un set_percentage()?
+      processGraph.parent().set_percentage(80); //TODO (issue #62) por que hay que hacer un render() antes de un set_percentage()?
       stdinTextInput.parent().set_percentage(80); //TODO (issue #62) por que hay que hacer un render() antes de un set_percentage()?
       root.render();
            

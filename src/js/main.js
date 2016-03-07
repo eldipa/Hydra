@@ -18,7 +18,8 @@ requirejs.config({
       standarInput: 'standarInput',
       shortcuts: 'shortcuts',
       jstree: 'external/jstree-3.1.1',
-      debuggee_tracker_view: 'debuggee_tracker_view'
+      debuggee_tracker_view: 'debuggee_tracker_view',
+      processView: 'processView'
    },
 
    shim: {
