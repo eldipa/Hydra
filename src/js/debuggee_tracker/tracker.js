@@ -691,27 +691,40 @@ define(["underscore", "event_handler", "debuggee_tracker/debugger", "debuggee_tr
                               });
    };
 
-   var StackTracker = function (thread) {
-       this.thread = thread;
+   var StackTracker = function () {
+       this.observers = [];
+
+       this.thread = null;
        this.frames = [];
       
        _.bindAll(this, "_frames_updated", "_variables_of_frame_updated");
 
-       this.request_frames_update(); // force a sync
    };
 
+   StackTracker.prototype.keep_tracking = function (thread) {
+       this.thread = thread;
+       if (! this.thread) {
+           this.frames = []; // cleanup
+       }
+       else {
+           this.request_frames_update(); // force a sync
+       }
+   }
+
    StackTracker.prototype.request_frames_update = function () {
-       this.thread.execute(
-               "-stack-list-frames", 
-               ["SELF", "--no-frame-filters"], 
-               this.frames_updated, 
-               0);
+       if (this.thread) {
+           this.thread.execute(
+                   "-stack-list-frames", 
+                   ["SELF", "--no-frame-filters"], 
+                   this._frames_updated, 
+                   0);
+       }
    };
 
    StackTracker.prototype._frames_updated = function (data) {
-        var frames = _.pluck(data.results.stack, 'frame');
+        var raw_frames = _.pluck(data.results.stack, 'frame');
         var that = this;
-        var processed_frames = _.map(frames, function (frame) {
+        var frames = _.map(raw_frames, function (frame) {
             var processed_frame = {};
 
             processed_frame.thread = that.thread;
@@ -728,10 +741,9 @@ define(["underscore", "event_handler", "debuggee_tracker/debugger", "debuggee_tr
             return new Frame(processed_frame);
         });
 
-        processed_frames = _.sortBy(processed_frames, 'level');
-        this.frames = processed_frames;
+        this.frames = _.sortBy(frames, 'level');
 
-        _.each(frames, function (frame) {
+        _.each(this.frames, function (frame) {
             that.request_variables_of_frame_update(frame);
         });
    };
@@ -746,11 +758,35 @@ define(["underscore", "event_handler", "debuggee_tracker/debugger", "debuggee_tr
 
    StackTracker.prototype._variables_of_frame_updated = function (frame, data) {
        frame.load_variables(data.results.variables);
+       this.notify("variables-of-frame-updated", {frame: frame});
    };
 
+   StackTracker.prototype.notify = function (event_topic, data_object) {
+      for (var i = 0; i < this.observers.length; i++) {
+         try {
+            this.observers[i].update(data_object, event_topic, this);
+         } catch(e) {
+            console.warn("" + e);
+         }
+      }
+   };
+
+   StackTracker.prototype.add_observer = function (observer) {
+      this.remove_observer(observer); // remove duplicates (if any)
+      this.observers.push(observer);
+   };
+
+   StackTracker.prototype.remove_observer = function (observer) {
+      this.observers = _.filter(
+                              this.observers, 
+                              function (obs) { 
+                                 return obs !== observer; 
+                              });
+   };
 
    return {DebuggeeTracker: DebuggeeTracker,
            Debugger: Debugger,
            ThreadGroup: ThreadGroup,
-           Thread: Thread};
+           Thread: Thread,
+           StackTracker: StackTracker};
 });

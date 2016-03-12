@@ -1,7 +1,8 @@
 define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'thread_button_bar_controller', 'stack_view'], function (ace, $, layout, shortcuts, _, code_editor, thread_button_bar_controller, stack_view) {
-    var ThreadFollower = function () {
+    var ThreadFollower = function (stack_tracker) {
         this.super("Thread Follower");
 
+        // Create a Code Editor view and a button bar to display and control a thread
         this.code_editor = new code_editor.CodeEditor();
         this.button_bar = new thread_button_bar_controller.ThreadButtonBarController(this);
 
@@ -9,7 +10,13 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
         this.view.add_child(this.button_bar, {position: "top", grow: 0, shrink: 0});
         this.view.add_child(this.code_editor, {position: "bottom", grow: 1, shrink: 1});
 
+        // Keep a tracking to the thread's stack with this Stack Tracker
+        this.stack_tracker = stack_tracker;
+
+        // Create a view for the stack and make sure that the view will be updated when the stack gets changed
         this.stack_view = new stack_view.StackView();
+        this.stack_tracker.add_observer(this.stack_view);
+
         this.view.split(this.stack_view, 'right');
         this.view = this.view.parent();
         this.view.set_percentage(70);
@@ -35,7 +42,7 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
 
     ThreadFollower.prototype.follow = function (thread_to_follow) {
         this.thread_followed = thread_to_follow;
-        this.stack_view.follow(thread_to_follow);
+        this.stack_tracker.keep_tracking(thread_to_follow); // This will eventually update the Stack View
 
         this.see_your_thread_and_update_yourself();
     }; 
@@ -95,8 +102,8 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
             //then call update_yourself_from_dissabled_code
         }
 
-        // Request an update of the thread's stack
-        this.thread_followed.get_stack_frames(_.bind(this.stack_view.update_tree_data_from_frames, this.stack_view));
+        // Request an update of the thread's stack TODO do this automatically
+        this.stack_tracker.request_frames_update();
     };
 
     ThreadFollower.prototype.update_current_line = function (line_number) {

@@ -48,7 +48,7 @@ define(["underscore", "shortcuts"], function (_, shortcuts) {
         }
 
         shortcuts.gdb_request(callback || null,
-                this.debugger_id, 
+                this.thread.debugger_id, 
                 command,
                 args
                 );
@@ -58,7 +58,7 @@ define(["underscore", "shortcuts"], function (_, shortcuts) {
         this.variables = {};
 
         _.each(variables,  function (name_val) {
-            this.variables[name_val.name] = name_val.val;
+            this.variables[name_val.name] = name_val.value;
         }, this);
     };
 

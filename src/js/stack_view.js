@@ -1,16 +1,11 @@
 define(["underscore", "jquery", "layout", "shortcuts", "jstree", "jstree_builder", "observation"], function (_, $, layout, shortcuts, jstree, jstree_builder, observation) {
    'use strict';
 
-   var StackView = function (thread) {
+   var StackView = function () {
        this.super("StackView");
        this.build_and_initialize_panel_container('<div style="height: 100%; width: 100%"></div>');
        this.build_tree();
 
-       this.follow(thread);
-   };
-
-   StackView.prototype.follow = function (thread) {
-       this.thread_followed = thread;
    };
 
    StackView.prototype.__proto__ = layout.Panel.prototype;
@@ -28,12 +23,14 @@ define(["underscore", "jquery", "layout", "shortcuts", "jstree", "jstree_builder
                 var data = self._get_data_from_selected();
                 var frame_level = "" + (data.level);
 
-                //self.thread_followed.get_debugger_you_belong().execute('-stack-select-frame', [frame_level]);
-                //self.thread_followed.get_debugger_you_belong().execute('up');
-                //self.thread_followed.frame_level = frame_level;
+                //var thread_followed = self.stack_tracker.thread; // TODO not supported?
+                //thread_followed.get_debugger_you_belong().execute('-stack-select-frame', [frame_level]);
+                //thread_followed.get_debugger_you_belong().execute('up');
+                //thread_followed.frame_level = frame_level;
                 
                 return null;
-            }
+            },
+            null,                                                   // Level 2: Variable
           ],
           {
             'core' : {
@@ -60,13 +57,21 @@ define(["underscore", "jquery", "layout", "shortcuts", "jstree", "jstree_builder
    };
 
 
-   StackView.prototype.update_tree_data_from_frames = function (frames) {
-      var data = _.map(frames, function (frame) {
+   StackView.prototype.update = function (event_topic, data, tracker) {
+      var data = _.map(tracker.frames, function (frame) {
           return {
             text: frame.get_display_name(),
             data: {level: frame.level},
             icon: false,
             id: [this._jstree_key, frame.level].join("_"),
+            children: _.map(frame.variables, function (value, variable_name) {
+                return {
+                    text: variable_name + " = " + value,
+                    data: {},
+                    icon: false,
+                    id: [this._jstree_key, frame.level, variable_name].join("_"),
+                }
+            }, this)
           };
       }, this);
 
