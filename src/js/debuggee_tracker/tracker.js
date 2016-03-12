@@ -711,55 +711,6 @@ define(["underscore", "event_handler", "debuggee_tracker/debugger", "debuggee_tr
        }
    }
 
-   StackTracker.prototype.request_frames_update = function () {
-       if (this.thread) {
-           this.thread.execute(
-                   "-stack-list-frames", 
-                   ["SELF", "--no-frame-filters"], 
-                   this._frames_updated, 
-                   0);
-       }
-   };
-
-   StackTracker.prototype._frames_updated = function (data) {
-        var raw_frames = _.pluck(data.results.stack, 'frame');
-        var that = this;
-        var frames = _.map(raw_frames, function (frame) {
-            var processed_frame = {};
-
-            processed_frame.thread = that.thread;
-
-            processed_frame.function_name = frame.func;
-            processed_frame.instruction_address = frame.addr;
-            processed_frame.level = parseInt(frame.level);
-
-            if (frame.fullname) {
-                processed_frame.source_fullname = frame.fullname;
-                processed_frame.source_line_number = parseInt(frame.line);
-            }
-
-            return new Frame(processed_frame);
-        });
-
-        this.frames = _.sortBy(frames, 'level');
-
-        _.each(this.frames, function (frame) {
-            that.request_variables_of_frame_update(frame);
-        });
-   };
-
-   StackTracker.prototype.request_variables_of_frame_update = function (frame) {
-       frame.execute(
-               "-stack-list-variables", 
-               ["THREAD", "SELF", "--all-values"], 
-               _.partial(this._variables_of_frame_updated, frame), 
-               1, 0);
-   };
-
-   StackTracker.prototype._variables_of_frame_updated = function (frame, data) {
-       frame.load_variables(data.results.variables);
-       this.notify("variables-of-frame-updated", {frame: frame});
-   };
 
    StackTracker.prototype.notify = function (event_topic, data_object) {
       for (var i = 0; i < this.observers.length; i++) {

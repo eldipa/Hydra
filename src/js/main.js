@@ -106,8 +106,7 @@ requirejs(['ui', 'code_view', 'jquery', 'export_console', 'layout', 'layout_exam
    var visor = l.visor;
    var old_code_editor = l.code_editor;
 
-   var aStackTracker = new debuggee_tracker.StackTracker();
-   var aThreadFollower = new thread_follower.ThreadFollower(aStackTracker);
+   var aThreadFollower = new thread_follower.ThreadFollower();
 
    var dbg_tracker = new debuggee_tracker.DebuggeeTracker();
    var dbg_tracker_view = new debuggee_tracker_view.DebuggeeTrackerView(dbg_tracker, aThreadFollower);

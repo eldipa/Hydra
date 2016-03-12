@@ -1,5 +1,5 @@
 define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'thread_button_bar_controller', 'stack_view'], function (ace, $, layout, shortcuts, _, code_editor, thread_button_bar_controller, stack_view) {
-    var ThreadFollower = function (stack_tracker) {
+    var ThreadFollower = function () {
         this.super("Thread Follower");
 
         // Create a Code Editor view and a button bar to display and control a thread
@@ -10,12 +10,8 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
         this.view.add_child(this.button_bar, {position: "top", grow: 0, shrink: 0});
         this.view.add_child(this.code_editor, {position: "bottom", grow: 1, shrink: 1});
 
-        // Keep a tracking to the thread's stack with this Stack Tracker
-        this.stack_tracker = stack_tracker;
-
-        // Create a view for the stack and make sure that the view will be updated when the stack gets changed
+        // Create a view for the stack 
         this.stack_view = new stack_view.StackView();
-        this.stack_tracker.add_observer(this.stack_view);
 
         this.view.split(this.stack_view, 'right');
         this.view = this.view.parent();
@@ -42,7 +38,7 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
 
     ThreadFollower.prototype.follow = function (thread_to_follow) {
         this.thread_followed = thread_to_follow;
-        this.stack_tracker.keep_tracking(thread_to_follow); // This will eventually update the Stack View
+        this.stack_view.follow(thread_to_follow);
 
         this.see_your_thread_and_update_yourself();
     }; 
@@ -103,7 +99,7 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
         }
 
         // Request an update of the thread's stack TODO do this automatically
-        this.stack_tracker.request_frames_update();
+        this.stack_view.request_frames_update();
     };
 
     ThreadFollower.prototype.update_current_line = function (line_number) {
