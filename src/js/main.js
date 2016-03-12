@@ -106,16 +106,14 @@ requirejs(['ui', 'code_view', 'jquery', 'export_console', 'layout', 'layout_exam
    var visor = l.visor;
    var old_code_editor = l.code_editor;
 
-   var aThreadFollower = new thread_follower.ThreadFollower();
-
    var dbg_tracker = new debuggee_tracker.DebuggeeTracker();
+   
+   var aThreadFollower = new thread_follower.ThreadFollower(dbg_tracker);
    var dbg_tracker_view = new debuggee_tracker_view.DebuggeeTrackerView(dbg_tracker, aThreadFollower);
  
    var bkps_view = new breakpoints_view.BreakpointsView(dbg_tracker);
 
    var det_view = new details_view.DetailsView();
-
-   dbg_tracker.add_observer(aThreadFollower);
 
    visor.swap(dbg_tracker_view);
    dbg_tracker_view.split(bkps_view, "bottom");

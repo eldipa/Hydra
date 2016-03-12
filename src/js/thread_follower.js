@@ -1,6 +1,8 @@
 define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'thread_button_bar_controller', 'stack_view'], function (ace, $, layout, shortcuts, _, code_editor, thread_button_bar_controller, stack_view) {
-    var ThreadFollower = function () {
+    var ThreadFollower = function (debuggee_tracker) {
         this.super("Thread Follower");
+
+        debuggee_tracker.add_observer(this);
 
         // Create a Code Editor view and a button bar to display and control a thread
         this.code_editor = new code_editor.CodeEditor();
@@ -11,7 +13,7 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
         this.view.add_child(this.code_editor, {position: "bottom", grow: 1, shrink: 1});
 
         // Create a view for the stack 
-        this.stack_view = new stack_view.StackView();
+        this.stack_view = new stack_view.StackView(); // we dont want that StackView be an observer of the debuggee_tracker. We want to reuse the same logic of our update method
 
         this.view.split(this.stack_view, 'right');
         this.view = this.view.parent();
@@ -68,7 +70,7 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
         }
 
         if (is_my_thread_updated) { 
-            console.log("Thread UPDATE");
+            this.stack_view.request_frames_update(); // Request an update of the thread's stack
             this.see_your_thread_and_update_yourself();
         }
     };
@@ -98,8 +100,6 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
             //then call update_yourself_from_dissabled_code
         }
 
-        // Request an update of the thread's stack TODO do this automatically
-        this.stack_view.request_frames_update();
     };
 
     ThreadFollower.prototype.update_current_line = function (line_number) {

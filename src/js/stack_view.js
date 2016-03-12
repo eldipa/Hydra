@@ -73,7 +73,7 @@ define(["underscore", "jquery", "layout", "shortcuts", "jstree", "jstree_builder
 
    StackView.prototype._variables_of_frame_updated = function (frame, data) {
        frame.load_variables(data.results.variables);
-       this.update();
+       this._update();
    };
 
    
@@ -123,7 +123,7 @@ define(["underscore", "jquery", "layout", "shortcuts", "jstree", "jstree_builder
    };
 
 
-   StackView.prototype.update = function () {
+   StackView.prototype._update = function () {
       var data = _.map(this.frames, function (frame) {
           return {
             text: frame.get_display_name(),
