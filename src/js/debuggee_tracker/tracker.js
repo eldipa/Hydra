@@ -1,10 +1,11 @@
-define(["underscore", "event_handler", "debuggee_tracker/debugger", "debuggee_tracker/thread_group", "debuggee_tracker/thread", "debuggee_tracker/breakpoint"], function (_, event_handler, debugger_module, thread_group_module, thread_module, breakpoint_module) {
+define(["underscore", "event_handler", "debuggee_tracker/debugger", "debuggee_tracker/thread_group", "debuggee_tracker/thread", "debuggee_tracker/breakpoint", 'debuggee_tracker/frame'], function (_, event_handler, debugger_module, thread_group_module, thread_module, breakpoint_module, frame_module) {
    'use strict';
 
    var Debugger = debugger_module.Debugger;
    var ThreadGroup = thread_group_module.ThreadGroup;
    var Thread = thread_module.Thread;
    var Breakpoint = breakpoint_module.Breakpoint;
+   var Frame = frame_module.Frame;
 
    var DebuggeeTracker = function () {
       this.EH = event_handler.get_global_event_handler();
@@ -689,6 +690,64 @@ define(["underscore", "event_handler", "debuggee_tracker/debugger", "debuggee_tr
                                  return obs !== observer; 
                               });
    };
+
+   var StackTracker = function (thread) {
+       this.thread = thread;
+       this.frames = [];
+      
+       _.bindAll(this, "_frames_updated", "_variables_of_frame_updated");
+
+       this.request_frames_update(); // force a sync
+   };
+
+   StackTracker.prototype.request_frames_update = function () {
+       this.thread.execute(
+               "-stack-list-frames", 
+               ["SELF", "--no-frame-filters"], 
+               this.frames_updated, 
+               0);
+   };
+
+   StackTracker.prototype._frames_updated = function (data) {
+        var frames = _.pluck(data.results.stack, 'frame');
+        var that = this;
+        var processed_frames = _.map(frames, function (frame) {
+            var processed_frame = {};
+
+            processed_frame.thread = that.thread;
+
+            processed_frame.function_name = frame.func;
+            processed_frame.instruction_address = frame.addr;
+            processed_frame.level = parseInt(frame.level);
+
+            if (frame.fullname) {
+                processed_frame.source_fullname = frame.fullname;
+                processed_frame.source_line_number = parseInt(frame.line);
+            }
+
+            return new Frame(processed_frame);
+        });
+
+        processed_frames = _.sortBy(processed_frames, 'level');
+        this.frames = processed_frames;
+
+        _.each(frames, function (frame) {
+            that.request_variables_of_frame_update(frame);
+        });
+   };
+
+   StackTracker.prototype.request_variables_of_frame_update = function (frame) {
+       frame.execute(
+               "-stack-list-variables", 
+               ["THREAD", "SELF", "--all-values"], 
+               _.partial(this._variables_of_frame_updated, frame), 
+               1, 0);
+   };
+
+   StackTracker.prototype._variables_of_frame_updated = function (frame, data) {
+       frame.load_variables(data.results.variables);
+   };
+
 
    return {DebuggeeTracker: DebuggeeTracker,
            Debugger: Debugger,

@@ -59,6 +59,7 @@ define(["underscore", "jquery", "layout", "shortcuts", "jstree", "jstree_builder
       this._is_loading_data_in_the_tree = results.is_loading_data_in_the_tree;
    };
 
+
    StackView.prototype.update_tree_data_from_frames = function (frames) {
       var data = _.map(frames, function (frame) {
           return {
