@@ -3,7 +3,7 @@ define([ 'jquery', 'layout', 'shortcuts', 'event_handler', 'd3' ], function($, l
     function ProcessView() {
         this.super("Process View");
 
-        this._$container = $('<div id="Grafo" > Error al cargar D3 </div>');
+        this._$container = $('<div> </div>');
 
         this._$out_of_dom = this._$container;
 
@@ -30,7 +30,7 @@ define([ 'jquery', 'layout', 'shortcuts', 'event_handler', 'd3' ], function($, l
         var force = d3.layout.force().charge(-120).linkDistance(30)
 
         //Append a SVG to the body of the html page. Assign this SVG as an object to svg
-        var svg = d3.select("Grafo").append("svg");
+        var svg = d3.select(this._$container.get(0)).append("svg");
 
         //Read the data from the mis element 
         //                var mis = document.getElementById('mis').innerHTML;

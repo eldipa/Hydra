@@ -1,6 +1,7 @@
 {
    "name": "concu-debug",
    "main": "index.html",
+   "chromium-args": "--disable-setuid-sandbox",
    "window":{
       "toolbar":true,
       "frame":true,
