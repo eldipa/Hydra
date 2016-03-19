@@ -117,6 +117,7 @@ class Gdb(object):
     def _configure_gdb(self):
         self.gdbInput.write('set non-stop on\n')
         self.gdbInput.write('set target-async on\n')
+        self.gdbInput.write('-inferior-tty-set /dev/null\n')
         self.gdbInput.flush()
 
     def _load_base_py_modules_into_gdb_process(self):
