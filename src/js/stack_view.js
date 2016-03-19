@@ -8,6 +8,7 @@ define(["underscore", "jquery", "layout", "shortcuts", "jstree", "jstree_builder
        this.build_tree();
 
        this.thread = null;
+       this.follower = null;
        this.frames = [];
        
        _.bindAll(this, "_frames_updated", "_variables_of_frame_updated");
@@ -16,8 +17,9 @@ define(["underscore", "jquery", "layout", "shortcuts", "jstree", "jstree_builder
    StackView.prototype.__proto__ = layout.Panel.prototype;
    layout.implement_render_and_unlink_methods(StackView.prototype);
 
-   StackView.prototype.follow = function (thread) {
+   StackView.prototype.follow = function (thread, follower) {
        this.thread = thread;
+       this.follower = follower;
        if (! this.thread) {
            this.frames = []; // cleanup
        }
@@ -89,10 +91,15 @@ define(["underscore", "jquery", "layout", "shortcuts", "jstree", "jstree_builder
                 var data = self._get_data_from_selected();
                 var frame_level = "" + (data.level);
 
-                //var thread_followed = self.stack_tracker.thread; // TODO not supported?
-                //thread_followed.get_debugger_you_belong().execute('-stack-select-frame', [frame_level]);
-                //thread_followed.get_debugger_you_belong().execute('up');
-                //thread_followed.frame_level = frame_level;
+                var frame = self.frames[frame_level];
+                var thread_followed = self.thread;
+                if (!thread_followed || !self.follower || !frame) {
+                    return null;
+                }
+
+                self.follower.update_button_bar_and_code_editor_to_show(frame.source_fullname, 
+                                                                        frame.source_line_number,
+                                                                        frame.instruction_address);
                 
                 return null;
             },

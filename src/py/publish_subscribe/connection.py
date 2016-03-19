@@ -41,7 +41,7 @@ class Connection(object):
          raise Exception("The communication is already close")
 
       message = json.dumps(obj)
-      syslog.syslog(syslog.LOG_DEBUG, "Sending object (%i bytes): %s." % esc(len(message), message))
+      syslog.syslog(syslog.LOG_INFO, "Sending object (%i bytes): %s." % esc(len(message), message))
       self.socket.sendall(message)
       syslog.syslog(syslog.LOG_DEBUG, "Object sent (%i bytes)." % esc(len(message)))
 
@@ -103,7 +103,7 @@ class Connection(object):
           
           try:
               obj = json.loads(self.buf)
-              syslog.syslog(syslog.LOG_DEBUG, "Received object from this raw string: '%s'." % esc(self.buf))
+              syslog.syslog(syslog.LOG_INFO, "Received object from this raw string: '%s'." % esc(self.buf))
           except:
               # JSON fail, so the 'object' is not complete yet
               continue

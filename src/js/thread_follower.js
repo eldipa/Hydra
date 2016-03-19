@@ -40,7 +40,7 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
 
     ThreadFollower.prototype.follow = function (thread_to_follow) {
         this.thread_followed = thread_to_follow;
-        this.stack_view.follow(thread_to_follow);
+        this.stack_view.follow(thread_to_follow, this);
 
         this.see_your_thread_and_update_yourself();
     }; 
@@ -82,7 +82,12 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
     ThreadFollower.prototype.see_your_thread_and_update_yourself = function () {
         var source_fullname = this.thread_followed.source_fullname;
         var line_number_str = this.thread_followed.source_line;
+        var instruction_address = this.thread_followed.instruction_address;
 
+        this.update_button_bar_and_code_editor_to_show(source_fullname, line_number_str, instruction_address);
+    };
+
+    ThreadFollower.prototype.update_button_bar_and_code_editor_to_show = function (source_fullname, line_number_str, instruction_address) {
         if (source_fullname && line_number_str) {
             this.button_bar.leave_assembly_mode();
 
@@ -95,11 +100,9 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
         else {
             this.button_bar.enter_assembly_mode();
 
-            var instruction_address = this.thread_followed.instruction_address;
             //TODO request to GDB to dissamble few (how much?) instructions around 'instruction_address'.
             //then call update_yourself_from_dissabled_code
         }
-
     };
 
     ThreadFollower.prototype.update_current_line = function (line_number) {
