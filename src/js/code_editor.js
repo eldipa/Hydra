@@ -61,8 +61,9 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore'], function (ace, $,
     CodeEditor.prototype.go_to_line = function (line_number_or_address) {
         var ace_row_number = this.ace_row_lookup_from_gutter_line(line_number_or_address);
 
-        this.editor.scrollToLine(ace_row_number, false, false);
-        this.editor.gotoLine(ace_row_number, 0, false);
+        var ace_line_number = ace_row_number + 1;
+        this.editor.scrollToLine(ace_line_number, false, false);
+        this.editor.gotoLine(ace_line_number, 0, false);
     };
 
     CodeEditor.prototype._highlight_ace_range = function (hightlight, stringBuilder, range, left, top, config) {
@@ -107,8 +108,6 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore'], function (ace, $,
 
         var marker_id = this.edit_session.addMarker(range, "", _.partial(this._highlight_ace_range, hightlight));
 
-        console.log(start);
-        console.log(end);
         return {marker_id: marker_id};
     };
 
