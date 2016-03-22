@@ -46,21 +46,27 @@ define([ 'jquery', 'layout', 'shortcuts', 'event_handler', 'd3' ], function($, l
         var force = d3.layout.force().charge(-120).linkDistance(30)
         
         var zoom = d3.behavior.zoom().on("zoom", rescale);
+        
+        var drag = d3.behavior.drag()
+        .origin(function(d) { return d; })
+        .on("dragstart", dragstarted)
+        .on("drag", dragged)
+        .on("dragend", dragended);
 
         var margin = {top: -5, right: -5, bottom: -5, left: -5};
         
         //Append a SVG to the body of the html page. Assign this SVG as an object to svg
         var svg = d3.select(this._$container.get(0)).append("svg").attr('style', 'width: 100%; height: 100%;');
-        var g = svg.append("g").attr("transform", "translate(" + margin.left + "," + margin.right + ")")
-        .call(zoom);
-        
 
         var rect = svg.append("g").append("rect")
             .attr("width", this._$container.width())
             .attr("height", this._$container.height())
             .style("fill", "none")
             .style("pointer-events", "all")
-            .call(zoom);;
+            .call(zoom);
+            
+        var g = svg.append("g").attr("transform", "translate(" + margin.left + "," + margin.right + ")")
+            .call(zoom);
 
         //Read the data from the mis element 
         //                var mis = document.getElementById('mis').innerHTML;
@@ -82,11 +88,15 @@ define([ 'jquery', 'layout', 'shortcuts', 'event_handler', 'd3' ], function($, l
                 }).call(force.drag).on(
                         "mouseover",
                         function(d, i) {
+                        	// disable zoom
+                            g.on(".zoom", null);
                             tooltip.transition().duration(200).style("opacity", .9);
                             tooltip.html(graph.nodes[i].name).style("left", (d3.event.pageX) + "px").style("top",
                                     (d3.event.pageY - 28) + "px");
                         }).on("mouseout", function(d) {
                     tooltip.transition().duration(500).style("opacity", 0);
+                    //reenable zoom
+                    g.call(zoom);
                 });
 
         //Codigo para evitar que nodos quedes superpuestos
@@ -165,7 +175,7 @@ define([ 'jquery', 'layout', 'shortcuts', 'event_handler', 'd3' ], function($, l
         
 
         function rescale() {
-        	
+        
         	  trans=d3.event.translate;
         	  scale=d3.event.scale;
 
@@ -175,10 +185,24 @@ define([ 'jquery', 'layout', 'shortcuts', 'event_handler', 'd3' ], function($, l
         	}     
         
         
+        function dragstarted(d) {
+      	  	d3.event.sourceEvent.stopPropagation();
+      	  	d3.select(this).classed("dragging", true);
+      	};
+
+      	function dragged(d) {
+      		d3.select(this).attr("cx", d.x = d3.event.x).attr("cy", d.y = d3.event.y);
+      	};
+
+      	function dragended(d) {
+      		d3.select(this).classed("dragging", false);
+      	};
         
 
-    }
-    ;
+    };
+    
+    
+    
    
 
     ProcessView.prototype.render = function() {
