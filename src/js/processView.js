@@ -44,7 +44,7 @@ define([ 'jquery', 'layout', 'shortcuts', 'event_handler', 'd3' ], function($, l
         var force = d3.layout.force().charge(-120).linkDistance(30)
 
         //Append a SVG to the body of the html page. Assign this SVG as an object to svg
-        var svg = d3.select(this._$container.get(0)).append("svg");
+        var svg = d3.select(this._$container.get(0)).append("svg").append("g").call(d3.behavior.zoom().on("zoom", rescale));
 
         //Read the data from the mis element 
         //                var mis = document.getElementById('mis').innerHTML;
@@ -144,9 +144,23 @@ define([ 'jquery', 'layout', 'shortcuts', 'event_handler', 'd3' ], function($, l
         ;
 
         var tooltip = d3.select("body").append("div").attr("class", "tooltip").style("opacity", 0);
+        
+
+        function rescale() {
+        	  trans=d3.event.translate;
+        	  scale=d3.event.scale;
+
+        	  svg.attr("transform",
+        	      "translate(" + trans + ")"
+        	      + " scale(" + scale + ")");
+        	}     
+        
+        
+        
 
     }
     ;
+   
 
     ProcessView.prototype.render = function() {
         if (this._$out_of_dom) {
