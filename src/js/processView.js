@@ -3,11 +3,13 @@ define([ 'jquery', 'layout', 'shortcuts', 'event_handler', 'd3' ], function($, l
     function ProcessView() {
         this.super("Process View");
 
-        this._$container = $('<div> </div>');
+        this._$container = $('<div style="width: 100%; height: 100%;"> </div>');
 
         this._$out_of_dom = this._$container;
 
         this.EH = event_handler.get_global_event_handler();
+        
+        var my_self = this;
         
         
         
@@ -42,9 +44,23 @@ define([ 'jquery', 'layout', 'shortcuts', 'event_handler', 'd3' ], function($, l
 
         //Set up the force layout
         var force = d3.layout.force().charge(-120).linkDistance(30)
+        
+        var zoom = d3.behavior.zoom().on("zoom", rescale);
 
+        var margin = {top: -5, right: -5, bottom: -5, left: -5};
+        
         //Append a SVG to the body of the html page. Assign this SVG as an object to svg
-        var svg = d3.select(this._$container.get(0)).append("svg").append("g").call(d3.behavior.zoom().on("zoom", rescale));
+        var svg = d3.select(this._$container.get(0)).append("svg").attr('style', 'width: 100%; height: 100%;');
+        var g = svg.append("g").attr("transform", "translate(" + margin.left + "," + margin.right + ")")
+        .call(zoom);
+        
+
+        var rect = svg.append("g").append("rect")
+            .attr("width", this._$container.width())
+            .attr("height", this._$container.height())
+            .style("fill", "none")
+            .style("pointer-events", "all")
+            .call(zoom);;
 
         //Read the data from the mis element 
         //                var mis = document.getElementById('mis').innerHTML;
@@ -54,13 +70,13 @@ define([ 'jquery', 'layout', 'shortcuts', 'event_handler', 'd3' ], function($, l
         force.nodes(graph.nodes).links(graph.links).start();
 
         //Create all the line svgs but without locations yet
-        var link = svg.selectAll(".link").data(graph.links).enter().append("line").attr("class", "link").style(
+        var link = g.selectAll(".link").data(graph.links).enter().append("line").attr("class", "link").style(
                 "stroke-width", function(d) {
                     return Math.sqrt(d.value);
                 });
 
         //Do the same with the circles for the nodes - no 
-        var node = svg.selectAll(".node").data(graph.nodes).enter().append("circle").attr("class", "node").attr("r", 8)
+        var node = g.selectAll(".node").data(graph.nodes).enter().append("circle").attr("class", "node").attr("r", 8)
                 .style("fill", function(d) {
                     return color(d.group);
                 }).call(force.drag).on(
@@ -127,8 +143,10 @@ define([ 'jquery', 'layout', 'shortcuts', 'event_handler', 'd3' ], function($, l
         d3.select(window).on("resize", resize);
 
         function resize() {
-            width = window.innerWidth, height = window.innerHeight;
+        	
+            width = my_self._$container.width(), height = my_self._$container.height();
             svg.attr("width", width).attr("height", height);
+            rect.attr("width", width).attr("height", height);
             force.size([ width, height ]).resume();
         }
         ;
@@ -147,10 +165,11 @@ define([ 'jquery', 'layout', 'shortcuts', 'event_handler', 'd3' ], function($, l
         
 
         function rescale() {
+        	
         	  trans=d3.event.translate;
         	  scale=d3.event.scale;
 
-        	  svg.attr("transform",
+        	  g.attr("transform",
         	      "translate(" + trans + ")"
         	      + " scale(" + scale + ")");
         	}     
