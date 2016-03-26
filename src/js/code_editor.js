@@ -62,7 +62,7 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore'], function (ace, $,
         var ace_row_number = this.ace_row_lookup_from_gutter_line(line_number_or_address);
 
         var ace_line_number = ace_row_number + 1;
-        this.editor.scrollToLine(ace_line_number, false, false);
+        this.editor.scrollToLine(ace_line_number, true, false);
         this.editor.gotoLine(ace_line_number, 0, false);
     };
 
