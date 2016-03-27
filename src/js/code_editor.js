@@ -124,6 +124,14 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore'], function (ace, $,
         }, line_number_or_address);
     };
 
+    CodeEditor.prototype.highlight_breakpoint = function (line_number_or_address) {
+        return this.highlight_lines({
+            css_classes: "code-editor-breakpoint",
+            note: {
+                text: "XXXXX",
+            }
+        }, line_number_or_address);
+    };
     
     /* Internal */
 
