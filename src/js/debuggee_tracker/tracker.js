@@ -520,13 +520,14 @@ define(["underscore", "event_handler", "debuggee_tracker/debugger", "debuggee_tr
    /* Call this to update several breakpoints from the data. This method was designed to be called from
     * the same object that modified the breakpoint through GDB.
     * */
-   DebuggeeTracker.prototype.breakpoint_changed = function () {
-       this.notify("breakpoint_changed", {})
+   DebuggeeTracker.prototype.breakpoint_changed = function (bkpt) {
+       this.notify("breakpoint_changed", {breakpoint: bkpt})
    };
 
    DebuggeeTracker.prototype.delete_breakpoint = function (bkpt) {
+       bkpt.was_deleted = true;
        delete this.breakpoints_by_debugger[bkpt.debugger_id][bkpt.id];
-       this.notify("breakpoint_changed", {})
+       this.notify("breakpoint_changed", {breakpoint: bkpt})
    };
 
    DebuggeeTracker.prototype._breakpoint_deleted = function (data) {
