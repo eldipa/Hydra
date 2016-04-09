@@ -4,7 +4,7 @@ define(["underscore", "shortcuts", 'event_handler', 'debuggee_tracker/frame'], f
     var Frame = frame_module.Frame;
 
     var Thread = function (id, tracker, obj) {
-        this._properties = ["debugger_id", "thread_group_id", "state", "source_fullname", "source_line",  "instruction_address", "frame_level"];
+        this._properties = ["debugger_id", "thread_group_id", "state", "source_fullname", "source_line",  "instruction_address", "frame_level", "is_alive"];
 
         this.update(obj);
         this.id = id;

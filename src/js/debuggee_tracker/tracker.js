@@ -234,7 +234,12 @@ define(["underscore", "event_handler", "debuggee_tracker/debugger", "debuggee_tr
       var thread_group_id = data.results['group-id'];
       var thread_id = data.results.id;
       
-      var thread = new Thread(thread_id, this, {debugger_id: debugger_id, thread_group_id: thread_group_id});
+      var thread = new Thread(thread_id, this, {
+                                                debugger_id: debugger_id, 
+                                                thread_group_id: thread_group_id, 
+                                                is_alive: true, 
+                                                state: "created"
+      });
 
       var thread_group = this.thread_groups_by_debugger[debugger_id][thread_group_id];
       var debugger_obj = this.debuggers_by_id[debugger_id];
@@ -258,6 +263,10 @@ define(["underscore", "event_handler", "debuggee_tracker/debugger", "debuggee_tr
       var debugger_obj = this.debuggers_by_id[debugger_id];
       var thread_group = this.thread_groups_by_debugger[debugger_id][thread_group_id];
       var thread = this.threads_by_debugger[debugger_id][thread_id];
+      thread.update({
+          state: "exited",
+          is_alive: false,
+      });
 
       this.notify("thread_exited", { 
                                        event_data: data,
