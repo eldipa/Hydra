@@ -5,6 +5,22 @@ define(['event_handler'], function (event_handler) {
       return Math.floor(Math.random() * (max - min)) + min;
    };
 
+   /* 
+    * Notify if gdb thrown an error. Only notify if there is a valid
+    * message, otherwise dont do anything.
+    * */
+   var nice_gdb_error_and_warning_notification = function (data) {
+       var msg = "";
+       try {
+          msg = data.results.msg;
+          if (msg) {
+             console.warn("GDB: " + msg);
+          }
+       }
+       catch (err) {
+       }
+   };
+
    /*
     * Request the execution of the command 'command' with 'args' in the debugger gdb_id.
     * If the on_non_error is not null, it must be a function that it will be called with the
@@ -19,7 +35,7 @@ define(['event_handler'], function (event_handler) {
          var interpreter = "console";
       }
 
-      var on_error = on_error || null;
+      var on_error = on_error || nice_gdb_error_and_warning_notification;
       var on_non_error = on_non_error || null;
 
       var args = args || [];
