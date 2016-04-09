@@ -232,7 +232,7 @@ define(function () {
          }
          for(var i = 0; i < callbacks.length; i++) {
             try {
-               callbacks[i](JSON.parse(event.data));
+               callbacks[i](JSON.parse(event.data), event.topic);
             }
             catch (e) {
                console.warn("Error in callback (topic: "+topic+"): " + e + "\n" + e.stack);
