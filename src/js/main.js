@@ -134,7 +134,7 @@ requirejs(['ui', 'code_view', 'jquery', 'export_console', 'layout', 'layout_exam
 
    old_code_editor.swap(aThreadFollower);
 
-   var log = new log_view_module.LogView();
+   var log = new log_view_module.LogView(det_view);
    l.stdoutlog.swap(log);
 
    root.render();

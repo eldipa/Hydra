@@ -1,27 +1,29 @@
 define(["underscore", "jquery", "layout", "slickgrid", "event_handler", "observation"], function (_, $, layout, slickgrid, event_handler, observation_module) {
    'use strict';
    var Observation = observation_module.Observation;
-   var LogView = function () {
+   var LogView = function (det_view) {
        this.super("LogView");
        this.build_and_initialize_panel_container('<div style="height: 100%; width: 100%"></div>');
 
        this._$container.data('do_observation', _.bind(this.do_observation_over_the_grid, this));
-   
+       this.det_view = det_view;
+
        this.keep_scrolling_to_bottom = false;
        var self = this;
 
           var columns = [
+            {id: 'n', name: "#", field: "n", width: 16, can_be_autosized: false},
             {id: "timestamp", name: "Timestamp", field: "timestamp", width: 96, can_be_autosized: false},
             {id: "source", name: "Source", field: "source", width: 96, can_be_autosized: false, cssClass: "selectable_text"},
             {id: "message", name: "Message", field: "message", cssClass: "selectable_text"},
           ];
           var options = {
-            enableCellNavigation: false,
-            enableColumnReorder: false,
-            rowHeight: 20,
-            syncColumnCellResize: true,
-            forceFitColumns: true,
-            enableTextSelectionOnCells: true,
+            enableCellNavigation: true, //
+            enableColumnReorder: false,  // dont allow the user to reorder the columns
+            rowHeight: 20,               // this is the height of each row in the grid
+            syncColumnCellResize: true,  // update the width of the column while the column's header is resized by the user
+            forceFitColumns: true,       // distribute the size of each column to a 1/Nth of the available space (unless that the column has the custom can_be_autosized=false in which case its width will remain unchanged.
+            enableTextSelectionOnCells: true, // that: enable text selection. Use in conjuntion with out custom css class "selectable_text"
           };
             
           this.data = [];
@@ -35,6 +37,16 @@ define(["underscore", "jquery", "layout", "slickgrid", "event_handler", "observa
             else {
                 self.keep_scrolling_to_bottom = false;
             }
+        });
+
+        this.grid.onActiveCellChanged.subscribe(function (e, d) {
+            if (!d) {
+                return;
+            }
+
+            var row_index = d.row;
+            var obs = self._do_observation_for_this_row(row_index);
+            self.det_view.observe(obs);
         });
          
    var EH = event_handler.get_global_event_handler();
@@ -53,7 +65,8 @@ define(["underscore", "jquery", "layout", "slickgrid", "event_handler", "observa
        source = source || "";
        timestamp = timestamp || Date.now();
 
-       this.data.push({timestamp: timestamp,
+       this.data.push({n: this.data.length + 1,
+                       timestamp: timestamp,
                        source: source,
                        message: message,
                     });
@@ -86,8 +99,10 @@ define(["underscore", "jquery", "layout", "slickgrid", "event_handler", "observa
        }
 
        var row_index = cell.row;
-       var cell_index_in_row = cell.cell;
-
+       return this._do_observation_for_this_row(row_index);
+   };
+   
+   LogView.prototype._do_observation_for_this_row = function (row_index) {
        var message = this.data[row_index].message;
        var message_object = {
             get_display_name: function () { return "XXX display name"; },
