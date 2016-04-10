@@ -8,8 +8,8 @@ define(["underscore", "jquery", "layout", "slickgrid", "event_handler"], functio
        var self = this;
 
           var columns = [
-            {id: "timestamp", name: "Timestamp", field: "timestamp", width: 64},
-            {id: "source", name: "Source", field: "source", width: 64},
+            {id: "timestamp", name: "Timestamp", field: "timestamp", width: 96, can_be_autosized: false},
+            {id: "source", name: "Source", field: "source", width: 96, can_be_autosized: false},
             {id: "message", name: "Message", field: "message"},
           ];
           var options = {

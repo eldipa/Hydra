@@ -92,6 +92,7 @@ if (typeof Slick === "undefined") {
     var columnDefaults = {
       name: "",
       resizable: true,
+      can_be_autosized: true,
       sortable: false,
       minWidth: 30,
       rerenderOnResize: false,
@@ -1039,7 +1040,7 @@ if (typeof Slick === "undefined") {
         c = columns[i];
         widths.push(c.width);
         total += c.width;
-        if (c.resizable) {
+        if (c.resizable && c.can_be_autosized) {
           shrinkLeeway += c.width - Math.max(c.minWidth, absoluteColumnMinWidth);
         }
       }
@@ -1051,7 +1052,7 @@ if (typeof Slick === "undefined") {
         for (i = 0; i < columns.length && total > availWidth; i++) {
           c = columns[i];
           var width = widths[i];
-          if (!c.resizable || width <= c.minWidth || width <= absoluteColumnMinWidth) {
+          if (!c.resizable || !c.can_be_autosized || width <= c.minWidth || width <= absoluteColumnMinWidth) {
             continue;
           }
           var absMinWidth = Math.max(c.minWidth, absoluteColumnMinWidth);
@@ -1076,7 +1077,7 @@ if (typeof Slick === "undefined") {
           var currentWidth = widths[i];
           var growSize;
 
-          if (!c.resizable || c.maxWidth <= currentWidth) {
+          if (!c.resizable || !c.can_be_autosized || c.maxWidth <= currentWidth) {
             growSize = 0;
           } else {
             growSize = Math.min(Math.floor(growProportion * currentWidth) - currentWidth, (c.maxWidth - currentWidth) || 1000000) || 1;
