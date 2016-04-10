@@ -78,6 +78,10 @@ classes should alter those!
   border-radius: 10px;
 }
 
+.slick-resizable-handle:hover {
+  background: #59b4d4;
+}
+
 .slick-sortable-placeholder {
   background: silver;
 }
