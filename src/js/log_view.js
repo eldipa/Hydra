@@ -1,8 +1,11 @@
-define(["underscore", "jquery", "layout", "slickgrid", "event_handler"], function (_, $, layout, slickgrid, event_handler) {
+define(["underscore", "jquery", "layout", "slickgrid", "event_handler", "observation"], function (_, $, layout, slickgrid, event_handler, observation_module) {
    'use strict';
+   var Observation = observation_module.Observation;
    var LogView = function () {
        this.super("LogView");
        this.build_and_initialize_panel_container('<div style="height: 100%; width: 100%"></div>');
+
+       this._$container.data('do_observation', _.bind(this.do_observation_over_the_grid, this));
    
        this.keep_scrolling_to_bottom = false;
        var self = this;
@@ -40,6 +43,10 @@ define(["underscore", "jquery", "layout", "slickgrid", "event_handler"], functio
             var source = "GDB " + gdb_id_as_str
             self.add_message(data.stream, source);
          });
+
+        EH.subscribe("", function (data, topic) {
+            self.add_message(JSON.stringify(data), "*("+topic+")");
+        });
    };
 
    LogView.prototype.add_message = function (message, source, timestamp) {
@@ -69,6 +76,26 @@ define(["underscore", "jquery", "layout", "slickgrid", "event_handler"], functio
        }
 
        this.grid.resizeCanvas();
+   };
+
+   LogView.prototype.do_observation_over_the_grid = function (event, dom_element) {
+       var cell = this.grid.getCellFromEvent(event);
+
+       if (!cell) {
+           return;
+       }
+
+       var row_index = cell.row;
+       var cell_index_in_row = cell.cell;
+
+       var message = this.data[row_index].message;
+       var message_object = {
+            get_display_name: function () { return "XXX display name"; },
+            get_display_details: function () { return $("<span></span>").text(message); },
+            get_display_fullname: function () { return "XXX display fullname"; },
+       };
+
+       return new Observation({target: message_object, context: this});
    };
 
    return { LogView: LogView };
