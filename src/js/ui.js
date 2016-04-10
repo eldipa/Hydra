@@ -62,7 +62,7 @@ define(['jquery', 'layout', 'code_editor', 'varViewer', 'listview_panel', 'stand
 
 
       // Now we attach and build the final layout
-      var root = view.attach($('body'));
+      var root = view.attach($('#main'));
       //view.split(log, "bottom");    // TODO (issue #61) poner esto en tabs y ademas hacer un metodo en layout.Panel que sea on_own_tab() para tomar un panel y reemplarlo por un Tabbed con un unico tab (el).
       //root.render();
 
@@ -285,7 +285,7 @@ define(['jquery', 'layout', 'code_editor', 'varViewer', 'listview_panel', 'stand
 
       root.render();
 
-      return {root: root, visor: visor, code_editor: view};
+      return {root: root, visor: visor, code_editor: view, stdoutlog:stdoutlog};
    };
 
    return {
