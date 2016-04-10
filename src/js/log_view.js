@@ -9,8 +9,8 @@ define(["underscore", "jquery", "layout", "slickgrid", "event_handler"], functio
 
           var columns = [
             {id: "timestamp", name: "Timestamp", field: "timestamp", width: 96, can_be_autosized: false},
-            {id: "source", name: "Source", field: "source", width: 96, can_be_autosized: false},
-            {id: "message", name: "Message", field: "message"},
+            {id: "source", name: "Source", field: "source", width: 96, can_be_autosized: false, cssClass: "selectable_text"},
+            {id: "message", name: "Message", field: "message", cssClass: "selectable_text"},
           ];
           var options = {
             enableCellNavigation: false,
@@ -18,6 +18,7 @@ define(["underscore", "jquery", "layout", "slickgrid", "event_handler"], functio
             rowHeight: 20,
             syncColumnCellResize: true,
             forceFitColumns: true,
+            enableTextSelectionOnCells: true,
           };
             
           this.data = [];
