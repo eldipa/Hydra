@@ -99,7 +99,7 @@ classes should alter those!
 
 /* Active row */
 .slick-row.ui-widget-content.active {
-    background: #5FA2DB;
+    background: #4c82b0;
     text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.5);
 }
 

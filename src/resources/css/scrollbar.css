@@ -1,7 +1,7 @@
 /* The scrollbar */ 
 ::-webkit-scrollbar { 
- width: 8px; 
- height: 8px;
+ width: 6px; 
+ height: 6px;
 } 
 
 /* The space where the thumb is moved */ 
@@ -13,6 +13,14 @@
 
 /* Handle which you move */ 
 ::-webkit-scrollbar-thumb { 
+ -webkit-border-radius: 10px; 
+ border-radius: 10px; 
+ background: rgba(97, 148, 192, 0.5);
+ -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.5); 
+} 
+
+/* Hover effect */ 
+::-webkit-scrollbar-thumb:hover { 
  -webkit-border-radius: 10px; 
  border-radius: 10px; 
  background: rgba(97, 148, 192, 1);
