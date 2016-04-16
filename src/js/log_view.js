@@ -108,6 +108,7 @@ define(["underscore", "jquery", "layout", "slickgrid", "event_handler", "observa
             get_display_name: function () { return "XXX display name"; },
             get_display_details: function () { return $("<span></span>").text(message); },
             get_display_fullname: function () { return "XXX display fullname"; },
+            get_display_controller: function () { return null; },
        };
 
        return new Observation({target: message_object, context: this});
