@@ -9,6 +9,7 @@ import socket
 from threading import Lock
 import syslog, traceback
 from connection import Connection
+from message import pack_message, unpack_message_body
 from topic import build_topic_chain, fail_if_topic_isnt_valid
 from esc import esc
 import random
@@ -25,13 +26,13 @@ class Publisher(object):
           self._log(syslog.LOG_ERR, "Error when creating a connection with the notifier server (%s): %s." % esc(str(address), traceback.format_exc()))
           raise 
 
-        self.connection.send_object({'type': 'introduce_myself', 'name': name})
+        self.connection.send_object(pack_message(message_type='introduce_myself', name=name))
         
     def publish(self, topic, data):
         fail_if_topic_isnt_valid(topic, allow_empty=False)
 
         self._log(syslog.LOG_DEBUG, "Sending publication of an event with topic '%s'." % esc(topic))
-        self.connection.send_object({'type': 'publish', 'topic': topic, 'data': json.dumps(data)})
+        self.connection.send_object(pack_message(message_type='publish', topic=topic, obj=data, dont_pack_object=False))
         self._log(syslog.LOG_DEBUG, "Publication of an event sent.")
 
 
@@ -102,7 +103,7 @@ class EventHandler(threading.Thread, Publisher):
                self._log(syslog.LOG_DEBUG, "Registered subscription locally. Subscription to the topic '%s' already sent." % esc(topic))
            else:
                self._log(syslog.LOG_DEBUG, "Sending subscription to the topic '%s'." % esc(topic))
-               self.connection.send_object({'type': 'subscribe', 'topic': topic})
+               self.connection.send_object(pack_message(message_type='subscribe', topic=topic))
                self._log(syslog.LOG_DEBUG, "Subscription sent.")
 
                self.callbacks_by_topic[topic] = [(callback, {'id': self.next_valid_subscription_id})]
@@ -173,7 +174,7 @@ class EventHandler(threading.Thread, Publisher):
 
         if not self.callbacks_by_topic[topic]:
            del self.callbacks_by_topic[topic]
-           self.connection.send_object({'type': 'unsubscribe', 'topic': topic})
+           self.connection.send_object(pack_message(message_type='unsubscribe', topic=topic))
         
         del self.subscriptions_by_id[subscription_id]
 
@@ -215,18 +216,22 @@ class EventHandler(threading.Thread, Publisher):
     def run(self):
         try:
            while not self.connection.end_of_the_communication:
-               events = self.connection.receive_objects()
+               message_type, message_body = self.connection.receive_object()
+               
+               if message_type != "publish":
+                   self._log(syslog.LOG_ERR, "Unexpected message of type '%s' (expecting a 'publish' message). Dropping the message and moving on." % esc(message_type))
+                   continue
 
-               for event in events:
-                   self.dispatch(event)
+               topic, obj = unpack_message_body(message_type, message_body, dont_unpack_object=False)
+               self.dispatch(topic, obj)
                    
         except:
            self._log(syslog.LOG_ERR, "Exception when receiving a message: %s." % esc(traceback.format_exc()))
         finally:
            self.connection.close()
 
-    def dispatch(self, event):
-        topic_chain = build_topic_chain(event['topic'])
+    def dispatch(self, topic, obj):
+        topic_chain = build_topic_chain(topic)
 
         callbacks_collected = []
         self.lock.acquire()
@@ -241,7 +246,7 @@ class EventHandler(threading.Thread, Publisher):
          
         for callbacks in callbacks_collected:   
             for callback, subscription in callbacks:
-                self._execute_callback(callback, json.loads(event['data']), t) #TODO what is 't'?
+                self._execute_callback(callback, obj, t) #TODO what is 't'?
 
     def _execute_callback(self, callback, data, t):
        try:

@@ -58,7 +58,7 @@ a
 
 ::
 
-   >>> payload = "a" * 7000
+   >>> payload = "a" * (7000 * 9)
    >>> begin_experiment_time = time.time()
    >>> for i in reversed(range(1000, -1, -1)):
    ...    agent1.publish('foo', {'n':i, 'd': payload})
@@ -70,7 +70,7 @@ a
 
 ::
 
-   >>> payload = "}a{}{d}{{}" * 7
+   >>> payload = "}a{}{d}{{}" * (700 * 9)
    >>> begin_experiment_time = time.time()
    >>> for i in reversed(range(1000, -1, -1)):
    ...    agent1.publish('foo', {'n':i, 'd': payload})

@@ -4,6 +4,7 @@ from connection import Connection
 from topic import build_topic_chain, fail_if_topic_isnt_valid
 
 from esc import esc
+from message import unpack_message_body, pack_message
 
 #TODO add keep alive
 class _Endpoint(threading.Thread):
@@ -18,68 +19,39 @@ class _Endpoint(threading.Thread):
 
       self.start()
 
-   def _is_valid_message(self, message):
-      if not isinstance(message, dict):
-         self._log(syslog.LOG_ERR, "Invalid message. It isn't an object like {...} : '%s'." % esc(json.dumps(message)))
+   def _is_valid_message(self, message_type, message_body):
+      if not message_type in ("subscribe", "publish", "unsubscribe", "introduce_myself"):
          return False
 
-      if not "type" in message:
-         self._log(syslog.LOG_ERR, "Invalid message. It hasn't a type: '%s'." % esc(json.dumps(message)))
-         return False
-
-      if not message["type"] in ("subscribe", "publish", "unsubscribe", "introduce_myself"):
-         self._log(syslog.LOG_ERR, "Invalid message. Unknown type: '%s'." % esc(json.dumps(message)))
-         return False
-
-      if message["type"] not in ("introduce_myself",) and not "topic" in message:
-         self._log(syslog.LOG_ERR, "Invalid message of type '%s'. It hasn't any topic: '%s'." % esc(message['type'], json.dumps(message)))
-         return False
-
-      if message["type"] == "publish" and "data" not in message:
-         self._log(syslog.LOG_ERR, "Invalid message. Publish message hasn't any data: '%s'." % esc(json.dumps(message)))
-         return False
-
-      if message["type"] == "introduce_myself" and "name" not in message:
-         self._log(syslog.LOG_ERR, "Invalid message. Missing name paremeter in the 'introduce myself' message: %s" % esc(json.dumps(message)))
-         return False
-
-      if message["type"] not in ("introduce_myself",):
-         try:
-            fail_if_topic_isnt_valid(message["topic"], allow_empty = (message["type"] == "subscribe"))
-         except Exception as e:
-            self._log(syslog.LOG_ERR, "Invalid topic: '%s'" % esc(str(e)))
-            return False
 
       return True
 
 
-   def _process_messages(self, messages):
-      for message in messages:
-         is_valid = self._is_valid_message(message)
-         if not is_valid:
-            self._log(syslog.LOG_ERR, "Invalid message: '%s'." % esc(json.dumps(message)))
-            raise Exception("Invalid message.")
+   def _process_message(self, message_type, message_body):
+         if message_type == "publish":
+            topic, raw_obj = unpack_message_body(message_type, message_body, dont_unpack_object=True)
+            self.notifier.distribute_event(topic, raw_obj)
 
-         if message["type"] == "publish":
-            self.notifier.distribute_event({"topic": message["topic"], "data": message["data"]})
+         elif message_type == "unsubscribe":
+            topic = unpack_message_body(message_type, message_body)
+            self.notifier.unsubscribe_me(topic, self)
 
-         elif message["type"] == "unsubscribe":
-            self.notifier.unsubscribe_me(message["topic"], self)
-
-         elif message["type"] == "introduce_myself":
-            self.name = message["name"]
+         elif message_type == "introduce_myself":
+            self.name = unpack_message_body(message_type, message_body)
          
+         elif message_type == "subscribe":
+            topic = unpack_message_body(message_type, message_body)
+            self.notifier.register_subscriber(topic, self)
+
          else:
-            assert message["type"] == "subscribe"
-            self.notifier.register_subscriber(message["topic"], self)
+            self._log(syslog.LOG_ERR, "Invalid message. Unknown type: '%s'." % esc(message_type))
+            raise Exception("Invalid message.")
 
    def run(self):
       try:
          while not self.connection.end_of_the_communication:
-            messages = self.connection.receive_objects()
-            self._log(syslog.LOG_DEBUG, "Received %s messages" % esc(str(len(messages))))
-
-            self._process_messages(messages)
+            message_type, message_body = self.connection.receive_object()
+            self._process_message(message_type, message_body)
 
          self._log(syslog.LOG_NOTICE, "The connection was closed by the other point of the connection.")
       except:
@@ -88,9 +60,9 @@ class _Endpoint(threading.Thread):
          self.is_finished = True
 
 
-   def send_event(self, event):
+   def send_event(self, topic, obj_raw):
       try:
-         self.connection.send_object(event)
+         self.connection.send_object(pack_message(message_type="publish", topic=topic, obj=obj_raw, dont_pack_object=True))
       except:
          self._log(syslog.LOG_ERR, "An exception when sending a message to it: %s." % esc(traceback.format_exc()))
          self.is_finished = True
@@ -191,21 +163,19 @@ class Notifier(daemon.Daemon):
       return endpoints
 
 
-   def distribute_event(self, event):
-      topic = event['topic']
+   def distribute_event(self, topic, obj_raw):
       fail_if_topic_isnt_valid(topic) # this shouldn't fail (it should be checked and filtered before)
       topic_chain = build_topic_chain(topic)
       
       self.endpoint_subscription_lock.acquire() # with this we guarrante that all the events are delivered in the correct order
       try:
-         syslog.syslog(syslog.LOG_NOTICE, "Distributing event over the topic chain '%s': %s." % esc(", ".join(topic_chain), json.dumps(event)))
+         syslog.syslog(syslog.LOG_NOTICE, "Distributing event over the topic chain '%s': %s." % esc(", ".join(topic_chain), obj_raw))
          all_interested_endpoints = sum(map(self.get_and_update_endpoints_by_topic, topic_chain), [])
          endpoints = set(all_interested_endpoints)
          syslog.syslog(syslog.LOG_NOTICE, "There are %i subscribed in total." % esc(len(endpoints)))
          
          for endpoint in endpoints:
-            endpoint.send_event(event)
-         
+            endpoint.send_event(topic, obj_raw)
 
       except:
          syslog.syslog(syslog.LOG_ERR, "Exception in the distribution: %s" % esc(traceback.format_exc()))

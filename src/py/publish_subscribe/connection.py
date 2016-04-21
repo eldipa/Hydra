@@ -6,6 +6,7 @@ import time
 import traceback
 
 from esc import esc
+from message import unpack_message_header
 
 class Connection(object):
    def __init__(self, address_or_already_open_socket):
@@ -36,24 +37,22 @@ class Connection(object):
          self.closed = False
 
 
-   def send_object(self, obj):
+   def send_object(self, message):
       if self.end_of_the_communication:
          raise Exception("The communication is already close")
 
-      message = json.dumps(obj)
-      syslog.syslog(syslog.LOG_INFO, "Sending object (%i bytes): %s." % esc(len(message), message))
+      #print "send", len(message), repr(message)
       self.socket.sendall(message)
       syslog.syslog(syslog.LOG_DEBUG, "Object sent (%i bytes)." % esc(len(message)))
 
-   def receive_objects(self):
+   def receive_object(self):
       if self.end_of_the_communication:
          raise Exception("The communication is already close")
 
-      chunk = self._read_chunk()
-      self.end_of_the_communication = not chunk
-
-      objects = self._ensamble_objects(chunk, 8912)
-      return objects
+      header = self._read_next_message_header()
+      message_type, message_body = self._read_next_message_body(header)
+      #print "recv", len(header), repr(header), "op:", message_type, len(message_body), repr(message_body)
+      return message_type, message_body
 
 
    def close(self):
@@ -74,12 +73,44 @@ class Connection(object):
          syslog.syslog(syslog.LOG_ERR, "Error in the close: '%s'" % esc(traceback.format_exc()))
 
     
-   def _read_chunk(self):
-      syslog.syslog(syslog.LOG_DEBUG, "Waiting for the next chunk of data")
-      chunk = self.socket.recv(8912)
-      syslog.syslog(syslog.LOG_DEBUG, "Chunk received (%i bytes)." % esc(len(chunk)))
+   def _read_next_message_header(self):
+      syslog.syslog(syslog.LOG_DEBUG, "Waiting for the next message header")
+      to_receive = 3
+      chunks = []
+      chunk = "dummy"
+      while to_receive > 0 and chunk:
+          chunk = self.socket.recv(to_receive)
+          chunks.append(chunk)
+          to_receive -= len(chunk)
 
-      return chunk
+      header = "".join(chunks)
+      syslog.syslog(syslog.LOG_DEBUG, "Chunk received (%i bytes)." % esc(len(header)))
+
+      if to_receive > 0:
+          self.end_of_the_communication = True
+          raise Exception()
+
+      return header
+
+   def _read_next_message_body(self, header):
+      message_type, message_body_len = unpack_message_header(header)
+
+      to_receive = message_body_len
+      chunks = []
+      chunk = "dummy"
+      while to_receive > 0 and chunk:
+          chunk = self.socket.recv(to_receive)
+          chunks.append(chunk)
+          to_receive -= len(chunk)
+      
+      message_body = "".join(chunks)
+      syslog.syslog(syslog.LOG_DEBUG, "Chunk received (%i bytes)." % esc(len(message_body)))
+
+      if to_receive > 0:
+          self.end_of_the_communication = True
+          raise Exception()
+
+      return message_type, message_body
 
    def _ensamble_objects(self, chunk, MAX_BUF_LENGTH):
       '''Take the unfinished object's payload and try to complete one or 
