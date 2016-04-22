@@ -41,9 +41,13 @@ class Connection(object):
       if self.end_of_the_communication:
          raise Exception("The communication is already close")
 
-      #print "send", len(message), repr(message)
+      syslog.syslog(syslog.LOG_DEBUG, 
+              " ".join(["sending...", 
+              str(len(message)), 
+              repr(message), 
+              ]))
+
       self.socket.sendall(message)
-      syslog.syslog(syslog.LOG_DEBUG, "Object sent (%i bytes)." % esc(len(message)))
 
    def receive_object(self):
       if self.end_of_the_communication:
@@ -51,7 +55,14 @@ class Connection(object):
 
       header = self._read_next_message_header()
       message_type, message_body = self._read_next_message_body(header)
-      #print "recv", len(header), repr(header), "op:", message_type, len(message_body), repr(message_body)
+      syslog.syslog(syslog.LOG_DEBUG, 
+              " ".join(["received", 
+              str(len(header)), 
+              repr(header), 
+              "op:", 
+              message_type, 
+              str(len(message_body)), 
+              repr(message_body)]))
       return message_type, message_body
 
 
@@ -94,6 +105,7 @@ class Connection(object):
 
    def _read_next_message_body(self, header):
       message_type, message_body_len = unpack_message_header(header)
+      syslog.syslog(syslog.LOG_DEBUG, "Received '%s' with %i bytes to be read. Reading..." % esc(message_type, message_body_len))
 
       to_receive = message_body_len
       chunks = []
@@ -104,7 +116,6 @@ class Connection(object):
           to_receive -= len(chunk)
       
       message_body = "".join(chunks)
-      syslog.syslog(syslog.LOG_DEBUG, "Chunk received (%i bytes)." % esc(len(message_body)))
 
       if to_receive > 0:
           self.end_of_the_communication = True
