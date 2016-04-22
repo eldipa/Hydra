@@ -27,6 +27,8 @@ define(['message'], function (message) {
 
       var net = require('net');
       this.socket = new net.Socket();
+      this.socket.setEncoding(null); // binary data (Buffer)
+      delete this.socket._readableState.decoder;
       
       var is_connected = false;
       var attempts = 0;
@@ -53,7 +55,6 @@ define(['message'], function (message) {
          that.init_dispacher();
       });
 
-      this.socket.setEncoding(null); // binary data (Buffer)
       this.socket.connect(5555, '');
    };
 
@@ -151,22 +152,22 @@ define(['message'], function (message) {
 
 
    EventHandler.prototype.init_dispacher = function () {
-      var previous_chunk = [];
+      var previous_chunk = new Buffer("");
       var is_waiting_the_header = true;
 
       var message_type = null;
       var message_body_len = null;
 
       var self = this;
-      var process_chunk = function (chunk) {
-         if (chunk.length > 0) {
-             previous_chunk += chunk;
+      var process_chunk = function (chunk, is_dummy_chunk) {
+         if (is_dummy_chunk !== true) {
+             previous_chunk = Buffer.concat([previous_chunk, chunk]);
          }
 
          if (is_waiting_the_header) {
             if (previous_chunk.length >= 3) {
                 var header = previous_chunk.slice(0, 3);
-                var previous_chunk = previous_chunk.slice(3);
+                previous_chunk = previous_chunk.slice(3);
 
                 var r = unpack_message_header(header);
                 message_type = r.message_type;
@@ -182,7 +183,7 @@ define(['message'], function (message) {
          else { // parsing the body, only if we have enough bytes
             if (previous_chunk.length >= message_body_len) {
                 var message_body = previous_chunk.slice(0, message_body_len);
-                var previous_chunk = previous_chunk.slice(message_body_len);
+                previous_chunk = previous_chunk.slice(message_body_len);
 
                 if (message_type !== 'publish') {
                     console.warn("Unexpected message of type '"+message_type+"' (expecting a 'publish' message). Dropping the message and moving on.");
@@ -192,7 +193,7 @@ define(['message'], function (message) {
                     var r = unpack_message_body(message_type, message_body);
                     var topic = r.topic;
                     var obj = r.obj;
-
+                    
                     is_waiting_the_header = true;
                     self.dispatch(topic, obj);
                 }
@@ -212,7 +213,7 @@ define(['message'], function (message) {
       this.socket.on('data', function (chunk) {
         var success = process_chunk(chunk);
         while (success) {
-            success = process_chunk("");
+            success = process_chunk("", true);
         }
       });
    };

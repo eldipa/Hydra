@@ -35,9 +35,9 @@ define(function () {
             }
 
         var raw = new Buffer(2 + topic_length + obj_lenth);
-        var offset = raw.writeInt16BE(topic_length);
-        offset = raw.write(topic, offset);
-        offset = raw.write(obj_raw, offset);
+        raw.writeInt16BE(topic_length);
+        raw.write(topic,   2);
+        raw.write(obj_raw, 2 + topic_length);
 
         return raw;
     }
@@ -47,7 +47,7 @@ define(function () {
         var topic   = raw.slice(2, 2+topic_length);
         var obj_raw = raw.slice(2+topic_length);
 
-        return {topic: topic, obj: JSON.parse(obj_raw)};
+        return {topic: topic.toString(), obj: JSON.parse(obj_raw)};
     }
 
 
@@ -91,9 +91,9 @@ define(function () {
         var message_body_len = message_body.length;
 
         var msg = new Buffer(1 + 2 + message_body_len);
-        var offset = msg.writeInt8(op);
-        offset = msg.writeInt16BE(message_body_len, offset);
-        offset = msg.write(message_body.toString(), offset);
+        msg.writeInt8(op);
+        msg.writeInt16BE(message_body_len, 1);
+        msg.write(message_body.toString(), 1+2);
 
         if (msg.length > ShortMax) {
             throw new Error();
