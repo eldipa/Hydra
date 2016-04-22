@@ -88,7 +88,7 @@ class Connection(object):
 
       if to_receive > 0:
           self.end_of_the_communication = True
-          raise Exception()
+          raise Exception("End of the communication.")
 
       return header
 

@@ -3,7 +3,6 @@ import json
 
 ByteMax  =  (2**8)-1
 ShortMax = (2**16)-1
-IntMax   = (2**32)-1
 
 def pack_introduce_myself_msg(name):
     name_length = len(name)
