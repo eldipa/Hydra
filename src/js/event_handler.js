@@ -1,5 +1,9 @@
-define(function () {
+define(['message'], function (message) {
    'use strict';
+
+   var pack_message = message.pack_message;
+   var unpack_message_header = message.unpack_message_header;
+   var unpack_message_body = message.unpack_message_body;
 
    // TODO extract the constants an put them in a external file
    // TODO wrap the errors into Error objects
@@ -45,11 +49,11 @@ define(function () {
 
       this.socket.on('connect', function () {
          is_connected = true;
-         that.socket.write(JSON.stringify({type: 'introduce_myself', name: name}));
+         that.socket.write(pack_message('introduce_myself', {name: name}));
          that.init_dispacher();
       });
 
-      this.socket.setEncoding('ascii');
+      this.socket.setEncoding(null); // binary data (Buffer)
       this.socket.connect(5555, '');
    };
 
@@ -71,7 +75,7 @@ define(function () {
          throw "The topic must not be empty";
       }
 
-      this.socket.write(JSON.stringify({type: 'publish', topic: topic, data: JSON.stringify(data)}));
+      this.socket.write(pack_message('publish', {topic: topic, obj: data}));
    };
 
    EventHandler.prototype.subscribe = function (topic, callback) {
@@ -79,7 +83,7 @@ define(function () {
       var callbacks = this.callbacks_by_topic[topic];
       if(!callbacks) {
          this.callbacks_by_topic[topic] = [callback];
-         this.socket.write(JSON.stringify({type: 'subscribe', topic: topic}));
+         this.socket.write(pack_message('subscribe', {topic: topic}));
       }
       else {
          this.callbacks_by_topic[topic].push(callback);
@@ -118,7 +122,7 @@ define(function () {
       // remove the topic if there isn't any callback
       if (this.callbacks_by_topic[topic].length === 0) {
          delete this.callbacks_by_topic[topic];
-         this.socket.write(JSON.stringify({type: 'unsubscribe', topic: topic}));
+         this.socket.write(pack_message('unsubscribe', {topic: topic}));
       }
 
       // remove the subscription
@@ -147,63 +151,76 @@ define(function () {
 
 
    EventHandler.prototype.init_dispacher = function () {
-      var buf = '';
+      var previous_chunk = [];
+      var is_waiting_the_header = true;
+
+      var message_type = null;
+      var message_body_len = null;
+
       var self = this;
+      var process_chunk = function (chunk) {
+         if (chunk.length > 0) {
+             previous_chunk += chunk;
+         }
+
+         if (is_waiting_the_header) {
+            if (previous_chunk.length >= 3) {
+                var header = previous_chunk.slice(0, 3);
+                var previous_chunk = previous_chunk.slice(3);
+
+                var r = unpack_message_header(header);
+                message_type = r.message_type;
+                message_body_len = r.message_body_len;
+
+                is_waiting_the_header = false;
+                return true;
+            }
+            else {
+                return false;
+            }
+         } 
+         else { // parsing the body, only if we have enough bytes
+            if (previous_chunk.length >= message_body_len) {
+                var message_body = previous_chunk.slice(0, message_body_len);
+                var previous_chunk = previous_chunk.slice(message_body_len);
+
+                if (message_type !== 'publish') {
+                    console.warn("Unexpected message of type '"+message_type+"' (expecting a 'publish' message). Dropping the message and moving on.");
+                    // continue, move on
+                }
+                else {
+                    var r = unpack_message_body(message_type, message_body);
+                    var topic = r.topic;
+                    var obj = r.obj;
+
+                    is_waiting_the_header = true;
+                    self.dispatch(topic, obj);
+                }
+                
+                message_type = null;
+                message_body_len = null;
+                return true;
+            }
+            else {
+                return false;
+            }
+         }
+
+         throw new Error(); 
+      };
+
       this.socket.on('data', function (chunk) {
-         var events = [];
-         var incremental_chunks = chunk.split('}');
-         var index_of_the_last = incremental_chunks.length-1;
-
-         // We join each sub-chunk in an incremental way.
-         // In each step we try to parse the full string to extract
-         // the event (an object).
-         for(var i = 0; i < incremental_chunks.length; i++) {
-            buf += incremental_chunks[i] + ((i === index_of_the_last)? '': '}');
-            if(!buf) {
-               continue;
-            }
-
-            if(buf.length > this.max_buf_length) {
-               throw "Too much data. Buffer's length exceeded .";
-            }
-
-            var event = null;
-            try {
-               event = JSON.parse(buf);
-            }
-            catch(e) {
-               //JSON fail, so the 'event object' is not complete yet
-            }
-
-            if(!event) {
-               continue;
-            } 
-
-            var old_buf = buf; //for logging
-            buf = '';
-
-            if(typeof event !== 'object') {
-               throw "Bogus 'event' payload. It isn't an object like {...} .";
-            }
-
-            if(typeof event.topic === 'undefined' || typeof event.data === 'undefined') {
-               throw "Bogus 'event' payload. It has an incorrect or missing property.";
-            }
-
-            events.push(event);
-         }
-
-         //finally we dispatch the events, if any
-         for(var i = 0; i < events.length; i++) {
-            self.dispatch(events[i]);
-         }
+        var success = process_chunk(chunk);
+        while (success) {
+            success = process_chunk("");
+        }
       });
    };
 
-   EventHandler.prototype.dispatch = function (event) {
+   EventHandler.prototype.dispatch = function (topic, data) {
       if(this.log_to_console) {
          console.debug("Dispatch: ");
-         console.debug(event);
+         console.debug({topic: topic, data:data});
       }
 
       // we build the topic chain:
@@ -211,7 +228,7 @@ define(function () {
       // if the event's topic was A, the chain is ['', A]
       // if the event's topic was A.B, the chain is ['', A, B]
       // and so on
-      var subtopics = event.topic.split('.');
+      var subtopics = topic.split('.');
       var topic_chain = ['']; // the 'empty' topic is added
       for(var i = 0; i < subtopics.length; i++) {
          topic_chain.push( subtopics.slice(0, i+1).join('.') );
@@ -232,7 +249,7 @@ define(function () {
          }
          for(var i = 0; i < callbacks.length; i++) {
             try {
-               callbacks[i](JSON.parse(event.data));
+               callbacks[i](data);
             }
             catch (e) {
                console.warn("Error in callback (topic: "+topic+"): " + e + "\n" + e.stack);
