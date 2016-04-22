@@ -25,7 +25,11 @@ define(function () {
         var obj   = params.obj;
 
         var topic_length = topic.length;
-        var obj_raw = JSON.stringify(obj);
+        try {
+           var obj_raw = JSON.stringify(obj);
+        } catch(e) {
+            throw new Error("Serialization of the object failed (json stringify): " + e);
+        }
 
         var obj_lenth = obj_raw.length;
 
@@ -35,7 +39,7 @@ define(function () {
             }
 
         var raw = new Buffer(2 + topic_length + obj_lenth);
-        raw.writeInt16BE(topic_length);
+        raw.writeUInt16BE(topic_length);
         raw.write(topic,   2);
         raw.write(obj_raw, 2 + topic_length);
 
@@ -43,11 +47,17 @@ define(function () {
     }
 
     function unpack_publish_msg(raw) {
-        var topic_length = raw.readInt16BE();
+        var topic_length = raw.readUInt16BE();
         var topic   = raw.slice(2, 2+topic_length);
         var obj_raw = raw.slice(2+topic_length);
 
-        return {topic: topic.toString(), obj: JSON.parse(obj_raw)};
+        try {
+            var obj = JSON.parse(obj_raw);
+        } catch(e) {
+            throw new Error("Deserialization of the object failed (json parse): " + e);
+        }
+
+        return {topic: topic.toString(), obj: obj};
     }
 
 
@@ -91,8 +101,8 @@ define(function () {
         var message_body_len = message_body.length;
 
         var msg = new Buffer(1 + 2 + message_body_len);
-        msg.writeInt8(op);
-        msg.writeInt16BE(message_body_len, 1);
+        msg.writeUInt8(op);
+        msg.writeUInt16BE(message_body_len, 1);
         msg.write(message_body.toString(), 1+2);
 
         if (msg.length > ShortMax) {
@@ -108,8 +118,8 @@ define(function () {
             throw new Error();
         }
 
-        var op = raw.readInt8();
-        var message_body_len = raw.readInt16BE(1);
+        var op = raw.readUInt8();
+        var message_body_len = raw.readUInt16BE(1);
 
         var message_type = {
             0x1: "publish",
