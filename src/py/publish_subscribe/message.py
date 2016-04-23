@@ -1,5 +1,8 @@
 import struct
-import json
+try:
+    import ujson as json
+except ImportError:
+    import json
 
 ByteMax  =  (2**8)-1
 ShortMax = (2**16)-1

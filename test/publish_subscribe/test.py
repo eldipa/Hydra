@@ -1,5 +1,6 @@
 import os, time, sys
 from subprocess import check_output
+from threading import Lock
 
 sys.path.append("./py")
 import publish_subscribe.eventHandler 
@@ -17,10 +18,20 @@ if __name__ == '__main__':
     try:
         agent1 = publish_subscribe.eventHandler.EventHandler()
 
+        is_done = Lock()
+        is_done.acquire()
+        def done(e):
+            global is_done
+            is_done.release()
+        agent1.subscribe('bar', done)
+
         try:
-            payload = ""
+            payload = {chr(k) * 1: {chr(q)*2: range(4) for q in range(ord('A'), ord('z'))}
+                            for k in range(ord('A'), ord('z'))}
             for i in range(10000, -1, -1):
                 agent1.publish('foo', {'n': i, 'd': payload})
+            agent1.publish('bar', {})
+            is_done.acquire()
 
         finally:
             agent1.close()
