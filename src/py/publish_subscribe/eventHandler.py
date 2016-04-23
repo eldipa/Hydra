@@ -27,13 +27,16 @@ class Publisher(object):
           raise 
 
         self.connection.send_object(pack_message(message_type='introduce_myself', name=name))
+        self._safe_topics = set()
         
     def publish(self, topic, data):
-        fail_if_topic_isnt_valid(topic, allow_empty=False)
+        if topic not in self._safe_topics:
+            fail_if_topic_isnt_valid(topic, allow_empty=False)
+            self._safe_topics.add(topic)
 
-        self._log(syslog.LOG_DEBUG, "Sending publication of an event with topic '%s'." % esc(topic))
+        #self._log(syslog.LOG_DEBUG, "Sending publication of an event with topic '%s'." % esc(topic))
         self.connection.send_object(pack_message(message_type='publish', topic=topic, obj=data, dont_pack_object=False))
-        self._log(syslog.LOG_DEBUG, "Publication of an event sent.")
+        #self._log(syslog.LOG_DEBUG, "Publication of an event sent.")
 
 
     def close(self, *args, **kargs):
@@ -93,18 +96,20 @@ class EventHandler(threading.Thread, Publisher):
         return "Endpoint (%s)" % self.name
         
     def subscribe(self, topic, callback, return_subscription_id=False, send_and_wait_echo=False):
-        fail_if_topic_isnt_valid(topic, allow_empty=True)
+        if topic not in self._safe_topics:
+            fail_if_topic_isnt_valid(topic, allow_empty=True)
+            if topic: # don't add an empty topic: whitelisting this kind of topics will defeat the publish's check. See this same check in the publish method.
+                self._safe_topics.add(topic) 
 
         result = None
         self.lock.acquire()
         try:
            if self.callbacks_by_topic.has_key(topic):
                self.callbacks_by_topic[topic].append((callback, {'id': self.next_valid_subscription_id}))
-               self._log(syslog.LOG_DEBUG, "Registered subscription locally. Subscription to the topic '%s' already sent." % esc(topic))
            else:
-               self._log(syslog.LOG_DEBUG, "Sending subscription to the topic '%s'." % esc(topic))
+               #self._log(syslog.LOG_DEBUG, "Sending subscription to the topic '%s'." % esc(topic))
                self.connection.send_object(pack_message(message_type='subscribe', topic=topic))
-               self._log(syslog.LOG_DEBUG, "Subscription sent.")
+               #self._log(syslog.LOG_DEBUG, "Subscription sent.")
 
                self.callbacks_by_topic[topic] = [(callback, {'id': self.next_valid_subscription_id})]
 
@@ -236,10 +241,8 @@ class EventHandler(threading.Thread, Publisher):
         callbacks_collected = []
         self.lock.acquire()
         try:
-           self._log(syslog.LOG_DEBUG, "Executing callback over the topic chain '%s'." % esc(", ".join(topic_chain))) ##TODO
            for t in topic_chain:
                callbacks = self.callbacks_by_topic.get(t, []);
-               self._log(syslog.LOG_DEBUG, "For the topic '%s' there are %s callbacks." % esc( (t if t else "(the empty topic)"), str(len(callbacks))))
                callbacks_collected.append(list(callbacks)) # get a copy!
         finally:
            self.lock.release()

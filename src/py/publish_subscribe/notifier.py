@@ -101,6 +101,7 @@ class Notifier(daemon.Daemon):
       self.stats_file = stats_file
 
       self.socket = None
+      self._safe_topics = set()
 
    def run(self):
       import gc
@@ -164,15 +165,18 @@ class Notifier(daemon.Daemon):
 
 
    def distribute_event(self, topic, obj_raw):
-      fail_if_topic_isnt_valid(topic) # this shouldn't fail (it should be checked and filtered before)
+      if topic not in self._safe_topics: 
+          fail_if_topic_isnt_valid(topic) # this shouldn't fail (it should be checked and filtered before)
+          self._safe_topics.add(topic)
+
       topic_chain = build_topic_chain(topic)
       
       self.endpoint_subscription_lock.acquire() # with this we guarrante that all the events are delivered in the correct order
       try:
-         syslog.syslog(syslog.LOG_NOTICE, "Distributing event over the topic chain '%s': %s." % esc(", ".join(topic_chain), obj_raw))
+         #syslog.syslog(syslog.LOG_NOTICE, "Distributing event over the topic chain '%s': %s." % esc(", ".join(topic_chain), obj_raw))
          all_interested_endpoints = sum(map(self.get_and_update_endpoints_by_topic, topic_chain), [])
          endpoints = set(all_interested_endpoints)
-         syslog.syslog(syslog.LOG_NOTICE, "There are %i subscribed in total." % esc(len(endpoints)))
+         #syslog.syslog(syslog.LOG_NOTICE, "There are %i subscribed in total." % esc(len(endpoints)))
          
          for endpoint in endpoints:
             endpoint.send_event(topic, obj_raw)
@@ -189,7 +193,6 @@ class Notifier(daemon.Daemon):
    def register_subscriber(self, topic, endpoint):
       self.endpoint_subscription_lock.acquire()
       try:
-         syslog.syslog(syslog.LOG_NOTICE, "Endpoint subscribed to topic '%s'." % esc(topic if topic else "(the empty topic)"))
          if topic in self.endpoints_by_topic:
             self.endpoints_by_topic[topic].append(endpoint)
          else:
@@ -204,7 +207,6 @@ class Notifier(daemon.Daemon):
    def unsubscribe_me(self, topic, endpoint):
       self.endpoint_subscription_lock.acquire()
       try:
-         syslog.syslog(syslog.LOG_NOTICE, "Removing endpoint subscription for the topic '%s'." % esc(topic if topic else "(the empty topic)"))
          if topic not in self.endpoints_by_topic:
             syslog.syslog(syslog.LOG_ERR, "Trying to unsubscribe from the topic '%s' but no one is subscribed to that topic!" % esc(topic if topic else "(the empty topic)"))
             

@@ -37,9 +37,11 @@ def fail_if_topic_isnt_valid(topic, allow_empty=False):
 
    if topic.startswith(".") or topic.endswith("."):
       raise Exception("The topic can not start or end with a dot. The topic is '%s'." % esc(topic))
+   
+   if topic.startswith(" ") or topic.endswith(" "):
+      raise Exception("The topic can not start or end with a space. The topic is '%s'." % esc(topic))
 
-   if not allow_empty and not topic:
-      assert " " not in topic
+   if not allow_empty and topic == "":
       raise Exception("The topic cannot be empty: '%s'" % esc(topic))
 
    subtopics = topic.split(".")

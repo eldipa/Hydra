@@ -41,11 +41,11 @@ class Connection(object):
       if self.end_of_the_communication:
          raise Exception("The communication is already close")
 
-      syslog.syslog(syslog.LOG_DEBUG, 
-              " ".join(["sending...", 
-              str(len(message)), 
-              repr(message), 
-              ]))
+      #syslog.syslog(syslog.LOG_DEBUG, 
+      #        " ".join(["sending...", 
+      #        str(len(message)), 
+      #        repr(message), 
+      #        ]))
 
       self.socket.sendall(message)
 
@@ -55,14 +55,15 @@ class Connection(object):
 
       header = self._read_next_message_header()
       message_type, message_body = self._read_next_message_body(header)
-      syslog.syslog(syslog.LOG_DEBUG, 
-              " ".join(["received", 
-              str(len(header)), 
-              repr(header), 
-              "op:", 
-              message_type, 
-              str(len(message_body)), 
-              repr(message_body)]))
+      #syslog.syslog(syslog.LOG_DEBUG, 
+      #        " ".join(["received", 
+      #        str(len(header)), 
+      #        repr(header), 
+      #        "op:", 
+      #        message_type, 
+      #        str(len(message_body)), 
+      #        repr(message_body)]))
+
       return message_type, message_body
 
 
@@ -85,7 +86,7 @@ class Connection(object):
 
     
    def _read_next_message_header(self):
-      syslog.syslog(syslog.LOG_DEBUG, "Waiting for the next message header")
+      #syslog.syslog(syslog.LOG_DEBUG, "Waiting for the next message header")
       to_receive = 3
       chunks = []
       chunk = "dummy"
@@ -95,7 +96,6 @@ class Connection(object):
           to_receive -= len(chunk)
 
       header = "".join(chunks)
-      syslog.syslog(syslog.LOG_DEBUG, "Chunk received (%i bytes)." % esc(len(header)))
 
       if to_receive > 0:
           self.end_of_the_communication = True
@@ -105,7 +105,7 @@ class Connection(object):
 
    def _read_next_message_body(self, header):
       message_type, message_body_len = unpack_message_header(header)
-      syslog.syslog(syslog.LOG_DEBUG, "Received '%s' with %i bytes to be read. Reading..." % esc(message_type, message_body_len))
+      #syslog.syslog(syslog.LOG_DEBUG, "Received '%s' with %i bytes to be read. Reading..." % esc(message_type, message_body_len))
 
       to_receive = message_body_len
       chunks = []
@@ -123,38 +123,6 @@ class Connection(object):
 
       return message_type, message_body
 
-   def _ensamble_objects(self, chunk, MAX_BUF_LENGTH):
-      '''Take the unfinished object's payload and try to complete one or 
-         more objects with the next 'chunk' of payload.
-         If the total buf exceeds MAX_BUF_LENGTH bytes, an exception will be thrown.
-
-         Return the ensambled objects.
-         '''
-      objects = []
-
-      incremental_chunks = chunk.split('}')
-      index_of_the_last = len(incremental_chunks) - 1
-      
-      for i in range(len(incremental_chunks)):
-          self.buf += incremental_chunks[i] + ('' if (i == index_of_the_last) else '}')
-          if(not self.buf):
-              continue
-           
-          if(len(self.buf) > MAX_BUF_LENGTH):
-              raise Exception("Too much data. Buffer's length exceeded .")
-          
-          try:
-              obj = json.loads(self.buf)
-              syslog.syslog(syslog.LOG_INFO, "Received object from this raw string: '%s'." % esc(self.buf))
-          except:
-              # JSON fail, so the 'object' is not complete yet
-              continue
-              
-          self.buf = ''
-          objects.append(obj)
-      
-      syslog.syslog(syslog.LOG_DEBUG, "Received %i objects (remain %i bytes in the internal buffer)" % esc(len(objects), len(self.buf)))
-      return objects
 
    def __del__(self):
       self.close()
