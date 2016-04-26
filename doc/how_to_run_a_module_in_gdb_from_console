@@ -1,0 +1,37 @@
+First, run GDB from the console (you can use MI or not):
+
+/home/joedoe/gdb-7.11/gdb/gdb --data-directory=/home/joedoe/gdb-7.11/gdb/data-directory cppTestCode/multiple_files/sort
+
+In the console of gdb, load the python module infrastracture.
+Enter "python" to set the python console and enter:
+
+import syslog
+syslog.openlog("(gdb plugin)", logoption=syslog.LOG_PID)
+syslog.setlogmask(syslog.LOG_UPTO(7))
+import sys
+sys.path.append("/home/joedoe/ConcuDebug/src/py")
+sys.path.append("/home/joedoe/ConcuDebug/src/py/gdb")
+import gdb_event_handler
+import gdb_module_loader
+gdb_event_handler.initialize()
+gdb_module_loader.initialize()
+sys.path.append("/home/joedoe/ConcuDebug/src/py/gdb/Plugins")
+
+NOTE: you can find the last update python code used to load the module infrastracture
+in src/py/gdb/gdb.py
+
+Now, to load any module just run in gdb (not python):
+python gdb_module_loader.get_module_loader().load("foo_bar")
+
+And to activate(deactivate) run the command:
+gdb-module-foo-bar-activate
+
+An useful module to load and activate is "log_gdb_modules_output_to_stdout":
+python gdb_module_loader.get_module_loader().load("log_gdb_modules_output_to_stdout")
+gdb-module-log-gdb-modules-output-to-stdout-activate
+
+If you want to debug the syscalls:
+python gdb_module_loader.get_module_loader().load("strace")
+catch syscall write
+condition 1 $notify_syscall()
+
