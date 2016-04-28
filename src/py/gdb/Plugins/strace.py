@@ -224,7 +224,7 @@ class NotifySyscall(gdb.Function):
         self.gdb_module = gdb_module
         self.process = ProcessUnderGDB()
 
-        self._tracker_of_notify_functions = {}
+        self._syscall_tracer_by_invokation_id = {}
 
     def as_a_convenient_function_call(self):
         return "$%s()" % self.name
@@ -238,21 +238,20 @@ class NotifySyscall(gdb.Function):
             raise Exception("You are calling the 'NotifySyscall' function with no thread running. This should never happen because only the catchpoint-syscall should call this function and by definition those require an running thread.")
 
         my_id = (gdb.selected_inferior().num, selected_thread.num)
-        my_state = self._tracker_of_notify_functions.setdefault(my_id, {}) 
+        syscall_tracer = self._syscall_tracer_by_invokation_id.get(my_id) 
 
-        syscall_tracer = my_state.get('syscall_tracer')
         am_at_syscall_enter = syscall_tracer is None  # if None no tracing was started so we must be at the enter of a syscall
 
         if am_at_syscall_enter:
             syscall_tracer = PtraceSyscallPublisher(self.gdb_module, self.process, Opts())
-            my_state['syscall_tracer'] = syscall_tracer # save this tracer to be called at the syscall's exit
+            self._syscall_tracer_by_invokation_id[my_id] = syscall_tracer # save this tracer to be called at the syscall's exit
             syscall_tracer.enter()
 
         else:
-            syscall_tracer = my_state['syscall_tracer']  # created at the syscall's enter
+            syscall_tracer = self._syscall_tracer_by_invokation_id[my_id]  # created at the syscall's enter
             syscall_tracer.exit()
 
-            del self._tracker_of_notify_functions[my_id] # clean up
+            del self._syscall_tracer_by_invokation_id[my_id] # clean up
 
         # publish the data from the syscall's enter/exit 
         syscall_tracer.publish_syscall()
