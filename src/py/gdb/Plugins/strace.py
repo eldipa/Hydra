@@ -46,8 +46,6 @@ class ProcessUnderGDB(PtraceProcess):
         PtraceProcess.__init__(self, None, None, True, None)
         self._inferior = None
         self._remove_implementation_of_methods()
-        self.orig_eax = None
-        self.orig_rax = None
 
     def set_inferior(self, inferior):
        self._inferior = inferior
@@ -134,11 +132,6 @@ class ProcessUnderGDB(PtraceProcess):
 
         return regs_struct
 
-
-    #def getreg(self, name):
-    #    regs = self.getregs()
-    #    return getattr(regs, name) #TODO handle sub registers (see ptrace/debugger/process.py line 420)
- 
 
     # BSD
     def getStackPointer(self):
@@ -277,7 +270,7 @@ class GDBSyscallTrace(GDBModule):
     self.catchpoint_id = None
     self.notify_syscall_function = NotifySyscall(self)
 
-    #self._set_catchpoint('')
+    self._set_catchpoint('')
 
   
   def activate(self, *args):
@@ -311,8 +304,8 @@ class GDBSyscallTrace(GDBModule):
     if self.catchpoint_id is not None:
         gdb.execute("delete %i" % self.catchpoint_id)
 
-    # format of msg:  Catchpoint 6 (syscall 'read' [0])
-    msg = gdb.execute("catch syscall %s" % syscall_whitelisted_string, to_string=True)
+    # format of msg:  Catchpoint 6 (syscall 'read' [0])  or  Catchpoint 1 (any syscall)
+    msg = gdb.execute("catch syscall %s" % syscall_whitelisted_string, to_string=True).strip()
     self.catchpoint_id = int(msg.split()[1])
 
     self._configure_condition_over_catchpoint_to_call_notify()
