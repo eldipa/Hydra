@@ -237,7 +237,7 @@ class NotifySyscall(gdb.Function):
         if selected_thread is None:
             raise Exception("You are calling the 'NotifySyscall' function with no thread running. This should never happen because only the catchpoint-syscall should call this function and by definition those require an running thread.")
 
-        my_id = 1 #selected_thread.global_num
+        my_id = (gdb.selected_inferior().num, selected_thread.num)
         my_state = self._tracker_of_notify_functions.setdefault(my_id, {}) 
 
         syscall_tracer = my_state.get('syscall_tracer')
