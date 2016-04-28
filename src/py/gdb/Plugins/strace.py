@@ -98,6 +98,7 @@ class ProcessUnderGDB(PtraceProcess):
         return b''.join(string), truncated
 
     def getregs(self):
+        # TODO, change to MI?
         info_register_text = gdb.execute("info registers", False, True)
 
         # first, uniform the output
@@ -174,7 +175,6 @@ class PtraceSyscallPublisher(PtraceSyscall):
    def publish_syscall(self):
        ''' Publish the syscall's name, arguments and result. '''
 
-       self.gdb_module.DEBUG("Publish Syscall BEGIN")
        name = self.name
        text = self.format()
        pid = self.process.get_process_id()
@@ -208,8 +208,6 @@ class PtraceSyscallPublisher(PtraceSyscall):
         
            self._str_sys_call = "%s(%s" % (self.name, ", ".join(arguments))
            self.gdb_module.notify("Exec", {"at": "enter", "call": data})
-       
-       self.gdb_module.DEBUG("Publish Syscall END")
 
 
 class NotifySyscall(gdb.Function):
@@ -227,6 +225,9 @@ class NotifySyscall(gdb.Function):
         self.process = ProcessUnderGDB()
 
         self._tracker_of_notify_functions = {}
+
+    def as_a_convenient_function_call(self):
+        return "$%s()" % self.name
 
     @noexception("Error when stopping in the NotifySyscall", False)
     def invoke(self, *args):
@@ -263,6 +264,47 @@ class NotifySyscall(gdb.Function):
 
 from gdb_module import GDBModule
 
+ARE_IN_MI_MODE = True # change this to False for debugging
+if ARE_IN_MI_MODE:
+    def enable_breakpoint(bkpt_id): # -break-enable   -break-delete  -break-condition
+        gdb.execute("-break-enable %i" % bkpt_id)
+
+    def disable_breakpoint(bkpt_id):
+        gdb.execute("-break-disable %i" % bkpt_id)
+    
+    def delete_breakpoint(bkpt_id):
+        gdb.execute("-break-delete %i" % bkpt_id)
+
+    #def set_condition_over_breakpoint(bkpt_id, condition_string):
+    #    gdb.execute("-break-condition %i %s" % (bkpt_id, condition_string))
+
+else:
+    def enable_breakpoint(bkpt_id):
+        gdb.execute("enable %i" % bkpt_id)
+
+    def disable_breakpoint(bkpt_id):
+        gdb.execute("disable %i" % bkpt_id)
+    
+    def delete_breakpoint(bkpt_id):
+        gdb.execute("delete %i" % bkpt_id)
+
+# There is a MI version but it is available for GDB 7.11 and superior.
+def set_condition_over_breakpoint(bkpt_id, condition_string):
+    gdb.execute("condition %i %s" % (bkpt_id, condition_string))
+
+# Because there isn't a MI version of the 'catch' command for the syscalls, we define
+# this outside of the if.
+def set_catchpoint(syscall_whitelisted_string=None):
+    if syscall_whitelisted_string is None:
+        syscall_whitelisted_string = "" # this means that gdb will match any sycall
+
+    # format of msg:  Catchpoint 6 (syscall 'read' [0])  or  Catchpoint 1 (any syscall)
+    msg = gdb.execute("catch syscall %s" % syscall_whitelisted_string, to_string=True).strip()
+    catchpoint_id = int(msg.split()[1])
+
+    return catchpoint_id
+
+
 class GDBSyscallTrace(GDBModule):
   ''' Module to log the system calls (syscalls) in a similar fashion like strace does.'''
   def __init__(self):
@@ -280,7 +322,7 @@ class GDBSyscallTrace(GDBModule):
     if self.are_activated():
       return
 
-    gdb.execute("enable %i" % self.catchpoint_id)
+    enable_breakpoint(self.catchpoint_id)
     self._activated = True
 
 
@@ -290,7 +332,7 @@ class GDBSyscallTrace(GDBModule):
     if not self.are_activated():
       return
     
-    gdb.execute("disable %i" % self.catchpoint_id)
+    disable_breakpoint(self.catchpoint_id)
     self._activated = False
 
   def cleanup(self):
@@ -302,16 +344,13 @@ class GDBSyscallTrace(GDBModule):
 
   def _set_catchpoint(self, syscall_whitelisted_string):
     if self.catchpoint_id is not None:
-        gdb.execute("delete %i" % self.catchpoint_id)
+        delete_breakpoint(self.catchpoint_id)
 
-    # format of msg:  Catchpoint 6 (syscall 'read' [0])  or  Catchpoint 1 (any syscall)
-    msg = gdb.execute("catch syscall %s" % syscall_whitelisted_string, to_string=True).strip()
-    self.catchpoint_id = int(msg.split()[1])
-
+    self.catchpoint_id = set_catchpoint(syscall_whitelisted_string)
     self._configure_condition_over_catchpoint_to_call_notify()
 
   def _configure_condition_over_catchpoint_to_call_notify(self):
-    gdb.execute("condition %i $%s()" % (self.catchpoint_id, self.notify_syscall_function.name))
+    set_condition_over_breakpoint(self.catchpoint_id, self.notify_syscall_function.as_a_convenient_function_call())
 
   # on thread-group created ... what? create a KernelVSyscallBreakpoint?
   # if then a process is attached, what is it the point?
