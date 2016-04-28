@@ -135,9 +135,9 @@ class ProcessUnderGDB(PtraceProcess):
         return regs_struct
 
 
-    def getreg(self, name):
-        regs = self.getregs()
-        return getattr(regs, name) #TODO handle sub registers (see ptrace/debugger/process.py line 420)
+    #def getreg(self, name):
+    #    regs = self.getregs()
+    #    return getattr(regs, name) #TODO handle sub registers (see ptrace/debugger/process.py line 420)
  
 
     # BSD
