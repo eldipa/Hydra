@@ -9,7 +9,7 @@ import syslog
 
 try:
     ## TODO 
-    sys.path.append('/home/martin/dummy/python-ptrace-0.8.1/')
+    sys.path.append('/home/martin/dummy/cdebug/python-ptrace-0.8.1/')
     import ptrace
 except ImportError as e:
     raise ImportError("External lib 'ptrace' not found (formaly, python-ptrace, version 0.9 or higher)!: %s" % str(e))
@@ -63,10 +63,7 @@ class ProcessUnderGDB(PtraceProcess):
     #   - readCString(): read a C string
 
     def readBytes(self, address, size):
-        try:
-            return self._inferior.read_memory(address, size).tobytes() #TODO tobytes?
-        except AttributeError:
-            return str(self._inferior.read_memory(address, size))
+        return str(self._inferior.read_memory(address, size))
 
 
     def readWord(self, address):
@@ -77,8 +74,9 @@ class ProcessUnderGDB(PtraceProcess):
     # si el size+chunk_length > max pero si se encuentra un \0 en la
     # operacion de lectura, data no mide chunk_length sino menos.
     # en ese caso, solo habria truncamiento si size+len(data) > max
-    # Notificar de este bug a los creadores.
-    def xxxreadCString(self, address, max_size, chunk_length=256):
+    # Notificar de este bug a los creadores. (presente en versiones 0.8.1 y 0.9 
+    # tal vez en otras tambien)
+    def readCString(self, address, max_size, chunk_length=256):
         string = []
         size = 0
         truncated = False
@@ -121,15 +119,9 @@ class ProcessUnderGDB(PtraceProcess):
                 if n.startswith("__"): #__cs, __ds, __es, __fs, __gs, __ss
                     v = names_and_values[n[2:]] # TODO use the value of xx for __xx?
                 elif n == 'orig_eax': #beware! no all the registers are shown in "info registers"
-                    #if self.orig_eax is None:
-                       v = hex(int(gdb.execute("print $orig_eax", False, True).split("=")[1]))
-                    #else:
-                    #   v = hex(self.orig_eax)
+                    v = hex(int(gdb.execute("print $orig_eax", False, True).split("=")[1]))
                 elif n == 'orig_rax': #beware! no all the registers are shown in "info registers"
-                    #if self.orig_rax is None:
-                       v = hex(int(gdb.execute("print $orig_rax", False, True).split("=")[1]))
-                    #else:
-                    #   v = hex(self.orig_rax)
+                    v = hex(int(gdb.execute("print $orig_rax", False, True).split("=")[1]))
                 else:
                     v = names_and_values[n]
 
@@ -142,26 +134,6 @@ class ProcessUnderGDB(PtraceProcess):
 
         return regs_struct
 
-    def get_orig_registers(self):
-        try:
-            eax = self.getreg('eax') # 32 bits
-        except:
-            eax = None
-
-        try:
-            rax = self.getreg('rax') # 64 bits
-        except:
-            rax = None 
-
-        return eax, rax
-        
-    def save_current_orig_registers_and_return_it(self):
-        regs = self.get_orig_registers()
-        self.save_orig_registers(regs)
-        return regs
-
-    def save_orig_registers(self, regs):
-        self.orig_eax, self.orig_rax = regs
 
     def getreg(self, name):
         regs = self.getregs()
@@ -278,21 +250,11 @@ class NotifySyscall(gdb.Function):
         am_at_syscall_enter = syscall_tracer is None  # if None no tracing was started so we must be at the enter of a syscall
 
         if am_at_syscall_enter:
-            # get the current eax and save it in our state to be set later (don't trust in the orig_eax/orig_rax of gdb)
-            #orig_regs = self.process.save_current_orig_registers_and_return_it()
-            #my_state['orig_regs'] = orig_regs
-
-            #regs = self.process.getregs()
-
-            syscall_tracer = PtraceSyscallPublisher(self.gdb_module, self.process, Opts()) #, regs) 
+            syscall_tracer = PtraceSyscallPublisher(self.gdb_module, self.process, Opts())
             my_state['syscall_tracer'] = syscall_tracer # save this tracer to be called at the syscall's exit
-            syscall_tracer.enter() #regs)
+            syscall_tracer.enter()
 
         else:
-            # set the orig_eax/orig_rax as the value of eax read at the syscall's enter (don't trust in the orig_eax/orig_rax of gdb)
-            # then trace the syscall. Delete the state for sanity.
-            #self.process.save_orig_registers(my_state['orig_regs']) 
-            
             syscall_tracer = my_state['syscall_tracer']  # created at the syscall's enter
             syscall_tracer.exit()
 
