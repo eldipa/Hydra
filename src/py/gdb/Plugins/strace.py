@@ -9,7 +9,7 @@ import syslog
 
 try:
     ## TODO 
-    sys.path.append('/home/martin/dummy/cdebug/python-ptrace-0.9/')
+    sys.path.append('/home/martin/dummy/python-ptrace-0.8.1/')
     import ptrace
 except ImportError as e:
     raise ImportError("External lib 'ptrace' not found (formaly, python-ptrace, version 0.9 or higher)!: %s" % str(e))
@@ -63,7 +63,11 @@ class ProcessUnderGDB(PtraceProcess):
     #   - readCString(): read a C string
 
     def readBytes(self, address, size):
-        return self._inferior.read_memory(address, size).tobytes() #TODO tobytes?
+        try:
+            return self._inferior.read_memory(address, size).tobytes() #TODO tobytes?
+        except AttributeError:
+            return str(self._inferior.read_memory(address, size))
+
 
     def readWord(self, address):
         return self.readBytes(address, CPU_WORD_SIZE)
@@ -74,7 +78,7 @@ class ProcessUnderGDB(PtraceProcess):
     # operacion de lectura, data no mide chunk_length sino menos.
     # en ese caso, solo habria truncamiento si size+len(data) > max
     # Notificar de este bug a los creadores.
-    def readCString(self, address, max_size, chunk_length=256):
+    def xxxreadCString(self, address, max_size, chunk_length=256):
         string = []
         size = 0
         truncated = False
@@ -200,6 +204,7 @@ class PtraceSyscallPublisher(PtraceSyscall):
    def __init__(self, gdb_module, *args, **kargs):
       PtraceSyscall.__init__(self, *args, **kargs)
       self.gdb_module = gdb_module
+      self._str_sys_call = ""
 
    def publish_syscall(self):
        ''' Publish the syscall's name, arguments and result. '''
@@ -223,6 +228,7 @@ class PtraceSyscallPublisher(PtraceSyscall):
                'result_text': self.result_text
            }
     
+           self.gdb_module.DEBUG(self._str_sys_call + ")   = " + str(self.result))
            self.gdb_module.notify("Exec", {"at": "exit", "call": data})
 
        else:
@@ -234,7 +240,8 @@ class PtraceSyscallPublisher(PtraceSyscall):
                'name':      self.name,
                'arguments': arguments,
            }
-         
+        
+           self._str_sys_call = "%s(%s" % (self.name, ", ".join(arguments))
            self.gdb_module.notify("Exec", {"at": "enter", "call": data})
        
        self.gdb_module.DEBUG("Publish Syscall END")
@@ -264,7 +271,7 @@ class NotifySyscall(gdb.Function):
         if selected_thread is None:
             raise Exception("You are calling the 'NotifySyscall' function with no thread running. This should never happen because only the catchpoint-syscall should call this function and by definition those require an running thread.")
 
-        my_id = selected_thread.global_num
+        my_id = 1 #selected_thread.global_num
         my_state = self._tracker_of_notify_functions.setdefault(my_id, {}) 
 
         syscall_tracer = my_state.get('syscall_tracer')
@@ -272,19 +279,19 @@ class NotifySyscall(gdb.Function):
 
         if am_at_syscall_enter:
             # get the current eax and save it in our state to be set later (don't trust in the orig_eax/orig_rax of gdb)
-            orig_regs = self.process.save_current_orig_registers_and_return_it()
-            my_state['orig_regs'] = orig_regs
+            #orig_regs = self.process.save_current_orig_registers_and_return_it()
+            #my_state['orig_regs'] = orig_regs
 
-            regs = self.process.getregs()
+            #regs = self.process.getregs()
 
-            syscall_tracer = PtraceSyscallPublisher(self.gdb_module, self.process, Opts(), regs) 
+            syscall_tracer = PtraceSyscallPublisher(self.gdb_module, self.process, Opts()) #, regs) 
             my_state['syscall_tracer'] = syscall_tracer # save this tracer to be called at the syscall's exit
-            syscall_tracer.enter(regs)
+            syscall_tracer.enter() #regs)
 
         else:
             # set the orig_eax/orig_rax as the value of eax read at the syscall's enter (don't trust in the orig_eax/orig_rax of gdb)
             # then trace the syscall. Delete the state for sanity.
-            self.process.save_orig_registers(my_state['orig_regs']) 
+            #self.process.save_orig_registers(my_state['orig_regs']) 
             
             syscall_tracer = my_state['syscall_tracer']  # created at the syscall's enter
             syscall_tracer.exit()
