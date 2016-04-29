@@ -9,7 +9,7 @@ import syslog
 
 try:
     ## TODO 
-    sys.path.append('/home/martin/dummy/cdebug/python-ptrace-0.8.1/')
+    sys.path.append('/home/martin/dummy/python-ptrace-0.9/')
     import ptrace
 except ImportError as e:
     raise ImportError("External lib 'ptrace' not found (formaly, python-ptrace, version 0.9 or higher)!: %s" % str(e))
@@ -170,45 +170,93 @@ class PtraceSyscallPublisher(PtraceSyscall):
    def __init__(self, gdb_module, *args, **kargs):
       PtraceSyscall.__init__(self, *args, **kargs)
       self.gdb_module = gdb_module
+      self._syscall_enter_decode_bug = None
+      self._syscall_arg_decode_bugs = []
+      self._syscall_exit_decode_bug = None
+      self._are_we_at_exit = False
       self._str_sys_call = ""
 
    def publish_syscall(self):
        ''' Publish the syscall's name, arguments and result. '''
 
        name = self.name
-       text = self.format()
-       pid = self.process.get_process_id()
+       pid  = self.process.get_process_id()
        timestamp = str(datetime.datetime.now())
-       if self.result is not None:
-           offset = 40 - len(text)
-           if offset > 0:
-               space = " " * offset
-           else:
-               space = ""
-           
+       if self._are_we_at_exit:
            data = {
                'timestamp':   timestamp,
                'pid':         pid,
                'result':      self.result,
-               'result_text': self.result_text
+               'result_text': self.result_text,
+               'decode_errors': self.get_decode_errors(),
            }
     
            self.gdb_module.DEBUG(self._str_sys_call + ")   = " + str(self.result))
            self.gdb_module.notify("Exec", {"at": "exit", "call": data})
 
        else:
-           arguments = [arg.format() for arg in self.arguments]
+           arguments = self.get_format_of_arguments()
+
            data = {
                'timestamp': timestamp,
                'pid':       pid,
                'restype':   self.restype,
                'name':      self.name,
                'arguments': arguments,
+               'decode_errors': self.get_decode_errors(),
            }
         
            self._str_sys_call = "%s(%s" % (self.name, ", ".join(arguments))
            self.gdb_module.notify("Exec", {"at": "enter", "call": data})
 
+
+   def enter(self, *args, **kargs):
+        try:
+            PtraceSyscall.enter(self, *args, **kargs)
+        except Exception, e:
+            self._syscall_enter_decode_bug = e
+
+            # set the syscall's name if we don't have one
+            self.name = getattr(self, 'name', "syscall<??>")
+
+            # and the arguments too
+            self.arguments = getattr(self, 'arguments', [])
+
+
+   def exit(self, *args, **kargs):
+        self._are_we_at_exit = True
+        try:
+            PtraceSyscall.exit(self, *args, **kargs)
+        except Exception, e:
+            self._syscall_exit_decode_bug = e 
+
+            # set the syscall's result if we couldn't get one
+            self.result = -1
+            self.result_text = "return<??>"
+
+   def get_format_of_arguments(self):
+        def safe_format(arg):
+            try:
+                return arg.format()
+            except Exception, e:
+                self._syscall_arg_decode_bugs.append(e)
+                return "arg<??>"
+
+        return [safe_format(arg) for arg in self.arguments]
+
+   def get_decode_errors(self):
+       decode_errors = {}
+       if self._are_we_at_exit:
+           if self._syscall_exit_decode_bug:
+               decode_errors['syscall_exit_decode_error'] = str(self._syscall_exit_decode_bug)
+
+       else:
+           if self._syscall_enter_decode_bug:
+               decode_errors['syscall_enter_decode_error'] = str(self._syscall_enter_decode_bug)
+           if self._syscall_arg_decode_bugs:
+               decode_errors['syscall_args_decode_error'] = [str(e) for e in self._syscall_arg_decode_bugs]
+
+       return decode_errors
 
 class NotifySyscall(gdb.Function):
     ''' Special funtion to be called before or after a syscall. When this function is call
@@ -295,7 +343,7 @@ def set_condition_over_breakpoint(bkpt_id, condition_string):
 # this outside of the if.
 def set_catchpoint(syscall_whitelisted_string=None):
     if syscall_whitelisted_string is None:
-        syscall_whitelisted_string = "" # this means that gdb will match any sycall
+        syscall_whitelisted_string = "" # this means that gdb will match any syscall
 
     # format of msg:  Catchpoint 6 (syscall 'read' [0])  or  Catchpoint 1 (any syscall)
     msg = gdb.execute("catch syscall %s" % syscall_whitelisted_string, to_string=True).strip()
