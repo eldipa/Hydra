@@ -443,10 +443,16 @@ define(["underscore", "event_handler", "debuggee_tracker/debugger", "debuggee_tr
                       }
 
                       if (type !== "breakpoint") {
-                          console.warn("Not supported Xpoint type '"+type+"', we only support 'breakpoint's.");
+                          if (type === "catchpoint") {
+                              // TODO after the intergration of the "strace" module (see py/gdb/Plugins/strace.py)
+                              // the catchpoints are special breakpoints expected. We don't handle them here right now
+                              // but we should in a future.
+                          }
+                          else {
+                              console.warn("Not supported Xpoint type '"+type+"', we only support 'breakpoint's.");
+                          }
                           return;
                       }
-
                       
                       var breakpoint_id = breakpoint_data.number;
                       
@@ -491,7 +497,14 @@ define(["underscore", "event_handler", "debuggee_tracker/debugger", "debuggee_tr
            }
 
            if (type !== "breakpoint") {
-              console.warn("Not supported Xpoint type '"+type+"', we only support 'breakpoint's.");
+              if (type === "catchpoint") {
+                  // TODO after the intergration of the "strace" module (see py/gdb/Plugins/strace.py)
+                  // the catchpoints are special breakpoints expected. We don't handle them here right now
+                  // but we should in a future.
+              }
+              else {
+                  console.warn("Not supported Xpoint type '"+type+"', we only support 'breakpoint's.");
+              }
               return;
            }
 
