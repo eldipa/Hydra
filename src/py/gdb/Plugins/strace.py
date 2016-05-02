@@ -8,11 +8,9 @@ import time, datetime
 import syslog
 
 try:
-    ## TODO 
-    sys.path.append('/home/martin/dummy/python-ptrace-0.9/')
     import ptrace
 except ImportError as e:
-    raise ImportError("External lib 'ptrace' not found (formaly, python-ptrace, version 0.9 or higher)!: %s" % str(e))
+    raise ImportError("External lib 'ptrace' not found (formaly, python-ptrace, version 0.8.1 or higher)!: %s" % str(e))
 
 
 import ptrace.debugger
@@ -311,7 +309,7 @@ class NotifySyscall(gdb.Function):
 
 from gdb_module import GDBModule
 
-ARE_IN_MI_MODE = True # change this to False for debugging
+ARE_IN_MI_MODE = False # change this to False for debugging (TODO MI not supported at all from a module?)
 if ARE_IN_MI_MODE:
     def enable_breakpoint(bkpt_id): # -break-enable   -break-delete  -break-condition
         gdb.execute("-break-enable %i" % bkpt_id)
@@ -360,7 +358,8 @@ class GDBSyscallTrace(GDBModule):
     self.notify_syscall_function = NotifySyscall(self)
 
     self._set_catchpoint('')
-
+    self._activated = True # we are activated but we shouldn't so...
+    self.deactivate()
   
   def activate(self, *args):
     ''' When activated, this plugin will install a catchpoint in the syscalls

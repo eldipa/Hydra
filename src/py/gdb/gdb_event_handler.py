@@ -14,9 +14,6 @@ from publish_subscribe.eventHandler import EventHandler as EH
 # We need this as a workaround for the bug in GDB: https://sourceware.org/bugzilla/show_bug.cgi?id=17314
 # This is based in the fix done in GDB for Guile in this patch: https://sourceware.org/git/gitweb.cgi?p=binutils-gdb.git;a=patch;h=92d8d229d9a310ebfcfc13bf4a75a286c1add1ac
 try:
-    ## TODO
-    import sys
-    sys.path.append('/home/martin/dummy/cdebug/python-signalfd-0.1/build/lib.linux-x86_64-2.7')
     import signalfd  # see https://launchpad.net/python-signalfd
 except ImportError as e:
     raise ImportError("External lib 'signalfd' not found (version 0.1 or higher)!: %s" % str(e))
@@ -67,7 +64,7 @@ class _GDBEventHandler(EH):
     import signal
     previous_mask = signalfd.sigprocmask(signalfd.SIG_BLOCK, [signal.SIGCHLD, signal.SIGCONT, signal.SIGINT])
     try:
-        EH.__init__(self, name="(gdb %s)" % gdb_id, as_daemon=True) # as_daemon=True otherwise GDB hangs
+        EH.__init__(self, name="(gdb %s[plugin])" % gdb_id, as_daemon=True) # as_daemon=True otherwise GDB hangs
     finally:
         signalfd.sigprocmask(signalfd.SIG_SETMASK, previous_mask) # restore the mask for GDB
     # ----------------------------------------------------------------------------

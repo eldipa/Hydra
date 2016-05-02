@@ -1,0 +1,6 @@
+python-signalfd >= 0.1
+https://pypi.python.org/pypi/python-signalfd
+
+python-ptrace >= 0.8.1
+https://pypi.python.org/pypi/python-ptrace
+
