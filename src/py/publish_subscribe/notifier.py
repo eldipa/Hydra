@@ -38,6 +38,7 @@ class _Endpoint(threading.Thread):
 
          elif message_type == "introduce_myself":
             self.name = unpack_message_body(message_type, message_body)
+            self._log(syslog.LOG_NOTICE, "Introduced himself as '%s'." % esc(self.name))
          
          elif message_type == "subscribe":
             topic = unpack_message_body(message_type, message_body)

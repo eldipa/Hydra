@@ -5,8 +5,7 @@ define([ 'event_handler', 'layout', 'jquery' ], function(event_handler, layout,
 		this.super("STDIN");
                 this.build_and_initialize_panel_container('<div></div>');
 
-		this.eventHandler = new event_handler.EventHandler();
-		this.eventHandler.init();
+		this.eventHandler = event_handler.get_global_event_handler();
 
 		this.input = $('<input type="text" value=""/>');
 		this.stdin = $('<div> pid@text: </div>');

@@ -6,8 +6,7 @@ define([ 'event_handler', 'layout', 'jquery' ], function(event_handler, layout,
 
 		this.variables = {};
 
-		this.eventHandler = new event_handler.EventHandler();
-		this.eventHandler.init();
+		this.eventHandler = event_handler.get_global_event_handler();
 
 		this._$container = $('<div></div>');
 
