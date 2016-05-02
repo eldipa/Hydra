@@ -189,7 +189,7 @@ class PtraceSyscallPublisher(PtraceSyscall):
                'decode_errors': self.get_decode_errors(),
            }
     
-           self.gdb_module.DEBUG(self._str_sys_call + ")   = " + str(self.result))
+           #self.gdb_module.DEBUG(self._str_sys_call + ")   = " + str(self.result))
            self.gdb_module.notify("Exec", {"at": "exit", "call": data})
 
        else:
