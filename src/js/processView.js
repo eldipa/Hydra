@@ -195,6 +195,9 @@ define([ 'jquery', 'layout', 'shortcuts', 'event_handler', 'd3' ], function($, l
         	g.attr("transform",
           	      "translate(" + trans + ")"
           	      + " scale(" + currentScale + ")");
+        	
+        	zoom.scale(currentScale);
+        	zoom.translate([currentx + dx, currenty + dy]);
 
 		};
         
@@ -209,6 +212,9 @@ define([ 'jquery', 'layout', 'shortcuts', 'event_handler', 'd3' ], function($, l
         	g.attr("transform",
             	      "translate(" + trans + ")"
             	      + " scale(" + newScale + ")");
+        	
+        	zoom.scale(newScale);
+        	zoom.translate([currentx, currenty]);
 
 		};
         
