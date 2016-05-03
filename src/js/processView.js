@@ -181,8 +181,7 @@ define([ 'jquery', 'layout', 'shortcuts', 'event_handler', 'd3' ], function($, l
         	  g.attr("transform",
         	      "translate(" + trans + ")"
         	      + " scale(" + scale + ")");
-        	  
-        	 console.log("auto t:"+ trans + " s:" + scale)
+
         };  
         
         
@@ -190,20 +189,27 @@ define([ 'jquery', 'layout', 'shortcuts', 'event_handler', 'd3' ], function($, l
         	
         	var currentx = d3.transform(g.attr("transform")).translate[0];
         	var currenty = d3.transform(g.attr("transform")).translate[1];
+        	var currentScale = d3.transform(g.attr("transform")).scale[0];
         	
         	trans = (currentx + dx) + "," + (currenty + dy);
         	g.attr("transform",
-          	      "translate(" + trans + ")");
-        	console.log("manual "+trans);
+          	      "translate(" + trans + ")"
+          	      + " scale(" + currentScale + ")");
+
 		};
         
         this.manualZoom = function (scale) {
         	
+        	var currentx = d3.transform(g.attr("transform")).translate[0];
+        	var currenty = d3.transform(g.attr("transform")).translate[1];
         	var currentScale = d3.transform(g.attr("transform")).scale[0];
+        	var newScale = scale * currentScale;
+        	trans = currentx  + "," +currenty ;
         	
         	g.attr("transform",
-          	      "scale(" + (scale + currentScale) + ")");
-        	console.log("manual " +(scale + currentScale));
+            	      "translate(" + trans + ")"
+            	      + " scale(" + newScale + ")");
+
 		};
         
         
@@ -211,14 +217,14 @@ define([ 'jquery', 'layout', 'shortcuts', 'event_handler', 'd3' ], function($, l
         //Control de zoom y pan manual
         svg.append("circle").attr("cx", 50).attr("cy", 50).attr("r", 42).attr("fill", "white").attr("opacity", "0.75");
         
-        svg.append("path").attr("d", "M50 10 l12   20 a40, 70 0 0,0 -24,  0z").attr("class", "button").attr("onclick", function(){my_self.manualPan( "0", "50"); console.log("manual")} );
-        svg.append("path").attr("d", "M10 50 l20  -12 a70, 40 0 0,0   0, 24z").attr("class", "button").attr("onclick", "manualPan( 50, 0)");
-        svg.append("path").attr("d", "M50 90 l12  -20 a40, 70 0 0,1 -24,  0z").attr("class", "button").attr("onclick", "manualPan( 0,-50)");
-        svg.append("path").attr("d", "M90 50 l-20 -12 a70, 40 0 0,1   0, 24z").attr("class", "button").attr("onclick", "manualPan( -50, 0)");
+        svg.append("path").attr("d", "M50 10 l12   20 a40, 70 0 0,0 -24,  0z").attr("class", "button").on("click", function() {my_self.manualPan( 0, 50)});
+        svg.append("path").attr("d", "M10 50 l20  -12 a70, 40 0 0,0   0, 24z").attr("class", "button").on("click", function() {my_self.manualPan( 50, 0)});
+        svg.append("path").attr("d", "M50 90 l12  -20 a40, 70 0 0,1 -24,  0z").attr("class", "button").on("click", function() {my_self.manualPan( 0, -50)});
+        svg.append("path").attr("d", "M90 50 l-20 -12 a70, 40 0 0,1   0, 24z").attr("class", "button").on("click", function() {my_self.manualPan( -50, 0)});
         
         svg.append("circle").attr("cx", 50).attr("cy", 50).attr("r", 20).attr("class", "compass");
-        svg.append("circle").attr("cx", 50).attr("cy", 41).attr("r", 8).attr("class", "button").attr("onclick", function(){my_self.manualZoom("0.8")} );
-        svg.append("circle").attr("cx", 50).attr("cy", 59).attr("r", 8).attr("class", "button").attr("onclick", "manualZoom(1.25)");
+        svg.append("circle").attr("cx", 50).attr("cy", 41).attr("r", 8).attr("class", "button").on("click", function() {my_self.manualZoom(0.8)});
+        svg.append("circle").attr("cx", 50).attr("cy", 59).attr("r", 8).attr("class", "button").on("click", function() {my_self.manualZoom(1.2)});
         
         svg.append("rect").attr("x", 46).attr("y", 39.5).attr("width", 8).attr("height", 3).attr("class", "plus-minus");
         svg.append("rect").attr("x", 46).attr("y", 57.5).attr("width", 8).attr("height", 3).attr("class", "plus-minus");
