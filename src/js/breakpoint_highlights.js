@@ -46,12 +46,8 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
             var was_breakpoint_deleted = breakpoint.was_deleted || !breakpoint.is_enabled;
 
             if (!was_breakpoint_deleted) {
-                var is_breakpoint_in_source_code = breakpoint.source_fullname && breakpoint.source_line_number;
-
-                // TODO we dont support breakpoints in assembly mode yet so we are only interested in source code level
-                var is_breakpoint_in_our_current_source_file = is_breakpoint_in_source_code && this.thread_follower.is_this_file_already_loaded(breakpoint.source_fullname);
-
-                if (is_breakpoint_in_source_code && is_breakpoint_in_our_current_source_file) {
+                var should_track_this_breakpoint = this.should_track_this_breakpoint(breakpoint, this.thread_follower);
+                if (should_track_this_breakpoint) {
                     this.breakpoint_highlights[breakpoint] = this.code_editor.highlight_breakpoint(Number(breakpoint.source_line_number));
                 }
             }
@@ -71,12 +67,9 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
         }
 
         var was_breakpoint_deleted = breakpoint.was_deleted || !breakpoint.is_enabled;
-        var is_breakpoint_in_source_code = breakpoint.source_fullname && breakpoint.source_line_number;
 
-        // TODO we dont support breakpoints in assembly mode yet so we are only interested in source code level
-        var is_breakpoint_in_our_current_source_file = is_breakpoint_in_source_code && this.thread_follower.is_this_file_already_loaded(breakpoint.source_fullname);
-        
-        if (is_breakpoint_in_source_code && is_breakpoint_in_our_current_source_file) {
+        var should_track_this_breakpoint = this.should_track_this_breakpoint(breakpoint, this.thread_follower);
+        if (should_track_this_breakpoint) {
             var breakpoint_highlight = this.breakpoint_highlights[breakpoint];
 
             if (was_breakpoint_deleted && breakpoint_highlight) {
@@ -96,6 +89,20 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
     // Is this breakpoint a valid, non-pending one and belongs to our debugger?
     BreakpointHighlights.prototype.is_an_interesting_breakpoint = function (breakpoint, thread_followed) {
         return breakpoint && !breakpoint.is_pending && breakpoint.debugger_id === thread_followed.debugger_id;
+    };
+
+    // Is this breakpoint in our source code file or in our assembly code page? Or is it just
+    // a breakpoint that we shouldn't track?
+    BreakpointHighlights.prototype.should_track_this_breakpoint = function(breakpoint, thread_follower) {
+        var is_breakpoint_in_source_code = breakpoint.source_fullname && breakpoint.source_line_number;
+
+        if (is_breakpoint_in_source_code) {
+            var is_breakpoint_in_our_current_source_file = this.thread_follower.is_this_file_already_loaded(breakpoint.source_fullname);
+            return is_breakpoint_in_our_current_source_file;
+        }
+        else {
+            return false; // TODO we dont support non-source-code breakpoints (assembly breakpoints)
+        }
     };
 
     return {BreakpointHighlights: BreakpointHighlights};
