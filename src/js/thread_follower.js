@@ -153,28 +153,6 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
 
     ThreadFollower.prototype.figure_out_if_this_breakpoint_apply_to_you_and_update_yourself_if_so = function (breakpoint) {
         this.breakpoint_highlights.update_highlight_of_breakpoint(breakpoint);
-        return;
-
-        var is_breakpoint_in_source_code = breakpoint.source_fullname && breakpoint.source_line_number;
-
-        // TODO we dont support breakpoints in assembly mode yet so we are only interested in source code level
-        var is_breakpoint_in_our_current_source_file = is_breakpoint_in_source_code && this.is_this_file_already_loaded(breakpoint.source_fullname);
-        
-        if (is_breakpoint_in_source_code && is_breakpoint_in_our_current_source_file) {
-            var breakpoint_highlight = this.breakpoint_highlights[breakpoint];
-
-            if (was_breakpoint_deleted && breakpoint_highlight) {
-                this.code_editor.remove_highlight(breakpoint_highlight);
-                delete this.breakpoint_highlights[breakpoint];
-            }
-            else if (!was_breakpoint_deleted) {
-                if (breakpoint_highlight) {
-                    this.code_editor.remove_highlight(breakpoint_highlight);
-                }
-
-                this.breakpoint_highlights[breakpoint] = this.code_editor.highlight_breakpoint(Number(breakpoint.source_line_number));
-            }
-        }
     };
     
 
