@@ -17,6 +17,7 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
     BreakpointHighlights.prototype.search_breakpoints_to_highlight = function () {
         var thread_followed = this.thread_follower.thread_followed;
         if (!thread_followed) {
+            console.error("The thread_followed is undefined or not well built and cannot be used by the BreakpointHighlights object");
             return;
         }
 
@@ -44,6 +45,7 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
     BreakpointHighlights.prototype.update_highlight_of_breakpoint = function (breakpoint) {
         var thread_followed = this.thread_follower.thread_followed;
         if (!thread_followed) {
+            console.error("The thread_followed is undefined or not well built and cannot be used by the BreakpointHighlights object");
             return;
         }
 
