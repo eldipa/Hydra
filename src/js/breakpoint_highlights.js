@@ -38,18 +38,14 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
         var breakpoints_by_id = debugger_obj.your_breakpoints_by_id();
 
         _.each(breakpoints_by_id, function (breakpoint) {
-            var is_an_interesting_breakpoint = this.is_an_interesting_breakpoint(breakpoint, thread_followed);
-            if (!is_an_interesting_breakpoint) {
+            if (this.isnt_an_interesting_breakpoint_or_shouldnt_be_track(breakpoint)) {
                 return;
             }
 
             var was_breakpoint_deleted = breakpoint.was_deleted || !breakpoint.is_enabled;
 
             if (!was_breakpoint_deleted) {
-                var should_track_this_breakpoint = this.should_track_this_breakpoint(breakpoint, this.thread_follower);
-                if (should_track_this_breakpoint) {
-                    this.breakpoint_highlights[breakpoint] = this.code_editor.highlight_breakpoint(Number(breakpoint.source_line_number));
-                }
+                this.breakpoint_highlights[breakpoint] = this.code_editor.highlight_breakpoint(Number(breakpoint.source_line_number));
             }
         }, this);
     };
@@ -61,28 +57,24 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
             return;
         }
 
-        var is_an_interesting_breakpoint = this.is_an_interesting_breakpoint(breakpoint, thread_followed);
-        if (!is_an_interesting_breakpoint) {
+        if (this.isnt_an_interesting_breakpoint_or_shouldnt_be_track(breakpoint)) {
             return;
         }
 
         var was_breakpoint_deleted = breakpoint.was_deleted || !breakpoint.is_enabled;
 
-        var should_track_this_breakpoint = this.should_track_this_breakpoint(breakpoint, this.thread_follower);
-        if (should_track_this_breakpoint) {
-            var breakpoint_highlight = this.breakpoint_highlights[breakpoint];
+        var breakpoint_highlight = this.breakpoint_highlights[breakpoint];
 
-            if (was_breakpoint_deleted && breakpoint_highlight) {
+        if (was_breakpoint_deleted && breakpoint_highlight) {
+            this.code_editor.remove_highlight(breakpoint_highlight);
+            delete this.breakpoint_highlights[breakpoint];
+        }
+        else if (!was_breakpoint_deleted) {
+            if (breakpoint_highlight) {
                 this.code_editor.remove_highlight(breakpoint_highlight);
-                delete this.breakpoint_highlights[breakpoint];
             }
-            else if (!was_breakpoint_deleted) {
-                if (breakpoint_highlight) {
-                    this.code_editor.remove_highlight(breakpoint_highlight);
-                }
 
-                this.breakpoint_highlights[breakpoint] = this.code_editor.highlight_breakpoint(Number(breakpoint.source_line_number));
-            }
+            this.breakpoint_highlights[breakpoint] = this.code_editor.highlight_breakpoint(Number(breakpoint.source_line_number));
         }
     };
 
@@ -103,6 +95,24 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
         else {
             return false; // TODO we dont support non-source-code breakpoints (assembly breakpoints)
         }
+    };
+
+    BreakpointHighlights.prototype.is_an_interesting_breakpoint_and_should_be_track = function (breakpoint){
+        var is_an_interesting_breakpoint = this.is_an_interesting_breakpoint(breakpoint, this.thread_follower.thread_followed);
+        if (!is_an_interesting_breakpoint) {
+            return false;
+        }
+
+        var should_track_this_breakpoint = this.should_track_this_breakpoint(breakpoint, this.thread_follower);
+        if (!should_track_this_breakpoint) {
+            return false;
+        }
+
+        return true;
+    };
+
+    BreakpointHighlights.prototype.isnt_an_interesting_breakpoint_or_shouldnt_be_track = function (breakpoint) {
+        return !this.is_an_interesting_breakpoint_and_should_be_track(breakpoint);
     };
 
     return {BreakpointHighlights: BreakpointHighlights};
