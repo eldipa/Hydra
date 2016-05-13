@@ -1,4 +1,4 @@
-define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'thread_button_bar_controller', 'stack_view'], function (ace, $, layout, shortcuts, _, code_editor, thread_button_bar_controller, stack_view) {
+define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'thread_button_bar_controller', 'stack_view', 'breakpoint_highlights'], function (ace, $, layout, shortcuts, _, code_editor, thread_button_bar_controller, stack_view, breakpoint_highlights_module) {
     var ThreadFollower = function (debuggee_tracker) {
         this.super("Thread Follower");
 
@@ -22,7 +22,7 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
         this.current_loaded_file = "";
         this.current_line_highlight = null;
 
-        this.breakpoint_highlights = {}
+        this.breakpoint_highlights = new breakpoint_highlights_module.BreakpointHighlights(this.code_editor, this);
     };
 
     ThreadFollower.prototype.__proto__ = layout.Panel.prototype;
@@ -78,12 +78,7 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
 
         if (topic === "breakpoint_update" || topic === "breakpoint_deleted" || topic === "breakpoint_changed") {
             var breakpoint = data.breakpoint;
-            var was_breakpoint_deleted = breakpoint.was_deleted || !breakpoint.is_enabled;
-
-            var can_be_shown = breakpoint && !breakpoint.is_pending && breakpoint.debugger_id === this.thread_followed.debugger_id;
-            if (can_be_shown) {
-                this.figure_out_if_this_breakpoint_apply_to_you_and_update_yourself_if_so(breakpoint, was_breakpoint_deleted);
-            }
+            this.figure_out_if_this_breakpoint_apply_to_you_and_update_yourself_if_so(breakpoint);
         }
     };
 
@@ -131,35 +126,13 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
     ThreadFollower.prototype.update_yourself_from_source_code = function (source_fullname) {
         //TODO do we need to disable the code view (ace) before doing this stuff and reenable it later?
      
-        // clean up any highlights:
-        _.each(this.breakpoint_highlights, function (bkt_highlight) {
-            this.code_editor.remove_highlight(bkt_highlight);
-        }, this);
-
-        this.breakpoint_highlights = {}; 
+        this.breakpoint_highlights.clean_up();
 
         // Load the new source code
         this.code_editor.load_cpp_code(source_fullname);
         this.current_loaded_file = source_fullname;
 
-        // Search for "objects" in this new file that require a highlight
-        var debugger_obj = this.thread_followed.get_debugger_you_belong();
-        var breakpoints_by_id = debugger_obj.your_breakpoints_by_id();
-        _.each(breakpoints_by_id, function (breakpoint) {
-            var can_be_shown = breakpoint && !breakpoint.is_pending && breakpoint.debugger_id === this.thread_followed.debugger_id;
-            var was_breakpoint_deleted = breakpoint.was_deleted || !breakpoint.is_enabled;
-
-            if (can_be_shown && !was_breakpoint_deleted) {
-                var is_breakpoint_in_source_code = breakpoint.source_fullname && breakpoint.source_line_number;
-
-                // TODO we dont support breakpoints in assembly mode yet so we are only interested in source code level
-                var is_breakpoint_in_our_current_source_file = is_breakpoint_in_source_code && this.is_this_file_already_loaded(breakpoint.source_fullname);
-
-                if (is_breakpoint_in_source_code && is_breakpoint_in_our_current_source_file) {
-                    this.breakpoint_highlights[breakpoint] = this.code_editor.highlight_breakpoint(Number(breakpoint.source_line_number));
-                }
-            }
-        }, this);
+        this.breakpoint_highlights.search_breakpoints_to_highlight();
 
     };
 
@@ -178,7 +151,10 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
     };
 
 
-    ThreadFollower.prototype.figure_out_if_this_breakpoint_apply_to_you_and_update_yourself_if_so = function (breakpoint, was_breakpoint_deleted) {
+    ThreadFollower.prototype.figure_out_if_this_breakpoint_apply_to_you_and_update_yourself_if_so = function (breakpoint) {
+        this.breakpoint_highlights.update_highlight_of_breakpoint(breakpoint);
+        return;
+
         var is_breakpoint_in_source_code = breakpoint.source_fullname && breakpoint.source_line_number;
 
         // TODO we dont support breakpoints in assembly mode yet so we are only interested in source code level
