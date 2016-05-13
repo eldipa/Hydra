@@ -1,5 +1,17 @@
 define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'thread_button_bar_controller', 'stack_view'], function (ace, $, layout, shortcuts, _, code_editor, thread_button_bar_controller, stack_view) {
 
+    /*
+     * This object will track the breakpoint highligths in the code_editor based
+     * in the breakpoints that are affecting the particular thread followed by thread_follower.
+     *
+     * There are two posibilities:
+     *  - the thread moves to another file: all the highlights are invalid and you need
+     *    to call clean_up and then, when the new file is open, call to search_breakpoints_to_highlight
+     *  - a breakpoint change: in that case you need to call update_highlight_of_breakpoint to
+     *    know of the breakpoint is of our interest (is in our file for example) and if it is new 
+     *    highlight it and if it is deleted or disabled, remove the highlight.
+     *
+     * */
     var BreakpointHighlights = function (code_editor, thread_follower) {
         this.code_editor = code_editor;
         this.thread_follower = thread_follower;
@@ -26,10 +38,14 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
         var breakpoints_by_id = debugger_obj.your_breakpoints_by_id();
 
         _.each(breakpoints_by_id, function (breakpoint) {
-            var can_be_shown = breakpoint && !breakpoint.is_pending && breakpoint.debugger_id === thread_followed.debugger_id;
+            var is_an_interesting_breakpoint = this.is_an_interesting_breakpoint(breakpoint, thread_followed);
+            if (!is_an_interesting_breakpoint) {
+                return;
+            }
+
             var was_breakpoint_deleted = breakpoint.was_deleted || !breakpoint.is_enabled;
 
-            if (can_be_shown && !was_breakpoint_deleted) {
+            if (!was_breakpoint_deleted) {
                 var is_breakpoint_in_source_code = breakpoint.source_fullname && breakpoint.source_line_number;
 
                 // TODO we dont support breakpoints in assembly mode yet so we are only interested in source code level
@@ -49,8 +65,8 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
             return;
         }
 
-        var can_be_shown = breakpoint && !breakpoint.is_pending && breakpoint.debugger_id === thread_followed.debugger_id;
-        if (!can_be_shown) {
+        var is_an_interesting_breakpoint = this.is_an_interesting_breakpoint(breakpoint, thread_followed);
+        if (!is_an_interesting_breakpoint) {
             return;
         }
 
@@ -75,6 +91,11 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
                 this.breakpoint_highlights[breakpoint] = this.code_editor.highlight_breakpoint(Number(breakpoint.source_line_number));
             }
         }
+    };
+
+    // Is this breakpoint a valid, non-pending one and belongs to our debugger?
+    BreakpointHighlights.prototype.is_an_interesting_breakpoint = function (breakpoint, thread_followed) {
+        return breakpoint && !breakpoint.is_pending && breakpoint.debugger_id === thread_followed.debugger_id;
     };
 
     return {BreakpointHighlights: BreakpointHighlights};
