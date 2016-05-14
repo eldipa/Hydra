@@ -58,7 +58,7 @@ define(['jquery', 'layout', 'code_editor', 'varViewer', 'listview_panel', 'stand
       // then, the VarViewer
       var visor = new varViewer.VarViewer();
 
-      var stdinTextInput = new standarInput.StandarInput();
+      // var stdinTextInput = new standarInput.StandarInput();
 
 
       // Now we attach and build the final layout
@@ -73,8 +73,8 @@ define(['jquery', 'layout', 'code_editor', 'varViewer', 'listview_panel', 'stand
       view.split(stdoutlog, "bottom");
       root.render();
       
-      stdoutlog.parent().split(stdinTextInput, "bottom");
-      root.render();
+      //stdoutlog.parent().split(stdinTextInput, "bottom");
+      //root.render();
 
       //stdoutlog.split(syscalllog, "bottom")
       //root.render();
@@ -82,8 +82,8 @@ define(['jquery', 'layout', 'code_editor', 'varViewer', 'listview_panel', 'stand
 
       root.render();
       view.parent().set_percentage(80); //TODO (issue #62) por que hay que hacer un render() antes de un set_percentage()?
-      stdoutlog.parent().set_percentage(80); //TODO (issue #62) por que hay que hacer un render() antes de un set_percentage()?
-      stdinTextInput.parent().set_percentage(80); //TODO (issue #62) por que hay que hacer un render() antes de un set_percentage()?
+      stdoutlog.parent().set_percentage(70); //TODO (issue #62) por que hay que hacer un render() antes de un set_percentage()?
+      //stdinTextInput.parent().set_percentage(80); //TODO (issue #62) por que hay que hacer un render() antes de un set_percentage()?
       root.render();
            
 

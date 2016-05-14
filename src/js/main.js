@@ -88,7 +88,6 @@ requirejs(['ui', 'code_view', 'jquery', 'export_console', 'layout', 'layout_exam
        shortcuts: shortcuts,
        u: _
    });
-   var fs = require('fs');
 
    // Load the context menu handler.
    ctxmenu.init({

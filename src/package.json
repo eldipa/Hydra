@@ -4,6 +4,7 @@
    "window":{
       "toolbar":false,
       "frame":true,
+      "fullscreen":false,
       "show":false,
       "icon": "resources/iconw.png"
    }
