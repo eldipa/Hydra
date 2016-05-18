@@ -6,9 +6,11 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
      *
      * There are two posibilities:
      *  - the thread moves to another file: all the highlights are invalid and you need
-     *    to call clean_up and then, when the new file is open, call to search_breakpoints_to_highlight
-     *  - a breakpoint change: in that case you need to call update_highlight_of_breakpoint to
-     *    know of the breakpoint is of our interest (is in our file for example) and if it is new 
+     *    to call clean_up and then, when the new file is open and loaded in the code_editor, 
+     *    call to search_breakpoints_to_highlight to search and highlight all the breakpoints that
+     *    are in the new file
+     *  - a breakpoint change: in this case you need to call update_highlight_of_breakpoint to
+     *    know if the breakpoint is of our interest (is in our file for example) and if it is new,
      *    highlight it and if it is deleted or disabled, remove the highlight.
      *
      * */
@@ -38,18 +40,18 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
         var breakpoints_by_id = debugger_obj.your_breakpoints_by_id();
 
         _.each(breakpoints_by_id, function (breakpoint) {
-            if (this.isnt_an_interesting_breakpoint_or_shouldnt_be_track(breakpoint)) {
-                return;
-            }
-
-            var was_breakpoint_deleted = breakpoint.was_deleted || !breakpoint.is_enabled;
-
-            if (!was_breakpoint_deleted) {
-                this.breakpoint_highlights[breakpoint] = this.code_editor.highlight_breakpoint(Number(breakpoint.source_line_number));
-            }
+            this.update_highlight_of_breakpoint(breakpoint);
         }, this);
     };
 
+    /*
+     * Update the highlight of the breakpoint:
+     *  - first, if he breakpoint isn't interesting for us, discard the breakpoint
+     *    (we assume the breakpoint hasn't a highlight already!)
+     *  - then, figure out of the breakpoint should be shown and if it is already shown
+     *  - if it should be shown, show it! (create a new highlight or update a previous one)
+     *    if it should not be shown, hide it (remove the highlight)
+     **/
     BreakpointHighlights.prototype.update_highlight_of_breakpoint = function (breakpoint) {
         var thread_followed = this.thread_follower.thread_followed;
         if (!thread_followed) {
@@ -57,24 +59,31 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
             return;
         }
 
+        var breakpoint_highlight = this.breakpoint_highlights[breakpoint];
+        var breakpoint_is_shown = !!breakpoint_highlight;
+
         if (this.isnt_an_interesting_breakpoint_or_shouldnt_be_track(breakpoint)) {
+            if (breakpoint_is_shown) {
+                console.warn("A breakpoint is highlighted but it shouldn't. In fact it shouldn't be tracked at all. Removing the highlight but this is situation that it shouldn't be happen!");
+                this.code_editor.remove_highlight(breakpoint_highlight);
+            }
             return;
         }
 
-        var was_breakpoint_deleted = breakpoint.was_deleted || !breakpoint.is_enabled;
+        var breakpoint_should_be_shown = !(breakpoint.was_deleted || !breakpoint.is_enabled);
 
-        var breakpoint_highlight = this.breakpoint_highlights[breakpoint];
-
-        if (was_breakpoint_deleted && breakpoint_highlight) {
-            this.code_editor.remove_highlight(breakpoint_highlight);
-            delete this.breakpoint_highlights[breakpoint];
-        }
-        else if (!was_breakpoint_deleted) {
-            if (breakpoint_highlight) {
+        if (breakpoint_should_be_shown) {
+            if (breakpoint_is_shown) { // is shown but probably it is in an incorrect location
                 this.code_editor.remove_highlight(breakpoint_highlight);
             }
 
             this.breakpoint_highlights[breakpoint] = this.code_editor.highlight_breakpoint(Number(breakpoint.source_line_number));
+        }
+        else if (!breakpoint_should_be_shown && breakpoint_is_shown) {
+            this.code_editor.remove_highlight(breakpoint_highlight);
+            delete this.breakpoint_highlights[breakpoint];
+        }
+        else { // the !breakpoint_should_be_shown && !breakpoint_is_shown so we dont do anything
         }
     };
 
