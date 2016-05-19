@@ -345,7 +345,12 @@ def set_catchpoint(syscall_whitelisted_string=None):
 
     # format of msg:  Catchpoint 6 (syscall 'read' [0])  or  Catchpoint 1 (any syscall)
     msg = gdb.execute("catch syscall %s" % syscall_whitelisted_string, to_string=True).strip()
-    catchpoint_id = int(msg.split()[1])
+    for word in msg.split():
+        try:
+            catchpoint_id = int(word)
+            break
+        except:
+            pass
 
     return catchpoint_id
 
