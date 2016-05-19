@@ -77,7 +77,7 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
                 this.code_editor.remove_highlight(breakpoint_highlight);
             }
 
-            this.breakpoint_highlights[breakpoint] = this.code_editor.highlight_breakpoint(Number(breakpoint.source_line_number));
+            this.highlight_this_source_code_breakpoint(breakpoint);
         }
         else if (!breakpoint_should_be_shown && breakpoint_is_shown) {
             this.code_editor.remove_highlight(breakpoint_highlight);
@@ -122,6 +122,11 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
 
     BreakpointHighlights.prototype.isnt_an_interesting_breakpoint_or_shouldnt_be_track = function (breakpoint) {
         return !this.is_an_interesting_breakpoint_and_should_be_track(breakpoint);
+    };
+
+    BreakpointHighlights.prototype.highlight_this_source_code_breakpoint = function (breakpoint) {
+        var breakpoint_highlight = this.code_editor.highlight_breakpoint(Number(breakpoint.source_line_number), {text: "*"});
+        this.breakpoint_highlights[breakpoint] = breakpoint_highlight;
     };
 
     return {BreakpointHighlights: BreakpointHighlights};

@@ -115,21 +115,17 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore'], function (ace, $,
         this.edit_session.removeMarker(highlight.marker_id);
     };
 
-    CodeEditor.prototype.highlight_thread_current_line = function (line_number_or_address) {
+    CodeEditor.prototype.highlight_thread_current_line = function (line_number_or_address, note) {
         return this.highlight_lines({
             css_classes: "code-editor-thread-current-line",
-            note: {
-                text: "XXXXX",
-            }
+            note: note
         }, line_number_or_address);
     };
 
-    CodeEditor.prototype.highlight_breakpoint = function (line_number_or_address) {
+    CodeEditor.prototype.highlight_breakpoint = function (line_number_or_address, note) {
         return this.highlight_lines({
             css_classes: "code-editor-breakpoint",
-            note: {
-                text: "XXXXX",
-            }
+            note: note
         }, line_number_or_address);
     };
     
