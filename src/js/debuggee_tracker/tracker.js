@@ -316,6 +316,7 @@ define(["underscore", "event_handler", "debuggee_tracker/debugger", "debuggee_tr
 
       _.each(threads_selected, function (thread) {
          thread.update({state: "stopped"});
+         thread.request_an_update_thread_stack();
       });
 
       var self = this;
