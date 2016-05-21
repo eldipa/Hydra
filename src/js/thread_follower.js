@@ -1,4 +1,4 @@
-define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'thread_button_bar_controller', 'stack_view', 'breakpoint_highlights'], function (ace, $, layout, shortcuts, _, code_editor, thread_button_bar_controller, stack_view, breakpoint_highlights_module) {
+define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'thread_button_bar_controller', 'stack_view', 'breakpoint_highlights', 'current_line_highlights'], function (ace, $, layout, shortcuts, _, code_editor, thread_button_bar_controller, stack_view, breakpoint_highlights_module, current_line_highlights_module) {
     var ThreadFollower = function (debuggee_tracker) {
         this.super("Thread Follower");
 
@@ -23,6 +23,7 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
         this.current_line_highlight = null;
 
         this.breakpoint_highlights = new breakpoint_highlights_module.BreakpointHighlights(this.code_editor, this);
+        //this.current_line_highlights = new current_line_highlights_module.CurrentLineHighlights(this.code_editor, this);
     };
 
     ThreadFollower.prototype.__proto__ = layout.Panel.prototype;
@@ -53,6 +54,19 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
         if (! this.thread_followed ) {
             return;
         }
+        
+        // Update the breakpoints
+        if (_.contains(["breakpoint_update", "breakpoint_deleted", "breakpoint_changed"], topic)) {
+            var breakpoint = data.breakpoint;
+            this.breakpoint_highlights.update_highlight_of_breakpoint(breakpoint);
+
+            return;
+        }
+
+
+        if (!_.contains(['thread_update'], topic)) {
+            return;
+        }
 
         var threads;
         var is_my_thread_updated = false;
@@ -71,15 +85,17 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
             is_my_thread_updated = false;
         }
 
+        // Update our thread that we are following
         if (is_my_thread_updated) { 
             this.stack_view.request_frames_update(); // Request an update of the thread's stack
             this.see_your_thread_and_update_yourself();
         }
 
-        if (topic === "breakpoint_update" || topic === "breakpoint_deleted" || topic === "breakpoint_changed") {
-            var breakpoint = data.breakpoint;
-            this.figure_out_if_this_breakpoint_apply_to_you_and_update_yourself_if_so(breakpoint);
-        }
+        // Update the rest of the threads
+        _.each(threads, function (thread) {
+            //this.current_line_highlights.update_highlight_of_thread(thread);
+        }, this);
+
     };
 
     ThreadFollower.prototype.is_this_file_already_loaded = function(filename) {
@@ -127,12 +143,14 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
         //TODO do we need to disable the code view (ace) before doing this stuff and reenable it later?
      
         this.breakpoint_highlights.clean_up();
+        //this.current_line_highlights.clean_up();
 
         // Load the new source code
         this.code_editor.load_cpp_code(source_fullname);
         this.current_loaded_file = source_fullname;
 
         this.breakpoint_highlights.search_breakpoints_to_highlight();
+        //this.current_line_highlights.search_threads_to_highlight();
 
     };
 
@@ -151,10 +169,6 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
     };
 
 
-    ThreadFollower.prototype.figure_out_if_this_breakpoint_apply_to_you_and_update_yourself_if_so = function (breakpoint) {
-        this.breakpoint_highlights.update_highlight_of_breakpoint(breakpoint);
-    };
-    
 
     return {ThreadFollower: ThreadFollower};
 });

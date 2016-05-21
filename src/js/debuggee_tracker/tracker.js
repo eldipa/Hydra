@@ -316,7 +316,6 @@ define(["underscore", "event_handler", "debuggee_tracker/debugger", "debuggee_tr
 
       _.each(threads_selected, function (thread) {
          thread.update({state: "stopped"});
-         thread.request_an_update_thread_stack();
       });
 
       var self = this;
@@ -327,6 +326,14 @@ define(["underscore", "event_handler", "debuggee_tracker/debugger", "debuggee_tr
                                   //thread_group_id: thread_group_id, TODO? un thread group para el hilo actual y los otros, pero podrian haber multiples thread groups si se corre "ALL" todos los hilos de todos los thread groups.
                                   threads: threads_selected
                                   });
+
+          _.each(threads_selected, function (thread) {
+             thread.request_an_update_thread_stack(function () {
+                 self.notify("thread-stack-updated", {
+                     thread: thread
+                 });
+             });
+          });
       });
       
    };
