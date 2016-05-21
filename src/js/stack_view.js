@@ -11,7 +11,7 @@ define(["underscore", "jquery", "layout", "shortcuts", "jstree", "jstree_builder
        this.follower = null;
        this.frames = [];
        
-       _.bindAll(this, "_request_frames_and_variables_update", "_variables_of_frame_updated");
+       _.bindAll(this, "on_frames_updated_request_variables_update", "_variables_of_frame_updated");
    };
    
    StackView.prototype.__proto__ = layout.Panel.prototype;
@@ -30,22 +30,16 @@ define(["underscore", "jquery", "layout", "shortcuts", "jstree", "jstree_builder
    
    StackView.prototype.request_frames_update = function () {
        if (this.thread) {
-            this._request_frames_and_variables_update();
+           this.thread.request_an_update_thread_stack(this.on_frames_updated_request_variables_update);
        }
    };
 
-   StackView.prototype._request_frames_and_variables_update = function () {
-       var thread = this.thread;
-       var self = this;
-
-       this.thread.request_an_update_thread_stack(function () {
-            self.frames = thread.get_stack_frames();
-            
-            _.each(self.frames, function (frame) {
-                self.request_variables_of_frame_update(frame);
-            });
-       });
-
+   StackView.prototype.on_frames_updated_request_variables_update = function () {
+        this.frames = this.thread.get_stack_frames();
+        
+        _.each(this.frames, function (frame) {
+            this.request_variables_of_frame_update(frame);
+        }, this);
    };
 
    StackView.prototype.request_variables_of_frame_update = function (frame) {
