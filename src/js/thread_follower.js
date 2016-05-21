@@ -63,6 +63,15 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
             return;
         }
 
+        // Request an update of the thread's variables 
+        if (_.contains(["thread-stack-updated"], topic)) {
+            var thread = data.thread;
+            if (thread === this.thread_followed) {
+                this.stack_view.on_frames_updated_request_variables_update();
+            }
+
+            return;
+        }
 
         if (!_.contains(['thread_update'], topic)) {
             return;
@@ -87,7 +96,6 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
 
         // Update our thread that we are following
         if (is_my_thread_updated) { 
-            this.stack_view.request_frames_update(); // Request an update of the thread's stack
             this.see_your_thread_and_update_yourself();
         }
 
