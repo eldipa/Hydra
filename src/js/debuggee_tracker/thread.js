@@ -15,6 +15,10 @@ define(["underscore", "shortcuts", 'event_handler', 'debuggee_tracker/frame'], f
     };
 
     Thread.prototype.update = shortcuts._update_properties;
+    
+    Thread.prototype.get_uid = function () {
+        return "/dbg/" + this.debugger_id + "/thg/" + this.thread_group_id + "/th/" + this.id;
+    };
 
     Thread.prototype.get_display_name = function () {
         return "Thread "+this.id+" ("+this.state+")";

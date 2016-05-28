@@ -15,6 +15,10 @@ define(["underscore", "shortcuts", 'event_handler', 'ko', 'snippet'], function (
         ko.track(this);
     };
 
+    Breakpoint.prototype.get_uid = function () {
+        return "/dbg/" + this.debugger_id + "/bkp/" + this.id;
+    };
+
     Breakpoint.prototype.update = function (attributes) {
         shortcuts._update_properties.call(this, attributes);
         
