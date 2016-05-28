@@ -89,10 +89,17 @@
 
        .code-editor-breakpoint {
           background: linear-gradient(to right, rgba(0,0,0,0) , red);
+          z-index: 21;
        }
        
-       .code-editor-thread-current-line {
+       .code-editor-thread-followed-line {
           background: linear-gradient(to right, rgba(0,0,0,0) , rgb(95, 162, 219));
+          z-index: 23;
+       }
+
+       .code-editor-other-thread-line {
+          background: linear-gradient(to right, rgba(0,0,0,0) , rgb(95, 162, 219));
+          z-index: 22;
        }
 
        .selectable_text {
