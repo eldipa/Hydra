@@ -28,6 +28,11 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
         this.breakpoint_highlights = {}; 
     };
 
+    BreakpointHighlights.prototype.clean_and_search_breakpoints_to_highlight = function () {
+        this.clean_up();
+        this.search_breakpoints_to_highlight();
+    };
+
     BreakpointHighlights.prototype.search_breakpoints_to_highlight = function () {
         var thread_followed = this.thread_follower.thread_followed;
         if (!thread_followed) {
@@ -59,7 +64,7 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
             return;
         }
 
-        var breakpoint_highlight = this.breakpoint_highlights[breakpoint];
+        var breakpoint_highlight = this.breakpoint_highlights[breakpoint.get_uid()];
         var breakpoint_is_shown = !!breakpoint_highlight;
 
         if (this.isnt_an_interesting_breakpoint_or_shouldnt_be_track(breakpoint)) {
@@ -81,7 +86,7 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
         }
         else if (!breakpoint_should_be_shown && breakpoint_is_shown) {
             this.code_editor.remove_highlight(breakpoint_highlight);
-            delete this.breakpoint_highlights[breakpoint];
+            delete this.breakpoint_highlights[breakpoint.get_uid()];
         }
         else { // the !breakpoint_should_be_shown && !breakpoint_is_shown so we dont do anything
         }
@@ -126,7 +131,7 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
 
     BreakpointHighlights.prototype.highlight_this_source_code_breakpoint = function (breakpoint) {
         var breakpoint_highlight = this.code_editor.highlight_breakpoint(Number(breakpoint.source_line_number), {text: "*"});
-        this.breakpoint_highlights[breakpoint] = breakpoint_highlight;
+        this.breakpoint_highlights[breakpoint.get_uid()] = breakpoint_highlight;
     };
 
     return {BreakpointHighlights: BreakpointHighlights};

@@ -28,6 +28,11 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
         this.thread_highlights = {}; 
     };
 
+    CurrentLineHighlights.prototype.clean_and_search_threads_to_highlight = function () {
+        this.clean_up();
+        this.search_threads_to_highlight();
+    };
+
     CurrentLineHighlights.prototype.search_threads_to_highlight = function () {
         var thread_followed = this.thread_follower.thread_followed;
         if (!thread_followed) {
@@ -63,68 +68,74 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
             return;
         }
 
-        var thread_highlight = this.thread_highlights[thread];
+        var thread_highlight = this.thread_highlights[thread.get_uid()];
         var thread_is_shown = !!thread_highlight;
 
-        if (this.isnt_an_interesting_breakpoint_or_shouldnt_be_track(breakpoint)) {
-            if (breakpoint_is_shown) {
-                console.warn("A breakpoint is highlighted but it shouldn't. In fact it shouldn't be tracked at all. Removing the highlight but this is situation that it shouldn't be happen!");
-                this.code_editor.remove_highlight(breakpoint_highlight);
+        /*
+         * Nop, this is not correct:
+         *
+         * if (this.isnt_an_interesting_thread_or_shouldnt_be_track(thread)) {
+            if (thread_is_shown) {
+                console.warn("A thread is highlighted but it shouldn't. In fact it shouldn't be tracked at all. Removing the highlight but this is situation that it shouldn't be happen!");
+                this.code_editor.remove_highlight(thread_highlight);
             }
             return;
         }
+         * 
+         * At difference with the breakpoints, a thread can move from one file to another so
+         * a particular thread in our file in one moment is tracked and at the next moment the
+         * thread moves to another file and the thread is not interesting anymore.
+         * This doesn't happen with the breakpoints which are static objects.
+         *
+         * So that "if" is wrong.
+        **/
 
-        var breakpoint_should_be_shown = !(breakpoint.was_deleted || !breakpoint.is_enabled);
+        var thread_should_be_shown = this.is_an_interesting_thread_and_should_be_track(thread);
 
-        if (breakpoint_should_be_shown) {
-            if (breakpoint_is_shown) { // is shown but probably it is in an incorrect location
-                this.code_editor.remove_highlight(breakpoint_highlight);
+        if (thread_should_be_shown) {
+            if (thread_is_shown) { // is shown but probably it is in an incorrect location
+                this.code_editor.remove_highlight(thread_highlight);
             }
 
-            this.highlight_this_source_code_breakpoint(breakpoint);
+            this.highlight_this_source_code_thread(thread);
         }
-        else if (!breakpoint_should_be_shown && breakpoint_is_shown) {
-            this.code_editor.remove_highlight(breakpoint_highlight);
-            delete this.thread_highlights[breakpoint];
+        else if (!thread_should_be_shown && thread_is_shown) {
+            this.code_editor.remove_highlight(thread_highlight);
+            delete this.thread_highlights[thread.get_uid()];
         }
-        else { // the !breakpoint_should_be_shown && !breakpoint_is_shown so we dont do anything
+        else { // the !thread_should_be_shown && !thread_is_shown so we dont do anything
         }
     };
 
     // Is this thread a valid, alive and belongs to our debugger?
     CurrentLineHighlights.prototype.is_an_interesting_thread = function (thread, thread_followed) {
-        return thread && thread.is_alive && thread.debugger_id === thread_followed.debugger_id;
+        return thread && thread.is_alive && thread.debugger_id === thread_followed.debugger_id && thread !== thread_followed;
     };
 
     // Is this breakpoint in our source code file or in our assembly code page? Or is it just
     // a breakpoint that we shouldn't track?
-    CurrentLineHighlights.prototype.should_track_this_thread = function(breakpoint, thread_follower) {
-    
-        // TODO debemos manejar el hecho de que un thread esta en varios lugares a la vez debido
-        // a la naturaleza del stack!!
-        //
-        // Para poder tener esa data hay que llamar a get_stack_frames pero este llama a GDB!
-        // Para evitar tantas llamadas a gdb se puede hacer que sea el tracker quien cargue los
-        // frames y el get_stack_frames solo los retorne o una variante mixta.
+    CurrentLineHighlights.prototype.should_track_this_thread = function(thread, thread_follower) {
+        var frames = thread.get_stack_frames();
 
-        var is_breakpoint_in_source_code = breakpoint.source_fullname && breakpoint.source_line_number;
+        var selected_frame = _.find(frames, function (frame) {
+            // TODO we dont support non-source-code frames
+            var is_our = frame.source_fullname && frame.source_line_number && this.thread_follower.is_this_file_already_loaded(frame.source_fullname);
+            if (is_our) {
+                this.cached_selected_frame = frame;
+                return true;
+            }
+        }, this);
 
-        if (is_breakpoint_in_source_code) {
-            var is_breakpoint_in_our_current_source_file = this.thread_follower.is_this_file_already_loaded(breakpoint.source_fullname);
-            return is_breakpoint_in_our_current_source_file;
-        }
-        else {
-            return false; // TODO we dont support non-source-code breakpoints (assembly breakpoints)
-        }
+        return selected_frame !== undefined;
     };
 
-    CurrentLineHighlights.prototype.is_an_interesting_thread_and_should_be_track = function (breakpoint){
-        var is_an_interesting_thread = this.is_an_interesting_thread(breakpoint, this.thread_follower.thread_followed);
+    CurrentLineHighlights.prototype.is_an_interesting_thread_and_should_be_track = function (thread){
+        var is_an_interesting_thread = this.is_an_interesting_thread(thread, this.thread_follower.thread_followed);
         if (!is_an_interesting_thread) {
             return false;
         }
 
-        var should_track_this_thread = this.should_track_this_thread(breakpoint, this.thread_follower);
+        var should_track_this_thread = this.should_track_this_thread(thread, this.thread_follower);
         if (!should_track_this_thread) {
             return false;
         }
@@ -132,13 +143,15 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
         return true;
     };
 
-    CurrentLineHighlights.prototype.isnt_an_interesting_breakpoint_or_shouldnt_be_track = function (breakpoint) {
-        return !this.is_an_interesting_thread_and_should_be_track(breakpoint);
+    CurrentLineHighlights.prototype.isnt_an_interesting_thread_or_shouldnt_be_track = function (thread) {
+        return !this.is_an_interesting_thread_and_should_be_track(thread);
     };
 
-    CurrentLineHighlights.prototype.highlight_this_source_code_breakpoint = function (breakpoint) {
-        var breakpoint_highlight = this.code_editor.highlight_breakpoint(Number(breakpoint.source_line_number), {text: "*"});
-        this.thread_highlights[breakpoint] = breakpoint_highlight;
+    CurrentLineHighlights.prototype.highlight_this_source_code_thread = function (thread) {
+        var selected_frame = this.cached_selected_frame;
+        console.log("th " + thread.id);
+        var thread_highlight = this.code_editor.highlight_thread(Number(selected_frame.source_line_number), {text: "th " + thread.id});
+        this.thread_highlights[thread.get_uid()] = thread_highlight;
     };
 
     return {CurrentLineHighlights: CurrentLineHighlights};
