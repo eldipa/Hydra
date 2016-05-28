@@ -293,7 +293,7 @@ define(["underscore", "event_handler", "debuggee_tracker/debugger", "debuggee_tr
          thread.update({state: "running"});
       });
       
-      this.notify("running", { 
+      this.notify("thread_running", { 
                               event_data: data,
                               debugger_obj: debugger_obj,
                               //thread_group_id: thread_group_id, TODO? un thread group para el hilo actual y los otros, pero podrian haber multiples thread groups si se corre "ALL" todos los hilos de todos los thread groups.
@@ -320,7 +320,7 @@ define(["underscore", "event_handler", "debuggee_tracker/debugger", "debuggee_tr
 
       var self = this;
       this._request_an_update_threads_info(debugger_id, function () {
-          self.notify("stopped", { 
+          self.notify("thread_stopped", { 
                                   event_data: data,
                                   debugger_obj: debugger_obj,
                                   //thread_group_id: thread_group_id, TODO? un thread group para el hilo actual y los otros, pero podrian haber multiples thread groups si se corre "ALL" todos los hilos de todos los thread groups.
@@ -684,6 +684,30 @@ define(["underscore", "event_handler", "debuggee_tracker/debugger", "debuggee_tr
 
       The other kinds of topics are emmited after apply all the modification to
       this tracker.
+
+      Topics:
+       About debuggers
+       ===============
+        debugger_started/debugger_exited: a debugger started or exited
+
+       About thread groups (processes)
+       ===============================
+        thread_group_added/thread_group_removed: a thread group was added(created) or removed from a debugger.
+        thread_group_started/thread_group_exited: a thread group (process) started or exited
+        thread_group_update: a forced update of the thread group triggers this event
+
+      About threads
+      =============
+        thread_created/thread_exited: a thread in a thread group was created or exited
+        thread_running/thread_stopped: a thread started to run (is running) or stopped
+        thread-stack-updated: after the completion of a request, the stack of a thread was updated
+        thread_update: a forced update of the thread triggers this event
+
+      About breakpoints
+      =================
+        breakpoint_changed/breakpoint_update: a breakpoint changed, may be was deleted, disabled, or ... who knows
+        breakpoint_deleted: the breakpoint was deleted
+
   
    */
    DebuggeeTracker.prototype.notify = function (event_topic, data_object) {
@@ -757,5 +781,5 @@ define(["underscore", "event_handler", "debuggee_tracker/debugger", "debuggee_tr
            Debugger: Debugger,
            ThreadGroup: ThreadGroup,
            Thread: Thread,
-           StackTracker: StackTracker};
+   };
 });
