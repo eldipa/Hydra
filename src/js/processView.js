@@ -25,8 +25,6 @@ define([ 'jquery', 'layout', 'shortcuts', 'event_handler', 'd3' ], function($, l
     
     ProcessView.prototype.loadProcessData = function() {
     	var my_self = this;
-    	
-//    	console.log("Ahi va");
         
         function findIndexByKeyValue(arraytosearch, key, valuetosearch) {
         	for (var i = 0; i < arraytosearch.length; i++) {
@@ -36,8 +34,6 @@ define([ 'jquery', 'layout', 'shortcuts', 'event_handler', 'd3' ], function($, l
         	}
         	return null;
         }
-        
-        my_self.stopAnimation();
         
         var sys = require('sys')
         var exec = require('child_process').exec;
@@ -54,6 +50,7 @@ define([ 'jquery', 'layout', 'shortcuts', 'event_handler', 'd3' ], function($, l
         		dict.nodes[i] = {"group": 1, "pid": data[1], "ppid": data[0], "command": data[2]};
         		i = i+1;
         	}
+        	//Saco la cabecera de las columnas y la ultima fila que es vacia.
         	dict.nodes.shift();
         	dict.nodes.pop();
         	
@@ -65,21 +62,23 @@ define([ 'jquery', 'layout', 'shortcuts', 'event_handler', 'd3' ], function($, l
         		}
         	}
         	
-        	my_self.mis = JSON.stringify(dict);
+        	my_self.stopAnimation();
         	
+        	my_self.savePositions();
+        	
+        	//TODO Conversion y desconversion a Jason innecesaria, pasar directo a string
+        	my_self.mis = JSON.stringify(dict);
         	my_self.graph = JSON.parse(my_self.mis);
         	
         	
-        	
         	my_self.force.nodes(my_self.graph.nodes).links(my_self.graph.links);
-
-        	my_self.createLines();
-
-        	my_self.createNodes();
         	
-        	my_self.startAnimation();
+        	my_self.loadPositions();      	
+        	
+        	my_self.update();
+        	
 
-//        	console.log(JSON.stringify(dict));
+//        	console.log(JSON.stringify(dict)); 
         	
         	if (error !== null) {
         		console.log('exec error: ' + error);
@@ -115,56 +114,23 @@ define([ 'jquery', 'layout', 'shortcuts', 'event_handler', 'd3' ], function($, l
             
         this.g = this.svg.append("g").attr("transform", "translate(" + margin.left + "," + margin.right + ")")
             .call(this.zoom);
+        
 
         //Read the data from the mis element 
         this.graph = JSON.parse(this.mis);
 
         //Creates the graph data structure out of the json data
-        this.force.nodes(this.graph.nodes).links(this.graph.links);
+//        this.force.nodes(this.graph.nodes).links(this.graph.links);
         
-        this.createLines();
-
-        this.createNodes();
+        this.oldPosition = {}
+        
+        this.update();
 
         this.tickConfig();
                
 		this.createZoomControl(); 
     };
     
-    //Create all the line svgs but without locations yet
-    ProcessView.prototype.createLines = function() {
-    	this.link = this.g.selectAll(".link").data(this.graph.links).enter().append("line").attr("class", "link").style(
-                "stroke-width", function(d) {
-                    return Math.sqrt(d.value);
-                });
-    };
-    
-    //Do the same with the circles for the nodes
-    ProcessView.prototype.createNodes = function() {
-    	var my_self = this;
-    	
-    	//Set up the colour scale
-        var color = d3.scale.category20();
-        
-        var tooltip = d3.select("body").append("div").attr("class", "tooltip").style("opacity", 0);
-        
-    	this.node = this.g.selectAll(".node").data(this.graph.nodes).enter().append("circle").attr("class", "node").attr("r", 8)
-        .style("fill", function(d) {
-            return color(d.group);
-        }).call(this.force.drag).on(
-                "mouseover",
-                function(d, i) {
-                	// disable zoom
-                	my_self.g.on(".zoom", null);
-                    tooltip.transition().duration(200).style("opacity", .9);
-                    tooltip.html(my_self.graph.nodes[i].command + " " + my_self.graph.nodes[i].pid).style("left", (d3.event.pageX) + "px").style("top",
-                            (d3.event.pageY - 28) + "px");
-                }).on("mouseout", function(d) {
-            tooltip.transition().duration(500).style("opacity", 0);
-            //reenable zoom
-            my_self.g.call(my_self.zoom);
-        });
-    };
     
     ProcessView.prototype.tickConfig = function() {
     	//Now we are giving the SVGs co-ordinates - the force layout is generating the co-ordinates which this code is using to update the attributes of the SVG elements
@@ -190,10 +156,87 @@ define([ 'jquery', 'layout', 'shortcuts', 'event_handler', 'd3' ], function($, l
                 }).attr("cy", function(d) {
                     return d.y;
                 });
+            	
 //            	my_self.node.each(my_self.collide(0.5)); //De momento deshabilitado ya que hace que el grafo no converja
             }
             ;
         });
+    };
+    
+    
+    ProcessView.prototype.update = function() {
+    	
+    	var my_self = this;
+    	
+    	var tooltip = d3.select("body").append("div").attr("class", "tooltip").style("opacity", 0);
+    	
+    	var link = this.g.selectAll(".link").data(this.graph.links);
+    	this.link = link;
+
+    	link.enter().append("line").attr("class","link").style("stroke-width", function(d) {return Math.sqrt(d.value);});;
+                
+//        link.append("title")
+//        .text(function(d){
+//        	return d.value;
+//        });
+        link.exit().remove();
+        
+    	//Set up the colour scale
+        var color = d3.scale.category20();
+
+        var node = this.g.selectAll(".node").data(this.graph.nodes)
+        this.node = node;
+
+        var nodeEnter = node.enter().append("g").call(this.force.drag);
+
+        nodeEnter.append("svg:circle").attr("class", "node").attr("r", 8)
+        .style("fill", function(d) {
+        		return color(d.group);
+        	}).call(this.force.drag).on("mouseover",
+            function(d, i) {
+            	// disable zoom
+            	my_self.g.on(".zoom", null);
+                tooltip.transition().duration(200).style("opacity", .9);
+                tooltip.html(my_self.graph.nodes[i].command + " " + my_self.graph.nodes[i].pid).style("left", (d3.event.pageX) + "px").style("top",
+                        (d3.event.pageY - 28) + "px");
+            }).on("mouseout", function(d) {
+            	tooltip.transition().duration(500).style("opacity", 0);
+            	//reenable zoom
+            	my_self.g.call(my_self.zoom);
+        });
+        
+
+//    	nodeEnter.append("svg:text")
+//    	.attr("class","textClass")
+//    	.text( function(d){return d.id;}) ;
+
+        node.exit().remove();
+    
+        this.startAnimation();
+    	
+    };
+    
+    ProcessView.prototype.savePositions = function() {
+    	node = this.g.selectAll(".node");
+    	nodeData = node.data();
+    	if (nodeData.length > 0)
+    		for (data in nodeData){
+    			this.oldPosition[nodeData[data].pid] = {"x":nodeData[data].x,"y": nodeData[data].y}
+    		}
+    };
+    
+    ProcessView.prototype.loadPositions = function() {
+    	node = this.g.selectAll(".node");
+    	nodeData = node.data();
+    	if (nodeData.length > 0)
+    		for (data in nodeData){
+    			if(nodeData[data].pid){
+    				nodeData[data].x = this.oldPosition[nodeData[data].pid].x;
+    				nodeData[data].y = this.oldPosition[nodeData[data].pid].y;
+//    				this.oldPosition[nodeData[data].pid] = {"x":nodeData[data].x,"y": nodeData[data].y}
+    			}
+    			
+    		}
     };
     
     ProcessView.prototype.startAnimation = function() {
