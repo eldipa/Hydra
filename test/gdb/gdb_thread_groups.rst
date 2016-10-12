@@ -79,7 +79,9 @@ Ahora, debe haber 2 inferior o thread groups
 
 ::
 
-   >>> request(gdb, '-list-thread-groups', [])        # doctest: +ELLIPSIS
+   >>> r = request(gdb, '-list-thread-groups', [])
+   >>> r['results']['groups'].sort(key=lambda t: t['id'], reverse=True)
+   >>> r   # doctest: +ELLIPSIS
    {u'debugger-id': ...
     u'klass': u'done',
     u'results': {u'groups': [{u'id': u'i2', u'type': u'process'},
@@ -336,7 +338,9 @@ se indiecaria en el atributo 'stopped-threads' que valdria 'all'.
 Veamos como queda la info de los hilos:
 
 ::
-   >>> request(gdb, "-thread-info", [])       # doctest: +ELLIPSIS
+   >>> r = request(gdb, "-thread-info", [])
+   >>> r['results']['threads'].sort(key=lambda t: t['id'], reverse=True)
+   >>> r   # doctest: +ELLIPSIS
    {u'debugger-id': ...
     u'klass': u'done',
     u'results': {u'current-thread-id': u'...',

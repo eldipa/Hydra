@@ -3,7 +3,7 @@
 GdbSpawmer es el encargado de iniciar nuevas instancias de gdb, tener conocimiento de ellas
 y de poder finalizarlas.
 
-Primero inicamos el servidor de eventos y luego instanciamos un gdbSpawner:
+Primero iniciamos el servidor de eventos y luego instanciamos un gdbSpawner:
 
 ::
    
@@ -14,7 +14,9 @@ Primero inicamos el servidor de eventos y luego instanciamos un gdbSpawner:
    >>> EH = EventHandler(name="TheTest")
 
    >>> from gdb.gdbSpawner import GdbSpawner
-   >>> gdb_spawner = GdbSpawner()
+   >>> gdb_spawner = GdbSpawner(count_gdbs_at_begin = 0)
+
+   >>> import time
    
   
 Para poder ver que resultados nos devuelve gdbSpawner, nos registramos a sus publicaciones:
@@ -39,7 +41,7 @@ Para listar las instancias (ninguna por ahora) de GDB bajo el control del gdbSpa
    {u'debuggers': {}}
 
 
-Sin GDBs no tiene diversion. Para spawner un gdb hacemos un add. gdbSpawner nos respondera
+Sin GDBs no tiene diversion. Para spawnear un gdb hacemos un add. gdbSpawner nos respondera
 con un evento que contendra el process id del nuevo GDB spawneado:
 
 ::
@@ -63,7 +65,7 @@ su codigo de salida (exit code) nos es devuelto:
 
 ::
    >>> gdb_process_id = gdb_added_result['debugger-id']
-   >>> EH.publish("spawner.kill-debugger", {'debugger-id': gdb_process_id})
+   >>> time.sleep(0.5); EH.publish("spawner.kill-debugger", {'debugger-id': gdb_process_id})
    
    >>> collector.get_next()                           # doctest: +ELLIPSIS
    {u'debugger-id': ..., u'exit-code': 0}
@@ -93,7 +95,7 @@ caso anterior.
    {u'debugger-id': ...}
 
 
-   >>> EH.publish("spawner.kill-all-debuggers", {})
+   >>> time.sleep(0.5); EH.publish("spawner.kill-all-debuggers", {})
    
    >>> collector.get_next()                           # doctest: +ELLIPSIS
    {u'debugger-id': ..., u'exit-code': 0}

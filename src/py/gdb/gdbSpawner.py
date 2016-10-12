@@ -6,10 +6,11 @@ import globalconfig
 import traceback, syslog
 
 class GdbSpawner(object):
-    def __init__(self): 
+    def __init__(self, count_gdbs_at_begin=None): 
         cfg = globalconfig.get_global_config()
         name = cfg.get('gdbspawner', 'name')
-        count_gdbs_at_begin = cfg.getint('gdbspawner', 'count_gdbs_at_begin')
+        if count_gdbs_at_begin is None:
+            count_gdbs_at_begin = cfg.getint('gdbspawner', 'count_gdbs_at_begin')
         
         self.gdb_by_its_pid = {}
         

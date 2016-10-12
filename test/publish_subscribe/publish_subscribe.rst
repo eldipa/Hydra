@@ -34,7 +34,7 @@ To run the server,
    >>> # just an auxiliary function for testing purpose only to know if the process 
    >>> # is running
    >>> def is_running():
-   ...   time.sleep(0.01)
+   ...   time.sleep(0.1)
    ...   out = check_output(["python", "py/publish_subscribe/notifier.py", "status"])
    ...   return "running" in out
 

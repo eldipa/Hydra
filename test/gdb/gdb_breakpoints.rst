@@ -264,7 +264,9 @@ mal formado: contiene por duplicado el numero del thread implicado.
                              u'type': u'breakpoint'}]},
     ...}
 
-   >>> request(gdb, "-thread-info", [])       # doctest: +ELLIPSIS
+   >>> r = request(gdb, "-thread-info", [])
+   >>> r['results']['threads'].sort(key=lambda t: t['id'], reverse=True)
+   >>> r   # doctest: +ELLIPSIS
    {...
                  u'threads': [{...
                                           u'func': u'roll',
@@ -322,7 +324,9 @@ mal formado: contiene por duplicado el numero del thread implicado.
                              u'type': u'breakpoint'}]},
     ...}
 
-   >>> request(gdb, "-thread-info", [])       # doctest: +ELLIPSIS
+   >>> r = request(gdb, "-thread-info", [])
+   >>> r['results']['threads'].sort(key=lambda t: t['id'], reverse=True)
+   >>> r   # doctest: +ELLIPSIS
    {...
                  u'threads': [{...
                                           u'func': u'roll',
