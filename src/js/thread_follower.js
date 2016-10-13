@@ -20,7 +20,7 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
         this.view.set_percentage(70);
 
         this.current_loaded_file = "";
-        this.current_line_highlight = null;
+        //this.current_line_highlight = null;
 
         this.breakpoint_highlights = new breakpoint_highlights_module.BreakpointHighlights(this.code_editor, this);
         this.current_line_highlights = new current_line_highlights_module.CurrentLineHighlights(this.code_editor, this);
@@ -153,12 +153,15 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
     ThreadFollower.prototype.update_current_line = function (line_number) {
         line_number = Number(line_number);
         this.code_editor.go_to_line(line_number);
+        this.current_line_highlights.update_highlight_of_thread(this.thread_followed);
 
+        /*
         if (this.current_line_highlight) {
             this.code_editor.remove_highlight(this.current_line_highlight);
         }
 
         this.current_line_highlight = this.code_editor.highlight_thread_current_line(line_number, {text: "@th " + this.thread_followed.id});
+        */
     };
 
     ThreadFollower.prototype.update_yourself_from_source_code = function (source_fullname) {

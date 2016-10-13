@@ -109,7 +109,7 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
 
     // Is this thread a valid, alive and belongs to our debugger?
     CurrentLineHighlights.prototype.is_an_interesting_thread = function (thread, thread_followed) {
-        return thread && thread.is_alive && thread.debugger_id === thread_followed.debugger_id && thread !== thread_followed;
+        return thread && thread.is_alive && thread.debugger_id === thread_followed.debugger_id; /* && thread !== thread_followed*/;
     };
 
     // Is this breakpoint in our source code file or in our assembly code page? Or is it just
@@ -149,8 +149,13 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
 
     CurrentLineHighlights.prototype.highlight_this_source_code_thread = function (thread) {
         var selected_frame = this.cached_selected_frame;
-        console.log("th " + thread.id);
-        var thread_highlight = this.code_editor.highlight_thread(Number(selected_frame.source_line_number), {text: "th " + thread.id});
+        
+        var marker = "th " + thread.id;
+        if (thread === this.thread_follower.thread_followed) {
+            marker = "@" + marker;
+        }
+
+        var thread_highlight = this.code_editor.highlight_thread(Number(selected_frame.source_line_number), {text: marker});
         this.thread_highlights[thread.get_uid()] = thread_highlight;
     };
 
