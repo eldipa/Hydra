@@ -11,6 +11,7 @@ import sys
 from sys import stdin
 from re import match
 import syslog
+import processInfoRecolector
 
 if (not match(".*/src$", os.getcwd())):
     print "ESTE MAIN SE DEBE LLAMAR DESDE LA CARPETA SRC"
@@ -32,6 +33,9 @@ try:
     os.system("python py/publish_subscribe/notifier.py start")
 
     spawner = gdb.gdbSpawner.GdbSpawner()
+    
+    processInfoRecolector = processInfoRecolector.ProcessInfoRecolector()
+    processInfoRecolector.start()
 
     # esperar quit
     while(stdin.readline() not in ["quit\n","q\n"]):
@@ -45,6 +49,9 @@ except Exception as inst:
 finally:
     
     spawner.shutdown()
+    
+    processInfoRecolector.finalizar()
+    processInfoRecolector.join()
     
     os.system("python py/publish_subscribe/notifier.py stop")
  

@@ -17,14 +17,22 @@ define([ 'jquery', 'layout', 'shortcuts', 'event_handler', 'd3' ], function($, l
         	
         this.configGraph();
         
-        setInterval(function() {
-        	my_self.loadProcessData();
-		}, 2000);
+        console.log(this.EH)
+        
+        this.EH.subscribe('processInfo', function(data) {
+        	my_self.loadProcessData(data);
+        });
+        
+//        setInterval(function() {
+//        	my_self.loadProcessData();
+//		}, 5000);
         
     };
     
-    ProcessView.prototype.loadProcessData = function() {
+    ProcessView.prototype.loadProcessData = function(info) {
     	var my_self = this;
+    	
+    	console.log(info);
         
         function findIndexByKeyValue(arraytosearch, key, valuetosearch) {
         	for (var i = 0; i < arraytosearch.length; i++) {
@@ -35,55 +43,36 @@ define([ 'jquery', 'layout', 'shortcuts', 'event_handler', 'd3' ], function($, l
         	return null;
         }
         
-        var sys = require('sys')
-        var exec = require('child_process').exec;
-        var child;
-        child = exec("ps axj | awk '{printf $1 \" \"; printf $2 \" \"; print $10;}'", function (error, stdout, stderr) {
-        	
-        	var dict ={"nodes": [], "links": []};
-        	
-        	var processes = stdout.split("\n");
-        	
-        	var i = 0;
-        	for (process in processes) {
-        		data = processes[process].split(" ");
-        		dict.nodes[i] = {"group": 1, "pid": data[1], "ppid": data[0], "command": data[2]};
-        		i = i+1;
-        	}
-        	//Saco la cabecera de las columnas y la ultima fila que es vacia.
-        	dict.nodes.shift();
-        	dict.nodes.pop();
-        	
-        	i = 0;
-        	for(process in dict.nodes){
-        		if(dict.nodes[process].ppid != "0"){
-        			dict.links[i] = {"source": parseInt(process), "target": findIndexByKeyValue(dict.nodes, "pid", dict.nodes[process].ppid), "value":1};
-        			i = i+1;
-        		}
-        	}
-        	
-        	my_self.stopAnimation();
-        	
-        	my_self.savePositions();
-        	
-        	//TODO Conversion y desconversion a Jason innecesaria, pasar directo a string
-        	my_self.mis = JSON.stringify(dict);
-        	my_self.graph = JSON.parse(my_self.mis);
-        	
-        	
-        	my_self.force.nodes(my_self.graph.nodes).links(my_self.graph.links);
-        	
-        	my_self.loadPositions();      	
-        	
-        	my_self.update();
+
+    	var dict ={"nodes": [], "links": []};
+    	dict.nodes = info
+    	
+    	i = 0;
+    	for(process in dict.nodes){
+    		if(dict.nodes[process].ppid != "0"){
+    			dict.links[i] = {"source": parseInt(process), "target": findIndexByKeyValue(dict.nodes, "pid", dict.nodes[process].ppid), "value":1};
+    			i = i+1;
+    		}
+    	}
+    	
+    	my_self.stopAnimation();
+    	
+    	my_self.savePositions();
+    	
+    	//TODO Conversion y desconversion a Jason innecesaria, pasar directo a string
+    	my_self.mis = JSON.stringify(dict);
+    	my_self.graph = JSON.parse(my_self.mis);
+    	
+    	  
+    	
+    	my_self.loadPositions();       	     	
+    	
+    	my_self.updateGraph();
         	
 
 //        	console.log(JSON.stringify(dict)); 
         	
-        	if (error !== null) {
-        		console.log('exec error: ' + error);
-        	}
-        });
+  
     };
   
     ProcessView.prototype.configGraph = function() {
@@ -115,6 +104,8 @@ define([ 'jquery', 'layout', 'shortcuts', 'event_handler', 'd3' ], function($, l
         this.g = this.svg.append("g").attr("transform", "translate(" + margin.left + "," + margin.right + ")")
             .call(this.zoom);
         
+        this.tooltip = d3.select("body").append("div").attr("class", "tooltip").style("opacity", 0);
+        
 
         //Read the data from the mis element 
         this.graph = JSON.parse(this.mis);
@@ -124,7 +115,7 @@ define([ 'jquery', 'layout', 'shortcuts', 'event_handler', 'd3' ], function($, l
         
         this.oldPosition = {}
         
-        this.update();
+        this.updateGraph();
 
         this.tickConfig();
                
@@ -164,11 +155,9 @@ define([ 'jquery', 'layout', 'shortcuts', 'event_handler', 'd3' ], function($, l
     };
     
     
-    ProcessView.prototype.update = function() {
+    ProcessView.prototype.updateGraph = function() {
     	
     	var my_self = this;
-    	
-    	var tooltip = d3.select("body").append("div").attr("class", "tooltip").style("opacity", 0);
     	
     	var link = this.g.selectAll(".link").data(this.graph.links);
     	this.link = link;
@@ -196,11 +185,11 @@ define([ 'jquery', 'layout', 'shortcuts', 'event_handler', 'd3' ], function($, l
             function(d, i) {
             	// disable zoom
             	my_self.g.on(".zoom", null);
-                tooltip.transition().duration(200).style("opacity", .9);
-                tooltip.html(my_self.graph.nodes[i].command + " " + my_self.graph.nodes[i].pid).style("left", (d3.event.pageX) + "px").style("top",
+            	my_self.tooltip.transition().duration(200).style("opacity", .9);
+            	my_self.tooltip.html(my_self.graph.nodes[i].command + " " + my_self.graph.nodes[i].pid).style("left", (d3.event.pageX) + "px").style("top",
                         (d3.event.pageY - 28) + "px");
             }).on("mouseout", function(d) {
-            	tooltip.transition().duration(500).style("opacity", 0);
+            	my_self.tooltip.transition().duration(500).style("opacity", 0);
             	//reenable zoom
             	my_self.g.call(my_self.zoom);
         });
@@ -221,22 +210,33 @@ define([ 'jquery', 'layout', 'shortcuts', 'event_handler', 'd3' ], function($, l
     	nodeData = node.data();
     	if (nodeData.length > 0)
     		for (data in nodeData){
-    			this.oldPosition[nodeData[data].pid] = {"x":nodeData[data].x,"y": nodeData[data].y}
+    			pid = nodeData[data].pid;
+//    			console.log(pid);
+    			this.oldPosition[pid] = {"x":nodeData[data].x,"y": nodeData[data].y}
     		}
     };
     
     ProcessView.prototype.loadPositions = function() {
-    	node = this.g.selectAll(".node");
-    	nodeData = node.data();
-    	if (nodeData.length > 0)
+    	
+//    	this.force.nodes(this.graph.nodes).links(this.graph.links);
+    	
+//    	node = this.g.selectAll(".node");
+//    	nodeData = node.data();
+    	nodeData = this.graph.nodes;
+//    	console.log(nodeData[0]);
+    	if (nodeData.length > 0 && this.oldPosition.length > 0)
     		for (data in nodeData){
     			if(nodeData[data].pid){
-    				nodeData[data].x = this.oldPosition[nodeData[data].pid].x;
-    				nodeData[data].y = this.oldPosition[nodeData[data].pid].y;
+    				pid = nodeData[data].pid;
+//    				console.log(this.oldPosition);
+    				nodeData[data].x = this.oldPosition[pid].x;
+    				nodeData[data].y = this.oldPosition[pid].y;
 //    				this.oldPosition[nodeData[data].pid] = {"x":nodeData[data].x,"y": nodeData[data].y}
     			}
     			
     		}
+//    	console.log(nodeData[0]);
+    	this.force.nodes(nodeData).links(this.graph.links);
     };
     
     ProcessView.prototype.startAnimation = function() {
