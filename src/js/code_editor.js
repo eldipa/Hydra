@@ -62,7 +62,7 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore'], function (ace, $,
         var ace_row_number = this.ace_row_lookup_from_gutter_line(line_number_or_address);
 
         var ace_line_number = ace_row_number + 1;
-        this.editor.scrollToLine(ace_line_number, false, false);
+        this.editor.scrollToLine(ace_line_number, true, false);
         this.editor.gotoLine(ace_line_number, 0, false);
     };
 
@@ -115,15 +115,26 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore'], function (ace, $,
         this.edit_session.removeMarker(highlight.marker_id);
     };
 
-    CodeEditor.prototype.highlight_thread_current_line = function (line_number_or_address) {
+    CodeEditor.prototype.highlight_thread_current_line = function (line_number_or_address, note) {
         return this.highlight_lines({
-            css_classes: "code-editor-thread-current-line",
-            note: {
-                text: "XXXXX",
-            }
+            css_classes: "code-editor-thread-followed-line",
+            note: note
+        }, line_number_or_address);
+    };
+    
+    CodeEditor.prototype.highlight_thread = function (line_number_or_address, note) {
+        return this.highlight_lines({
+            css_classes: "code-editor-other-thread-line",
+            note: note
         }, line_number_or_address);
     };
 
+    CodeEditor.prototype.highlight_breakpoint = function (line_number_or_address, note) {
+        return this.highlight_lines({
+            css_classes: "code-editor-breakpoint",
+            note: note
+        }, line_number_or_address);
+    };
     
     /* Internal */
 

@@ -242,18 +242,18 @@ define(['message'], function (message) {
       // we call the callbacks for each topic in the topic chain.
       // the chain is iterated in reverse order (the more specific topic first)
       for(var j = topic_chain.length-1; j >= 0; j--) {
-         var topic = topic_chain[j];
-         var callbacks = this.callbacks_by_topic[topic] || [];
+         var subtopic = topic_chain[j];
+         var callbacks = this.callbacks_by_topic[subtopic] || [];
          if(this.log_to_console) {
-            console.debug(" on '" + topic + "': ");
+            console.debug(" on '" + subtopic + "': ");
             console.debug(callbacks);
          }
          for(var i = 0; i < callbacks.length; i++) {
             try {
-               callbacks[i](data);
+               callbacks[i](data, topic); // forward the full topic string, not the partial one
             }
             catch (e) {
-               console.warn("Error in callback (topic: "+topic+"): " + e + "\n" + e.stack);
+               console.warn("Error in callback (subtopic: "+subtopic+"): " + e + "\n" + e.stack);
             }
          }
       }

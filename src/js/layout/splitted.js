@@ -49,6 +49,8 @@ define(['jquery', 'layout/panel', 'jqueryui'], function ($, P, _) {
                var percentage = (rel_offset * 100);
                self.set_percentage(percentage);
             }
+            
+            window.scrollTo(0,0);
          };
       };  
 

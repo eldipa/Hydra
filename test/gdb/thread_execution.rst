@@ -142,7 +142,9 @@ con un continue. Vease los FIXs
    {u'debugger-id': ...
     u'klass': u'stopped',...
 
-   >>> request(gdb, '-list-thread-groups', [])              # doctest: +ELLIPSIS
+   >>> r = request(gdb, '-list-thread-groups', [])
+   >>> r['results']['groups'].sort(key=lambda t: t['id'], reverse=True)
+   >>> r   # doctest: +ELLIPSIS
    {u'debugger-id': ...,
     u'klass': u'done',
     u'results': {u'groups': [{u'cores': [...],
@@ -170,7 +172,9 @@ Ahora, todos los threads salvo el tercero deberian estar frenados debido a cada 
 
 ::
 
-   >>> request(gdb, "-thread-info", [])       # doctest: +ELLIPSIS
+   >>> r = request(gdb, "-thread-info", [])
+   >>> r['results']['threads'].sort(key=lambda t: t['id'], reverse=True)
+   >>> r   # doctest: +ELLIPSIS
    {u'debugger-id': ...
     u'results': {u'current-thread-id': ...,
                  u'threads': [{...
@@ -217,12 +221,16 @@ el hilo que queremos analizar y solo se podra ver el backtrace de los hilos stop
                              ...]},
      ...}
 
-    >>> request(gdb, "-stack-list-frames", ["--thread 3", "--no-frame-filters"]) # doctest: +ELLIPSIS
+    >>> r = request(gdb, "-stack-list-frames", ["--thread 3", "--no-frame-filters"])
+    >>> r  # doctest: +ELLIPSIS
     {u'debugger-id': ...,
      u'klass': u'error',
-     u'results': {u'msg': u'Target is executing.'},
+     u'results': {u'msg':...},
      u'token': ...,
      u'type': u'Sync'}
+
+    >>> r['results']['msg'] in ('Target is executing.', 'Selected thread is running.')
+    True
     
     >>> request(gdb, "-stack-list-frames", ["--thread 4", "--no-frame-filters"]) # doctest: +ELLIPSIS
     {u'debugger-id': ...,
@@ -251,7 +259,9 @@ aun podremos hablarle a GDB.
     u'results': {u'thread-id': u'1'},
     ...}
    
-   >>> request(gdb, "-thread-info", [])       # doctest: +ELLIPSIS
+   >>> r  =request(gdb, "-thread-info", [])
+   >>> r['results']['threads'].sort(key=lambda t: t['id'], reverse=True)
+   >>> r   # doctest: +ELLIPSIS
    {u'debugger-id': ...
     u'results': {u'current-thread-id': ...,
                  u'threads': [{...
@@ -305,7 +315,9 @@ seguira en running. (y los thread del segundo proceso inalterados)
     u'token': None,
     u'type': u'Exec'}
    
-   >>> request(gdb, "-thread-info", [])       # doctest: +ELLIPSIS
+   >>> r = request(gdb, "-thread-info", [])
+   >>> r['results']['threads'].sort(key=lambda t: t['id'], reverse=True)
+   >>> r   # doctest: +ELLIPSIS
    {u'debugger-id': ...
     u'results': {u'current-thread-id': ...,
                  u'threads': [{...
@@ -344,7 +356,9 @@ Lo mismo si hacemos un next.
     u'klass': u'stopped',
     ...}
    
-   >>> request(gdb, "-thread-info", [])       # doctest: +ELLIPSIS
+   >>> r = request(gdb, "-thread-info", [])
+   >>> r['results']['threads'].sort(key=lambda t: t['id'], reverse=True)
+   >>> r   # doctest: +ELLIPSIS
    {u'debugger-id': ...
     u'results': {u'current-thread-id': ...,
                  u'threads': [{...
@@ -376,9 +390,8 @@ A pesar de que el thread 1 sigue corriendo, lo podemos interrumpir:
    {u'debugger-id': ...,
     u'klass': u'stopped',
     u'results': {u'core': u'...',
-                 u'frame': {u'addr': u'0x...',
-                            u'args': [],
-                            u'func': u'...'},
+                 u'frame': {...
+                            ...},
                  u'reason': u'signal-received',
                  u'signal-meaning': u'Signal 0',
                  u'signal-name': u'0',
@@ -387,7 +400,9 @@ A pesar de que el thread 1 sigue corriendo, lo podemos interrumpir:
     u'token': None,
     u'type': u'Exec'}
 
-   >>> request(gdb, "-thread-info", [])       # doctest: +ELLIPSIS
+   >>> r = request(gdb, "-thread-info", [])
+   >>> r['results']['threads'].sort(key=lambda t: t['id'], reverse=True)
+   >>> r   # doctest: +ELLIPSIS
    {u'debugger-id': ...
     u'results': {u'current-thread-id': ...,
                  u'threads': [{...

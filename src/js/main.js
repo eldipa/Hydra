@@ -18,7 +18,10 @@ requirejs.config({
       standarInput: 'standarInput',
       shortcuts: 'shortcuts',
       jstree: 'external/jstree-3.1.1',
-      debuggee_tracker_view: 'debuggee_tracker_view'
+      debuggee_tracker_view: 'debuggee_tracker_view',
+      jquery_event_drag: 'external/jquery.event.drag-2.2',
+      slickgrid_core: 'external/slick.core',
+      slickgrid: 'external/slick.grid'
    },
 
    shim: {
@@ -39,6 +42,16 @@ requirejs.config({
       },
       "knockout": {
          exports: "ko",
+      },
+      "jquery_event_drag": {
+         deps: ['jquery'],
+      },
+      "slickgrid_core": {
+         deps: ['jquery', "jquery_event_drag"],
+      },
+      "slickgrid": {
+         deps: ['jquery', 'slickgrid_core', "jquery_event_drag"],
+         exports: 'Slick'
       }
    }
 
@@ -65,17 +78,16 @@ function (err) {
    alert("Error during the import (" + err.requireType + ").\nFailed modules: " + err.requireModules + "\n");
 });
 
-requirejs(['ui', 'code_view', 'jquery', 'export_console', 'layout', 'layout_examples', 'jqueryui', 'ctxmenu', 'notify_js_console', 'debuggee_tracker/tracker', 'event_handler', 'debuggee_tracker_view', 'underscore', 'shortcuts', 'thread_follower', "breakpoints_view", "details_view", "global_toolbar"], function (ui, code_view, $, export_console, layout, layout_examples, jqueryui, ctxmenu, notify_js_console, debuggee_tracker, event_handler, debuggee_tracker_view, _, shortcuts, thread_follower, breakpoints_view, details_view, glob) {
+requirejs(['ui', 'code_view', 'jquery', 'export_console', 'layout', 'layout_examples', 'jqueryui', 'ctxmenu', 'notify_js_console', 'debuggee_tracker/tracker', 'event_handler', 'debuggee_tracker_view', 'underscore', 'shortcuts', 'thread_follower', "breakpoints_view", "details_view", "global_toolbar", "log_view"], function (ui, code_view, $, export_console, layout, layout_examples, jqueryui, ctxmenu, notify_js_console, debuggee_tracker, event_handler, debuggee_tracker_view, _, shortcuts, thread_follower, breakpoints_view, details_view, glob, log_view_module) {
    var EH = event_handler.get_global_event_handler();
    EH.publish("ui.loading", {'what': "Creating the Views..."});
-
+   
    var js_console_server = export_console.init({
        event_handler: event_handler,
        debuggee_tracker: debuggee_tracker,
        shortcuts: shortcuts,
        u: _
    });
-   var fs = require('fs');
 
    // Load the context menu handler.
    ctxmenu.init({
@@ -120,6 +132,9 @@ requirejs(['ui', 'code_view', 'jquery', 'export_console', 'layout', 'layout_exam
    dbg_tracker_view.parent().split(det_view, "bottom");
 
    old_code_editor.swap(aThreadFollower);
+
+   var log = new log_view_module.LogView(det_view);
+   l.stdoutlog.swap(log);
 
    root.render();
 

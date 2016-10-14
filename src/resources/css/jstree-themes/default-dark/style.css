@@ -292,7 +292,7 @@
   box-shadow: inset 0 0 1px #555555;
 }
 .jstree-default-dark .jstree-clicked {
-  background: #5fa2db;
+  background: #4c82b0;
   border-radius: 2px;
   box-shadow: inset 0 0 1px #666666;
 }
@@ -360,9 +360,9 @@
   background: #555555;
 }
 .jstree-default-dark .jstree-wholerow-clicked {
-  background: #5fa2db;
-  background: -webkit-linear-gradient(top, #5fa2db 0%, #5fa2db 100%);
-  background: linear-gradient(to bottom, #5fa2db 0%, #5fa2db 100%);
+  background: #4c82b0;
+  background: -webkit-linear-gradient(top, #4c82b0 0%, #4c82b0 100%);
+  background: linear-gradient(to bottom, #4c82b0 0%, #4c82b0 100%);
 }
 .jstree-default-dark .jstree-node {
   min-height: 24px;
@@ -978,7 +978,7 @@
     background: #555555;
   }
   .jstree-default-dark-responsive .jstree-wholerow-clicked {
-    background: #5fa2db;
+    background: #4c82b0;
   }
   .jstree-default-dark-responsive .jstree-children .jstree-last > .jstree-wholerow {
     box-shadow: inset 0 -6px 3px -5px #111111;
@@ -1031,7 +1031,7 @@
 }
 
 .jstree-default-dark .jstree-anchor {
-  color: #999;
+  /*color: #999;*/                                      /* disabled, use the default */
   text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.5);
 }
 .jstree-default-dark .jstree-clicked,

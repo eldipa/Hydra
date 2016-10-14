@@ -2,15 +2,21 @@ define(["underscore", "shortcuts", 'event_handler', 'ko', 'snippet'], function (
     'use strict';
     
     var Breakpoint = function (id, tracker, obj) {
-        this._properties = ["debugger_id", "is_pending", "apply_to_all_threads", "is_enabled", "is_temporal", "thread_ids", "thread_group_ids", "source_fullname", "source_line_number", "instruction_address", "code_resolved", "is_code_resolved", "original_location"];
+        this._properties = ["debugger_id", "is_pending", "apply_to_all_threads", "is_enabled", "is_temporal", "thread_ids", "thread_group_ids", "source_fullname", "source_line_number", "instruction_address", "code_resolved", "is_code_resolved", "original_location", "was_deleted"];
         
         this.id = id;
         this.tracker = tracker;
         this.EH = event_handler.get_global_event_handler();
+
+        this.was_deleted = false;
         
         this.update(obj);
 
         ko.track(this);
+    };
+
+    Breakpoint.prototype.get_uid = function () {
+        return "/dbg/" + this.debugger_id + "/bkp/" + this.id;
     };
 
     Breakpoint.prototype.update = function (attributes) {
@@ -108,7 +114,7 @@ define(["underscore", "shortcuts", 'event_handler', 'ko', 'snippet'], function (
             
             this.code_resolved = code.trim();
             this.is_code_resolved = true;
-            this.tracker.breakpoint_changed();
+            this.tracker.breakpoint_changed(this);
             return;
         }
         else {
@@ -122,7 +128,7 @@ define(["underscore", "shortcuts", 'event_handler', 'ko', 'snippet'], function (
                     var code = instruction_object.inst;
                     self.code_resolved = code.trim();
                     self.is_code_resolved = true;
-                    self.tracker.breakpoint_changed();
+                    self.tracker.breakpoint_changed(self);
                 },
                 this.debugger_id, 
                 "-data-disassemble",
@@ -184,7 +190,7 @@ define(["underscore", "shortcuts", 'event_handler', 'ko', 'snippet'], function (
 
         shortcuts.gdb_request(function () {
                 _.each(bkpts_selected, function (bkpt) { bkpt.is_enabled = is_enabled; });
-                self.tracker.breakpoint_changed(); 
+                self.tracker.breakpoint_changed(self); 
             },
             this.debugger_id, 
             break_cmd,

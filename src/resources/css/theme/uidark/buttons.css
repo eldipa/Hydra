@@ -1,0 +1,66 @@
+/* http://devgrow.com/dark-button-navigation-using-css3/ */
+
+/* Dark Button CSS */
+button.ui-button.ui-widget.ui-state-default {
+    color: #B7C2CB;
+    font-weight: bold;
+    text-shadow: 1px 1px #1f272b;
+    border: 1px solid #1c252b;
+    /*border-radius: 3px;
+    -moz-border-radius: 3px;
+    -webkit-border-radius: 3px;*/
+    background: #232B30; /* old browsers */
+    background: -moz-linear-gradient(top, #3D4850 3%, #313d45 4%, #232B30 100%); /* firefox */
+    background: -webkit-gradient(linear, left top, left bottom, color-stop(3%,#3D4850), color-stop(4%,#313d45), color-stop(100%,#232B30)); /* webkit */
+    box-shadow: 1px 1px 1px rgba(0,0,0,0.2); /* CSS3 */
+    -moz-box-shadow: 1px 1px 1px rgba(0,0,0,0.2); /* Firefox */
+    -webkit-box-shadow: 1px 1px 1px rgba(0,0,0,0.2); /* Safari, Chrome */
+}
+
+button.ui-button.ui-widget.ui-state-hover {
+    color: #fff;
+    background: #4C5A64; 
+    background: -webkit-gradient(linear, left top, left bottom, color-stop(3%,#4C5A64), color-stop(4%,#404F5A), color-stop(100%,#2E3940)); 
+}
+button.ui-button.ui-widget.ui-state-active {
+    color: #fff;
+    background: #20282D; 
+    background: -webkit-gradient(linear, left top, left bottom, color-stop(3%,#20282D), color-stop(51%,#252E34), color-stop(100%,#222A30)); 
+    -moz-box-shadow: 1px 1px 1px rgba(255,255,255,0.1); 
+    -webkit-box-shadow: 1px 1px 1px rgba(255,255,255,0.1);
+    box-shadow: 1px 1px 1px rgba(255,255,255,0.1); 
+}
+
+/* Search CSS: */
+.search-input {
+    padding: 0 5px 0 22px;
+    border: 1px solid #1c252b;
+    height: 30px;
+    color: #9fa8b0;
+    font-size: 12px;
+    line-height: 30px;
+    font-weight: bold;
+    text-shadow: 1px 1px #1f272b;
+    border-radius: 25px;
+    -moz-border-radius: 25px;
+    -webkit-border-radius: 25px;
+    background: #20282D; /* old browsers */
+    background: -moz-linear-gradient(top, #20282D 3%, #252E34 51%, #222A30 100%); /* firefox */
+    background: -webkit-gradient(linear, left top, left bottom, color-stop(3%,#20282D), color-stop(51%,#252E34), color-stop(100%,#222A30)); /* webkit */
+    filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#20282D', endColorstr='#222A30',GradientType=0 ); /* ie */
+    -moz-box-shadow: 1px 1px 1px rgba(255,255,255,0.1); /* Firefox */
+    -webkit-box-shadow: 1px 1px 1px rgba(255,255,255,0.1); /* Safari, Chrome */
+    box-shadow: 1px 1px 1px rgba(255,255,255,0.1); /* CSS3 */
+}
+.search-input:focus {outline: none;}
+.search-submit {
+    width: 13px;
+    height: 13px;
+    border: none;
+    background: url(mag-glass.png) no-repeat;
+    display: block;
+    position: absolute;
+    left: 26px;
+    top: 10px;
+    text-indent: -9999em;
+}

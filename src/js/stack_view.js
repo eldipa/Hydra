@@ -11,7 +11,7 @@ define(["underscore", "jquery", "layout", "shortcuts", "jstree", "jstree_builder
        this.follower = null;
        this.frames = [];
        
-       _.bindAll(this, "_frames_updated", "_variables_of_frame_updated");
+       _.bindAll(this, "on_frames_updated_request_variables_update", "_variables_of_frame_updated");
    };
    
    StackView.prototype.__proto__ = layout.Panel.prototype;
@@ -30,39 +30,16 @@ define(["underscore", "jquery", "layout", "shortcuts", "jstree", "jstree_builder
    
    StackView.prototype.request_frames_update = function () {
        if (this.thread) {
-           this.thread.execute(
-                   "-stack-list-frames", 
-                   ["SELF", "--no-frame-filters"], 
-                   this._frames_updated, 
-                   0);
+           this.thread.request_an_update_thread_stack(this.on_frames_updated_request_variables_update);
        }
    };
 
-   StackView.prototype._frames_updated = function (data) {
-        var raw_frames = _.pluck(data.results.stack, 'frame');
-        var that = this;
-        var frames = _.map(raw_frames, function (frame) {
-            var processed_frame = {};
-
-            processed_frame.thread = that.thread;
-
-            processed_frame.function_name = frame.func;
-            processed_frame.instruction_address = frame.addr;
-            processed_frame.level = parseInt(frame.level);
-
-            if (frame.fullname) {
-                processed_frame.source_fullname = frame.fullname;
-                processed_frame.source_line_number = parseInt(frame.line);
-            }
-
-            return new Frame(processed_frame);
-        });
-
-        this.frames = _.sortBy(frames, 'level');
-
+   StackView.prototype.on_frames_updated_request_variables_update = function () {
+        this.frames = this.thread.get_stack_frames();
+        
         _.each(this.frames, function (frame) {
-            that.request_variables_of_frame_update(frame);
-        });
+            this.request_variables_of_frame_update(frame);
+        }, this);
    };
 
    StackView.prototype.request_variables_of_frame_update = function (frame) {

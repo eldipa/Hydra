@@ -1,4 +1,4 @@
-define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'thread_button_bar_controller', 'stack_view'], function (ace, $, layout, shortcuts, _, code_editor, thread_button_bar_controller, stack_view) {
+define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'thread_button_bar_controller', 'stack_view', 'breakpoint_highlights', 'current_line_highlights'], function (ace, $, layout, shortcuts, _, code_editor, thread_button_bar_controller, stack_view, breakpoint_highlights_module, current_line_highlights_module) {
     var ThreadFollower = function (debuggee_tracker) {
         this.super("Thread Follower");
 
@@ -20,7 +20,10 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
         this.view.set_percentage(70);
 
         this.current_loaded_file = "";
-        this.current_line_highlight = null;
+        //this.current_line_highlight = null;
+
+        this.breakpoint_highlights = new breakpoint_highlights_module.BreakpointHighlights(this.code_editor, this);
+        this.current_line_highlights = new current_line_highlights_module.CurrentLineHighlights(this.code_editor, this);
     };
 
     ThreadFollower.prototype.__proto__ = layout.Panel.prototype;
@@ -42,7 +45,10 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
         this.thread_followed = thread_to_follow;
         this.stack_view.follow(thread_to_follow, this);
 
-        this.see_your_thread_and_update_yourself();
+        this.see_your_thread_and_update_yourself(true);
+
+        this.breakpoint_highlights.clean_and_search_breakpoints_to_highlight();
+        this.current_line_highlights.clean_and_search_threads_to_highlight();
     }; 
 
     // TODO: the ThreadFollower should update himself not only if its thread changed but also if
@@ -51,7 +57,17 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
         if (! this.thread_followed ) {
             return;
         }
+        
+        // If any breakpoint changed, update that breakpoint
+        if (_.contains(["breakpoint_update", "breakpoint_deleted", "breakpoint_changed"], topic)) {
+            var breakpoint = data.breakpoint;
+            this.breakpoint_highlights.update_highlight_of_breakpoint(breakpoint);
 
+            return;
+        }
+
+        // Get all the threads involved in this event  and determine if our thread followed
+        // is one of them
         var threads;
         var is_my_thread_updated = false;
         if (data.threads) {
@@ -68,10 +84,34 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
             threads = [];
             is_my_thread_updated = false;
         }
+        
+        
+        // Request an update of the thread's variables if was my thread followed who was updated
+        if (_.contains(["thread-stack-updated"], topic)) {
+            var thread = data.thread;
+            if (is_my_thread_updated) {
+                this.stack_view.on_frames_updated_request_variables_update();
+            }
 
-        if (is_my_thread_updated) { 
-            this.stack_view.request_frames_update(); // Request an update of the thread's stack
-            this.see_your_thread_and_update_yourself();
+            //return;
+        }
+
+        // a thread changed, we need to update us:
+        if (_.contains(["thread-stack-updated", 'thread_created', 'thread_running', 'thread_stopped', 'thread_exited', 'thread_update'], topic)) {
+            // Update our thread that we are following
+            if (is_my_thread_updated) { 
+                this.see_your_thread_and_update_yourself();
+            }
+            
+            // Update the rest of the threads, always
+            _.each(threads, function (thread) {
+                if (thread !== this.thread_followed) {
+                    this.current_line_highlights.update_highlight_of_thread(thread);
+                }
+            }, this);
+        }
+        else {
+            console.log("w? " + topic);
         }
     };
 
@@ -79,20 +119,25 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
         return this.current_loaded_file === filename;
     };
 
-    ThreadFollower.prototype.see_your_thread_and_update_yourself = function () {
+    ThreadFollower.prototype.see_your_thread_and_update_yourself = function (am_i_following_other_thread) {
         var source_fullname = this.thread_followed.source_fullname;
         var line_number_str = this.thread_followed.source_line;
         var instruction_address = this.thread_followed.instruction_address;
 
-        this.update_button_bar_and_code_editor_to_show(source_fullname, line_number_str, instruction_address);
+        this.update_button_bar_and_code_editor_to_show(source_fullname, line_number_str, instruction_address, am_i_following_other_thread);
     };
 
-    ThreadFollower.prototype.update_button_bar_and_code_editor_to_show = function (source_fullname, line_number_str, instruction_address) {
+    ThreadFollower.prototype.update_button_bar_and_code_editor_to_show = function (source_fullname, line_number_str, instruction_address, am_i_following_other_thread) {
         if (source_fullname && line_number_str) {
             this.button_bar.leave_assembly_mode();
 
             if (! this.is_this_file_already_loaded(source_fullname)) {
                 this.update_yourself_from_source_code(source_fullname);
+
+                if (! am_i_following_other_thread ) {
+                    this.breakpoint_highlights.clean_and_search_breakpoints_to_highlight();
+                    this.current_line_highlights.clean_and_search_threads_to_highlight();
+                }
             }
 
             this.update_current_line(line_number_str);
@@ -108,19 +153,22 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
     ThreadFollower.prototype.update_current_line = function (line_number) {
         line_number = Number(line_number);
         this.code_editor.go_to_line(line_number);
+        this.current_line_highlights.update_highlight_of_thread(this.thread_followed);
 
+        /*
         if (this.current_line_highlight) {
             this.code_editor.remove_highlight(this.current_line_highlight);
         }
 
-        this.current_line_highlight = this.code_editor.highlight_thread_current_line(line_number);
+        this.current_line_highlight = this.code_editor.highlight_thread_current_line(line_number, {text: "@th " + this.thread_followed.id});
+        */
     };
 
     ThreadFollower.prototype.update_yourself_from_source_code = function (source_fullname) {
         //TODO do we need to disable the code view (ace) before doing this stuff and reenable it later?
-        
+     
+        // Load the new source code
         this.code_editor.load_cpp_code(source_fullname);
-        
         this.current_loaded_file = source_fullname;
     };
 
@@ -137,7 +185,8 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
 
         this.current_loaded_file = null;
     };
-    
+
+
 
     return {ThreadFollower: ThreadFollower};
 });

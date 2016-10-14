@@ -4,16 +4,21 @@ define(["underscore", "shortcuts", 'event_handler', 'debuggee_tracker/frame'], f
     var Frame = frame_module.Frame;
 
     var Thread = function (id, tracker, obj) {
-        this._properties = ["debugger_id", "thread_group_id", "state", "source_fullname", "source_line",  "instruction_address", "frame_level"];
+        this._properties = ["debugger_id", "thread_group_id", "state", "source_fullname", "source_line",  "instruction_address", "frame_level", "is_alive"];
 
         this.update(obj);
         this.id = id;
         this.tracker = tracker;
         this.EH = event_handler.get_global_event_handler();
 
+        this.frames = [];
     };
 
     Thread.prototype.update = shortcuts._update_properties;
+    
+    Thread.prototype.get_uid = function () {
+        return "/dbg/" + this.debugger_id + "/thg/" + this.thread_group_id + "/th/" + this.id;
+    };
 
     Thread.prototype.get_display_name = function () {
         return "Thread "+this.id+" ("+this.state+")";
@@ -61,12 +66,19 @@ define(["underscore", "shortcuts", 'event_handler', 'debuggee_tracker/frame'], f
                 );
     };
 
-    Thread.prototype.get_stack_frames = function (on_success) {
+    Thread.prototype.get_stack_frames = function () {
+        return this.frames;
+    };
+   
+    Thread.prototype.request_an_update_thread_stack = function (on_success) {
+        var thread = this;
+        
         var create_frames_and_run_callback_on_success = function create_frames_and_run_callback_on_success(data) {
-            var frames = _.pluck(data.results.stack, 'frame');
-
-            var processed_frames = _.map(frames, function (frame) {
+            var raw_frames = _.pluck(data.results.stack, 'frame');
+            var frames = _.map(raw_frames, function (frame) {
                 var processed_frame = {};
+
+                processed_frame.thread = thread;
 
                 processed_frame.function_name = frame.func;
                 processed_frame.instruction_address = frame.addr;
@@ -80,12 +92,14 @@ define(["underscore", "shortcuts", 'event_handler', 'debuggee_tracker/frame'], f
                 return new Frame(processed_frame);
             });
 
-            processed_frames = _.sortBy(processed_frames, 'level');
-            on_success(processed_frames);
+            thread.frames = _.sortBy(frames, 'level');
+            if (on_success) {
+                on_success(thread);
+            }
         };
 
-        this.execute("-stack-list-frames", ["SELF", "--no-frame-filters"], create_frames_and_run_callback_on_success, 0);
-    };
+        thread.execute("-stack-list-frames", ["SELF", "--no-frame-filters"], create_frames_and_run_callback_on_success, 0);
+   };
 
     return {Thread: Thread};
 });
