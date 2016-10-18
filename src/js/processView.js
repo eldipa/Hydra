@@ -17,22 +17,17 @@ define([ 'jquery', 'layout', 'shortcuts', 'event_handler', 'd3' ], function($, l
         	
         this.configGraph();
         
-        console.log(this.EH)
-        
         this.EH.subscribe('processInfo', function(data) {
         	my_self.loadProcessData(data);
         });
         
-//        setInterval(function() {
-//        	my_self.loadProcessData();
-//		}, 5000);
         
     };
     
     ProcessView.prototype.loadProcessData = function(info) {
     	var my_self = this;
     	
-    	console.log(info);
+//    	console.log(info);
         
         function findIndexByKeyValue(arraytosearch, key, valuetosearch) {
         	for (var i = 0; i < arraytosearch.length; i++) {
@@ -45,7 +40,7 @@ define([ 'jquery', 'layout', 'shortcuts', 'event_handler', 'd3' ], function($, l
         
 
     	var dict ={"nodes": [], "links": []};
-    	dict.nodes = info
+    	dict.nodes = info.info
     	
     	i = 0;
     	for(process in dict.nodes){

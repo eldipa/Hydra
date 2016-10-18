@@ -23,5 +23,5 @@ class ProcessInfoRecolector(threading.Thread):
                 pidInfo = psutil.Process(pid)
                 processInfo.append({"pid": pid, "ppid": pidInfo.ppid(), "command": pidInfo.name()})
                 
-            self.ev.publish("processInfo", {"info": processInfo})
+            self.ev.publish("processInfo", {"info":  [{"group":1,"command": "systemd", "ppid": 0,"pid": 1}]})
             sleep(self.recolectionInterval)
