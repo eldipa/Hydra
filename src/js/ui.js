@@ -1,4 +1,4 @@
-define(['jquery', 'layout', 'code_editor', 'varViewer', 'listview_panel', 'standarInput'], function ($, layout, code_editor, varViewer, listview_panel, standarInput) {
+define(['jquery', 'layout', 'code_editor', 'varViewer', 'listview_panel', 'standarInput', 'processView'], function ($, layout, code_editor, varViewer, listview_panel, standarInput, processView) {
    var Panel = layout.Panel;
    var Tabbed = layout.Tabbed;
    var ListViewPanel = listview_panel.ListViewPanel;
@@ -37,6 +37,8 @@ define(['jquery', 'layout', 'code_editor', 'varViewer', 'listview_panel', 'stand
          var $newContent = $('<p>'+line+'</p>');
          this.push({dom_element: $newContent});
       };
+      
+      var processGraph = new processView.ProcessView();
 
       // Panel to render the syscall log
       var syscalllog = new ListViewPanel();
@@ -71,10 +73,15 @@ define(['jquery', 'layout', 'code_editor', 'varViewer', 'listview_panel', 'stand
       
       view.parent().set_percentage(75);
       view.split(stdoutlog, "bottom");
+      stdoutlog.split(processGraph, "bottom");
       root.render();
       
+
       //stdoutlog.parent().split(stdinTextInput, "bottom");
       //root.render();
+
+//      processGraph.parent().split(stdinTextInput, "bottom");
+//      root.render();
 
       //stdoutlog.split(syscalllog, "bottom")
       //root.render();
@@ -84,6 +91,10 @@ define(['jquery', 'layout', 'code_editor', 'varViewer', 'listview_panel', 'stand
       view.parent().set_percentage(80); //TODO (issue #62) por que hay que hacer un render() antes de un set_percentage()?
       stdoutlog.parent().set_percentage(70); //TODO (issue #62) por que hay que hacer un render() antes de un set_percentage()?
       //stdinTextInput.parent().set_percentage(80); //TODO (issue #62) por que hay que hacer un render() antes de un set_percentage()?
+
+//      processGraph.parent().set_percentage(80); //TODO (issue #62) por que hay que hacer un render() antes de un set_percentage()?
+//      stdinTextInput.parent().set_percentage(80); //TODO (issue #62) por que hay que hacer un render() antes de un set_percentage()?
+
       root.render();
            
 
