@@ -21,7 +21,8 @@ requirejs.config({
       debuggee_tracker_view: 'debuggee_tracker_view',
       jquery_event_drag: 'external/jquery.event.drag-2.2',
       slickgrid_core: 'external/slick.core',
-      slickgrid: 'external/slick.grid'
+      slickgrid: 'external/slick.grid',
+      processView: 'processView'
    },
 
    shim: {

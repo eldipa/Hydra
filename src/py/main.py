@@ -13,6 +13,8 @@ import syslog
 import threading
 import signal
 import traceback
+import processInfoRecolector
+
 
 if (not match(".*/src$", os.getcwd())):
     print "ESTE MAIN SE DEBE LLAMAR DESDE LA CARPETA SRC"
@@ -75,6 +77,8 @@ try:
         ui_process = subprocess.Popen([node_webkit_executable_path, "."], shell=False, env=env)
 
         spawner = gdb.gdbSpawner.GdbSpawner()
+        processInfoRecolector = processInfoRecolector.ProcessInfoRecolector()
+        processInfoRecolector.start()
 
     while not is_ui_closed.wait(15):
         pass
@@ -86,6 +90,9 @@ except Exception as inst:
 finally:
     if spawner:
         spawner.shutdown()
+    
+    processInfoRecolector.finalizar()
+    processInfoRecolector.join()
     
     os.system("python py/publish_subscribe/notifier.py stop")
  
