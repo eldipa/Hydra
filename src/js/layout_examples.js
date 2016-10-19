@@ -70,6 +70,25 @@ define(['jquery', 'layout', 'underscore', 'widgets/switch_theme', 'code_view', '
       root.render();
       return root;
    }; 
+   
+   /* 
+    * How to create a Panel, attach it to the DOM and render the screen where the DOM element
+    * is floating over the rest of the page.
+    * We use two roots
+    */
+   var one_panel_overlay_example = function () {
+      var square = Rectangle('green', 'green-square', 120);
+      var root = square.attach($('body'));
+
+      var $floating_el = $('<div style="position: absolute; top: 10px; left: 30px;"></div>');
+      $('body').append($floating_el);
+
+      var floaing_square = Rectangle('blue', 'blue-square', 60);
+      var floating_root = root.add_child(floaing_square, 'overlay');
+
+      root.render();
+      return root;
+   }; 
 
    /*
     * How to create two Panels and split the space of one to put the other using
@@ -80,6 +99,21 @@ define(['jquery', 'layout', 'underscore', 'widgets/switch_theme', 'code_view', '
       var on_right = Text('green', 'green-right-text', 100);
 
       var root = on_left.attach($('body'));
+      on_left.split(on_right, 'right');
+
+      root.render();
+      return root;
+   };
+   
+   var two_text_panels_splitted_overlay_example = function () {
+      var square = Rectangle('green', 'green-square', 120);
+      var root = square.attach($('body'));
+      root.render();
+
+      var on_left = Text('green', 'green-left-text', 0);
+      var on_right = Text('green', 'green-right-text', 100);
+
+      var floating_root = root.add_child(on_left, 'overlay');
       on_left.split(on_right, 'right');
 
       root.render();
@@ -119,7 +153,7 @@ define(['jquery', 'layout', 'underscore', 'widgets/switch_theme', 'code_view', '
       root.render();
       return root;
    };
-
+   
    /*
     * How to split a parent. Also, how to set the percentage of the available size
     * of a panel splitted.
@@ -141,6 +175,26 @@ define(['jquery', 'layout', 'underscore', 'widgets/switch_theme', 'code_view', '
       var root = on_center.attach($('body'));     // 1)
       on_center.split(on_top, "top");             // 2)
       on_center.parent().split(on_left, "left");  // 3)
+
+      root.render();
+      on_center.parent().parent().set_percentage(15); // 15 for on_left, 85 for on_center
+      on_center.parent().set_percentage(7); // 7 for on_top, 93 for [on_center & on_left]
+
+      root.render();
+      return root;
+   };
+
+   var top_left_center_panels_overlay_example = function () {
+      var square = Rectangle('green', 'green-square', 60);
+      var root = square.attach($('body'));
+
+      var on_top = Text('red', 'top-text', 150);
+      var on_left = Text('green', 'left-text', 100);
+      var on_center = Text('blue', 'center-text', 0);
+
+      root.add_child(on_center, 'overlay');
+      on_center.split(on_top, "top");  
+      on_center.parent().split(on_left, "left"); 
 
       root.render();
       on_center.parent().parent().set_percentage(15); // 15 for on_left, 85 for on_center
@@ -336,6 +390,25 @@ define(['jquery', 'layout', 'underscore', 'widgets/switch_theme', 'code_view', '
       }, 2000);
       return root;
    };
+   
+   var tab_overlay_example = function () {
+      var tabbed = new layout.Tabbed();
+      var root = tabbed.attach($('body'));
+      
+      tabbed.add_child(Text('red',  'Text Red', 0), "intab");
+      tabbed.add_child(Text('green', 'Text Green', 100), "intab");
+      tabbed.add_child(Text('blue', 'Text Blue', 150), "intab");
+
+      var overlay_tabbed = new layout.Tabbed();
+      overlay_tabbed.add_child(Text('red',  'Text Red', 0), "intab");
+      overlay_tabbed.add_child(Text('green', 'Text Green', 100), "intab");
+      overlay_tabbed.add_child(Text('blue', 'Text Blue', 150), "intab");
+      
+      root.add_child(overlay_tabbed, 'overlay');
+
+      root.render();
+      return root;
+   };
       
    /*
     * How to display a tab
@@ -384,6 +457,28 @@ define(['jquery', 'layout', 'underscore', 'widgets/switch_theme', 'code_view', '
       root.render();
       return root;
    };
+   
+   var two_tabbed_splitted_overlay_example = function () {
+      var square = Rectangle('green', 'green-square', 300);
+      var root = square.attach($('body'));
+
+      var tabbed_left = new layout.Tabbed();
+      var tabbed_right = new layout.Tabbed();
+      
+      tabbed_left.split(tabbed_right, 'right');
+      
+      tabbed_left.add_child(Text('red',  'Text Red', 0), "intab");
+      tabbed_left.add_child(Text('green', 'Text Green', 100), "intab");
+      tabbed_right.add_child(Text('blue', 'Text Blue', 150), "intab");
+      tabbed_right.add_child(Rectangle('magenta', 'Square Magenta', 150), "intab");
+      tabbed_right.add_child(Rectangle('white', 'Rectangle White', 150, 50), "intab");
+      tabbed_right.add_child(Rectangle('cyan', 'Rectangle Cyan', 50, 150), "intab");
+
+      root.add_child(tabbed_left.parent(), 'overlay');
+      root.render();
+
+      return root;
+   };
 
    /*
     * How to stack: because the Texts will occupy all the free space available,
@@ -404,6 +499,24 @@ define(['jquery', 'layout', 'underscore', 'widgets/switch_theme', 'code_view', '
       return root;
    };
    
+   var stack_horizontally_overlay_example = function () {
+      var square = Rectangle('green', 'green-square', 300);
+      var root = square.attach($('body'));
+
+      var stack = new layout.Stacked('horizontally');
+      
+      stack.add_child(Text('red',  'Text Red', 0), 
+         {position: "right", grow: 0, shrink: 1});
+      stack.add_child(Text('green', 'Text Green', 100), 
+         {position: "right", grow: 0, shrink: 1});
+      stack.add_child(Text('blue', 'Text Blue', 150), 
+         {position: "right", grow: 0, shrink: 1});
+
+      root.add_child(stack, 'overlay');
+      root.render();
+
+      return root;
+   };
    /*
     * How to stack: because the Rectangles have fixed space, there will be free space.
     */
@@ -1590,18 +1703,24 @@ define(['jquery', 'layout', 'underscore', 'widgets/switch_theme', 'code_view', '
    
    var _examples = {
       one_panel_example: one_panel_example,
+      one_panel_overlay_example: one_panel_overlay_example,
       two_text_panels_splitted_example: two_text_panels_splitted_example,
+      two_text_panels_splitted_overlay_example: two_text_panels_splitted_overlay_example,
       three_text_panels_splitted_nested_horizontally_example: three_text_panels_splitted_nested_horizontally_example,
       four_text_panels_splitted_nested_vertically_example: four_text_panels_splitted_nested_vertically_example,
       top_left_center_panels_example: top_left_center_panels_example,
+      top_left_center_panels_overlay_example: top_left_center_panels_overlay_example,
       two_panels_swapping_example: two_panels_swapping_example,
       top_left_center_panels_swapping_example: top_left_center_panels_swapping_example,
       adding_removing_two_panels_example: adding_removing_two_panels_example,
       splitting_and_removing_example: splitting_and_removing_example,
       adding_removing_tabs_example: adding_removing_tabs_example,
+      tab_overlay_example: tab_overlay_example,
       display_tabs_example: display_tabs_example,
       two_tabbed_splitted_example: two_tabbed_splitted_example,
+      two_tabbed_splitted_overlay_example: two_tabbed_splitted_overlay_example,
       stack_horizontally_with_no_free_space_example: stack_horizontally_with_no_free_space_example,
+      stack_horizontally_overlay_example: stack_horizontally_overlay_example,
       stack_horizontally_with_free_space_example: stack_horizontally_with_free_space_example,
       stack_horizontally_growing_expanding_one_to_occupy_free_space_example: stack_horizontally_growing_expanding_one_to_occupy_free_space_example,
       stack_horizontally_growing_expanding_two_to_occupy_free_space_example: stack_horizontally_growing_expanding_two_to_occupy_free_space_example,

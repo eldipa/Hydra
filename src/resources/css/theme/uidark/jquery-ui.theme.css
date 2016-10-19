@@ -401,9 +401,10 @@
 
 /* Overlays */
 .ui-widget-overlay {
-	background: #5c5c5c url("images/ui-bg_flat_50_5c5c5c_40x100.png") 50% 50% repeat-x;
-	opacity: .8;
-	filter: Alpha(Opacity=80); /* support: IE8 */
+	/*background: #5c5c5c url("images/ui-bg_flat_50_5c5c5c_40x100.png") 50% 50% repeat-x;*/
+        box-shadow: 3px 3px 10px rgba(0, 236, 255, 0.2);
+	opacity: .90;
+	filter: Alpha(Opacity=90); /* support: IE8 */
 }
 .ui-widget-shadow {
 	margin: -7px 0 0 -7px;

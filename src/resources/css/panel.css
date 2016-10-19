@@ -6,4 +6,15 @@
   fill: #000000;
 }
 
+/*  ui-widget-overlay  */
+.overlay_panel {
+  height: 96%;
+  width: 96%;
+  top: 2%;
+  left: 2%;
 
+}
+
+.overlay_panel_holding_container {
+  background: rgba(0, 236, 255, 0.2);
+}
