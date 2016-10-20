@@ -20,8 +20,15 @@ class ProcessInfoRecolector(threading.Thread):
             processInfo = []
             pidList = psutil.pids()
             for pid in pidList:
-                pidInfo = psutil.Process(pid)
-                processInfo.append({"pid": pid, "ppid": pidInfo.ppid(), "command": pidInfo.name()})
+                try:
+                    pidInfo = psutil.Process(pid)
+                    processInfo.append({"pid": pid, "ppid": pidInfo.ppid(), "command": pidInfo.name()})
+                except NoSuchProcess:
+                    pass # el proceso finalizo en el tiempo que se iteraba en la lista pidList, ignorar
+                except Exception as inst:
+                    self.ev.publish("processInfo.error", {"type":  type(inst), "traceback": traceback.format_exc()})
+                    
                 
-            self.ev.publish("processInfo", {"info":  [{"group":1,"command": "systemd", "ppid": 0,"pid": 1}]})
+#             self.ev.publish("processInfo", {"info":  [{"group":1,"command": "systemd", "ppid": 0,"pid": 1}]})
+            self.ev.publish("processInfo.info", {"info":  processInfo})
             sleep(self.recolectionInterval)

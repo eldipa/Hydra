@@ -17,7 +17,7 @@ define([ 'jquery', 'layout', 'shortcuts', 'event_handler', 'd3' ], function($, l
         	
         this.configGraph();
         
-        this.EH.subscribe('processInfo', function(data) {
+        this.EH.subscribe('processInfo.info', function(data) {
         	my_self.loadProcessData(data);
         });
         
