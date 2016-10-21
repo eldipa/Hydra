@@ -1,4 +1,6 @@
-define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore'], function (ace, $, layout, shortcuts, _) {
+define(["event_handler",'ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'observation'], function (event_handler, ace, $, layout, shortcuts, _, Obs) {
+    var Observation = Obs.Observation;
+
     var get_text_of_gutter_line_number_from_number = function(session, ace_row_number) {
         return "" + (ace_row_number+1);
     };
@@ -9,11 +11,19 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore'], function (ace, $,
 
     var CodeEditor = function () {
         this.super("Code Editor");
+        var self = this;
+      
+        this.EH = event_handler.get_global_event_handler();
 
         this._$container = $('<div style="width: 100%; height: 100%; font-family: monaco;"></div>');
+        this._$container.data('do_observation', function () { return new Observation({target: self, context: self}); }); 
         this.create_ace_viewer();
 
         this._$out_of_dom = this._$container;
+
+        this.debugger_obj = null;
+
+        this._breakpoints_highlights_by_marker_id = {};
     };
 
     CodeEditor.prototype.__proto__ = layout.Panel.prototype;
@@ -41,7 +51,70 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore'], function (ace, $,
     };
 
     CodeEditor.prototype.attach_menu = function (menu) {
+        console.log(menu);
+        throw new Error("Deprecated 'attach_menu' in CodeEditor. Remove me!!");
         this._$container.data('ctxmenu_controller', menu);
+    };
+
+    CodeEditor.prototype.get_display_controller = function () {
+        var self = this;
+        if (!self.debugger_obj) {
+            return [];
+        }
+
+        var ace_row_number = self.editor.getCursorPosition().row;
+        var line_number_str = self.line_number_or_address_lookup_from_ace_row(null, ace_row_number);
+
+        var breakpoints = [];
+        for (var marker_id in self._breakpoints_highlights_by_marker_id) {
+            marker_id = parseInt(marker_id);
+            if (self._breakpoints_highlights_by_marker_id[marker_id] &&
+                    self._breakpoints_highlights_by_marker_id[marker_id].ace_row_number == ace_row_number) {
+                var breakpoint = self._breakpoints_highlights_by_marker_id[marker_id].breakpoint;
+                breakpoints.push(breakpoint);
+            }
+        }
+
+        var is_at_least_one_breakpoint = breakpoints.length > 0;
+        if (is_at_least_one_breakpoint) {
+            var count_of_breakpoints = breakpoints.length;
+            var remove_txt = 'remove breakpoint';
+            if (count_of_breakpoints > 1) {
+                remove_txt = 'remove breakpoints ('+count_of_breakpoints+' bkps)';
+            }
+            return [
+                      {
+                         header: 'On this line'
+                      },
+                      {
+                         text: remove_txt,
+                         action: function (e) {
+                            e.preventDefault();
+                            for (var i = 0; i < count_of_breakpoints; ++i) {
+                                breakpoints[i].delete_you_and_your_subbreakpoints();
+                            }
+                         }
+                      }
+                  ];
+        }
+        else {
+            return [
+                      {
+                         header: 'On this line'
+                      },
+                      {
+                         text: 'add breakpoint',
+                         action: function (e) {
+                            e.preventDefault();
+                            // TODO restrict this breakpoint to the threa group
+                            // and/or if it is temporal
+                            self.debugger_obj.execute("-break-insert", [line_number_str], function (data) {
+                                self.debugger_obj.tracker._breakpoints_modified(data);
+                            });
+                         }
+                      },
+                  ];
+        }
     };
 
 
@@ -113,6 +186,7 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore'], function (ace, $,
 
     CodeEditor.prototype.remove_highlight = function (highlight) {
         this.edit_session.removeMarker(highlight.marker_id);
+        delete this._breakpoints_highlights_by_marker_id[highlight.marker_id];
     };
 
     CodeEditor.prototype.highlight_thread_current_line = function (line_number_or_address, note) {
@@ -129,11 +203,19 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore'], function (ace, $,
         }, line_number_or_address);
     };
 
-    CodeEditor.prototype.highlight_breakpoint = function (line_number_or_address, note) {
-        return this.highlight_lines({
+    CodeEditor.prototype.highlight_breakpoint = function (line_number_or_address, note, breakpoint) {
+        var ace_row_number = this.ace_row_lookup_from_gutter_line(line_number_or_address);
+        var marker_proxy = this.highlight_lines({
             css_classes: "code-editor-breakpoint",
             note: note
         }, line_number_or_address);
+
+        this._breakpoints_highlights_by_marker_id[marker_proxy.marker_id] = {
+            'ace_row_number': ace_row_number,
+            'breakpoint': breakpoint
+        };
+
+        return marker_proxy;
     };
     
     /* Internal */
@@ -162,6 +244,7 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore'], function (ace, $,
         };
 
         this.ace_row_lookup_from_gutter_line = ace_row_lookup_from_line_number;
+        this.line_number_or_address_lookup_from_ace_row = get_text_of_gutter_line_number_from_number;
     };
 
     CodeEditor.prototype.use_the_common_decimal_gutter = function () {
@@ -196,6 +279,7 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore'], function (ace, $,
         this.editor.renderer.setShowGutter(true);
 
         this.ace_row_lookup_from_gutter_line = inverse_for_ace_row_lookup;
+        this.line_number_or_address_lookup_from_ace_row = get_text_for_gutter;
     }
    
     CodeEditor.prototype.load_code_from_file = function (filename, encoding) {
@@ -206,6 +290,10 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore'], function (ace, $,
 
     CodeEditor.prototype.load_code_from_string = function (string) {
         this.editor.setValue(string);
+    };
+
+    CodeEditor.prototype.set_debugger = function (debugger_obj) {
+        this.debugger_obj = debugger_obj;
     };
 
     return {CodeEditor: CodeEditor};

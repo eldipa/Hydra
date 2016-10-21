@@ -43,6 +43,8 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
 
     ThreadFollower.prototype.follow = function (thread_to_follow) {
         this.thread_followed = thread_to_follow;
+        this.code_editor.set_debugger(thread_to_follow.get_debugger_you_belong());
+
         this.stack_view.follow(thread_to_follow, this);
 
         this.see_your_thread_and_update_yourself(true);

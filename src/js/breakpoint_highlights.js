@@ -130,7 +130,7 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
     };
 
     BreakpointHighlights.prototype.highlight_this_source_code_breakpoint = function (breakpoint) {
-        var breakpoint_highlight = this.code_editor.highlight_breakpoint(Number(breakpoint.source_line_number), {text: "*"});
+        var breakpoint_highlight = this.code_editor.highlight_breakpoint(Number(breakpoint.source_line_number), {text: "*"}, breakpoint);
         this.breakpoint_highlights[breakpoint.get_uid()] = breakpoint_highlight;
     };
 
