@@ -99,7 +99,7 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
         }
 
         // a thread changed, we need to update us:
-        if (_.contains(["thread-stack-updated", 'thread_created', 'thread_running', 'thread_stopped', 'thread_exited', 'thread_update'], topic)) {
+        if (_.contains(["thread-stack-updated", 'thread_created', 'thread_running', 'thread_stopped', 'thread_exited', 'thread_update', 'thread_group_exited'], topic)) {
             // Update our thread that we are following
             if (is_my_thread_updated) { 
                 this.see_your_thread_and_update_yourself();
