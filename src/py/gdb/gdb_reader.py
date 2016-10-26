@@ -39,7 +39,7 @@ class GDBReader(threading.Thread):
                     sys.stderr.write("**ERROR**:" + traceback.format_exc())
         
         if not self.is_gdb_shutting_down and not self.is_gdb_running: # this is abnormal, so I will kill myself
-            self.ev.publish('spawner.kill-debugger', {'pid': self.gdb_pid})
+            self.ev.publish('spawner.kill-debugger', {'debugger-id': self.gdb_pid})
             if self._DEBUG:
                 sys.stderr.write("**GDB is DEAD?!**: i'm (output reader) should be keep running!\n")
 
@@ -47,7 +47,7 @@ class GDBReader(threading.Thread):
             sys.stderr.write("**BYE!**\n")
 
     def _process_gdb_mi_income(self):
-        chunk = os.read(self.gdb_mi_file_descriptor, 512)
+        chunk = os.read(self.gdb_mi_file_descriptor, 2048)
         if not chunk:
             self.is_gdb_running = False
             if self._DEBUG:
@@ -87,7 +87,7 @@ class GDBReader(threading.Thread):
 
 
     def _process_gdb_console_chunk(self):
-        chunk = os.read(self.gdb_console_file_descriptor, 512)
+        chunk = os.read(self.gdb_console_file_descriptor, 2048)
         if chunk:
             topic = "output-from-gdb-console.%i" % (self.gdb_pid, )
             self.ev.publish(topic, chunk)
