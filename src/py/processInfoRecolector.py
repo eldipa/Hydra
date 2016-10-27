@@ -36,8 +36,6 @@ class ProcessInfoRecolector(threading.Thread):
             addedProcess = [x for x in processInfo if x not in lastProcessInfo]
             removedProcess = [x for x in lastProcessInfo if x not in processInfo]
                 
-#             self.ev.publish("processInfo", {"info":  [{"group":1,"command": "systemd", "ppid": 0,"pid": 1}]})
-#             self.ev.publish("processInfo.info", {"info":  processInfo, "add": addedProcess, "remove": removedProcess})
             if len(addedProcess) > 0 or len(removedProcess) > 0:
                 if len(addedProcess) + len(removedProcess) < self.msgTrunk:
                     self.ev.publish("processInfo.info", {"add": addedProcess, "remove": removedProcess})
@@ -55,5 +53,6 @@ class ProcessInfoRecolector(threading.Thread):
                         removedProcess = removedProcess[self.msgTrunk:]
                         self.ev.publish("processInfo.info", {"add": [], "remove": removedProcess})
                         remainingSize = len(removedProcess)
+                        
             sleep(self.recolectionInterval)
             
