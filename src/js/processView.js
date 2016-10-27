@@ -310,15 +310,27 @@ define([ 'jquery', 'layout', 'shortcuts', 'event_handler', 'd3' ], function($, l
     
     ProcessView.prototype.get_display_controller = function (node) {
     	var my_self = this;
+    	
+    	var debug = {
+        	    text: 'Debug this',
+        	    action: function(e){
+        	    	my_self.EH.publish("attachTo", {"process": node.pid})
+        	    }
+        	   };
+    	
+    	var anchor = {
+           	    text: 'Toggle anchor',
+           	    action: function(e){
+           	    	node.fixed = !node.fixed;
+           	    }
+           	   };
+    	
     	return [{
     	    header: node.command + " (" + node.pid + ")"
     	   },
-    	   {
-    	    text: 'Debug this',
-    	    action: function(e){
-    	    	my_self.EH.publish("attachTo", {"process": node.pid})
-    	    }
-    	   }];
+    	   debug,
+    	   anchor
+    	   ];
     	};
     
    
