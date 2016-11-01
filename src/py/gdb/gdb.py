@@ -40,7 +40,8 @@ class Gdb(object):
                         self._execute_a_request,
                         return_subscription_id=True, send_and_wait_echo=True),
                 
-                self.ev.subscribe("type-into-gdb-console.%i" % self.gdb.pid, 
+                self.ev.subscribe("type-into-gdb-console",
+#                    "type-into-gdb-console.%i" % self.gdb.pid, 
                         self._type_into_gdb_console,
                         return_subscription_id=True, send_and_wait_echo=True),
                 ]
@@ -179,7 +180,15 @@ sys.path.append("%(plugin_module_path)s")
         self.gdbInput.flush()
 
     def _type_into_gdb_console(self, data):
-        os.write(self.terminal_master, data) # TODO what happen if not all the data can by written? 
+        written = 0
+        to_write = len(data)
+        while written < to_write:
+            w = os.write(self.terminal_master, data)
+            if w > 0:
+                written += w
+            else:
+                raise Exception("Failed to write into gdb console (os.write syscall returned %i)" % w)
+        
 
     def _execute_a_request(self, request):
         command = request['command']

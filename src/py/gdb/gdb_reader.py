@@ -20,6 +20,19 @@ class GDBReader(threading.Thread):
         self.is_gdb_running = True
         self.is_gdb_shutting_down = False
 
+        self.gdb_console_last_chunks = []
+        self.how_much_gdb_console_buffered = 0
+        self.max_gdb_console_buffer_length = 2048 * 4
+
+        self.ev.subscribe("request-last-output-from-gdb-console",
+                #"request-last-output-from-gdb-console.%i" % self.gdb_pid, 
+                self._send_last_output_of_gdb_console)
+
+    def _send_last_output_of_gdb_console(self, data):
+        self.ev.publish("last-output-from-gdb-console.%i" % self.gdb_pid,
+                "".join(self.gdb_console_last_chunks))
+
+
     def run(self):
         while self.is_gdb_running:
             ready_to_read, _, _ = select.select([self.gdb_mi_file_descriptor,
@@ -91,6 +104,16 @@ class GDBReader(threading.Thread):
         if chunk:
             topic = "output-from-gdb-console.%i" % (self.gdb_pid, )
             self.ev.publish(topic, chunk)
+            
+            self.gdb_console_last_chunks.append(chunk)
+            self.how_much_gdb_console_buffered += len(chunk)
+
+            while self.how_much_gdb_console_buffered > self.max_gdb_console_buffer_length and \
+                    len(self.gdb_console_last_chunks) > 1:
+                oldest_chunk = self.gdb_console_last_chunks[0]
+                self.how_much_gdb_console_buffered -= len(oldest_chunk)
+
+                del self.gdb_console_last_chunks[0]
 
     
     def arun(self):
