@@ -22,7 +22,8 @@ requirejs.config({
       jquery_event_drag: 'external/jquery.event.drag-2.2',
       slickgrid_core: 'external/slick.core',
       slickgrid: 'external/slick.grid',
-      processView: 'processView'
+      processView: 'processView',
+      xterm: 'external/xterm/xterm',
    },
 
    shim: {
@@ -79,7 +80,7 @@ function (err) {
    alert("Error during the import (" + err.requireType + ").\nFailed modules: " + err.requireModules + "\n");
 });
 
-requirejs(['ui', 'code_view', 'jquery', 'export_console', 'layout', 'layout_examples', 'jqueryui', 'ctxmenu', 'notify_js_console', 'debuggee_tracker/tracker', 'event_handler', 'debuggee_tracker_view', 'underscore', 'shortcuts', 'thread_follower', "breakpoints_view", "details_view", "global_toolbar", "log_view"], function (ui, code_view, $, export_console, layout, layout_examples, jqueryui, ctxmenu, notify_js_console, debuggee_tracker, event_handler, debuggee_tracker_view, _, shortcuts, thread_follower, breakpoints_view, details_view, glob, log_view_module) {
+requirejs(['xterm', 'ui', 'code_view', 'jquery', 'export_console', 'layout', 'layout_examples', 'jqueryui', 'ctxmenu', 'notify_js_console', 'debuggee_tracker/tracker', 'event_handler', 'debuggee_tracker_view', 'underscore', 'shortcuts', 'thread_follower', "breakpoints_view", "details_view", "global_toolbar", "log_view"], function (xterm, ui, code_view, $, export_console, layout, layout_examples, jqueryui, ctxmenu, notify_js_console, debuggee_tracker, event_handler, debuggee_tracker_view, _, shortcuts, thread_follower, breakpoints_view, details_view, glob, log_view_module) {
    var EH = event_handler.get_global_event_handler();
    EH.publish("ui.loading", {'what': "Creating the Views..."});
    
@@ -113,6 +114,87 @@ requirejs(['ui', 'code_view', 'jquery', 'export_console', 'layout', 'layout_exam
    root_for_global_bar.render();
 
 
+      var Panel = layout.Panel;
+      var text_rectangle = new Panel("my xterm");
+
+      text_rectangle.$container = $('<div style="width: 100%; height: 100%; font-family: monaco;"></div>');
+      text_rectangle.$out_of_dom = text_rectangle.$container;
+
+      text_rectangle.render = function () {
+         if (this.$out_of_dom) {
+            this.$out_of_dom.appendTo(this.box);
+            this.$out_of_dom = null;
+         }
+
+         var term = this.term;
+         term.fit();
+         setTimeout(function () { term.fit(); }, 100);
+      };
+
+      text_rectangle.unlink = function () {
+         if (!this.$out_of_dom) {
+            this.$out_of_dom = this.$container.detach();
+         }
+      };
+
+      var term = new xterm.Terminal({cursorBlink: true});
+      text_rectangle.term = term;
+      term.open(text_rectangle.$container.get(0));
+    
+    var bidirectional = true;
+    var buffered = true;
+
+    term._flushBuffer = function () {
+      term.write(term._attachSocketBuffer);
+      term._attachSocketBuffer = null;
+      clearTimeout(term._attachSocketBufferTimer);
+      term._attachSocketBufferTimer = null;
+    };
+
+    term._pushToBuffer = function (data) {
+      if (term._attachSocketBuffer) {
+        term._attachSocketBuffer += data;
+      } else {
+        term._attachSocketBuffer = data;
+        setTimeout(term._flushBuffer, 10);
+      }
+    };
+
+    term._sendData = function (data) {
+        console.log(data[0])
+      EH.publish("type-into-gdb-console", data);
+    };
+    window.term = term;
+
+    EH.subscribe("output-from-gdb-console", function (data) {
+      if (buffered) {
+        term._pushToBuffer(data);
+      } else {
+        term.write(data);
+      }
+    });
+    
+    EH.subscribe("last-output-from-gdb-console", function (data) {
+      term.clear();
+      if (buffered) {
+        term._pushToBuffer(data);
+      } else {
+        term.write(data);
+      }
+    });
+
+    if (bidirectional) {
+      term.on('data', term._sendData);
+    }
+
+    setTimeout(function () {
+        EH.publish("request-last-output-from-gdb-console", "");
+    }, 500);
+
+    //socket.addEventListener('close', term.detach.bind(term, socket));
+    //socket.addEventListener('error', term.detach.bind(term, socket));
+
+
    //layout_examples.init_short_examples();
    var l = ui.init(EH);
    var root = l.root;
@@ -136,6 +218,9 @@ requirejs(['ui', 'code_view', 'jquery', 'export_console', 'layout', 'layout_exam
 
    var log = new log_view_module.LogView(det_view);
    l.stdoutlog.swap(log);
+
+   root.render();
+                bkps_view.swap(text_rectangle);
 
    root.render();
 
