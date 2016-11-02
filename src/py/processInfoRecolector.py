@@ -12,31 +12,45 @@ class ProcessInfoRecolector(threading.Thread):
         self.salir = False
         self.recolectionInterval = 2 # segundos
         self.msgTrunk = 50 #cantidad de procesos que se envian cada vez en caso de cortar el mensaje
+        self.processListLock = threading.Lock()
+        self.ev.subscribe('processInfo.restart', self.restart)
         
     def finalizar(self):
         self.salir = True    
         
+    def restart(self, data):
+        self.processListLock.acquire()
+        self.processInfo = []
+        self.processListLock.release()
+        
     def run(self):
-        sleep(5); #Espero a que cargue la parte de js
-        processInfo = []
+        self.processInfo = []
         while not self.salir:
-            lastProcessInfo = processInfo
-            processInfo = []
+            self.processListLock.acquire() #LOCK
+            lastProcessInfo = self.processInfo
+            self.processInfo = []
             pidList = psutil.pids()
             for pid in pidList:
                 try:
                     pidInfo = psutil.Process(pid)
-                    processInfo.append({"pid": pid, "ppid": pidInfo.ppid(), "command": pidInfo.name()})
+                    self.processInfo.append({"pid": pid, "ppid": pidInfo.ppid(), "command": pidInfo.name()})
                 except psutil.NoSuchProcess:
                     pass # el proceso finalizo en el tiempo que se iteraba en la lista pidList, ignorar
                 except Exception as inst:
                     self.ev.publish("processInfo.error", {"type":  type(inst), "traceback": traceback.format_exc()})
                     
                     
-            addedProcess = [x for x in processInfo if x not in lastProcessInfo]
-            removedProcess = [x for x in lastProcessInfo if x not in processInfo]
+            addedProcess = [x for x in self.processInfo if x not in lastProcessInfo]
+            removedProcess = [x for x in lastProcessInfo if x not in self.processInfo]
                 
-            if len(addedProcess) > 0 or len(removedProcess) > 0:
+            self.sendProcessInfo(addedProcess, removedProcess)
+            
+            self.processListLock.release() #LOCK
+                        
+            sleep(self.recolectionInterval)
+            
+    def sendProcessInfo(self, addedProcess, removedProcess):
+        if len(addedProcess) > 0 or len(removedProcess) > 0:
                 if len(addedProcess) + len(removedProcess) < self.msgTrunk:
                     self.ev.publish("processInfo.info", {"add": addedProcess, "remove": removedProcess})
                 else:
@@ -53,6 +67,4 @@ class ProcessInfoRecolector(threading.Thread):
                         removedProcess = removedProcess[self.msgTrunk:]
                         self.ev.publish("processInfo.info", {"add": [], "remove": removedProcess})
                         remainingSize = len(removedProcess)
-                        
-            sleep(self.recolectionInterval)
             

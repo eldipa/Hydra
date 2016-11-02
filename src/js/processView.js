@@ -17,21 +17,33 @@ define([ 'jquery', 'layout', 'shortcuts', 'event_handler', 'd3' ], function($, l
         
         this.configureCtxMenu();
         
-        this.EH.subscribe('processInfo.info', function(data) {
+        this.configureEventsSubscription()  
+        
+    };
+    
+    ProcessView.prototype.configureEventsSubscription = function() {
+    	var my_self = this;
+    	
+    	this.EH.subscribe('processInfo.info', function(data) {
+    		
+    		var update = false;
 
         	if (data.add.length >0){
 	        	my_self.addNodes(data.add);
-	        	my_self.updateGraph();
+	        	update = true
         	}
         	
         	if (data.remove.length >0){
 	        	my_self.removeNodes(data.remove);
-	        	my_self.updateGraph();
+	        	update = true
         	}
+        	
+        	if (update)
+        		my_self.updateGraph();
         });
-        
-        
-    };
+    	
+    	this.EH.publish('processInfo.restart',{});
+    }
   
     ProcessView.prototype.configGraph = function() {
     	var my_self = this;
@@ -78,7 +90,9 @@ define([ 'jquery', 'layout', 'shortcuts', 'event_handler', 'd3' ], function($, l
     
     ProcessView.prototype.removeNodes = function (nodeList) {
         for ( var node in nodeList) {
-        	this.nodes.splice(this.findNodeIndex(nodeList[node].pid), 1);
+        	var nodeIndex = this.findNodeIndex(nodeList[node].pid);
+        	if(nodeIndex != -1)
+        		this.nodes.splice(nodeIndex, 1);
 		}
         
     };
@@ -88,23 +102,26 @@ define([ 'jquery', 'layout', 'shortcuts', 'event_handler', 'd3' ], function($, l
             if (this.nodes[i].pid == pid) {
                 return i;
             }
-        }
-        ;
+        };
+        return -1;
     };
     
     ProcessView.prototype.findNode = function (pid) {
         for (var i in this.nodes) {
             if (this.nodes[i]["pid"] === pid) return this.nodes[i];
-        }
-        ;
+        };
+        return undefined;
     };
     
     ProcessView.prototype.updateLinks = function (add) {
     	this.links.splice(0, this.links.length);
     	for (var node in this.nodes) {
-    		if(this.nodes[node].ppid != "0")
-    			this.links.push({"source": this.findNode(this.nodes[node].ppid), "target": this.findNode(this.nodes[node].pid), "value":1})
-			
+    		if(this.nodes[node].ppid != "0"){
+    			var sourceNode = this.findNode(this.nodes[node].ppid);
+    			var targetNode = this.findNode(this.nodes[node].pid);
+    			if(sourceNode && targetNode)
+    				this.links.push({"source": sourceNode, "target": targetNode, "value":1})
+    		}
 		}
     };
     
@@ -147,6 +164,8 @@ define([ 'jquery', 'layout', 'shortcuts', 'event_handler', 'd3' ], function($, l
 		
 		this.link = this.g.selectAll(".link")
 	    .data(this.links, function (d) {
+	    	if(!d.source || !d.target)
+	    		console.log(JSON.stringify(d))
 	        return d.source.pid + "-" + d.target.pid;
 	    });
 	
@@ -188,7 +207,8 @@ define([ 'jquery', 'layout', 'shortcuts', 'event_handler', 'd3' ], function($, l
 		
 		this.node.exit().remove();
 		
-		this.node = this.g.selectAll(".node"); //Fix temporal que evita que el ultimo grupo de nodos queden fuera del grafo
+		this.node = this.g.selectAll(".node"); 
+		this.link = this.g.selectAll(".link");
 		
 		this.tickConfig();
 		
