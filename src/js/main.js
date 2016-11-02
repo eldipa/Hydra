@@ -140,6 +140,7 @@ requirejs(['xterm', 'ui', 'code_view', 'jquery', 'export_console', 'layout', 'la
       var term = new xterm.Terminal({cursorBlink: true});
       text_rectangle.term = term;
       term.open(text_rectangle.$container.get(0));
+
     
     var bidirectional = true;
     var buffered = true;
@@ -161,7 +162,6 @@ requirejs(['xterm', 'ui', 'code_view', 'jquery', 'export_console', 'layout', 'la
     };
 
     term._sendData = function (data) {
-        console.log(data[0])
       EH.publish("type-into-gdb-console", data);
     };
     window.term = term;

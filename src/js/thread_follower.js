@@ -150,6 +150,13 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
             //TODO request to GDB to dissamble few (how much?) instructions around 'instruction_address'.
             //then call update_yourself_from_dissabled_code
         }
+
+        // The following is necessary to syncronize other gdb views (like the gdb console view)
+        var thread_followed = this.thread_followed;
+        var debugger_obj = thread_followed.get_debugger_you_belong();
+        debugger_obj.execute("-thread-select", ["" + thread_followed.id], function() {
+            debugger_obj.execute("-stack-select-frame", ["" + thread_followed.frame_level]);
+        });
     };
 
     ThreadFollower.prototype.update_current_line = function (line_number) {
