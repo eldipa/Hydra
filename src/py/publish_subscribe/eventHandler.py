@@ -20,7 +20,7 @@ class Publisher(object):
         address = self._get_address()
 
         try:
-          self.connection = Connection(address)
+          self.connection = Connection(address, whoiam=name)
           self._log(syslog.LOG_DEBUG, "Stablished a connection with the notifier server (%s)." % esc(str(address)))
         except:
           self._log(syslog.LOG_ERR, "Error when creating a connection with the notifier server (%s): %s." % esc(str(address), traceback.format_exc()))

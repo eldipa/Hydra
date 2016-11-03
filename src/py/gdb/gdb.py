@@ -3,23 +3,28 @@ import subprocess
 from subprocess import PIPE
 
 import outputReader
+from gdb_reader import GDBReader
 import publish_subscribe.eventHandler
 import os
 import signal
 import syslog
 import functools
+import pty
 
 import globalconfig
+from terminal_driver import TerminalDriver
 
 class Gdb(object):
     def __init__(self): 
         self._start_gdb_process()
         
         name_prefix = "(gdb %i" % self.gdb.pid
-        self.ev = publish_subscribe.eventHandler.EventHandler(name=name_prefix + "[input])")
+        self.ev = publish_subscribe.eventHandler.EventHandler(name=name_prefix + "[write to gdb])")
 
-        self._start_gdb_output_reader(name_prefix + "[output])")
+        self._start_gdb_output_reader(name_prefix + "[read from gdb])")
         self._configure_gdb()
+        self._connect_gdb_console_to_us()
+        #self._open_and_connect_gdb_terminal_to_us()
         self._load_base_py_modules_into_gdb_process()
 
         self._subscribe_to_interested_events_for_me()
@@ -34,6 +39,11 @@ class Gdb(object):
                 self.ev.subscribe("request-gdb.%i" % self.gdb.pid, 
                         self._execute_a_request,
                         return_subscription_id=True, send_and_wait_echo=True),
+                
+                self.ev.subscribe("type-into-gdb-console",
+#                    "type-into-gdb-console.%i" % self.gdb.pid, 
+                        self._type_into_gdb_console,
+                        return_subscription_id=True, send_and_wait_echo=True),
                 ]
 
     def _unsubscribe_me_for_all_events(self):
@@ -46,7 +56,7 @@ class Gdb(object):
         self._unsubscribe_me_for_all_events() # no more events for me
         self.ev.close() # wait until all the events are flushed out, so there should not be any race condition with the thread of my event-handler
                         # but can lead to a deadlock if a handler running in that thread tries to call a publish and in the meanwhile the connection was closed.
-        self.reader.should_be_running = False
+        self.reader.is_gdb_shutting_down = True
 
         try:
             if self.gdb.poll() is None:
@@ -109,15 +119,22 @@ class Gdb(object):
         self.gdbOutput = self.gdb.stdout
 
         self.gdb_pid = self.gdb.pid
+        
+        self.terminal_master, self.terminal_slave = pty.openpty()
+        self.terminal_name = os.ttyname(self.terminal_slave)
 
     def _start_gdb_output_reader(self, name):
-        self.reader = outputReader.OutputReader(self.gdbOutput, self.gdb_pid, name)
+        self.reader = GDBReader(self.gdb_pid, name, self.gdbOutput.fileno(), self.terminal_master)
         self.reader.start()
 
     def _configure_gdb(self):
         self.gdbInput.write('set non-stop on\n')
         self.gdbInput.write('set target-async on\n')
         self.gdbInput.write('-inferior-tty-set /dev/null\n')
+        self.gdbInput.flush()
+
+    def _connect_gdb_console_to_us(self):
+        self.gdbInput.write('new-ui console %s\n' % self.terminal_name)
         self.gdbInput.flush()
 
     def _load_base_py_modules_into_gdb_process(self):
@@ -162,6 +179,16 @@ sys.path.append("%(plugin_module_path)s")
                 self.gdbInput.write('python %s\n' % line)
         self.gdbInput.flush()
 
+    def _type_into_gdb_console(self, data):
+        written = 0
+        to_write = len(data)
+        while written < to_write:
+            w = os.write(self.terminal_master, data)
+            if w > 0:
+                written += w
+            else:
+                raise Exception("Failed to write into gdb console (os.write syscall returned %i)" % w)
+        
 
     def _execute_a_request(self, request):
         command = request['command']

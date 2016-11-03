@@ -31,7 +31,7 @@ define(function () {
             throw new Error("Serialization of the object failed (json stringify): " + e);
         }
 
-        var obj_lenth = obj_raw.length;
+        var obj_lenth = Buffer.byteLength(obj_raw); // return the length in bytes, not in "characters"
 
         if ((! (0 <= topic_length && topic_length <= ShortMax)) ||
             (! (0 <= obj_lenth && obj_lenth <= ShortMax))) {

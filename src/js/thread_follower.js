@@ -1,8 +1,9 @@
 define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'thread_button_bar_controller', 'stack_view', 'breakpoint_highlights', 'current_line_highlights'], function (ace, $, layout, shortcuts, _, code_editor, thread_button_bar_controller, stack_view, breakpoint_highlights_module, current_line_highlights_module) {
-    var ThreadFollower = function (debuggee_tracker) {
+    var ThreadFollower = function (debuggee_tracker, gdb_console_view) {
         this.super("Thread Follower");
 
         debuggee_tracker.add_observer(this);
+        this.gdb_console_view = gdb_console_view;
 
         // Create a Code Editor view and a button bar to display and control a thread
         this.code_editor = new code_editor.CodeEditor();
@@ -44,6 +45,7 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
     ThreadFollower.prototype.follow = function (thread_to_follow) {
         this.thread_followed = thread_to_follow;
         this.code_editor.set_debugger(thread_to_follow.get_debugger_you_belong());
+        this.gdb_console_view.follow_debugger(thread_to_follow.get_debugger_you_belong());
 
         this.stack_view.follow(thread_to_follow, this);
 
@@ -150,6 +152,13 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
             //TODO request to GDB to dissamble few (how much?) instructions around 'instruction_address'.
             //then call update_yourself_from_dissabled_code
         }
+
+        // The following is necessary to syncronize other gdb views (like the gdb console view)
+        var thread_followed = this.thread_followed;
+        var debugger_obj = thread_followed.get_debugger_you_belong();
+        debugger_obj.execute("-thread-select", ["" + thread_followed.id], function() {
+            debugger_obj.execute("-stack-select-frame", ["" + thread_followed.frame_level]);
+        });
     };
 
     ThreadFollower.prototype.update_current_line = function (line_number) {
