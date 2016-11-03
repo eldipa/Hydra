@@ -80,7 +80,7 @@ function (err) {
    alert("Error during the import (" + err.requireType + ").\nFailed modules: " + err.requireModules + "\n");
 });
 
-requirejs(['xterm', 'ui', 'code_view', 'jquery', 'export_console', 'layout', 'layout_examples', 'jqueryui', 'ctxmenu', 'notify_js_console', 'debuggee_tracker/tracker', 'event_handler', 'debuggee_tracker_view', 'underscore', 'shortcuts', 'thread_follower', "breakpoints_view", "details_view", "global_toolbar", "log_view"], function (xterm, ui, code_view, $, export_console, layout, layout_examples, jqueryui, ctxmenu, notify_js_console, debuggee_tracker, event_handler, debuggee_tracker_view, _, shortcuts, thread_follower, breakpoints_view, details_view, glob, log_view_module) {
+requirejs(['processView', 'gdb_console_view', 'code_view', 'jquery', 'export_console', 'layout', 'layout_examples', 'jqueryui', 'ctxmenu', 'notify_js_console', 'debuggee_tracker/tracker', 'event_handler', 'debuggee_tracker_view', 'underscore', 'shortcuts', 'thread_follower', "breakpoints_view", "details_view", "global_toolbar", "log_view"], function (processView, gdb_console_view, code_view, $, export_console, layout, layout_examples, jqueryui, ctxmenu, notify_js_console, debuggee_tracker, event_handler, debuggee_tracker_view, _, shortcuts, thread_follower, breakpoints_view, details_view, glob, log_view_module) {
    var EH = event_handler.get_global_event_handler();
    EH.publish("ui.loading", {'what': "Creating the Views..."});
    
@@ -114,113 +114,39 @@ requirejs(['xterm', 'ui', 'code_view', 'jquery', 'export_console', 'layout', 'la
    root_for_global_bar.render();
 
 
-      var Panel = layout.Panel;
-      var text_rectangle = new Panel("my xterm");
-
-      text_rectangle.$container = $('<div style="width: 100%; height: 100%; font-family: monaco;"></div>');
-      text_rectangle.$out_of_dom = text_rectangle.$container;
-
-      text_rectangle.render = function () {
-         if (this.$out_of_dom) {
-            this.$out_of_dom.appendTo(this.box);
-            this.$out_of_dom = null;
-         }
-
-         var term = this.term;
-         term.fit();
-         setTimeout(function () { term.fit(); }, 100);
-      };
-
-      text_rectangle.unlink = function () {
-         if (!this.$out_of_dom) {
-            this.$out_of_dom = this.$container.detach();
-         }
-      };
-
-      var term = new xterm.Terminal({cursorBlink: true});
-      text_rectangle.term = term;
-      term.open(text_rectangle.$container.get(0));
-
-    
-    var bidirectional = true;
-    var buffered = true;
-
-    term._flushBuffer = function () {
-      term.write(term._attachSocketBuffer);
-      term._attachSocketBuffer = null;
-      clearTimeout(term._attachSocketBufferTimer);
-      term._attachSocketBufferTimer = null;
-    };
-
-    term._pushToBuffer = function (data) {
-      if (term._attachSocketBuffer) {
-        term._attachSocketBuffer += data;
-      } else {
-        term._attachSocketBuffer = data;
-        setTimeout(term._flushBuffer, 10);
-      }
-    };
-
-    term._sendData = function (data) {
-      EH.publish("type-into-gdb-console", data);
-    };
-    window.term = term;
-
-    EH.subscribe("output-from-gdb-console", function (data) {
-      if (buffered) {
-        term._pushToBuffer(data);
-      } else {
-        term.write(data);
-      }
-    });
-    
-    EH.subscribe("last-output-from-gdb-console", function (data) {
-      term.clear();
-      if (buffered) {
-        term._pushToBuffer(data);
-      } else {
-        term.write(data);
-      }
-    });
-
-    if (bidirectional) {
-      term.on('data', term._sendData);
-    }
-
-    setTimeout(function () {
-        EH.publish("request-last-output-from-gdb-console", "");
-    }, 500);
-
-    //socket.addEventListener('close', term.detach.bind(term, socket));
-    //socket.addEventListener('error', term.detach.bind(term, socket));
 
 
    //layout_examples.init_short_examples();
-   var l = ui.init(EH);
-   var root = l.root;
-   var visor = l.visor;
-   var old_code_editor = l.code_editor;
-
+   
    var dbg_tracker = new debuggee_tracker.DebuggeeTracker();
    
-   var aThreadFollower = new thread_follower.ThreadFollower(dbg_tracker);
+   var aGdbConsoleView = new gdb_console_view.GdbConsoleView();
+   var aThreadFollower = new thread_follower.ThreadFollower(dbg_tracker, aGdbConsoleView);
    var dbg_tracker_view = new debuggee_tracker_view.DebuggeeTrackerView(dbg_tracker, aThreadFollower);
  
    var bkps_view = new breakpoints_view.BreakpointsView(dbg_tracker);
 
    var det_view = new details_view.DetailsView();
-
-   visor.swap(dbg_tracker_view);
-   dbg_tracker_view.split(bkps_view, "bottom");
-   dbg_tracker_view.parent().split(det_view, "bottom");
-
-   old_code_editor.swap(aThreadFollower);
-
    var log = new log_view_module.LogView(det_view);
-   l.stdoutlog.swap(log);
+    
+   var processGraphView = new processView.ProcessView();
 
+   var root = aThreadFollower.attach($('#main'));
+   aThreadFollower.split(dbg_tracker_view, 'right');
    root.render();
-                bkps_view.swap(text_rectangle);
+   aThreadFollower.parent().set_percentage(75);
+
+   var tabbed = new layout.Tabbed();
+   tabbed.add_child(aGdbConsoleView, "intab");
+   tabbed.add_child(log, "intab");
+
+   aThreadFollower.split(tabbed, 'bottom');
+   tabbed.split(processGraphView, 'bottom');
+
+   dbg_tracker_view.split(bkps_view, 'bottom');
+   dbg_tracker_view.parent().split(det_view, 'bottom');
+
+
 
    root.render();
 

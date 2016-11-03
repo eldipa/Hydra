@@ -32,7 +32,17 @@ define(['jquery', 'layout/panel', 'jqueryui'], function ($, P, _) {
       this._active_on_next_refresh = null;
 
       var tabs = $(this._$container).tabs({
-         heightStyle: "fill"
+         heightStyle: "fill",
+         activate: function (ev, ui) {
+             if (!self._$out_of_dom) {
+                 self.render();
+             }
+         },
+         create: function (ev, ui) {
+             if (!self._$out_of_dom) {
+                 self.render();
+             }
+         }
       });
 
       var $headers = this._$headers;

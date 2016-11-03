@@ -1,8 +1,9 @@
 define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'thread_button_bar_controller', 'stack_view', 'breakpoint_highlights', 'current_line_highlights'], function (ace, $, layout, shortcuts, _, code_editor, thread_button_bar_controller, stack_view, breakpoint_highlights_module, current_line_highlights_module) {
-    var ThreadFollower = function (debuggee_tracker) {
+    var ThreadFollower = function (debuggee_tracker, gdb_console_view) {
         this.super("Thread Follower");
 
         debuggee_tracker.add_observer(this);
+        this.gdb_console_view = gdb_console_view;
 
         // Create a Code Editor view and a button bar to display and control a thread
         this.code_editor = new code_editor.CodeEditor();
@@ -44,6 +45,7 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
     ThreadFollower.prototype.follow = function (thread_to_follow) {
         this.thread_followed = thread_to_follow;
         this.code_editor.set_debugger(thread_to_follow.get_debugger_you_belong());
+        this.gdb_console_view.follow_debugger(thread_to_follow.get_debugger_you_belong());
 
         this.stack_view.follow(thread_to_follow, this);
 
