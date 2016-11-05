@@ -94,6 +94,13 @@ define(["event_handler",'ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'o
                                 breakpoints[i].delete_you_and_your_subbreakpoints();
                             }
                          }
+                      },
+                      {
+                         text: 'run until here',
+                         action: function (e) {
+                            e.preventDefault();
+                            self.debugger_obj.execute("-exec-until", [line_number_str]);
+                         }
                       }
                   ];
         }
@@ -113,6 +120,13 @@ define(["event_handler",'ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'o
                             });
                          }
                       },
+                      {
+                         text: 'run until here',
+                         action: function (e) {
+                            e.preventDefault();
+                            self.debugger_obj.execute("-exec-until", [line_number_str]);
+                         }
+                      }
                   ];
         }
     };
