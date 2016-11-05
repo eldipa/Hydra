@@ -22,7 +22,8 @@ requirejs.config({
       jquery_event_drag: 'external/jquery.event.drag-2.2',
       slickgrid_core: 'external/slick.core',
       slickgrid: 'external/slick.grid',
-      processView: 'processView'
+      processView: 'processView',
+      xterm: 'external/xterm/xterm',
    },
 
    shim: {
@@ -79,7 +80,7 @@ function (err) {
    alert("Error during the import (" + err.requireType + ").\nFailed modules: " + err.requireModules + "\n");
 });
 
-requirejs(['ui', 'code_view', 'jquery', 'export_console', 'layout', 'layout_examples', 'jqueryui', 'ctxmenu', 'notify_js_console', 'debuggee_tracker/tracker', 'event_handler', 'debuggee_tracker_view', 'underscore', 'shortcuts', 'thread_follower', "breakpoints_view", "details_view", "global_toolbar", "log_view"], function (ui, code_view, $, export_console, layout, layout_examples, jqueryui, ctxmenu, notify_js_console, debuggee_tracker, event_handler, debuggee_tracker_view, _, shortcuts, thread_follower, breakpoints_view, details_view, glob, log_view_module) {
+requirejs(['processView', 'gdb_console_view', 'code_view', 'jquery', 'export_console', 'layout', 'layout_examples', 'jqueryui', 'ctxmenu', 'notify_js_console', 'debuggee_tracker/tracker', 'event_handler', 'debuggee_tracker_view', 'underscore', 'shortcuts', 'thread_follower', "breakpoints_view", "details_view", "global_toolbar", "log_view"], function (processView, gdb_console_view, code_view, $, export_console, layout, layout_examples, jqueryui, ctxmenu, notify_js_console, debuggee_tracker, event_handler, debuggee_tracker_view, _, shortcuts, thread_follower, breakpoints_view, details_view, glob, log_view_module) {
    var EH = event_handler.get_global_event_handler();
    EH.publish("ui.loading", {'what': "Creating the Views..."});
    
@@ -113,29 +114,39 @@ requirejs(['ui', 'code_view', 'jquery', 'export_console', 'layout', 'layout_exam
    root_for_global_bar.render();
 
 
-   //layout_examples.init_short_examples();
-   var l = ui.init(EH);
-   var root = l.root;
-   var visor = l.visor;
-   var old_code_editor = l.code_editor;
 
+
+   //layout_examples.init_short_examples();
+   
    var dbg_tracker = new debuggee_tracker.DebuggeeTracker();
    
-   var aThreadFollower = new thread_follower.ThreadFollower(dbg_tracker);
+   var aGdbConsoleView = new gdb_console_view.GdbConsoleView();
+   var aThreadFollower = new thread_follower.ThreadFollower(dbg_tracker, aGdbConsoleView);
    var dbg_tracker_view = new debuggee_tracker_view.DebuggeeTrackerView(dbg_tracker, aThreadFollower);
  
    var bkps_view = new breakpoints_view.BreakpointsView(dbg_tracker);
 
    var det_view = new details_view.DetailsView();
-
-   visor.swap(dbg_tracker_view);
-   dbg_tracker_view.split(bkps_view, "bottom");
-   dbg_tracker_view.parent().split(det_view, "bottom");
-
-   old_code_editor.swap(aThreadFollower);
-
    var log = new log_view_module.LogView(det_view);
-   l.stdoutlog.swap(log);
+    
+   var processGraphView = new processView.ProcessView();
+
+   var root = aThreadFollower.attach($('#main'));
+   aThreadFollower.split(dbg_tracker_view, 'right');
+   root.render();
+   aThreadFollower.parent().set_percentage(75);
+
+   var tabbed = new layout.Tabbed();
+   tabbed.add_child(aGdbConsoleView, "intab");
+   tabbed.add_child(log, "intab");
+
+   aThreadFollower.split(tabbed, 'bottom');
+   tabbed.split(processGraphView, 'bottom');
+
+   dbg_tracker_view.split(bkps_view, 'bottom');
+   dbg_tracker_view.parent().split(det_view, 'bottom');
+
+
 
    root.render();
 
