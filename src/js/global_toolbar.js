@@ -1,6 +1,8 @@
-define(['jquery', 'layout', 'shortcuts', 'underscore', 'widgets/buttons'], function ($, layout, shortcuts, _, buttons) {
+define(['jquery', 'layout', 'shortcuts', 'underscore', 'widgets/buttons','event_handler'], function ($, layout, shortcuts, _, buttons, event_handler) {
     var GlobalToolbar = function () {
         this.super("Global Button Bar");
+        
+        var EH = event_handler.get_global_event_handler();
         
         var self = this;
         var button_descriptions = [
@@ -25,7 +27,15 @@ define(['jquery', 'layout', 'shortcuts', 'underscore', 'widgets/buttons'], funct
                   var W = require('nw.gui').Window.get();
                   W.reloadIgnoringCache();
                },
-            }
+            },{
+                label: "ProcessView",
+                text: false,
+                tooltip: "Show Process Graph.",
+                icons: {primary: 'fa fa-fw fa-code-fork'},
+                action: function (ev) {
+                	EH.publish("Layout.showProcessGraph",{});
+                },
+             }
         ];
 
         this._$toolbar = buttons.create_button_bar(button_descriptions, true, true);

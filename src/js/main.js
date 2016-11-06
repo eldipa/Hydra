@@ -141,10 +141,23 @@ requirejs(['processView', 'gdb_console_view', 'code_view', 'jquery', 'export_con
    tabbed.add_child(log, "intab");
 
    aThreadFollower.split(tabbed, 'bottom');
-   tabbed.split(processGraphView, 'bottom');
+//   tabbed.split(processGraphView, 'bottom');
+//   var floating_root = root.add_child(processGraphView, 'overlay');
 
    dbg_tracker_view.split(bkps_view, 'bottom');
    dbg_tracker_view.parent().split(det_view, 'bottom');
+   
+   var floating_root = false;
+   EH.subscribe("Layout.showProcessGraph", function() {
+	   if (!floating_root){
+		   root.add_child(processGraphView, 'overlay');
+		   floating_root = true;
+	   }else{
+		   root.remove_child(processGraphView);
+		   floating_root = false
+	   }
+	   root.render();
+   	})
 
 
 

@@ -11,7 +11,7 @@ define([ 'jquery', 'layout', 'shortcuts', 'event_handler', 'd3' ], function($, l
         
         var my_self = this;
         
-        this.skipFrame = 10; //Modificar este valor para saltaear frame de renderizado
+        this.skipFrame = 1; //Modificar este valor para saltaear frame de renderizado
 
         this.configGraph();
         
@@ -38,8 +38,9 @@ define([ 'jquery', 'layout', 'shortcuts', 'event_handler', 'd3' ], function($, l
 	        	update = true
         	}
         	
-        	if (update)
+        	if (update){
         		my_self.updateGraph();
+        	}
         });
     	
     	this.EH.publish('processInfo.restart',{});
@@ -191,7 +192,7 @@ define([ 'jquery', 'layout', 'shortcuts', 'event_handler', 'd3' ], function($, l
 		
 		nodeEnter.append("svg:circle").attr("class", "node").attr("r", 8)
 		      .style("fill", function(d) {
-		      		return color(1);
+		      		return color(Math.floor((Math.random() * 20) + 1));
 		      	}).call(this.force.drag).on("mouseover",
 		          function(d, i) {
 		          	// disable zoom
@@ -217,7 +218,6 @@ define([ 'jquery', 'layout', 'shortcuts', 'event_handler', 'd3' ], function($, l
 
     	
     };
-
     
     ProcessView.prototype.startAnimation = function() {
     	this.force.start();
