@@ -12,7 +12,6 @@ import functools
 import pty
 
 import globalconfig
-from terminal_driver import TerminalDriver
 
 class Gdb(object):
     def __init__(self): 
