@@ -78,7 +78,7 @@ define([ 'jquery', 'layout', 'shortcuts', 'event_handler', 'd3' ], function($, l
         this.g = this.svg.append("g").attr("transform", "translate(" + margin.left + "," + margin.right + ")")
             .call(this.zoom);
         
-        this.tooltip = d3.select("body").append("div").attr("class", "tooltip").style("opacity", 0);
+        this.tooltip = d3.select($(this._$container).get(0)).append("div").attr("class", "tooltip").style("opacity", 0);
                
 		this.createZoomControl(); 
     };
@@ -188,7 +188,7 @@ define([ 'jquery', 'layout', 'shortcuts', 'event_handler', 'd3' ], function($, l
 		            return d.pid;
 		        });
 		
-		var nodeEnter = this.node.enter().append("g");
+		var nodeEnter = this.node.enter().append("g").on("dblclick", this.dblclick);
 		
 		nodeEnter.append("svg:circle").attr("class", "node").attr("r", 8)
 		      .style("fill", function(d) {
@@ -352,6 +352,28 @@ define([ 'jquery', 'layout', 'shortcuts', 'event_handler', 'd3' ], function($, l
     	   anchor
     	   ];
     	};
+    	
+    	
+	// action to take on mouse double click
+	ProcessView.prototype.dblclick = function() {
+	    var select = d3.select(this);
+	    var circle = select.select("circle");
+	    var IsBig = JSON.parse(circle.attr("IsBig"));
+	    if (!IsBig){
+	    	circle.transition().duration(750).attr("r", 30).style("fill", "#ccc");
+	    	circle.attr("IsBig", true);
+	    }else{
+	    	circle.transition().duration(750).attr("r", 8).style("fill", "#ccc");
+	    	circle.attr("IsBig", false);
+	    }
+//	    d3.select(this).select("text").transition()
+//	        .duration(750)
+//	        .attr("x", 12)
+//	        .style("stroke", "none")
+//	        .style("fill", "black")
+//	        .style("stroke", "none")
+//	        .style("font", "10px sans-serif");
+	}
     
    
     ProcessView.prototype.render = function() {
