@@ -92,6 +92,9 @@ define([ 'jquery', 'layout', 'shortcuts', 'event_handler', 'd3' ], function($, l
         this.g = this.svg.append("g").attr("transform", "translate(" + margin.left + "," + margin.right + ")")
             .call(this.zoom);
         
+        this.g_links = this.g.append("g");
+        this.g_nodes = this.g.append("g");
+        
         this.tooltip = d3.select($(this._$container).get(0)).append("div").attr("class", "tooltip").style("opacity", 0);
                
 		this.createZoomControl(); 
@@ -177,7 +180,7 @@ define([ 'jquery', 'layout', 'shortcuts', 'event_handler', 'd3' ], function($, l
 		
 		this.updateLinks();
 		
-		this.link = this.g.selectAll(".link")
+		this.link = this.g_links.selectAll(".link")
 	    .data(this.links, function (d) {
 	    	if(!d.source || !d.target)
 	    		console.log(JSON.stringify(d))
@@ -197,7 +200,7 @@ define([ 'jquery', 'layout', 'shortcuts', 'event_handler', 'd3' ], function($, l
 		
 
 		
-		this.node = this.g.selectAll(".node")
+		this.node = this.g_nodes.selectAll(".node")
 		        .data(this.nodes, function (d) {
 		            return d.pid;
 		        });
