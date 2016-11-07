@@ -11,8 +11,8 @@ define([ 'jquery', 'layout', 'shortcuts', 'event_handler', 'd3' ], function($, l
         
         var my_self = this;
         
-        this.skipFrame = 1; //Modificar este valor para saltaear frame de renderizado
-
+        this.initValues();
+        
         this.configGraph();
         
         this.configureCtxMenu();
@@ -20,6 +20,20 @@ define([ 'jquery', 'layout', 'shortcuts', 'event_handler', 'd3' ], function($, l
         this.configureEventsSubscription()  
         
     };
+    
+    ProcessView.prototype.initValues = function() {
+    	//tick
+    	this.skipFrame = 1; //Modificar este valor para saltaear frame de renderizado, debe ser mayor a 0
+    	
+    	//force
+    	this.charge = -1000;
+    	this.linkDistance = 30;
+    	
+    	//nodes
+    	this.smallRadius = 8;
+    	this.bigRadius = 30;
+
+	}
     
     ProcessView.prototype.configureEventsSubscription = function() {
     	var my_self = this;
@@ -50,7 +64,7 @@ define([ 'jquery', 'layout', 'shortcuts', 'event_handler', 'd3' ], function($, l
     	var my_self = this;
     	
     	//Set up the force layout
-        this.force = d3.layout.force().charge(-120).linkDistance(30);
+        this.force = d3.layout.force().charge(this.charge).linkDistance(this.linkDistance);
         
         this.nodes = this.force.nodes();
         this.links = this.force.links();
@@ -170,7 +184,7 @@ define([ 'jquery', 'layout', 'shortcuts', 'event_handler', 'd3' ], function($, l
 	        return d.source.pid + "-" + d.target.pid;
 	    });
 	
-		this.link.enter().append("line")
+		this.link.enter().append("g").append("line")
 		        .attr("id", function (d) {
 		            return d.source.pid + "-" + d.target.pid;
 		        })
@@ -190,7 +204,7 @@ define([ 'jquery', 'layout', 'shortcuts', 'event_handler', 'd3' ], function($, l
 		
 		var nodeEnter = this.node.enter().append("g").on("dblclick", this.dblclick);
 		
-		nodeEnter.append("svg:circle").attr("class", "node").attr("r", 8)
+		nodeEnter.append("svg:circle").attr("class", "node").attr("r", this.smallRadius)
 		      .style("fill", function(d) {
 		      		return color(Math.floor((Math.random() * 20) + 1));
 		      	}).call(this.force.drag).on("mouseover",
@@ -214,7 +228,7 @@ define([ 'jquery', 'layout', 'shortcuts', 'event_handler', 'd3' ], function($, l
 		this.tickConfig();
 		
 		// Restart the force layout.
-        this.force.charge(-1000).linkDistance(30).start();
+        this.force.charge(this.charge).linkDistance(this.linkDistance).start();
 
     	
     };
@@ -356,14 +370,13 @@ define([ 'jquery', 'layout', 'shortcuts', 'event_handler', 'd3' ], function($, l
     	
 	// action to take on mouse double click
 	ProcessView.prototype.dblclick = function() {
-	    var select = d3.select(this);
-	    var circle = select.select("circle");
+	    var circle = d3.select(this).select("circle");
 	    var IsBig = JSON.parse(circle.attr("IsBig"));
 	    if (!IsBig){
-	    	circle.transition().duration(750).attr("r", 30).style("fill", "#ccc");
+	    	circle.transition().duration(750).attr("r", my_self.bigRadius).style("fill", "#ccc");
 	    	circle.attr("IsBig", true);
 	    }else{
-	    	circle.transition().duration(750).attr("r", 8).style("fill", "#ccc");
+	    	circle.transition().duration(750).attr("r", my_self.smallRadius).style("fill", "#ccc");
 	    	circle.attr("IsBig", false);
 	    }
 //	    d3.select(this).select("text").transition()
