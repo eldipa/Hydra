@@ -17,6 +17,8 @@ define([ 'jquery', 'layout', 'shortcuts', 'event_handler', 'd3' ], function($, l
         
         this.configureCtxMenu();
         
+        this.createSearchControl();
+        
         this.configureEventsSubscription()  
         
     };
@@ -325,6 +327,16 @@ define([ 'jquery', 'layout', 'shortcuts', 'event_handler', 'd3' ], function($, l
         this.svg.append("rect").attr("x", 48.5).attr("y", 55).attr("width", 3).attr("height", 8).attr("class", "plus-minus");
 
     };
+    
+    ProcessView.prototype.createSearchControl = function() {
+    	
+    	var searchDiv = d3.select(this._$container.get(0)).append("div").style("left", "100px").style("top", "10px").style("position", "absolute");
+    	
+    	searchDiv.append("input").attr("type", "search").attr("placeholder", "Search...").style("color", "black").style("position", "relative").style("border-radius", "10px").style("padding-left", "30px");
+    	
+    	searchDiv.append("span").attr("class","icon").append("i").attr("class","fa fa-search").style("color", "black").style("left", "5px").style("top", "4px").style("position", "absolute");
+
+	}
     
     
     ProcessView.prototype.configureCtxMenu = function () {
