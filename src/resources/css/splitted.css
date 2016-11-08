@@ -62,7 +62,7 @@
    float: left;
    overflow: hidden;
    cursor: ew-resize;
-   z-index: 999;
+   z-index: 998;
 }
 
 /*
@@ -116,7 +116,7 @@
    float: left;
    overflow: hidden;
    cursor: ns-resize;
-   z-index: 999;
+   z-index: 998;
 }
 
 /*
