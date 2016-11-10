@@ -352,7 +352,10 @@ define([ 'jquery', 'layout', 'shortcuts', 'event_handler', 'd3' ], function($, l
 			
 			if(searchValue.length != 0){
 				var data = node[0][0].__data__; 
-				var keys = Object.keys(data);
+				
+				var keys = ["pid", "ppid", "command"] //TODO Sacar estos parametros hardcodeados y filtar los datos de D3
+//				var keys = Object.keys(data);
+				
 				for (i in keys){
 					var key = keys[i]
 					if(String(data[key]).includes(searchValue)){
