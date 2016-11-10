@@ -21,6 +21,7 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
         this.view.set_percentage(70);
 
         this.current_loaded_file = "";
+        this.current_loaded_codepage = null;
         //this.current_line_highlight = null;
 
         this.breakpoint_highlights = new breakpoint_highlights_module.BreakpointHighlights(this.code_editor, this);
@@ -123,6 +124,15 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
         return this.current_loaded_file === filename;
     };
 
+    ThreadFollower.prototype.is_this_address_already_loaded = function (hexa_address) {
+        if (this.current_loaded_codepage === null) {
+            return false;
+        }
+
+        var addr = parseInt(hexa_address, 16);
+        return this.current_loaded_codepage.begin <= addr && addr <= this.current_loaded_codepage.end;
+    };
+
     ThreadFollower.prototype.see_your_thread_and_update_yourself = function (am_i_following_other_thread) {
         var source_fullname = this.thread_followed.source_fullname;
         var line_number_str = this.thread_followed.source_line;
@@ -149,8 +159,25 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
         else {
             this.button_bar.enter_assembly_mode();
 
-            //TODO request to GDB to dissamble few (how much?) instructions around 'instruction_address'.
-            //then call update_yourself_from_dissabled_code
+            var debugger_obj = this.thread_followed.get_debugger_you_belong();
+            var self = this;
+            var base = parseInt(instruction_address, 16);
+            base = base - (base % 1024);
+            debugger_obj.execute("-data-disassemble", 
+                    ["-s", base+"",
+                     "-e", base+"+1024",
+                     "--", "0"],
+                    function (e) {
+                        self.update_yourself_from_disassembled_code(e);
+
+                        if (! am_i_following_other_thread ) {
+                            self.breakpoint_highlights.clean_and_search_breakpoints_to_highlight();
+                            self.current_line_highlights.clean_and_search_threads_to_highlight();
+                        }
+
+                        self.update_current_line(instruction_address);
+                    }
+                    );
         }
 
         // The following is necessary to syncronize other gdb views (like the gdb console view)
@@ -161,9 +188,9 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
         });
     };
 
-    ThreadFollower.prototype.update_current_line = function (line_number) {
-        line_number = Number(line_number);
-        this.code_editor.go_to_line(line_number);
+    ThreadFollower.prototype.update_current_line = function (line_number_or_address) {
+        //line_number = Number(line_number);
+        this.code_editor.go_to_line(line_number_or_address);
         this.current_line_highlights.update_highlight_of_thread(this.thread_followed);
 
         /*
@@ -181,6 +208,7 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
         // Load the new source code
         this.code_editor.load_cpp_code(source_fullname);
         this.current_loaded_file = source_fullname;
+        this.current_loaded_codepage = null;
     };
 
     ThreadFollower.prototype.update_yourself_from_disassembled_code = function (disassembled_code_gdb_event) {
@@ -195,6 +223,7 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
         this.code_editor.go_to_line(0);
 
         this.current_loaded_file = null;
+        this.current_loaded_codepage = {begin: parseInt(addresses[0], 16), end: parseInt(addresses[addresses.length-1], 16)};
     };
 
 

@@ -75,7 +75,7 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
                 this.code_editor.remove_highlight(thread_highlight);
             }
 
-            this.highlight_this_source_code_thread(thread);
+            this.highlight_this_thread(thread);
         }
         else if (!thread_should_be_shown && thread_is_shown) {
             this.code_editor.remove_highlight(thread_highlight);
@@ -95,7 +95,8 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
 
         var selected_frame = _.find(frames, function (frame) {
             // TODO we dont support non-source-code frames
-            var is_our = frame.source_fullname && frame.source_line_number && this.thread_follower.is_this_file_already_loaded(frame.source_fullname);
+            var is_our = frame.source_fullname && frame.source_line_number && this.thread_follower.is_this_file_already_loaded(frame.source_fullname)
+                         || this.thread_follower.is_this_address_already_loaded(frame.instruction_address);
             if (is_our) {
                 this.cached_selected_frame = frame;
                 return true;
@@ -123,7 +124,7 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
         return !this.is_an_interesting_thread_and_should_be_track(thread);
     };
 
-    CurrentLineHighlights.prototype.highlight_this_source_code_thread = function (thread) {
+    CurrentLineHighlights.prototype.highlight_this_thread = function (thread) {
         var selected_frame = this.cached_selected_frame;
         
         var marker = "th " + thread.id;
@@ -131,7 +132,8 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
             marker = "@" + marker;
         }
 
-        var thread_highlight = this.code_editor.highlight_thread(Number(selected_frame.source_line_number), {text: marker});
+        var line_number_or_address = selected_frame.source_line_number || selected_frame.instruction_address;
+        var thread_highlight = this.code_editor.highlight_thread(line_number_or_address, {text: marker});
         this.thread_highlights[thread.get_uid()] = thread_highlight;
     };
 
