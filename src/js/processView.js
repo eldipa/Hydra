@@ -344,8 +344,30 @@ define([ 'jquery', 'layout', 'shortcuts', 'event_handler', 'd3' ], function($, l
 
 	}
     
-    ProcessView.prototype.highLightNodes = function(key) {
-		console.log("highlight " + key);
+    ProcessView.prototype.highLightNodes = function(searchValue) {
+
+		this.node.each(function() {
+			var highlight = false;
+			var node = d3.select(this);
+			
+			if(searchValue.length != 0){
+				var data = node[0][0].__data__; 
+				var keys = Object.keys(data);
+				for (i in keys){
+					var key = keys[i]
+					if(String(data[key]).includes(searchValue)){
+						highlight = true
+					}
+				}
+			}
+			
+			if(highlight){
+				node.transition().duration(750).style("stroke-width", "5px")
+			} else {
+				node.transition().duration(750).style("stroke-width", "0px")
+			}
+		});
+    	
 	}
     
     ProcessView.prototype.configureCtxMenu = function () {
@@ -397,10 +419,10 @@ define([ 'jquery', 'layout', 'shortcuts', 'event_handler', 'd3' ], function($, l
 	    var circle = d3.select(this).select("circle");
 	    var IsBig = JSON.parse(circle.attr("IsBig"));
 	    if (!IsBig){
-	    	circle.transition().duration(750).attr("r", my_self.bigRadius).style("fill", "#ccc");
+	    	circle.transition().duration(750).attr("r", my_self.bigRadius);
 	    	circle.attr("IsBig", true);
 	    }else{
-	    	circle.transition().duration(750).attr("r", my_self.smallRadius).style("fill", "#ccc");
+	    	circle.transition().duration(750).attr("r", my_self.smallRadius);
 	    	circle.attr("IsBig", false);
 	    }
 //	    d3.select(this).select("text").transition()
