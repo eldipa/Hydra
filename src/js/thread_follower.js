@@ -1,4 +1,6 @@
 define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'thread_button_bar_controller', 'stack_view', 'breakpoint_highlights', 'current_line_highlights'], function (ace, $, layout, shortcuts, _, code_editor, thread_button_bar_controller, stack_view, breakpoint_highlights_module, current_line_highlights_module) {
+    var PAGE_LENGTH = 2048;
+
     var ThreadFollower = function (debuggee_tracker, gdb_console_view) {
         this.super("Thread Follower");
 
@@ -162,22 +164,31 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
             var debugger_obj = this.thread_followed.get_debugger_you_belong();
             var self = this;
             var base = parseInt(instruction_address, 16);
-            base = base - (base % 1024);
-            debugger_obj.execute("-data-disassemble", 
-                    ["-s", base+"",
-                     "-e", base+"+1024",
-                     "--", "0"],
-                    function (e) {
-                        self.update_yourself_from_disassembled_code(e);
+            base = base - (base % PAGE_LENGTH);
 
-                        if (! am_i_following_other_thread ) {
-                            self.breakpoint_highlights.clean_and_search_breakpoints_to_highlight();
-                            self.current_line_highlights.clean_and_search_threads_to_highlight();
+            var up_asm = function () {
+                if (! am_i_following_other_thread ) {
+                    self.breakpoint_highlights.clean_and_search_breakpoints_to_highlight();
+                    self.current_line_highlights.clean_and_search_threads_to_highlight();
+                }
+
+                self.update_current_line(instruction_address);
+            };
+
+            if (this.current_loaded_codepage && this.current_loaded_codepage.begin === base) {
+                up_asm();
+            }
+            else {
+                debugger_obj.execute("-data-disassemble", 
+                        ["-s", base+"",
+                         "-e", base+"+"+PAGE_LENGTH,
+                         "--", "0"],
+                        function (e) {
+                            self.update_yourself_from_disassembled_code(e);
+                            up_asm();
                         }
-
-                        self.update_current_line(instruction_address);
-                    }
-                    );
+                        );
+            }
         }
 
         // The following is necessary to syncronize other gdb views (like the gdb console view)
