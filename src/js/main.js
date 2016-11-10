@@ -139,6 +139,7 @@ requirejs(['processView', 'gdb_console_view', 'code_view', 'jquery', 'export_con
    var tabbed = new layout.Tabbed();
    tabbed.add_child(aGdbConsoleView, "intab");
    tabbed.add_child(log, "intab");
+    
 
    aThreadFollower.split(tabbed, 'bottom');
 //   tabbed.split(processGraphView, 'bottom');
@@ -159,8 +160,8 @@ requirejs(['processView', 'gdb_console_view', 'code_view', 'jquery', 'export_con
 	   root.render();
    	})
 
-
-
+   root.render();
+   tabbed.display(0);
    root.render();
 
    det_view.update_view();

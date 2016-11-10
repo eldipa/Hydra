@@ -263,7 +263,7 @@ define(["event_handler",'ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'o
 
     CodeEditor.prototype.use_the_common_decimal_gutter = function () {
         if (this.edit_session.gutterRenderer.getText !== get_text_of_gutter_line_number_from_number) {
-            this.update_gutter_with(get_text_of_gutter_line_number_from_number, ace_row_lookup_from_gutter_line);
+            this.update_gutter_with(get_text_of_gutter_line_number_from_number, ace_row_lookup_from_line_number);
         }
     };
 

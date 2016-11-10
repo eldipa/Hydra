@@ -17,7 +17,7 @@ define(['jquery', 'layout', 'shortcuts', 'underscore', 'xterm', 'event_handler']
             this.$out_of_dom = null;
         }
     
-        _.delay(_.bind(this.term.fit, this.term), 100);
+        _.delay(_.bind(this.term.fit, this.term), 500);
     };
 
     GdbConsoleView.prototype.unlink = function () {

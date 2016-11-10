@@ -144,7 +144,7 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
     };
 
     ThreadFollower.prototype.update_button_bar_and_code_editor_to_show = function (source_fullname, line_number_str, instruction_address, am_i_following_other_thread) {
-        if (source_fullname && line_number_str) {
+        if (source_fullname && line_number_str && !this.button_bar.is_in_assembly()) {
             this.button_bar.leave_assembly_mode();
 
             if (! this.is_this_file_already_loaded(source_fullname)) {

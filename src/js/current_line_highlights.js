@@ -132,7 +132,14 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
             marker = "@" + marker;
         }
 
-        var line_number_or_address = selected_frame.source_line_number || selected_frame.instruction_address;
+        if (selected_frame.source_fullname && selected_frame.source_line_number && 
+                this.thread_follower.is_this_file_already_loaded(selected_frame.source_fullname)) {
+            var line_number_or_address = selected_frame.source_line_number;
+        }
+        else {
+            var line_number_or_address = selected_frame.instruction_address;
+        }
+
         var thread_highlight = this.code_editor.highlight_thread(line_number_or_address, {text: marker});
         this.thread_highlights[thread.get_uid()] = thread_highlight;
     };
