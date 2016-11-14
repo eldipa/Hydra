@@ -24,8 +24,8 @@ class GDBReader(threading.Thread):
         self.how_much_gdb_console_buffered = 0
         self.max_gdb_console_buffer_length = 2048 * 4
 
-        self.ev.subscribe("request-last-output-from-gdb-console",
-                #"request-last-output-from-gdb-console.%i" % self.gdb_pid, 
+        self.ev.subscribe(
+                "request-last-output-from-gdb-console.%i" % self.gdb_pid, 
                 self._send_last_output_of_gdb_console)
 
     def _send_last_output_of_gdb_console(self, data):
