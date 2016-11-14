@@ -43,13 +43,18 @@ class ProcessUnderGDB(PtraceProcess):
     def __init__(self):
         PtraceProcess.__init__(self, None, None, True, None)
         self._inferior = None
+        self._thread = None
         self._remove_implementation_of_methods()
 
-    def set_inferior(self, inferior):
+    def set_inferior(self, inferior, thread):
        self._inferior = inferior
+       self._thread = thread
 
     def get_process_id(self):
        return self._inferior.pid
+
+    def get_thread_id(self):
+       return self._thread.num
 
     # Reading
     #   - readWord(): read a memory word
@@ -179,11 +184,13 @@ class PtraceSyscallPublisher(PtraceSyscall):
 
        name = self.name
        pid  = self.process.get_process_id()
+       tid  = self.process.get_thread_id()
        timestamp = str(datetime.datetime.now())
        if self._are_we_at_exit:
            data = {
                'timestamp':   timestamp,
                'pid':         pid,
+               'tid':         tid,
                'result':      self.result,
                'result_text': self.result_text,
                'decode_errors': self.get_decode_errors(),
@@ -198,6 +205,7 @@ class PtraceSyscallPublisher(PtraceSyscall):
            data = {
                'timestamp': timestamp,
                'pid':       pid,
+               'tid':       tid,
                'restype':   self.restype,
                'name':      self.name,
                'arguments': arguments,
@@ -277,7 +285,7 @@ class NotifySyscall(gdb.Function):
 
     @noexception("Error when stopping in the NotifySyscall", False)
     def invoke(self, *args):
-        self.process.set_inferior(gdb.selected_inferior())
+        self.process.set_inferior(gdb.selected_inferior(), gdb.selected_thread())
 
         selected_thread = gdb.selected_thread()
         if selected_thread is None:
