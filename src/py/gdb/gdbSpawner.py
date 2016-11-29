@@ -25,6 +25,7 @@ class GdbSpawner(object):
         self.subscriptions = [
             self.ev.subscribe("spawner.request.debuggers-info", self._response_debuggers_info, return_subscription_id=True, send_and_wait_echo=True),
             self.ev.subscribe("spawner.add-debugger", self._spawn_a_gdb, return_subscription_id=True, send_and_wait_echo=True),
+            self.ev.subscribe("spawner.add-debugger-and-attach", self._spawn_and_attach_a_gdb, return_subscription_id=True, send_and_wait_echo=True),
             self.ev.subscribe("spawner.kill-debugger", self._shutdown_a_gdb, return_subscription_id=True, send_and_wait_echo=True),
             self.ev.subscribe("spawner.kill-all-debuggers", self._shutdown_all_gdbs, return_subscription_id=True, send_and_wait_echo=True),
             ]
@@ -46,6 +47,10 @@ class GdbSpawner(object):
         self.ev.publish("spawner.debugger-started", {"debugger-id": gdb_pid})
 
         return gdb_pid
+    
+    def _spawn_and_attach_a_gdb(self, pid):
+        gdb_pid = self._spawn_a_gdb(None)
+        self.ev.publish("request-gdb.%i" % gdb_pid, {"command": "attach", "arguments": [str(pid)], "token": str(pid), "interpreter": "console"})
 
     def _shutdown_a_gdb(self, data):
         ''' Shutdown the GDB process with process id data['pid']. '''

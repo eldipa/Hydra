@@ -394,10 +394,19 @@ define([ 'jquery', 'layout', 'shortcuts', 'event_handler', 'd3' ], function($, l
     ProcessView.prototype.get_display_controller = function (node) {
     	var my_self = this;
     	
+    	if (node == undefined){
+    		return [{
+        	    text: 'Add debugger',
+        	    action: function(e){
+        	    	my_self.EH.publish("spawner.add-debugger", {})
+        	    }
+        	   }];
+    	}
+    
     	var debug = {
         	    text: 'Debug this',
         	    action: function(e){
-        	    	my_self.EH.publish("attachTo", {"process": node.pid})
+        	    	my_self.EH.publish("spawner.add-debugger-and-attach", node.pid)
         	    }
         	   };
     	
