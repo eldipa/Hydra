@@ -353,8 +353,9 @@ define([ 'jquery', 'layout', 'shortcuts', 'event_handler', 'd3' ], function($, l
 			if(searchValue.length != 0){
 				var data = node[0][0].__data__; 
 				
-				var keys = ["pid", "ppid", "command"] //TODO Sacar estos parametros hardcodeados y filtar los datos de D3
-//				var keys = Object.keys(data);
+				var keysToRemove = ["index", "weight", "x", "y", "px", "py"] // parametros agregados por D3 que no deben participar en la busqueda
+				var keys = Object.keys(data);
+				keys =  $(keys).not(keysToRemove).get();
 				
 				for (i in keys){
 					var key = keys[i]
