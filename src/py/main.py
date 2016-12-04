@@ -14,6 +14,7 @@ import threading
 import signal
 import traceback
 import processInfoRecolector
+import ipcsInfoRecolector
 
 
 if (not match(".*/src$", os.getcwd())):
@@ -79,6 +80,8 @@ try:
         spawner = gdb.gdbSpawner.GdbSpawner()
         processInfoRecolector = processInfoRecolector.ProcessInfoRecolector()
         processInfoRecolector.start()
+        ipcsInfoRecolector = ipcsInfoRecolector.IPCSInfoRecolector()
+        ipcsInfoRecolector.start()
 
     while not is_ui_closed.wait(15):
         pass
@@ -92,7 +95,10 @@ finally:
         spawner.shutdown()
     
     processInfoRecolector.finalizar()
+    ipcsInfoRecolector.finalizar()
+    
     processInfoRecolector.join()
+    ipcsInfoRecolector.join()
     
     os.system("python py/publish_subscribe/notifier.py stop")
  
