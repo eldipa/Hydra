@@ -25,6 +25,7 @@ class Gdb(object):
         self._connect_gdb_console_to_us()
         #self._open_and_connect_gdb_terminal_to_us()
         self._load_base_py_modules_into_gdb_process()
+        self._load_default_py_modules_into_gdb_process()
 
         self._subscribe_to_interested_events_for_me()
 
@@ -176,6 +177,30 @@ sys.path.append("%(plugin_module_path)s")
         for line in python_code.strip().split('\n'):
             if line.strip(): # warning, any empty line will make gdb to enter into 'python mode': we need to execute one line at time.
                 self.gdbInput.write('python %s\n' % line)
+        self.gdbInput.flush()
+    
+    def _load_default_py_modules_into_gdb_process(self):
+        ''' Load the default python modules into GDB which extend the GDB's functionality
+            like strace. 
+            '''
+        cfg = globalconfig.get_global_config() # TODO allow the selection of which modules should be loaded 
+        
+        # load the modules
+        python_code = '''
+gdb_module_loader.get_module_loader().load('strace')
+''' 
+        for line in python_code.strip().split('\n'):
+            if line.strip(): # warning, any empty line will make gdb to enter into 'python mode': we need to execute one line at time.
+                self.gdbInput.write('python %s\n' % line)
+        self.gdbInput.flush()
+
+        # activate the modules
+        gdb_code = '''
+gdb-module-strace-activate
+'''
+        for line in gdb_code.strip().split('\n'):
+            if line.strip(): 
+                self.gdbInput.write('%s\n' % line)
         self.gdbInput.flush()
 
     def _type_into_gdb_console(self, data):
