@@ -11,7 +11,6 @@ int main(int argc, char **argv) {
 
 	key_t key;
 	int semid;
-//	union semun dummy;
 
 	if (argc == 1) {
 		std::cout << "Modo de utilizacion: semTest pathToFile [d]"<< std::endl;
