@@ -35,16 +35,8 @@ class IPCSInfoRecolector(threading.Thread):
         #key, shmid, propietario, perms, bytes, nattch, estado
         headers = shmemIPCS[2].split()
         
-        shmemInfo = []
-        
-        #basci info
-        for i in range(3,len(shmemIPCS) - 1):
-            info={}
-            values = shmemIPCS[i].split()
-            for j in range(len(headers)):
-                info.update({headers[j]: values[j]})
-            shmemInfo.append(info)
-            
+        shmemInfo = self.getBasicInfo(shmemIPCS, headers)
+
         #detailed info
         for shmem in shmemInfo:
             info = {}
@@ -66,16 +58,7 @@ class IPCSInfoRecolector(threading.Thread):
         #'key', 'semid', 'propietario', 'perms', 'nsems'
         headers = semIPCS[2].split()
         
-        semInfo = []
-        
-        #basci info
-        for i in range(3,len(semIPCS) - 1):
-            info={}
-            values = semIPCS[i].split()
-            for j in range(len(headers)):
-                info.update({headers[j]: values[j]})
-            semInfo.append(info)
-            
+        semInfo = self.getBasicInfo(semIPCS, headers)
         
         #detailed info
         for sem in semInfo:
@@ -114,15 +97,7 @@ class IPCSInfoRecolector(threading.Thread):
         if (len(headers) == 7):
             headers = headers[:4] + [headers[4] + "-" + headers[5]] + headers[6:]
         
-        msqInfo = []
-        
-        #basci info
-        for i in range(3,len(msqIPCS) - 1):
-            info={}
-            values = msqIPCS[i].split()
-            for j in range(len(headers)):
-                info.update({headers[j]: values[j]})
-            msqInfo.append(info)
+        msqInfo = self.getBasicInfo(msqIPCS, headers)
             
         #detailed info
         for msq in msqInfo:
@@ -139,6 +114,17 @@ class IPCSInfoRecolector(threading.Thread):
             
         
         return msqInfo
+    
+    def getBasicInfo(self, IPCS, headers):
+        ipcInfo = []
+        for i in range(3,len(IPCS) - 1):
+            info={}
+            values = IPCS[i].split()
+            for j in range(len(headers)):
+                info.update({headers[j]: values[j]})
+            ipcInfo.append(info)
+        return ipcInfo
+        
     
     def splitDetailedInfo(self, infoArray):
         try:
