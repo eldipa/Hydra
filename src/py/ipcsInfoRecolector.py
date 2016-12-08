@@ -11,21 +11,49 @@ class IPCSInfoRecolector(threading.Thread):
         self.ev = publish_subscribe.eventHandler.EventHandler(name="IPCSInfoRecolector")
         self.salir = False
         self.recolectionInterval = 2 # segundos
+        self.msgTrunk = 50 #cantidad de procesos que se envian cada vez en caso de cortar el mensaje
+        self.IPCSInfoLock = threading.Lock()
+        self.ev.subscribe('IPCSInfo.restart', self.restart)
         
-    
     def finalizar(self):
         self.salir = True 
         
-    
+    def restart(self, data):
+        self.IPCSInfoLock.acquire()
+        self.semInfo = []
+        self.shmemInfo = []
+        self.msqInfo = []
+        self.IPCSInfoLock.release()
+        
     def run(self):
-        self.processInfo = []
+        self.semInfo = []
+        self.shmemInfo = []
+        self.msqInfo = []
         while not self.salir:
+            self.IPCSInfoLock.acquire() #LOCK
             
-            print self.getShmemInfo()
-             
-            print self.getSemInfo()
+            lastSemInfo = self.semInfo
+            lastShmemInfo = self.shmemInfo
+            lastMsqInfo = self.msqInfo
+            
+            self.semInfo = self.getSemInfo()
+            self.shmemInfo = self.getShmemInfo()
+            self.msqInfo = self.getMsqInfo()
+            
+            addedSem = [x for x in self.semInfo if x not in lastSemInfo]
+            removedSem = [x for x in lastSemInfo if x not in self.semInfo]
+            
+            addedShmem = [x for x in self.shmemInfo if x not in lastShmemInfo]
+            removedShmem = [x for x in lastShmemInfo if x not in self.shmemInfo]
+            
+            addedMsq = [x for x in self.msqInfo if x not in lastMsqInfo]
+            removedMsq = [x for x in lastMsqInfo if x not in self.msqInfo]
 
-            print self.getMsqInfo()
+            self.sendInfo(addedSem, removedSem, "sem")
+            self.sendInfo(addedShmem, removedShmem, "shmem")
+            self.sendInfo(addedMsq, removedMsq, "msq")
+            
+            self.IPCSInfoLock.release() #LOCK
             
             sleep(self.recolectionInterval)
             
@@ -125,7 +153,6 @@ class IPCSInfoRecolector(threading.Thread):
             ipcInfo.append(info)
         return ipcInfo
         
-    
     def splitDetailedInfo(self, infoArray):
         try:
             aux = {}
@@ -136,4 +163,24 @@ class IPCSInfoRecolector(threading.Thread):
         except Exception as inst:
             print "infoArray = " + str(infoArray)
             raise inst
+        
+    def sendInfo(self, added, removed, type):
+        if len(added) > 0 or len(removed) > 0:
+                if len(added) + len(removed) < self.msgTrunk:
+                    self.ev.publish("IPCSInfo.info." + type, {"add": added, "remove": removed})
+                else:
+                    remainingSize = len(added)
+                    while remainingSize > 0:
+                        division = added[:self.msgTrunk]
+                        added = added[self.msgTrunk:]
+                        self.ev.publish("IPCSInfo.info."+ type, {"add": division, "remove": []})
+                        remainingSize = len(added)
+                        
+                    remainingSize = len(removed)
+                    while remainingSize > 0:
+                        division = removed[:self.msgTrunk]
+                        removed = removed[self.msgTrunk:]
+                        self.ev.publish("IPCSInfo.info."+ type, {"add": [], "remove": removed})
+                        remainingSize = len(removed)
+            
         
