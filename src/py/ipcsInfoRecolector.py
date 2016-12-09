@@ -11,7 +11,7 @@ class IPCSInfoRecolector(threading.Thread):
         self.ev = publish_subscribe.eventHandler.EventHandler(name="IPCSInfoRecolector")
         self.salir = False
         self.recolectionInterval = 2 # segundos
-        self.msgTrunk = 50 #cantidad de procesos que se envian cada vez en caso de cortar el mensaje
+        self.msgTrunk = 50 #cantidad de elementos que se envian cada vez en caso de cortar el mensaje
         self.IPCSInfoLock = threading.Lock()
         self.ev.subscribe('IPCSInfo.restart', self.restart)
         
