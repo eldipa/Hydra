@@ -69,13 +69,16 @@ class IPCSInfoRecolector(threading.Thread):
         for shmem in shmemInfo:
             info = {}
             detailedInfo = subprocess.check_output(["ipcs","-m", "-i", shmem["shmid"]]).splitlines()
-            
-            for i in range(2,5):
-                info.update(self.splitDetailedInfo(detailedInfo[i].split()))
-
-            info.update(self.splitDetailedInfo([detailedInfo[5]]))
-            
-            shmem.update(info)
+            if("ipcs" in detailedInfo):
+                #El ipcs desaparecio mientras se iteraba
+                shmemInfo.remove(shmem)
+            else:
+                for i in range(2,5):
+                    info.update(self.splitDetailedInfo(detailedInfo[i].split()))
+    
+                info.update(self.splitDetailedInfo([detailedInfo[5]]))
+                
+                shmem.update(info)
             
         
         return shmemInfo
@@ -92,27 +95,30 @@ class IPCSInfoRecolector(threading.Thread):
         for sem in semInfo:
             info = {}
             detailedInfo = subprocess.check_output(["ipcs","-s", "-i", sem["semid"]]).splitlines()
+            if("ipcs" in detailedInfo):
+                #El ipcs desaparecio mientras se iteraba
+                semInfo.remove(sem)
+            else:
+                for i in range(2,4):
+                    info.update(self.splitDetailedInfo(detailedInfo[i].split()))
+                
+                for i in range(4,7):
+                    info.update(self.splitDetailedInfo([detailedInfo[i]]))
+                
+                subHeaders = detailedInfo[7].split()
+                
+                subinfo = []
+                for i in range(int(info["nsems"])):
+                    individualInfo = {}
+                    singularSemData = detailedInfo[8 + i].split()
+                    for j in range(len(subHeaders)):
+                        individualInfo.update({subHeaders[j]: singularSemData[j]})
+                    subinfo.append(individualInfo)
+                
+                info.update({"sems": subinfo})
+                
+                sem.update(info)
             
-            for i in range(2,4):
-                info.update(self.splitDetailedInfo(detailedInfo[i].split()))
-            
-            for i in range(4,7):
-                info.update(self.splitDetailedInfo([detailedInfo[i]]))
-            
-            subHeaders = detailedInfo[7].split()
-            
-            subinfo = []
-            for i in range(int(info["nsems"])):
-                individualInfo = {}
-                singularSemData = detailedInfo[8 + i].split()
-                for j in range(len(subHeaders)):
-                    individualInfo.update({subHeaders[j]: singularSemData[j]})
-                subinfo.append(individualInfo)
-            
-            info.update({"sems": subinfo})
-            
-            sem.update(info)
-        
         return semInfo
     
     def getMsqInfo(self):
@@ -131,14 +137,17 @@ class IPCSInfoRecolector(threading.Thread):
         for msq in msqInfo:
             info = {}
             detailedInfo = subprocess.check_output(["ipcs","-q", "-i", msq["msqid"]]).splitlines()
-            
-            for i in range(2,4):
-                info.update(self.splitDetailedInfo(detailedInfo[i].split()))
-
-            for i in range(4,7):
-                info.update(self.splitDetailedInfo([detailedInfo[i]]))
-            
-            msq.update(info)
+            if("ipcs" in detailedInfo):
+                #El ipcs desaparecio mientras se iteraba
+                msqInfo.remove(msq)
+            else:
+                for i in range(2,4):
+                    info.update(self.splitDetailedInfo(detailedInfo[i].split()))
+    
+                for i in range(4,7):
+                    info.update(self.splitDetailedInfo([detailedInfo[i]]))
+                
+                msq.update(info)
             
         
         return msqInfo
@@ -167,20 +176,20 @@ class IPCSInfoRecolector(threading.Thread):
     def sendInfo(self, added, removed, type):
         if len(added) > 0 or len(removed) > 0:
                 if len(added) + len(removed) < self.msgTrunk:
-                    self.ev.publish("IPCSInfo.info." + type, {"add": added, "remove": removed})
+                    self.ev.publish("IPCSInfo.info" , {"add": added, "remove": removed, "type": type})
                 else:
                     remainingSize = len(added)
                     while remainingSize > 0:
                         division = added[:self.msgTrunk]
                         added = added[self.msgTrunk:]
-                        self.ev.publish("IPCSInfo.info."+ type, {"add": division, "remove": []})
+                        self.ev.publish("IPCSInfo.info", {"add": division, "remove": [], "type": type})
                         remainingSize = len(added)
                         
                     remainingSize = len(removed)
                     while remainingSize > 0:
                         division = removed[:self.msgTrunk]
                         removed = removed[self.msgTrunk:]
-                        self.ev.publish("IPCSInfo.info."+ type, {"add": [], "remove": removed})
+                        self.ev.publish("IPCSInfo.info", {"add": [], "remove": removed, "type": type})
                         remainingSize = len(removed)
             
         
