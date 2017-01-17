@@ -147,10 +147,11 @@ requirejs(['processView', 'gdb_console_view', 'code_view', 'jquery', 'export_con
     
 
    aThreadFollower.split(tabbed, 'bottom');
-//   tabbed.split(processGraphView, 'bottom');
 
    dbg_tracker_view.split(bkps_view, 'bottom');
    dbg_tracker_view.parent().split(det_view, 'bottom');
+   
+   det_view.split(ipcsInfoView, 'bottom');
    
    var floating_root = false;
    EH.subscribe("Layout.showProcessGraph", function() {
