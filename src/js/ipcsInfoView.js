@@ -39,7 +39,7 @@ define(["underscore", "jquery", "jstree", "layout", "jstree_builder", "shortcuts
 	       	}
 	       	
 	       	if (update){
-//	       		console.log(data);
+	       		my_self.update();
 	       	}
 	       });
 	   	
@@ -119,38 +119,69 @@ define(["underscore", "jquery", "jstree", "layout", "jstree_builder", "shortcuts
 	   	  var data = this.data;
 
 	      var tree_data = _.map(data, 
-	         function (ipcs) {   
+	         function (ipcs , ipcs_key) {   
 	            // first level
-
-	    	  var level1key = Object.keys(data).filter(function(key) {return data[key] === ipcs})[0];
+	    	  var level1key = this._jstree_key;
 
 	            return {
-	            	text: level1key,
+	            	text: ipcs_key,
 	                data: ipcs,
 	                icon: false,
-	                id: [this._jstree_key, level1key].join("_")//,
-//	                children: _.map(thread_groups_by_id,
-//	                       function (thread_group) {
-//	                          
-//	                          // second level          
-//	                          return {
-//	                              text: thread_group.get_display_name(),
-//	                              data: {debugger_id: debugger_obj.id, thread_group_id: thread_group.id},
-//	                              icon: false,
-//	                              id: [this._jstree_key, debugger_obj.id, thread_group.id].join("_"),
-//	                              children: _.map(thread_group.your_threads_by_id(),
-//	                                  function (thread) {
-//
-//	                                     // third level
-//	                                     return {
-//	                                         text: thread.get_display_name(),
-//	                                         data: {debugger_id: debugger_obj.id, thread_group_id: thread_group.id, thread_id: thread.id},
-//	                                         id: [this._jstree_key, debugger_obj.id, thread_group.id, thread.id].join("_"),
-//	                                         icon: (thread.state === "running")? 'fa fa-spinner fa-pulse' : 'fa fa-circle'
-//	                                     };
-//	                                  }, this)
-//	                             };
-//	                       }, this)
+	                id: [level1key, ipcs_key].join("_"),
+	                children: _.map(data[ipcs_key][0],
+	                       function (individual_ipcs, individual_ipcs_key) {
+	         
+	                          var level2key = individual_ipcs.shmid || individual_ipcs.msqid || individual_ipcs.semid
+	                          // second level          
+	                          return {
+	                              text: level2key,
+	                              data: individual_ipcs,
+	                              icon: false,
+	                              id: [level1key, ipcs_key, level2key].join("_"),
+	                              children: _.map(individual_ipcs,
+	                                  function (individual_data, individual_data_key) {
+	                                     // third level
+	                            	  		if(individual_data_key != "sems"){
+	                            	  			return {
+		   	                                         text: individual_data_key + " = " + individual_data,
+		   	                                         data: individual_data,
+		   	                                         id: [level1key, ipcs_key, level2key, individual_data_key].join("_"),
+		   	                                         icon: false
+	                            	  			}
+	                            	  		} else {
+	                            	  			return {
+		   	                                         text: individual_data_key,
+		   	                                         data: individual_data,
+		   	                                         id: [level1key, ipcs_key, level2key, individual_data_key].join("_"),
+		   	                                         icon: false,
+		   	                                         children: _.map(individual_data, 
+		   	                                        		 function(sems_data, sems_data_key) {
+				   	                                        	 //optional fourth level
+				   	                                        	 return {
+				   	                                        		 text: sems_data.semnum,
+						   	                                         data: sems_data,
+						   	                                         id: [level1key, ipcs_key, level2key, individual_data_key,sems_data_key].join("_"),
+						   	                                         icon: false,
+						   	                                         children: _.map(sems_data, 
+						   	                                        		 function(individual_sems_data, individual_sems_data_key) {
+								   	                                        	 //optional fourth level
+								   	                                        	 return {
+								   	                                        		 text: individual_sems_data_key + ' = ' + individual_sems_data,
+										   	                                         data: individual_sems_data,
+										   	                                         id: [level1key, ipcs_key, level2key, individual_data_key,sems_data_key, individual_sems_data_key].join("_"),
+										   	                                         icon: false
+								   	                                        	 }
+																		
+						   	                                         })
+				   	                                        	 }
+														
+													})
+	                            	  			}
+	                            	  		}
+	                                     ;
+	                                  }, this)
+	                             };
+	                       }, this)
 	               };
 	         }, this);
 
