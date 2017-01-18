@@ -45,7 +45,9 @@ define(["underscore", "jquery", "jstree", "layout", "jstree_builder", "shortcuts
    }
    
    IPCSInfoView.prototype.addData = function(data, type) {
-	   this.data[type].push(data);
+	   for (var ipcs in data){
+		   this.data[type].push(data[ipcs]);
+	   }
    }
    
    IPCSInfoView.prototype.removeData = function(data, type) {
@@ -59,7 +61,7 @@ define(["underscore", "jquery", "jstree", "layout", "jstree_builder", "shortcuts
    IPCSInfoView.prototype.findIndexOfIPC = function(IPCToFind, typeOfIPC) {
 	   var index = -1;
 	   for (var ipc in this.data[typeOfIPC]){
-		   if (JSON.stringify(IPCToFind) === JSON.stringify(this.data[typeOfIPC][ipc][0]))
+		   if (JSON.stringify(IPCToFind) === JSON.stringify(this.data[typeOfIPC][ipc]))
 			   index = ipc;
 	   }
 	   return index;
@@ -127,7 +129,7 @@ define(["underscore", "jquery", "jstree", "layout", "jstree_builder", "shortcuts
 	                data: ipcs,
 	                icon: false,
 	                id: [level1key, ipcs_key].join("_"),
-	                children: _.map(data[ipcs_key][0],
+	                children: _.map(data[ipcs_key],
 	                       function (individual_ipcs, individual_ipcs_key) {
 	         
 	                          var level2key = individual_ipcs.shmid || individual_ipcs.msqid || individual_ipcs.semid
