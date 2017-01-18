@@ -7,8 +7,6 @@ define(["underscore", "jquery", "jstree", "layout", "jstree_builder", "shortcuts
 
       this.data = {"sem": [], "shmem": [], "msq": []};
       
-//      this.add_observer(this);
-      
       this.EH = event_handler.get_global_event_handler();   
       
       this.configureEventsSubscription()  ;
@@ -51,7 +49,20 @@ define(["underscore", "jquery", "jstree", "layout", "jstree_builder", "shortcuts
    }
    
    IPCSInfoView.prototype.removeData = function(data, type) {
-		//TODO
+	   for (var ipcs in data){
+		   var index = this.findIndexOfIPC(data[ipcs], type);
+		   if(index != -1)
+			   this.data[type].splice(index, 1);
+	   }
+   }
+   
+   IPCSInfoView.prototype.findIndexOfIPC = function(IPCToFind, typeOfIPC) {
+	   var index = -1;
+	   for (var ipc in this.data[typeOfIPC]){
+		   if (JSON.stringify(IPCToFind) === JSON.stringify(this.data[typeOfIPC][ipc][0]))
+			   index = ipc;
+	   }
+	   return index;
    }
    
 
@@ -67,19 +78,7 @@ define(["underscore", "jquery", "jstree", "layout", "jstree_builder", "shortcuts
       var results = jstree_builder.build_jstree_with_do_observation_functions_attached(this._$container, [
             function (e, elem_owner) {                              // Level 0: 
                 return new Observation({target: self, context: self}); 
-            }//,
-//            function (e, elem_owner) {                              // Level 1: IPCS type
-//                self._immediate_action_to_hack_jstree(e, elem_owner);
-//                var ids = self._get_data_from_selected();
-//
-//                if (ids === null || ids === undefined) {
-//                    return null;
-//                }
-//
-//                var debugger_id =  ids.debugger_id;
-//                var debugger_obj = self.debuggee_tracker.get_debugger_with_id(debugger_id);
-//                return new Observation({target: debugger_obj, context: self});
-//            }
+            }
           ],
           {
             'core' : {
@@ -164,7 +163,7 @@ define(["underscore", "jquery", "jstree", "layout", "jstree_builder", "shortcuts
 						   	                                         icon: false,
 						   	                                         children: _.map(sems_data, 
 						   	                                        		 function(individual_sems_data, individual_sems_data_key) {
-								   	                                        	 //optional fourth level
+								   	                                        	 //fifth level
 								   	                                        	 return {
 								   	                                        		 text: individual_sems_data_key + ' = ' + individual_sems_data,
 										   	                                         data: individual_sems_data,
@@ -187,29 +186,6 @@ define(["underscore", "jquery", "jstree", "layout", "jstree_builder", "shortcuts
 
 	      return tree_data;
 	   };
-   
-//   IPCSInfoView.prototype.notify = function (event_topic, data_object) {
-////	      for (var i = 0; i < this.observers.length; i++) {
-////	         try {
-////	            this.observers[i].update(data_object, event_topic, this);
-////	         } catch(e) {
-////	            console.warn("" + e);
-////	         }
-////	      }
-//	   };
-//
-//   IPCSInfoView.prototype.add_observer = function (observer) {
-//      this.remove_observer(observer); // remove duplicates (if any)
-//      this.observers.push(observer);
-//   };
-//
-//   IPCSInfoView.prototype.remove_observer = function (observer) {
-//      this.observers = _.filter(
-//                              this.observers, 
-//                              function (obs) { 
-//                                 return obs !== observer; 
-//                              });
-//   };
 
    return {IPCSInfoView: IPCSInfoView};
 });
