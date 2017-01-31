@@ -24,6 +24,7 @@ requirejs.config({
       slickgrid: 'external/slick.grid',
       processView: 'processView',
       xterm: 'external/xterm/xterm',
+      ipcsInfoView : 'ipcsInfoView'
    },
 
    shim: {
@@ -80,7 +81,7 @@ function (err) {
    alert("Error during the import (" + err.requireType + ").\nFailed modules: " + err.requireModules + "\n");
 });
 
-requirejs(['processView', 'gdb_console_view', 'code_view', 'jquery', 'export_console', 'layout', 'layout_examples', 'jqueryui', 'ctxmenu', 'notify_js_console', 'debuggee_tracker/tracker', 'event_handler', 'debuggee_tracker_view', 'underscore', 'shortcuts', 'thread_follower', "breakpoints_view", "details_view", "global_toolbar", "hidra_log_view", "syscall_trace_view"], function (processView, gdb_console_view, code_view, $, export_console, layout, layout_examples, jqueryui, ctxmenu, notify_js_console, debuggee_tracker, event_handler, debuggee_tracker_view, _, shortcuts, thread_follower, breakpoints_view, details_view, glob, hidra_log_view_module, syscall_trace_view_module) {
+requirejs(['processView', 'gdb_console_view', 'code_view', 'jquery', 'export_console', 'layout', 'layout_examples', 'jqueryui', 'ctxmenu', 'notify_js_console', 'debuggee_tracker/tracker', 'event_handler', 'debuggee_tracker_view', 'underscore', 'shortcuts', 'thread_follower', "breakpoints_view", "details_view", "global_toolbar", "hidra_log_view", "syscall_trace_view", "ipcsInfoView"], function (processView, gdb_console_view, code_view, $, export_console, layout, layout_examples, jqueryui, ctxmenu, notify_js_console, debuggee_tracker, event_handler, debuggee_tracker_view, _, shortcuts, thread_follower, breakpoints_view, details_view, glob, hidra_log_view_module, syscall_trace_view_module,ipcsInfoView) {
    var EH = event_handler.get_global_event_handler();
    EH.publish("ui.loading", {'what': "Creating the Views..."});
    
@@ -131,6 +132,8 @@ requirejs(['processView', 'gdb_console_view', 'code_view', 'jquery', 'export_con
    var syscall_trace_view = new syscall_trace_view_module.SyscallTraceView(det_view);
     
    var processGraphView = new processView.ProcessView();
+   
+   var ipcsInfoView = new ipcsInfoView.IPCSInfoView();
 
    var root = aThreadFollower.attach($('#main'));
    aThreadFollower.split(dbg_tracker_view, 'right');
@@ -144,11 +147,11 @@ requirejs(['processView', 'gdb_console_view', 'code_view', 'jquery', 'export_con
     
 
    aThreadFollower.split(tabbed, 'bottom');
-//   tabbed.split(processGraphView, 'bottom');
-//   var floating_root = root.add_child(processGraphView, 'overlay');
 
    dbg_tracker_view.split(bkps_view, 'bottom');
    dbg_tracker_view.parent().split(det_view, 'bottom');
+   
+   det_view.split(ipcsInfoView, 'bottom');
    
    var floating_root = false;
    EH.subscribe("Layout.showProcessGraph", function() {
