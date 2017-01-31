@@ -15,6 +15,7 @@ import signal
 import traceback
 import processInfoRecolector
 import ipcsInfoRecolector
+import forkDetector
 
 
 if (not match(".*/src$", os.getcwd())):
@@ -82,6 +83,8 @@ try:
         processInfoRecolector.start()
         ipcsInfoRecolector = ipcsInfoRecolector.IPCSInfoRecolector()
         ipcsInfoRecolector.start()
+        forkDetector = forkDetector.ForkDetector()
+        forkDetector.start()
 
     while not is_ui_closed.wait(15):
         pass
@@ -96,9 +99,11 @@ finally:
     
     processInfoRecolector.finalizar()
     ipcsInfoRecolector.finalizar()
+    forkDetector.finalizar()
     
     processInfoRecolector.join()
     ipcsInfoRecolector.join()
+    forkDetector.join()
     
     os.system("python py/publish_subscribe/notifier.py stop")
  
