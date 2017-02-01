@@ -37,6 +37,7 @@ class ForkDetector(threading.Thread):
         salir = False
         while (not salir): 
             msg = self.msgQueue.pull(type=1)
+            print msg
             pid = self.ObtenerPID(msg)
             if pid == 0:
 #                 del self.msgQueue  # posiblemente este de mas borrarlo explicitamente

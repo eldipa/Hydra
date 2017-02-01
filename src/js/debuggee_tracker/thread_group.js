@@ -62,6 +62,8 @@ define(["underscore", "shortcuts", 'event_handler'], function (_, shortcuts, eve
                           debugger_obj.execute("-break-insert", ["-t", "main"]); // TODO restrict this breakpoint to the threa group 
                           debugger_obj.execute("python gdb_module_loader.get_module_loader().load('strace')");
                           debugger_obj.execute("gdb-module-strace-activate");
+                          debugger_obj.execute("python gdb_module_loader.get_module_loader().load('ld_preload')");
+                          debugger_obj.execute("gdb-module-ld_preload-activate");
                           self.execute("-exec-run");
                       }
                       else {

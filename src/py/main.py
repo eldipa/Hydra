@@ -97,13 +97,17 @@ finally:
     if spawner:
         spawner.shutdown()
     
-    processInfoRecolector.finalizar()
-    ipcsInfoRecolector.finalizar()
-    forkDetector.finalizar()
-    
-    processInfoRecolector.join()
-    ipcsInfoRecolector.join()
-    forkDetector.join()
+    if processInfoRecolector:
+        processInfoRecolector.finalizar()
+        processInfoRecolector.join()
+        
+    if ipcsInfoRecolector:
+        ipcsInfoRecolector.finalizar()
+        ipcsInfoRecolector.join()
+        
+    if forkDetector:
+        forkDetector.finalizar()
+        forkDetector.join()
     
     os.system("python py/publish_subscribe/notifier.py stop")
  
