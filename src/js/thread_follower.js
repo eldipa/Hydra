@@ -47,6 +47,8 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
 
     ThreadFollower.prototype.follow = function (thread_to_follow) {
         this.thread_followed = thread_to_follow;
+        this.follow_thread_group(thread_to_follow.get_thread_group_you_belong());
+
         this.code_editor.set_debugger(thread_to_follow.get_debugger_you_belong());
         this.gdb_console_view.follow_debugger(thread_to_follow.get_debugger_you_belong());
 
@@ -56,15 +58,22 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
 
         this.breakpoint_highlights.clean_and_search_breakpoints_to_highlight();
         this.current_line_highlights.clean_and_search_threads_to_highlight();
-    }; 
+    };
+
+    ThreadFollower.prototype.follow_thread_group = function (thread_group) {
+        this.thread_group_followed = thread_group;
+    };
 
     // TODO: the ThreadFollower should update himself not only if its thread changed but also if
     // other threads changed and their files are the same that the file seen by this ThreadFollower
     ThreadFollower.prototype.update = function (data, topic, tracker) {
-        if (! this.thread_followed ) {
+        // Thread Group specific stuff --------------------------
+        //
+        //
+        if (! this.thread_group_followed) {
             return;
         }
-        
+
         // If any breakpoint changed, update that breakpoint
         if (_.contains(["breakpoint_update", "breakpoint_deleted", "breakpoint_changed"], topic)) {
             var breakpoint = data.breakpoint;
@@ -73,6 +82,18 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
             return;
         }
 
+        //
+        //
+        // Thread Group specific stuff end.
+
+
+        // Thread alive specific stuff --------------------------
+        //
+        //
+        if (! this.thread_followed ) {
+            return;
+        }
+        
         // Get all the threads involved in this event  and determine if our thread followed
         // is one of them
         var threads;
@@ -120,6 +141,10 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
         else {
             console.log("w? " + topic);
         }
+
+        //
+        //
+        // Thread alive specific stuff end.
     };
 
     ThreadFollower.prototype.is_this_file_already_loaded = function(filename) {
