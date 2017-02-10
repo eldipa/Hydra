@@ -2,7 +2,7 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
 
     /*
      * This object will track the breakpoint highligths in the code_editor based
-     * in the breakpoints that are affecting the particular thread followed by thread_follower.
+     * in the breakpoints that are affecting the particular thread group followed by thread_follower.
      *
      * There are two posibilities:
      *  - the thread moves to another file: all the highlights are invalid and you need
@@ -34,14 +34,14 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
     };
 
     BreakpointHighlights.prototype.search_breakpoints_to_highlight = function () {
-        var thread_followed = this.thread_follower.thread_followed;
-        if (!thread_followed) {
-            console.error("The thread_followed is undefined or not well built and cannot be used by the BreakpointHighlights object");
+        var thread_group_followed = this.thread_follower.thread_group_followed;
+        if (!thread_group_followed) {
+            console.error("The thread_group_followed is undefined or not well built and cannot be used by the BreakpointHighlights object");
             return;
         }
 
         // Search for "objects" in this new file that require a highlight
-        var debugger_obj = thread_followed.get_debugger_you_belong();
+        var debugger_obj = thread_group_followed.get_debugger_you_belong();
         var breakpoints_by_id = debugger_obj.your_breakpoints_by_id();
 
         _.each(breakpoints_by_id, function (breakpoint) {
@@ -58,9 +58,9 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
      *    if it should not be shown, hide it (remove the highlight)
      **/
     BreakpointHighlights.prototype.update_highlight_of_breakpoint = function (breakpoint) {
-        var thread_followed = this.thread_follower.thread_followed;
-        if (!thread_followed) {
-            console.error("The thread_followed is undefined or not well built and cannot be used by the BreakpointHighlights object");
+        var thread_group_followed = this.thread_follower.thread_group_followed;
+        if (!thread_group_followed) {
+            console.error("The thread_group_followed is undefined or not well built and cannot be used by the BreakpointHighlights object");
             return;
         }
 
@@ -93,8 +93,8 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
     };
 
     // Is this breakpoint a valid, non-pending one and belongs to our debugger?
-    BreakpointHighlights.prototype.is_an_interesting_breakpoint = function (breakpoint, thread_followed) {
-        return breakpoint && !breakpoint.is_pending && breakpoint.debugger_id === thread_followed.debugger_id;
+    BreakpointHighlights.prototype.is_an_interesting_breakpoint = function (breakpoint, thread_group_followed) {
+        return breakpoint && !breakpoint.is_pending && breakpoint.debugger_id === thread_group_followed.debugger_id;
     };
 
     // Is this breakpoint in our source code file or in our assembly code page? Or is it just
@@ -112,7 +112,7 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
     };
 
     BreakpointHighlights.prototype.is_an_interesting_breakpoint_and_should_be_track = function (breakpoint){
-        var is_an_interesting_breakpoint = this.is_an_interesting_breakpoint(breakpoint, this.thread_follower.thread_followed);
+        var is_an_interesting_breakpoint = this.is_an_interesting_breakpoint(breakpoint, this.thread_follower.thread_group_followed);
         if (!is_an_interesting_breakpoint) {
             return false;
         }
