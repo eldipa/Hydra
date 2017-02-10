@@ -42,8 +42,16 @@ define(["underscore", "shortcuts", 'event_handler'], function (_, shortcuts, eve
 
         return txt.join(" ");
     };
+
+    ThreadGroup.prototype.are_you_alive = function () {
+        return this.state === "started";
+    };
     
-    ThreadGroup.prototype.get_display_controller = function () {
+    ThreadGroup.prototype.get_debugger_you_belong = function () {
+        return this.tracker.get_debugger_with_id(this.debugger_id);
+    };
+    
+    ThreadGroup.prototype.get_display_controller = function (from_who) {
         var self = this;
         return [{
                text: 'Load sources', //TODO attach (and others)
