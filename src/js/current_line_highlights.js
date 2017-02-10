@@ -20,14 +20,14 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
     };
 
     CurrentLineHighlights.prototype.search_threads_to_highlight = function () {
-        var thread_followed = this.thread_follower.thread_followed;
-        if (!thread_followed) {
-            console.error("The thread_followed is undefined or not well built and cannot be used by the CurrentLineHighlights object");
+        var thread_group_followed = this.thread_follower.thread_group_followed;
+        if (!thread_group_followed) {
+            console.error("The thread_group_followed is undefined or not well built and cannot be used by the CurrentLineHighlights object");
             return;
         }
 
         // Search for "objects" in this new file that require a highlight
-        var debugger_obj = thread_followed.get_debugger_you_belong();
+        var debugger_obj = thread_group_followed.get_debugger_you_belong();
         var thread_groups_by_id = debugger_obj.your_thread_groups_by_id();
 
         _.each(thread_groups_by_id, function (thread_group) {
@@ -40,9 +40,9 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
     };
 
     CurrentLineHighlights.prototype.update_highlight_of_thread = function (thread) {
-        var thread_followed = this.thread_follower.thread_followed;
-        if (!thread_followed) {
-            console.error("The thread_followed is undefined or not well built and cannot be used by the CurrentLineHighlights object");
+        var thread_group_followed = this.thread_follower.thread_group_followed;
+        if (!thread_group_followed) {
+            console.error("The thread_group_followed is undefined or not well built and cannot be used by the CurrentLineHighlights object");
             return;
         }
 
@@ -86,8 +86,8 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
     };
 
     // Is this thread a valid, alive and belongs to our debugger?
-    CurrentLineHighlights.prototype.is_an_interesting_thread = function (thread, thread_followed) {
-        return thread && thread.is_alive && thread.debugger_id === thread_followed.debugger_id; /* && thread !== thread_followed*/;
+    CurrentLineHighlights.prototype.is_an_interesting_thread = function (thread, thread_group_followed) {
+        return thread && thread.is_alive && thread.debugger_id === thread_group_followed.debugger_id; /* && thread !== thread_followed*/;
     };
 
     CurrentLineHighlights.prototype.should_track_this_thread = function(thread, thread_follower) {
@@ -107,7 +107,7 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
     };
 
     CurrentLineHighlights.prototype.is_an_interesting_thread_and_should_be_track = function (thread){
-        var is_an_interesting_thread = this.is_an_interesting_thread(thread, this.thread_follower.thread_followed);
+        var is_an_interesting_thread = this.is_an_interesting_thread(thread, this.thread_follower.thread_group_followed);
         if (!is_an_interesting_thread) {
             return false;
         }
@@ -128,7 +128,8 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
         var selected_frame = this.cached_selected_frame;
         
         var marker = "th " + thread.id;
-        if (thread === this.thread_follower.thread_followed) {
+        var thread_followed = this.thread_follower.thread_followed;
+        if (thread_followed && thread === thread_followed) {
             marker = "@" + marker;
         }
 
