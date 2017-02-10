@@ -48,9 +48,13 @@ class GdbSpawner(object):
 
         return gdb_pid
     
+    def _spawn_and_attach_completed(self, data):
+        self.ev.publish("spawner.spawn_and_attach_completed", data['token'])
+    
     def _spawn_and_attach_a_gdb(self, pid):
         gdb_pid = self._spawn_a_gdb(None)
         self.ev.publish("request-gdb.%i" % gdb_pid, {"command": "attach", "arguments": [str(pid)], "token": str(pid), "interpreter": "console"})
+        self.ev.subscribe_for_once_call('result-gdb.%i.%i.done' % (gdb_pid, pid), self._spawn_and_attach_completed)
 
     def _shutdown_a_gdb(self, data):
         ''' Shutdown the GDB process with process id data['pid']. '''

@@ -13,37 +13,47 @@ from struct import *
 
 _QUEUE_PATH_ = "/tmp/forkHack"
 _QUEUE_CHAR_ = 'a'
+
+_STRUCT_FORMAT_ = '<l4xi4x' #Formato little endiand - long - 4 x padding - int - 4 x padding 
  
  
 class ForkDetector(threading.Thread):
     
     def __init__(self):
         threading.Thread.__init__(self)
-        open(_QUEUE_PATH_, _QUEUE_CHAR_)
+        open(_QUEUE_PATH_,'a')
+        self.PID_of_forked = []
         self.ev = publish_subscribe.eventHandler.EventHandler(name="ForkDetector")
+        self.ev.subscribe('spawner.spawn_and_attach_completed', self.respondToForkedProcess)
         try:
             self.msgQueue = MessageQueue(_QUEUE_PATH_, _QUEUE_CHAR_, 0666, True)
         except:
             self.ev.publish("ERROR.forkDetector", {'info':"MSQ ya existente"})
             self.msgQueue = MessageQueue(_QUEUE_PATH_, _QUEUE_CHAR_, 0666, False)
+    
+    def respondToForkedProcess(self, data):
+        if data in self.PID_of_forked:
+            msg = self.CrearMensaje(data, 0)
+            self.msgQueue.push(msg)
+            self.PID_of_forked.remove(data)
             
 
     def ObtenerPID(self, msg):
 #         print msg.encode('hex_codec')
 #         print len(msg)
 
-        struct = unpack('<l4xi4x', msg) #TODO Este padding sirve para una pc de 64 bits, extender para 32 y ver si puede existir otro padding
+        struct = unpack(_STRUCT_FORMAT_, msg) #TODO Este padding sirve para una pc de 64 bits, extender para 32 y ver si puede existir otro padding
         
 #         print struct
         return struct[1]
     
-    def CrearMensaje(self, pid):
-        msg = pack('<l4xi4x', pid, 0)
+    def CrearMensaje(self, mtype ,pid):
+        msg = pack(_STRUCT_FORMAT_, mtype, pid)
         return msg
     
     def finalizar(self):
         if self.msgQueue:
-            msg = pack('<l4xi4x', 1, 0)
+            msg = pack(_STRUCT_FORMAT_, 1, 0)
 #             print msg.encode('hex_codec')
 #             print sys.getsizeof(msg)
             self.msgQueue.push(msg)
@@ -53,18 +63,20 @@ class ForkDetector(threading.Thread):
         try:
             while (not salir): 
                 msg = self.msgQueue.pull(type=1)
-#                 print calcsize('<li')
                 pid = self.ObtenerPID(msg)
                 if pid == 0:
-    #                 del self.msgQueue  # posiblemente este de mas borrarlo explicitamente
                     salir = True
                 else:
+                    self.PID_of_forked.append(pid)
                     self.ev.publish("spawner.add-debugger-and-attach.ForkDetector", pid)
+
         except Exception as inst:
             print type(inst)
             print traceback.format_exc()
             self.msgQueue = None
+            
         finally:
+            del self.msgQueue
             os.remove(_QUEUE_PATH_)
 
         
