@@ -194,7 +194,7 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
         else {
             this.button_bar.enter_assembly_mode();
 
-            var debugger_obj = this.thread_followed.get_debugger_you_belong();
+            var debugger_obj = this.thread_group_followed.get_debugger_you_belong();
             var self = this;
             var base = parseInt(instruction_address, 16);
             base = base - (base % PAGE_LENGTH);
@@ -223,19 +223,31 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
                         );
             }
         }
+        
+        this.force_sync_due_thread_followed_update();
+    };
 
+    ThreadFollower.prototype.force_sync_due_thread_followed_update = function () {
         // The following is necessary to syncronize other gdb views (like the gdb console view)
         var thread_followed = this.thread_followed;
-        var debugger_obj = thread_followed.get_debugger_you_belong();
-        debugger_obj.execute("-thread-select", ["" + thread_followed.id], function() {
-            debugger_obj.execute("-stack-select-frame", ["" + thread_followed.frame_level]);
-        });
+        var debugger_obj = this.thread_group_followed.get_debugger_you_belong()
+
+        if (thread_followed) {
+            debugger_obj.execute("-thread-select", ["" + thread_followed.id], function() {
+                debugger_obj.execute("-stack-select-frame", ["" + thread_followed.frame_level]);
+            });
+        }
+        else {
+            // XXX we need to do something here?
+        }
     };
 
     ThreadFollower.prototype.update_current_line = function (line_number_or_address) {
         //line_number = Number(line_number);
         this.code_editor.go_to_line(line_number_or_address);
-        this.current_line_highlights.update_highlight_of_thread(this.thread_followed);
+        if (this.thread_followed) { // if we are following a thread we must update its highlight
+            this.current_line_highlights.update_highlight_of_thread(this.thread_followed);
+        }
 
         /*
         if (this.current_line_highlight) {
@@ -245,6 +257,7 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
         this.current_line_highlight = this.code_editor.highlight_thread_current_line(line_number, {text: "@th " + this.thread_followed.id});
         */
     };
+
 
     ThreadFollower.prototype.update_yourself_from_source_code = function (source_fullname) {
         //TODO do we need to disable the code view (ace) before doing this stuff and reenable it later?
