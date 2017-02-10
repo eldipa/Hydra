@@ -45,9 +45,20 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
         return this.view.unlink();
     };
 
-    ThreadFollower.prototype.follow = function (thread_to_follow) {
+    ThreadFollower.prototype.follow = function (thread_to_follow, thread_group_to_follow) {
+        if (thread_to_follow && thread_group_to_follow) {
+            throw new Error("You cannot 'follow' a thread and a thread group, just pick a thread only and you will be following its thread group indirectly.");
+        }
+
+        if (thread_to_follow) {
+            thread_group_to_follow = thread_to_follow.get_thread_group_you_belong();
+        }
+        else {
+            thread_to_follow = null; // beware of this....
+        }
+
         this.thread_followed = thread_to_follow;
-        this.follow_thread_group(thread_to_follow.get_thread_group_you_belong());
+        this.thread_group_followed = thread_group_to_follow;
 
         this.code_editor.set_debugger(thread_to_follow.get_debugger_you_belong());
         this.gdb_console_view.follow_debugger(thread_to_follow.get_debugger_you_belong());
@@ -60,9 +71,6 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
         this.current_line_highlights.clean_and_search_threads_to_highlight();
     };
 
-    ThreadFollower.prototype.follow_thread_group = function (thread_group) {
-        this.thread_group_followed = thread_group;
-    };
 
     // TODO: the ThreadFollower should update himself not only if its thread changed but also if
     // other threads changed and their files are the same that the file seen by this ThreadFollower
