@@ -24,6 +24,7 @@ define(["underscore", "jquery", "layout", "shortcuts", "jstree", "jstree_builder
        }
        else {
            this.frames = []; // if there isn't a thread, there aren't any frames
+           this._update();
        }
    };
 
