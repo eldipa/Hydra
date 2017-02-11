@@ -9,6 +9,8 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
 
         // Create a Code Editor view and a button bar to display and control a thread
         this.code_editor = new code_editor.CodeEditor(this);
+        this.code_editor.clean_up();
+
         this.button_bar = new thread_button_bar_controller.ThreadButtonBarController(this);
 
         this.view = new layout.Stacked("vertically");
@@ -27,6 +29,8 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
 
         this.breakpoint_highlights = new breakpoint_highlights_module.BreakpointHighlights(this.code_editor, this);
         this.current_line_highlights = new current_line_highlights_module.CurrentLineHighlights(this.code_editor, this);
+
+        _.bindAll(this, "update_button_bar_and_code_editor_to_show");
     };
 
     ThreadFollower.prototype.__proto__ = layout.Panel.prototype;
@@ -59,14 +63,46 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
         this.thread_followed = thread_to_follow;
         this.thread_group_followed = thread_group_to_follow;
 
-        this.gdb_console_view.follow_debugger(thread_group_to_follow.get_debugger_you_belong());
+        if (this.are_you_following_a_thread_group()) {
+            this.gdb_console_view.follow_debugger(this.thread_group_followed.get_debugger_you_belong());
 
-        this.stack_view.request_frames_update();
+            this.stack_view.request_frames_update();
 
-        this.see_your_thread_and_update_yourself(true);
+            this.see_your_thread_and_update_yourself(true);
 
-        this.breakpoint_highlights.clean_and_search_breakpoints_to_highlight();
-        this.current_line_highlights.clean_and_search_threads_to_highlight();
+            this.breakpoint_highlights.clean_and_search_breakpoints_to_highlight();
+            this.current_line_highlights.clean_and_search_threads_to_highlight();
+        }
+        else {
+            this.clean_up();
+        }
+
+        if (false) {
+            if (this.are_you_following_a_thread_group() && !this.are_you_following_a_specific_thread()) {
+                console.log("Thread follower: following a thread group "+this.thread_group_followed.get_display_name()+" ("+this.thread_group_followed.get_debugger_you_belong().get_display_name()+")");
+            }
+            else if (this.are_you_following_a_specific_thread()) {
+                if (!this.are_you_following_a_thread_group()) throw new Error("Inconsistent following");
+                console.log("Thread follower: following the thread "+this.thread_followed.get_display_name()+" of "+this.thread_group_followed.get_display_name()+" ("+this.thread_group_followed.get_debugger_you_belong().get_display_name()+")");
+            }
+            else {
+                console.log("Thread follower: not following anything.");
+            }
+        }
+    };
+
+    ThreadFollower.prototype.clean_up = function () {
+        if (this.thread_followed || this.thread_group_followed) throw new Error("Invalid clean-up state of ThreadFollower");
+
+        this.gdb_console_view.follow_debugger(null);
+        
+        this.stack_view.clean_up();
+        
+        this.code_editor.clean_up();
+        this.button_bar.select_toolbar(); // because this thread follower is not following anything, this call will disable the button bar
+
+        this.breakpoint_highlights.clean_up();
+        this.current_line_highlights.clean_up();
     };
 
 
@@ -108,7 +144,6 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
         }
 
         if (_.contains(["thread_group_exited"], topic) && data.thread_group == this.thread_group_followed) {
-            this.button_bar.select_toolbar(); // update this here so the toolbar can disable itself
             this.follow(null, null); // restart the following, our thread group (process) is dead!
 
             return;
@@ -199,11 +234,17 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
     };
 
     ThreadFollower.prototype.see_your_thread_and_update_yourself = function (am_i_following_other_thread) {
-        var source_fullname = this.thread_followed.source_fullname;
-        var line_number_str = this.thread_followed.source_line;
-        var instruction_address = this.thread_followed.instruction_address;
-
-        this.update_button_bar_and_code_editor_to_show(source_fullname, line_number_str, instruction_address, am_i_following_other_thread);
+        if (!this.are_you_following_a_thread_group()) {
+            throw new Error("see_your_thread_and_update_yourself on a follower which it is not following anything.");
+        }
+        else if (this.are_you_following_a_thread_group() && !this.are_you_following_a_specific_thread()) {
+            var target = this.thread_group_followed;
+        }
+        else {
+            var target = this.thread_followed;
+        }
+        
+        target.resolve_current_position(_.partial(this.update_button_bar_and_code_editor_to_show, _, _, _, am_i_following_other_thread));
     };
 
     ThreadFollower.prototype.update_button_bar_and_code_editor_to_show = function (source_fullname, line_number_str, instruction_address, am_i_following_other_thread) {
