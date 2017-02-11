@@ -74,6 +74,15 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
     // TODO: the ThreadFollower should update himself not only if its thread changed but also if
     // other threads changed and their files are the same that the file seen by this ThreadFollower
     ThreadFollower.prototype.update = function (data, topic, tracker) {
+        // Safe to ignore ---------------------------------------
+        //
+        if (_.contains(["debugger_started", "thread_group_started"], topic)) {
+            return;
+        }
+        //
+        // ------------------------------------------------------
+
+
         // Thread Group specific stuff --------------------------
         //
         //
@@ -89,9 +98,21 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
             return;
         }
 
+        // If several breakpoints changed...
+        if (_.contains(["breakpoints_update"], topic)) {
+            var breakpoints_by_id = data.debugger_obj.your_breakpoints_by_id();
+            _.each(breakpoints_by_id, function (breakpoint) {
+                this.breakpoint_highlights.update_highlight_of_breakpoint(breakpoint);
+            }, this);
+
+            return;
+        }
+
         if (_.contains(["thread_group_exited"], topic) && data.thread_group == this.thread_group_followed) {
             this.button_bar.select_toolbar(); // update this here so the toolbar can disable itself
             this.follow(null, this.thread_group_followed); // restart the following
+
+            return;
         }
 
         //
