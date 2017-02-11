@@ -60,7 +60,7 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
         this.thread_followed = thread_to_follow;
         this.thread_group_followed = thread_group_to_follow;
 
-        this.gdb_console_view.follow_debugger(thread_to_follow.get_debugger_you_belong());
+        this.gdb_console_view.follow_debugger(thread_group_to_follow.get_debugger_you_belong());
 
         this.stack_view.follow(thread_to_follow, this);
 
@@ -87,6 +87,11 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
             this.breakpoint_highlights.update_highlight_of_breakpoint(breakpoint);
 
             return;
+        }
+
+        if (_.contains(["thread_group_exited"], topic) && data.thread_group == this.thread_group_followed) {
+            this.button_bar.select_toolbar(); // update this here so the toolbar can disable itself
+            this.follow(null, this.thread_group_followed); // restart the following
         }
 
         //
@@ -282,6 +287,9 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
         this.current_loaded_codepage = {begin: parseInt(addresses[0], 16), end: parseInt(addresses[addresses.length-1], 16)};
     };
 
+    ThreadFollower.prototype.are_you_following_a_live_process = function () {
+        return this.thread_group_followed && this.thread_group_followed.are_you_alive();
+    };
 
 
     return {ThreadFollower: ThreadFollower};
