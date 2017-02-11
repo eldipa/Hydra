@@ -136,5 +136,58 @@ define(["underscore", "shortcuts", 'event_handler'], function (_, shortcuts, eve
                 );
     };
 
+    ThreadGroup.prototype.update_source_fullnames = function (on_result) {
+        this.execute("-file-list-exec-source-files", [], function on_file_list(data) {
+            var results = data['results'];
+            var files = results['files'];
+
+            if (!files) {
+                // failed, try to find a reason of why
+                this.execute("-file-list-exec-source-file", [], function on_single_file(data) {
+                    var results = data['results'];
+                    var msg = results['msg'];
+
+                    if (msg) {
+                        on_result([], msg);
+                    }
+                    else {
+                        on_result([], 'No sources, unknown reason');
+                    }
+                });
+            }
+            else {
+                on_result(files, "Ok");
+            }
+        });
+    };
+
+    ThreadGroup.prototype.resolve_current_position = function (on_result) {
+        var self = this;
+        if (!this._source_fullname || !this._source_line || !this._instruction_address) {
+            this.update_source_fullnames(function on_file_list(file_list, msg) {
+                if (!file_list) {
+                    // log msg??
+                    var source_fullname = null;
+                    var source_line = null;
+                    var instruction_address = "0x000000"; // TODO replace this by the entry point
+                }
+                else {
+                    var source_fullname = file_list[0].fullname;
+                    var source_line = 1; 
+                    var instruction_address = null;
+                }
+
+                self._source_fullname = source_fullname;
+                self._source_line = source_line;
+                self._instruction_address = instruction_address;
+
+                on_result(source_fullname, source_line, instruction_address);
+            });
+        }
+        else {
+            on_result(this._source_fullname, this._source_line, this._instruction_address);
+        }
+    };
+
     return {ThreadGroup: ThreadGroup};
 });
