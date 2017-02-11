@@ -58,10 +58,11 @@ define(["event_handler",'ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'o
 
     CodeEditor.prototype.get_display_controller = function () {
         var self = this;
-        var thread_group_followed = this.thread_follower.thread_group_followed;
-        if (!thread_group_followed) {
+        if (!this.thread_follower.are_you_following_a_thread_group()) {
             return [];
         }
+
+        var thread_group_followed = this.thread_follower.thread_group_followed;
 
         var ace_row_number = self.editor.getCursorPosition().row;
         var position_str = self.line_number_or_address_lookup_from_ace_row(null, ace_row_number);

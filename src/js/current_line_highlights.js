@@ -20,11 +20,12 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
     };
 
     CurrentLineHighlights.prototype.search_threads_to_highlight = function () {
-        var thread_group_followed = this.thread_follower.thread_group_followed;
-        if (!thread_group_followed) {
+        if (!this.thread_follower.are_you_following_a_thread_group()) {
             console.error("The thread_group_followed is undefined or not well built and cannot be used by the CurrentLineHighlights object");
             return;
         }
+        
+        var thread_group_followed = this.thread_follower.thread_group_followed;
 
         // Search for "objects" in this new file that require a highlight
         var debugger_obj = thread_group_followed.get_debugger_you_belong();
@@ -40,11 +41,12 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
     };
 
     CurrentLineHighlights.prototype.update_highlight_of_thread = function (thread) {
-        var thread_group_followed = this.thread_follower.thread_group_followed;
-        if (!thread_group_followed) {
+        if (!this.thread_follower.are_you_following_a_thread_group()) {
             console.error("The thread_group_followed is undefined or not well built and cannot be used by the CurrentLineHighlights object");
             return;
         }
+
+        var thread_group_followed = this.thread_follower.thread_group_followed;
 
         var thread_highlight = this.thread_highlights[thread.get_uid()];
         var thread_is_shown = !!thread_highlight;
@@ -128,8 +130,9 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
         var selected_frame = this.cached_selected_frame;
         
         var marker = "th " + thread.id;
-        var thread_followed = this.thread_follower.thread_followed;
-        if (thread_followed && thread === thread_followed) {
+        if (this.thread_follower.are_you_following_a_specific_thread() && 
+            thread === this.thread_follower.thread_followed) {
+
             marker = "@" + marker;
         }
 

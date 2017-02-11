@@ -34,11 +34,12 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
     };
 
     BreakpointHighlights.prototype.search_breakpoints_to_highlight = function () {
-        var thread_group_followed = this.thread_follower.thread_group_followed;
-        if (!thread_group_followed) {
+        if (!this.thread_follower.are_you_following_a_thread_group()) {
             console.error("The thread_group_followed is undefined or not well built and cannot be used by the BreakpointHighlights object");
             return;
         }
+        
+        var thread_group_followed = this.thread_follower.thread_group_followed;
 
         // Search for "objects" in this new file that require a highlight
         var debugger_obj = thread_group_followed.get_debugger_you_belong();
@@ -58,11 +59,12 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
      *    if it should not be shown, hide it (remove the highlight)
      **/
     BreakpointHighlights.prototype.update_highlight_of_breakpoint = function (breakpoint) {
-        var thread_group_followed = this.thread_follower.thread_group_followed;
-        if (!thread_group_followed) {
+        if (!this.thread_follower.are_you_following_a_thread_group()) {
             console.error("The thread_group_followed is undefined or not well built and cannot be used by the BreakpointHighlights object");
             return;
         }
+        
+        var thread_group_followed = this.thread_follower.thread_group_followed;
 
         var breakpoint_highlight = this.breakpoint_highlights[breakpoint.get_uid()];
         var breakpoint_is_shown = !!breakpoint_highlight;

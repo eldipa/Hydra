@@ -181,13 +181,12 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'widgets/buttons',
     ThreadButtonBarController.prototype._target_of_the_action = function () {
         //TODO no hay ningun cambio en las toolbars que muestren este pseudo mode!!!
           var is_targeting_all_threads = this.pseudo_mode.is_targeting_all_threads || this.mode.is_targeting_all_threads;
-          var thread_followed = this.thread_follower.thread_followed;
 
-          if (is_targeting_all_threads || !thread_followed) {
+          if (is_targeting_all_threads || !this.thread_follower.are_you_following_a_specific_thread()) {
               return this.thread_follower.thread_group_followed;
           }
           else {
-              return thread_followed;
+              return this.thread_follower.thread_followed;
           }
     };
 

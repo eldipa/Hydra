@@ -16,7 +16,7 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
         this.view.add_child(this.code_editor, {position: "bottom", grow: 1, shrink: 1});
 
         // Create a view for the stack 
-        this.stack_view = new stack_view.StackView(); // we dont want that StackView be an observer of the debuggee_tracker. We want to reuse the same logic of our update method
+        this.stack_view = new stack_view.StackView(this); // we dont want that StackView be an observer of the debuggee_tracker. We want to reuse the same logic of our update method
 
         this.view.split(this.stack_view, 'right');
         this.view = this.view.parent();
@@ -62,7 +62,7 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
 
         this.gdb_console_view.follow_debugger(thread_group_to_follow.get_debugger_you_belong());
 
-        this.stack_view.follow(thread_to_follow, this);
+        this.stack_view.request_frames_update();
 
         this.see_your_thread_and_update_yourself(true);
 
@@ -86,7 +86,7 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
         // Thread Group specific stuff --------------------------
         //
         //
-        if (! this.thread_group_followed) {
+        if (! this.are_you_following_a_thread_group()) {
             return;
         }
 
@@ -110,7 +110,7 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
 
         if (_.contains(["thread_group_exited"], topic) && data.thread_group == this.thread_group_followed) {
             this.button_bar.select_toolbar(); // update this here so the toolbar can disable itself
-            this.follow(null, this.thread_group_followed); // restart the following
+            this.follow(null, null); // restart the following, our thread group (process) is dead!
 
             return;
         }
@@ -123,7 +123,7 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
         // Thread alive specific stuff --------------------------
         //
         //
-        if (! this.thread_followed ) {
+        if (! this.are_you_following_a_specific_thread() ) {
             return;
         }
         
@@ -160,7 +160,7 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
         // a thread changed, we need to update us:
         if (_.contains(["thread-stack-updated", 'thread_created', 'thread_running', 'thread_stopped', 'thread_exited', 'thread_update', 'thread_group_exited'], topic)) {
             // Update our thread that we are following
-            if (is_my_thread_updated) { 
+            if (is_my_thread_updated) {
                 this.see_your_thread_and_update_yourself();
             }
             
@@ -170,6 +170,12 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
                     this.current_line_highlights.update_highlight_of_thread(thread);
                 }
             }, this);
+
+
+            if (is_my_thread_updated && _.contains(["thread_exited"], topic)) {
+                this.follow(null, this.thread_group_followed); // refollowing us, our thread is dead!
+            }
+
         }
         else {
             console.log("w? " + topic);
@@ -254,10 +260,10 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
 
     ThreadFollower.prototype.force_sync_due_thread_followed_update = function () {
         // The following is necessary to syncronize other gdb views (like the gdb console view)
-        var thread_followed = this.thread_followed;
-        var debugger_obj = this.thread_group_followed.get_debugger_you_belong()
+        if (this.are_you_following_a_specific_thread()) {
+            var thread_followed = this.thread_followed;
+            var debugger_obj = this.thread_group_followed.get_debugger_you_belong()
 
-        if (thread_followed) {
             debugger_obj.execute("-thread-select", ["" + thread_followed.id], function() {
                 debugger_obj.execute("-stack-select-frame", ["" + thread_followed.frame_level]);
             });
@@ -270,7 +276,7 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
     ThreadFollower.prototype.update_current_line = function (line_number_or_address) {
         //line_number = Number(line_number);
         this.code_editor.go_to_line(line_number_or_address);
-        if (this.thread_followed) { // if we are following a thread we must update its highlight
+        if (this.are_you_following_a_specific_thread()) { // if we are following a thread we must update its highlight
             this.current_line_highlights.update_highlight_of_thread(this.thread_followed);
         }
 
@@ -310,6 +316,14 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
 
     ThreadFollower.prototype.are_you_following_a_live_process = function () {
         return this.thread_group_followed && this.thread_group_followed.are_you_alive();
+    };
+
+    ThreadFollower.prototype.are_you_following_a_thread_group = function () {
+        return !!this.thread_group_followed;
+    };
+
+    ThreadFollower.prototype.are_you_following_a_specific_thread = function () {
+        return !!this.thread_followed;
     };
 
 
