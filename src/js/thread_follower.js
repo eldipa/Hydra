@@ -8,7 +8,7 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
         this.gdb_console_view = gdb_console_view;
 
         // Create a Code Editor view and a button bar to display and control a thread
-        this.code_editor = new code_editor.CodeEditor();
+        this.code_editor = new code_editor.CodeEditor(this);
         this.button_bar = new thread_button_bar_controller.ThreadButtonBarController(this);
 
         this.view = new layout.Stacked("vertically");
@@ -60,7 +60,6 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
         this.thread_followed = thread_to_follow;
         this.thread_group_followed = thread_group_to_follow;
 
-        this.code_editor.set_debugger(thread_to_follow.get_debugger_you_belong());
         this.gdb_console_view.follow_debugger(thread_to_follow.get_debugger_you_belong());
 
         this.stack_view.follow(thread_to_follow, this);

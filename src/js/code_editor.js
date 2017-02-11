@@ -9,7 +9,7 @@ define(["event_handler",'ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'o
         return Number(line_number)-1;
     };
 
-    var CodeEditor = function () {
+    var CodeEditor = function (thread_follower) {
         this.super("Code Editor");
         var self = this;
       
@@ -21,7 +21,7 @@ define(["event_handler",'ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'o
 
         this._$out_of_dom = this._$container;
 
-        this.debugger_obj = null;
+        this.thread_follower = thread_follower;
 
         this._breakpoints_highlights_by_marker_id = {};
     };
@@ -58,7 +58,8 @@ define(["event_handler",'ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'o
 
     CodeEditor.prototype.get_display_controller = function () {
         var self = this;
-        if (!self.debugger_obj) {
+        var thread_group_followed = this.thread_follower.thread_group_followed;
+        if (!thread_group_followed) {
             return [];
         }
 
@@ -100,7 +101,7 @@ define(["event_handler",'ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'o
                          text: 'run until here',
                          action: function (e) {
                             e.preventDefault();
-                            self.debugger_obj.execute("-exec-until", [bound_position_str]);
+                            thread_group_followed.execute("-exec-until", [bound_position_str]);
                          }
                       }
                   ];
@@ -116,8 +117,8 @@ define(["event_handler",'ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'o
                             e.preventDefault();
                             // TODO restrict this breakpoint to the threa group
                             // and/or if it is temporal
-                            self.debugger_obj.execute("-break-insert", [bound_position_str], function (data) {
-                                self.debugger_obj.tracker._breakpoints_modified(data);
+                            thread_group_followed.execute("-break-insert", [bound_position_str], function (data) {
+                                thread_group_followed.tracker._breakpoints_modified(data);
                             });
                          }
                       },
@@ -125,7 +126,7 @@ define(["event_handler",'ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'o
                          text: 'run until here',
                          action: function (e) {
                             e.preventDefault();
-                            self.debugger_obj.execute("-exec-until", [bound_position_str]);
+                            thread_group_followed.execute("-exec-until", [bound_position_str]);
                          }
                       }
                   ];
@@ -317,10 +318,6 @@ define(["event_handler",'ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'o
         else {
             return line_number_str_or_address;
         }
-    };
-
-    CodeEditor.prototype.set_debugger = function (debugger_obj) {
-        this.debugger_obj = debugger_obj;
     };
 
     return {CodeEditor: CodeEditor};
