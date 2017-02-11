@@ -23,9 +23,13 @@ define(["underscore", "jquery", "layout", "shortcuts", "jstree", "jstree_builder
            thread_followed.request_an_update_thread_stack(this.on_frames_updated_request_variables_update);
        }
        else {
-           this.frames = []; // if there isn't a thread, there aren't any frames
-           this._update();
+           this.clean_up(); // if there isn't a thread, there aren't any frames
        }
+   };
+
+   StackView.prototype.clean_up = function () {
+       this.frames = [];
+       this._update();
    };
 
    StackView.prototype.on_frames_updated_request_variables_update = function () {

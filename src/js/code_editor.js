@@ -148,6 +148,12 @@ define(["event_handler",'ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'o
         this.load_code_from_string(assembly_code);
     };
 
+    CodeEditor.prototype.clean_up= function () {
+        this.edit_session.setMode("ace/mode/c_cpp");
+        this.use_the_common_decimal_gutter();
+        this.load_code_from_string("");
+    };
+
     CodeEditor.prototype.go_to_line = function (line_number_or_address) {
         var ace_row_number = this.ace_row_lookup_from_gutter_line(line_number_or_address);
 
