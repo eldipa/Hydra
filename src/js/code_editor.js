@@ -61,8 +61,9 @@ define(["event_handler",'ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'o
                     var file = ui.item.label;
                     var fullname = ui.item.value;
 
-                    console.log("file "+file+" ("+fullname+")");
                     ui.item.value = ui.item.label;
+
+                    thread_follower.update_button_bar_and_code_editor_to_show(fullname, 1, "0x00000000");
                 }
         });
 
