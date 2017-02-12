@@ -1,5 +1,6 @@
-define(["event_handler",'ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'observation'], function (event_handler, ace, $, layout, shortcuts, _, Obs) {
+define(["event_handler",'ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'observation', 'code_selector'], function (event_handler, ace, $, layout, shortcuts, _, Obs, code_selector) {
     var Observation = Obs.Observation;
+    var CodeSelector = code_selector.CodeSelector;
 
     var get_text_of_gutter_line_number_from_number = function(session, ace_row_number) {
         return "" + (ace_row_number+1);
@@ -19,53 +20,7 @@ define(["event_handler",'ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'o
         this._$container.data('do_observation', function () { return new Observation({target: self, context: self}); }); 
         this.create_ace_viewer();
 
-        this._$file_selector = $('<input></input>')
-            .addClass( "ui-widget ui-widget-content ui-state-default ui-corner-all" )
-            .autocomplete({
-                source: function search_for_suggestions(request, callback) {
-                    var search_for_all = !request.term;
-
-                    var safe_value = $.ui.autocomplete.escapeRegex(request.term);
-                    var matcher = new RegExp(safe_value, 'i');
-
-                    var thread_follower = self.thread_follower;
-
-                    if (thread_follower.are_you_following_a_thread_group()) {
-                        var thread_group_followed = thread_follower.thread_group_followed;
-                        thread_group_followed.update_source_fullnames(function on_source_fullnames(files, msg) {
-                            var all_options = _.map(files, function (obj) {
-                                return {
-                                    label: obj.file,
-                                    value: obj.fullname
-                                };
-                            });
-
-                            if (search_for_all) {
-                                var options = all_options;
-                            }
-                            else {
-                                var options = _.filter(all_options, function (opt) {
-                                    return matcher.test(opt.label);
-                                });
-                            }
-
-                            callback(options);
-                        });
-                    }
-                    else {
-                        callback([]);
-                    }
-                },
-
-                select: function on_suggestion_selected(ev, ui) {
-                    var file = ui.item.label;
-                    var fullname = ui.item.value;
-
-                    ui.item.value = ui.item.label;
-
-                    thread_follower.update_button_bar_and_code_editor_to_show(fullname, 1, "0x00000000");
-                }
-        });
+        this._file_selector = new CodeSelector(thread_follower);
 
         this._$out_of_dom = this._$container;
 
@@ -87,11 +42,12 @@ define(["event_handler",'ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'o
 
             this._$out_of_dom.appendTo(this.box);
             this._$out_of_dom = null;
-            
-            this._$file_selector.appendTo(this.box);
         }
 
-        this._$file_selector.position({
+        this._file_selector.box = this.box;
+        this._file_selector.render();
+
+        this._file_selector.position({
             my: "right-5 top+5",
             at: "right top",
             of: this._$container
@@ -103,8 +59,9 @@ define(["event_handler",'ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'o
     CodeEditor.prototype.unlink = function () {
         if (!this._$out_of_dom) {
             this._$out_of_dom = this._$container.detach();
-            this._$file_selector = this._$file_selector.detach();
         }
+       
+        this._file_selector.unlink();
     };
 
     CodeEditor.prototype.attach_menu = function (menu) {
