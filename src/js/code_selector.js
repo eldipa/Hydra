@@ -112,7 +112,8 @@ define(['jquery', 'layout', 'underscore'], function ($, layout, _) {
             });
         }
         else {
-            throw new Error("You are trying to set a source code (CodeSelector) in a thread group that doesn't exist.");
+            $(self._$file_selector).val("");
+            this._selected = {file: null, fullname: null};
         }
 
     };
