@@ -1,4 +1,4 @@
-define(["event_handler",'ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'observation', 'widgets/combobox-autocomplete'], function (event_handler, ace, $, layout, shortcuts, _, Obs, _unused_) {
+define(["event_handler",'ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'observation'], function (event_handler, ace, $, layout, shortcuts, _, Obs) {
     var Observation = Obs.Observation;
 
     var get_text_of_gutter_line_number_from_number = function(session, ace_row_number) {
@@ -19,7 +19,52 @@ define(["event_handler",'ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'o
         this._$container.data('do_observation', function () { return new Observation({target: self, context: self}); }); 
         this.create_ace_viewer();
 
-        this._$file_selector = $('<span></span>').combobox();
+        this._$file_selector = $('<input></input>')
+            .addClass( "ui-widget ui-widget-content ui-state-default ui-corner-all" )
+            .autocomplete({
+                source: function search_for_suggestions(request, callback) {
+                    var search_for_all = !request.term;
+
+                    var safe_value = $.ui.autocomplete.escapeRegex(request.term);
+                    var matcher = new RegExp(safe_value, 'i');
+
+                    var thread_follower = self.thread_follower;
+
+                    if (thread_follower.are_you_following_a_thread_group()) {
+                        var thread_group_followed = thread_follower.thread_group_followed;
+                        thread_group_followed.update_source_fullnames(function on_source_fullnames(files, msg) {
+                            var all_options = _.map(files, function (obj) {
+                                return {
+                                    label: obj.file,
+                                    value: obj.fullname
+                                };
+                            });
+
+                            if (search_for_all) {
+                                var options = all_options;
+                            }
+                            else {
+                                var options = _.filter(all_options, function (opt) {
+                                    return matcher.test(opt.label);
+                                });
+                            }
+
+                            callback(options);
+                        });
+                    }
+                    else {
+                        callback([]);
+                    }
+                },
+
+                select: function on_suggestion_selected(ev, ui) {
+                    var file = ui.item.label;
+                    var fullname = ui.item.value;
+
+                    console.log("file "+file+" ("+fullname+")");
+                    ui.item.value = ui.item.label;
+                }
+        });
 
         this._$out_of_dom = this._$container;
 
@@ -46,7 +91,7 @@ define(["event_handler",'ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'o
         }
 
         this._$file_selector.position({
-            my: "right+5 top+5",
+            my: "right-5 top+5",
             at: "right top",
             of: this._$container
         });
