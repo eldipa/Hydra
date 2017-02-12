@@ -1,4 +1,4 @@
-define(["event_handler",'ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'observation'], function (event_handler, ace, $, layout, shortcuts, _, Obs) {
+define(["event_handler",'ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'observation', 'widgets/combobox-autocomplete'], function (event_handler, ace, $, layout, shortcuts, _, Obs, _unused_) {
     var Observation = Obs.Observation;
 
     var get_text_of_gutter_line_number_from_number = function(session, ace_row_number) {
@@ -18,6 +18,8 @@ define(["event_handler",'ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'o
         this._$container = $('<div style="width: 100%; height: 100%; font-family: monaco;"></div>');
         this._$container.data('do_observation', function () { return new Observation({target: self, context: self}); }); 
         this.create_ace_viewer();
+
+        this._$file_selector = $('<span></span>').combobox();
 
         this._$out_of_dom = this._$container;
 
@@ -39,14 +41,23 @@ define(["event_handler",'ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'o
 
             this._$out_of_dom.appendTo(this.box);
             this._$out_of_dom = null;
+            
+            this._$file_selector.appendTo(this.box);
         }
 
+        this._$file_selector.position({
+            my: "right+5 top+5",
+            at: "right top",
+            of: this._$container
+        });
+        
         this.editor.resize();
     };
    
     CodeEditor.prototype.unlink = function () {
         if (!this._$out_of_dom) {
             this._$out_of_dom = this._$container.detach();
+            this._$file_selector = this._$file_selector.detach();
         }
     };
 
