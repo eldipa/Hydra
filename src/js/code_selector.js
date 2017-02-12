@@ -56,6 +56,8 @@ define(['jquery', 'layout', 'underscore'], function ($, layout, _) {
         });
 
         this._$out_of_dom = this._$file_selector;
+
+        this.disable();
     };
     
     CodeSelector.prototype.__proto__ = layout.Panel.prototype;
@@ -116,6 +118,16 @@ define(['jquery', 'layout', 'underscore'], function ($, layout, _) {
             this._selected = {file: null, fullname: null};
         }
 
+    };
+
+    CodeSelector.prototype.disable = function () {
+        this._selected = {file: null, fullname: null};
+        $(this._$file_selector).attr('disabled', true).addClass('ui-state-disabled').val("");
+    };
+
+    CodeSelector.prototype.enable = function () {
+        this._selected = {file: null, fullname: null};
+        $(this._$file_selector).removeAttr('disabled').removeClass('ui-state-disabled').val("");
     };
 
     return {CodeSelector: CodeSelector};

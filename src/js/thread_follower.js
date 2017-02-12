@@ -68,6 +68,7 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
 
             this.stack_view.request_frames_update();
 
+            this.code_editor._file_selector.enable();
             this.see_your_thread_and_update_yourself(true);
 
             this.breakpoint_highlights.clean_and_search_breakpoints_to_highlight();
@@ -99,6 +100,7 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
         this.stack_view.clean_up();
         
         this.code_editor.clean_up();
+        this.code_editor._file_selector.disable();
         this.button_bar.select_toolbar(); // because this thread follower is not following anything, this call will disable the button bar
 
         this.breakpoint_highlights.clean_up();
