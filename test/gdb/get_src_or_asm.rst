@@ -302,10 +302,10 @@ como un ejecutable valido ("Architecture of file not recognized")
    >>> r['results']                          #doctest: +ELLIPSIS
    {u'files': [{u'file': u'main.c',
                 u'fullname': u'/.../main.c'},
-               {u'file': u'sort.c',
-                u'fullname': u'/.../sort.c'},
-               {u'file': u'print.c',
-                u'fullname': u'/.../print.c'}]}
+               {u'file': u'lib/sort.c',
+                u'fullname': u'/.../lib/sort.c'},
+               {u'file': u'lib/print.c',
+                u'fullname': u'/.../lib/print.c'}]}
 
 Limiamos todo:
 

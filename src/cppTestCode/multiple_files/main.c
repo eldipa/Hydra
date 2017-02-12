@@ -1,6 +1,6 @@
 #include <stdio.h>
-#include "sort.h"
-#include "print.h"
+#include "lib/sort.h"
+#include "lib/print.h"
 
 #define NUM_ELEMS 9
 
