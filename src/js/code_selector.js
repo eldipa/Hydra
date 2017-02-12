@@ -3,6 +3,7 @@ define(['jquery', 'layout', 'underscore'], function ($, layout, _) {
         this.thread_follower = thread_follower;
 
         this._selected = {file: null, fullname: null};
+        this._am_i_disabled = true;
 
         var self = this;
         this._$file_selector = $('<input></input>')
@@ -80,6 +81,10 @@ define(['jquery', 'layout', 'underscore'], function ($, layout, _) {
     };
 
     CodeSelector.prototype.update_selection = function (fullname) {
+        if (this._am_i_disabled) {
+            return;
+        }
+
         //console.log("updating... " + fullname); 
         var self = this;
         var thread_follower = self.thread_follower;
@@ -121,11 +126,13 @@ define(['jquery', 'layout', 'underscore'], function ($, layout, _) {
     };
 
     CodeSelector.prototype.disable = function () {
+        this._am_i_disabled = true;
         this._selected = {file: null, fullname: null};
         $(this._$file_selector).attr('disabled', true).addClass('ui-state-disabled').val("");
     };
 
     CodeSelector.prototype.enable = function () {
+        this._am_i_disabled = false;
         this._selected = {file: null, fullname: null};
         $(this._$file_selector).removeAttr('disabled').removeClass('ui-state-disabled').val("");
     };
