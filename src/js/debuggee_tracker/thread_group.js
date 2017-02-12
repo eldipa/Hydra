@@ -62,6 +62,18 @@ define(["underscore", "shortcuts", 'event_handler'], function (_, shortcuts, eve
         var debugger_id = self.debugger_id;
         var debugger_obj = self.tracker.get_debugger_with_id(debugger_id);
 
+        var thread_follower = from_who.thread_follower;
+
+        menu.push({
+            text: 'Follow',
+            disabled: !self.is_executable_loaded() || !thread_follower,
+            action: function (e) {
+                e.preventDefault();
+                thread_follower.follow(null, self);
+            },
+        });
+
+        menu.push({divider: true});
         menu.push({
                text: 'Load executable', //TODO attach (and others)
                action: function (e) {
