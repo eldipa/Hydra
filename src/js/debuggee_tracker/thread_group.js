@@ -50,14 +50,22 @@ define(["underscore", "shortcuts", 'event_handler'], function (_, shortcuts, eve
     ThreadGroup.prototype.get_debugger_you_belong = function () {
         return this.tracker.get_debugger_with_id(this.debugger_id);
     };
+
+    ThreadGroup.prototype.is_executable_loaded = function () {
+        return this._is_executable_loaded === true; // this is a HACK TODO (if gdb removes the executable we don't notice it!!)
+    };
     
     ThreadGroup.prototype.get_display_controller = function (from_who) {
         var self = this;
-        return [{
-               text: 'Load sources', //TODO attach (and others)
+        var menu = [];
+
+        var debugger_id = self.debugger_id;
+        var debugger_obj = self.tracker.get_debugger_with_id(debugger_id);
+
+        menu.push({
+               text: 'Load executable', //TODO attach (and others)
                action: function (e) {
                   e.preventDefault();
-                  var debugger_id = self.debugger_id;
 
                   var input_file_dom = $('<input style="display:none;" type="file" />');
                   input_file_dom.change(function(evt) {
@@ -65,10 +73,6 @@ define(["underscore", "shortcuts", 'event_handler'], function (_, shortcuts, eve
                       if (file_exec_path) {
                           self.load_file_exec_and_symbols(file_exec_path);
 
-                          // TODO XXX XXX  HACK, run the process
-                          var debugger_obj = self.tracker.get_debugger_with_id(debugger_id);
-                          debugger_obj.execute("-break-insert", ["-t", "main"]); // TODO restrict this breakpoint to the threa group 
-                          self.execute("-exec-run");
                       }
                       else {
                           console.log("Loading nothing");
@@ -76,17 +80,41 @@ define(["underscore", "shortcuts", 'event_handler'], function (_, shortcuts, eve
                   });
                   input_file_dom.trigger('click');
                },
-              },
-              {
-                divider: true
-              },
-              {
+              });
+
+        menu.push({divider: true});
+        menu.push({
+            text: 'Run at main',
+            disabled: self.are_you_alive() || !self.is_executable_loaded(),
+            action: function (e) {
+                e.preventDefault();
+
+                self.execute("-break-insert", ["-t", "main"]); 
+                self.execute("-exec-run");
+            },
+        });
+        
+        menu.push({divider: true});
+        menu.push({
+            text: 'Send signal...',
+            disabled: !self.are_you_alive(),
+            action: function (e) {
+                e.preventDefault();
+                // TODO
+            },
+        });
+
+        menu.push({divider: true});
+        menu.push({
                text: 'Remove thread group',
                action: function (e) {
                   e.preventDefault();
                   self.remove();
                },
-              }];
+        });
+
+        return menu;
+
     };
 
     ThreadGroup.prototype.remove = function () {
@@ -101,6 +129,7 @@ define(["underscore", "shortcuts", 'event_handler'], function (_, shortcuts, eve
         var self = this;
         var update_my_status_when_file_is_loaded = function () {
             var s = self.tracker.thread_groups_by_debugger[self.debugger_id];
+            self._is_executable_loaded = true;
             self.tracker._request_an_update_thread_groups_info(s, self.debugger_id);
         };
 
