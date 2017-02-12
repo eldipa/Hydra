@@ -2,6 +2,8 @@ define(['jquery', 'layout', 'underscore'], function ($, layout, _) {
     var CodeSelector = function (thread_follower) {
         this.thread_follower = thread_follower;
 
+        this._selected = {file: null, fullname: null};
+
         var self = this;
         this._$file_selector = $('<input></input>')
             .addClass( "ui-widget ui-widget-content ui-state-default ui-corner-all" )
@@ -45,6 +47,8 @@ define(['jquery', 'layout', 'underscore'], function ($, layout, _) {
                     var file = ui.item.label;
                     var fullname = ui.item.value;
 
+                    self._selected = {file: file, fullname: fullname};
+
                     ui.item.value = ui.item.label;
 
                     thread_follower.update_button_bar_and_code_editor_to_show(fullname, 1, "0x00000000");
@@ -71,6 +75,46 @@ define(['jquery', 'layout', 'underscore'], function ($, layout, _) {
 
     CodeSelector.prototype.position = function (conf) {
         this._$file_selector.position(conf);
+    };
+
+    CodeSelector.prototype.update_selection = function (fullname) {
+        //console.log("updating... " + fullname); 
+        var self = this;
+        var thread_follower = self.thread_follower;
+
+        if (this._selected.fullname === fullname) {
+            return; //nothing to update
+        }
+
+        if (!fullname) {
+            $(self._$file_selector).val("");
+            this._selected = {file: null, fullname: null};
+            return; 
+        }
+
+        if (thread_follower.are_you_following_a_thread_group()) {
+            var thread_group_followed = thread_follower.thread_group_followed;
+            thread_group_followed.update_source_fullnames(function on_source_fullnames(files, msg) {
+                var found = _.where(files, {fullname: fullname});
+                if (found) {
+                    var file = found[0].file;
+                    $(self._$file_selector).val(file);
+
+                    //console.log("updated " + file); 
+                    this._selected = {file: file, fullname: fullname};
+                }
+                else {
+                    console.warn("The file '"+fullname+"' isn't loaded in GDB, beware...");
+                    $(self._$file_selector).val("??");
+                    
+                    this._selected = {file: null, fullname: null};
+                }
+            });
+        }
+        else {
+            throw new Error("You are trying to set a source code (CodeSelector) in a thread group that doesn't exist.");
+        }
+
     };
 
     return {CodeSelector: CodeSelector};

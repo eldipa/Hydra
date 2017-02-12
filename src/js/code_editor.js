@@ -153,6 +153,8 @@ define(["event_handler",'ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'o
         this.edit_session.setMode("ace/mode/c_cpp");
         this.use_the_common_decimal_gutter();
         this.load_code_from_file(source_fullname);
+
+        this._file_selector.update_selection(source_fullname);
     };
 
 
@@ -160,12 +162,16 @@ define(["event_handler",'ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'o
         this.edit_session.setMode("ace/mode/assembly_x86");  // TODO avoid re create the session if the file to load is already loaded
         this.use_the_gutter_for_hexa_addresses(addresses);
         this.load_code_from_string(assembly_code);
+        
+        this._file_selector.update_selection("");
     };
 
     CodeEditor.prototype.clean_up= function () {
         this.edit_session.setMode("ace/mode/c_cpp");
         this.use_the_common_decimal_gutter();
         this.load_code_from_string("");
+        
+        this._file_selector.update_selection("");
     };
 
     CodeEditor.prototype.go_to_line = function (line_number_or_address) {
