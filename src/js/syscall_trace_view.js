@@ -34,7 +34,7 @@ define(["underscore", "jquery", "layout", "event_handler", "widgets/log_view"], 
            if (at_enter) {
                var message = {
                    n: self.log_view.data.length + 1,
-                   time: dtime / 1000,
+                   time: (dtime / 1000).toFixed(4),
                    pid:  data.call.pid,
                    tid:  data.call.tid,
                    name: data.call.name,
@@ -48,7 +48,7 @@ define(["underscore", "jquery", "layout", "event_handler", "widgets/log_view"], 
                var incomplete_syscall = self.didnt_finish_syscalls[syscall_key];
                var message = {
                    n: self.log_view.data.length + 1,
-                   time: dtime / 1000,
+                   time: (dtime / 1000).toFixed(4),
                    pid:  data.call.pid,
                    tid:  data.call.tid,
                    name: "?",
