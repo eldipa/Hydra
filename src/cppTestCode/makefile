@@ -1,6 +1,6 @@
 .PHONY: multiple_files simplified_unix_tools threads
 
-all: Prueba testExe testVariables write_one_char_at_time multiplesPunteros multiple_files simplified_unix_tools outputTest stdinTest threads
+all: Prueba testExe testVariables write_one_char_at_time multiplesPunteros multiple_files simplified_unix_tools outputTest stdinTest threads semTest msgTest
 
 defines= -D espera
 
@@ -27,6 +27,12 @@ outputTest: outputTest.cpp
 	
 stdinTest: stdinTest.cpp
 	g++ -g -o stdinTest stdinTest.cpp
+	
+semTest: semTest.cpp
+	g++ -g -o semTest semTest.cpp
+	
+msgTest: msgTest.cpp
+	g++ -g -o msgTest msgTest.cpp
 
 simplified_unix_tools:
 	$(MAKE) --no-print-directory -C ./simplified_unix_tools
@@ -35,7 +41,7 @@ threads:
 	$(MAKE) --no-print-directory -C ./threads
 
 clean:
-	rm Prueba testExe testVariables write_one_char_at_time multiplesPunteros outputTest stdinTest
+	rm Prueba testExe testVariables write_one_char_at_time multiplesPunteros outputTest stdinTest semTest msgTest
 	$(MAKE) --no-print-directory -C ./multiple_files clean
 	$(MAKE) --no-print-directory -C ./simplified_unix_tools clean
 	$(MAKE) --no-print-directory -C ./threads clean
