@@ -172,3 +172,11 @@ classes should alter those!
   position: absolute;
   border: 2px dashed black;
 }
+
+.slick-row.odd {
+  background: #16191B;
+}
+
+.slick-row.even {
+  background: #0E0E0E;
+}
