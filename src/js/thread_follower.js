@@ -252,6 +252,7 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
     ThreadFollower.prototype.update_button_bar_and_code_editor_to_show = function (source_fullname, line_number_str, instruction_address, am_i_following_other_thread) {
         if (source_fullname && line_number_str && !this.button_bar.is_in_assembly()) {
             this.button_bar.leave_assembly_mode();
+            this.code_editor._file_selector.update_selection(source_fullname);
 
             if (! this.is_this_file_already_loaded(source_fullname)) {
                 this.update_yourself_from_source_code(source_fullname);
@@ -266,6 +267,7 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
         }
         else {
             this.button_bar.enter_assembly_mode();
+            this.code_editor._file_selector.update_selection("");
 
             var debugger_obj = this.thread_group_followed.get_debugger_you_belong();
             var self = this;

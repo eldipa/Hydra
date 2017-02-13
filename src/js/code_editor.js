@@ -48,7 +48,7 @@ define(["event_handler",'ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'o
         this._file_selector.render();
 
         this._file_selector.position({
-            my: "right-5 top+5",
+            my: "right-7 top+7",
             at: "right top",
             of: this._$container
         });
@@ -153,8 +153,6 @@ define(["event_handler",'ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'o
         this.edit_session.setMode("ace/mode/c_cpp");
         this.use_the_common_decimal_gutter();
         this.load_code_from_file(source_fullname);
-
-        this._file_selector.update_selection(source_fullname);
     };
 
 
@@ -162,16 +160,12 @@ define(["event_handler",'ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'o
         this.edit_session.setMode("ace/mode/assembly_x86");  // TODO avoid re create the session if the file to load is already loaded
         this.use_the_gutter_for_hexa_addresses(addresses);
         this.load_code_from_string(assembly_code);
-        
-        this._file_selector.update_selection("");
     };
 
     CodeEditor.prototype.clean_up= function () {
         this.edit_session.setMode("ace/mode/c_cpp");
         this.use_the_common_decimal_gutter();
         this.load_code_from_string("");
-        
-        this._file_selector.update_selection("");
     };
 
     CodeEditor.prototype.go_to_line = function (line_number_or_address) {
@@ -270,6 +264,8 @@ define(["event_handler",'ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'o
         this.editor.setTheme("ace/theme/monokai");
         this.editor.setOption("showPrintMargin", false)
         this.editor.setReadOnly(true);
+
+        this.editor.renderer.$cursorLayer.element.style.display = "none"
       
         this.editor.setHighlightActiveLine(false);
      

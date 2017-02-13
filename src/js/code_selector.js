@@ -7,7 +7,9 @@ define(['jquery', 'layout', 'underscore'], function ($, layout, _) {
 
         var self = this;
         this._$file_selector = $('<input></input>')
-            .addClass( "ui-widget ui-widget-content ui-state-default ui-corner-all" )
+            //.addClass( "ui-widget ui-widget-content ui-state-default ui-corner-all" )
+            .addClass( "ui-corner-all" )
+            .addClass( "code_selector" )
             .autocomplete({
                 source: function search_for_suggestions(request, callback) {
                     var search_for_all = !request.term;
@@ -85,17 +87,16 @@ define(['jquery', 'layout', 'underscore'], function ($, layout, _) {
             return;
         }
 
-        //console.log("updating... " + fullname); 
         var self = this;
         var thread_follower = self.thread_follower;
 
-        if (this._selected.fullname === fullname) {
+        if (self._selected.fullname === fullname) {
             return; //nothing to update
         }
 
         if (!fullname) {
             $(self._$file_selector).val("");
-            this._selected = {file: null, fullname: null};
+            self._selected = {file: null, fullname: null};
             return; 
         }
 
@@ -107,20 +108,19 @@ define(['jquery', 'layout', 'underscore'], function ($, layout, _) {
                     var file = found[0].file;
                     $(self._$file_selector).val(file);
 
-                    //console.log("updated " + file); 
-                    this._selected = {file: file, fullname: fullname};
+                    self._selected = {file: file, fullname: fullname};
                 }
                 else {
                     console.warn("The file '"+fullname+"' isn't loaded in GDB, beware...");
                     $(self._$file_selector).val("??");
                     
-                    this._selected = {file: null, fullname: null};
+                    self._selected = {file: null, fullname: null};
                 }
             });
         }
         else {
             $(self._$file_selector).val("");
-            this._selected = {file: null, fullname: null};
+            self._selected = {file: null, fullname: null};
         }
 
     };

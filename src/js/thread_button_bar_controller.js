@@ -259,7 +259,7 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'widgets/buttons',
             ];
 
 
-        var toolbar_to_control_a_dead_process = buttons.create_button_bar(this._create_button_descriptions_for_non_running_thread_group(button_descriptions_for_src_stopped_mode));
+        var toolbar_to_control_a_dead_process = buttons.create_button_bar(this._create_button_descriptions_for_non_running_thread_group(button_descriptions_for_src_stopped_mode), true);
 
         var toolbar_to_control_a_stopped_thread = buttons.create_button_bar(button_descriptions_for_src_stopped_mode, true);
         var toolbar_to_control_a_stopped_thread_in_reverse_mode = buttons.create_button_bar(this._create_button_descriptions_for_reverse_mode_from(button_descriptions_for_src_stopped_mode), true);
