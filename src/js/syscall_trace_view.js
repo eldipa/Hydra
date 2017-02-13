@@ -5,7 +5,7 @@ define(["underscore", "jquery", "layout", "event_handler", "widgets/log_view"], 
        
        var columns = [
            {id: 'n', name: "#", field: "n", width: 16, can_be_autosized: false},
-           {id: "timestamp", name: "Timestamp", field: "timestamp", width: 96, can_be_autosized: false},
+           {id: "time", name: "Time", field: "time", width: 96, can_be_autosized: false},
            {id: "pid", name: "PID", field: "pid", width: 36, can_be_autosized: false, cssClass: "selectable_text"},
            {id: "tid", name: "TID", field: "tid", width: 16, can_be_autosized: false, cssClass: "selectable_text"},
            {id: "name", name: "Name", field: "name", width: 36, cssClass: "selectable_text"},
@@ -18,6 +18,7 @@ define(["underscore", "jquery", "layout", "event_handler", "widgets/log_view"], 
        this.didnt_finish_syscalls = {};
 
        var EH = event_handler.get_global_event_handler();
+       this.time_reference = Date.now();
 
        var self = this;
        EH.subscribe("notification-gdb", function (data, topic) {
@@ -25,13 +26,15 @@ define(["underscore", "jquery", "layout", "event_handler", "widgets/log_view"], 
            if (!topic.endsWith('.gdb-module.Exec.strace')) {
                return;
            }
+           var dtime = Date.now() - self.time_reference;
+           self.time_reference += dtime;
 
            var at_enter = data.at === 'enter';
            var syscall_key = "pid"+data.call.pid+"tid"+data.call.tid;
            if (at_enter) {
                var message = {
                    n: self.log_view.data.length + 1,
-                   timestamp: Date.now(),
+                   time: dtime / 1000,
                    pid:  data.call.pid,
                    tid:  data.call.tid,
                    name: data.call.name,
@@ -45,7 +48,7 @@ define(["underscore", "jquery", "layout", "event_handler", "widgets/log_view"], 
                var incomplete_syscall = self.didnt_finish_syscalls[syscall_key];
                var message = {
                    n: self.log_view.data.length + 1,
-                   timestamp: Date.now(),
+                   time: dtime / 1000,
                    pid:  data.call.pid,
                    tid:  data.call.tid,
                    name: "?",

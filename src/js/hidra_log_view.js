@@ -5,7 +5,7 @@ define(["underscore", "jquery", "layout", "event_handler", "widgets/log_view"], 
        
        var columns = [
            {id: 'n', name: "#", field: "n", width: 16, can_be_autosized: false},
-           {id: "timestamp", name: "Timestamp", field: "timestamp", width: 96, can_be_autosized: false},
+           {id: "time", name: "Time", field: "time", width: 96, can_be_autosized: false},
            {id: "source", name: "Source", field: "source", width: 96, can_be_autosized: false, cssClass: "selectable_text"},
            {id: "message", name: "Message", field: "message", cssClass: "selectable_text"},
        ];
@@ -13,12 +13,15 @@ define(["underscore", "jquery", "layout", "event_handler", "widgets/log_view"], 
        this.log_view = new log_view_module.LogView(det_view, columns, Message);
 
        var EH = event_handler.get_global_event_handler();
+       this.time_reference = Date.now();
 
        var self = this;
        EH.subscribe("", function (data, topic) {
+           var dtime = Date.now() - self.time_reference;
+           self.time_reference += dtime;
            self.log_view.append_message({
                n: self.log_view.data.length + 1,
-               timestamp: Date.now(),
+               time: dtime / 1000,
                source: "*" + topic,
                message: JSON.stringify(data)
            });
