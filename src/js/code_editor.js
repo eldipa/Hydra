@@ -1,5 +1,6 @@
-define(["event_handler",'ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'observation'], function (event_handler, ace, $, layout, shortcuts, _, Obs) {
+define(["event_handler",'ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'observation', 'code_selector'], function (event_handler, ace, $, layout, shortcuts, _, Obs, code_selector) {
     var Observation = Obs.Observation;
+    var CodeSelector = code_selector.CodeSelector;
 
     var get_text_of_gutter_line_number_from_number = function(session, ace_row_number) {
         return "" + (ace_row_number+1);
@@ -9,7 +10,7 @@ define(["event_handler",'ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'o
         return Number(line_number)-1;
     };
 
-    var CodeEditor = function () {
+    var CodeEditor = function (thread_follower) {
         this.super("Code Editor");
         var self = this;
       
@@ -19,9 +20,11 @@ define(["event_handler",'ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'o
         this._$container.data('do_observation', function () { return new Observation({target: self, context: self}); }); 
         this.create_ace_viewer();
 
+        this._file_selector = new CodeSelector(thread_follower);
+
         this._$out_of_dom = this._$container;
 
-        this.debugger_obj = null;
+        this.thread_follower = thread_follower;
 
         this._breakpoints_highlights_by_marker_id = {};
     };
@@ -41,6 +44,15 @@ define(["event_handler",'ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'o
             this._$out_of_dom = null;
         }
 
+        this._file_selector.box = this.box;
+        this._file_selector.render();
+
+        this._file_selector.position({
+            my: "right-7 top+7",
+            at: "right top",
+            of: this._$container
+        });
+        
         this.editor.resize();
     };
    
@@ -48,6 +60,8 @@ define(["event_handler",'ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'o
         if (!this._$out_of_dom) {
             this._$out_of_dom = this._$container.detach();
         }
+       
+        this._file_selector.unlink();
     };
 
     CodeEditor.prototype.attach_menu = function (menu) {
@@ -58,12 +72,15 @@ define(["event_handler",'ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'o
 
     CodeEditor.prototype.get_display_controller = function () {
         var self = this;
-        if (!self.debugger_obj) {
+        if (!this.thread_follower.are_you_following_a_thread_group()) {
             return [];
         }
 
+        var thread_group_followed = this.thread_follower.thread_group_followed;
+
         var ace_row_number = self.editor.getCursorPosition().row;
-        var line_number_str = self.line_number_or_address_lookup_from_ace_row(null, ace_row_number);
+        var position_str = self.line_number_or_address_lookup_from_ace_row(null, ace_row_number);
+        var bound_position_str = self.bind_line_number_str_or_address_to_source_filename(position_str);
 
         var breakpoints = [];
         for (var marker_id in self._breakpoints_highlights_by_marker_id) {
@@ -99,7 +116,7 @@ define(["event_handler",'ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'o
                          text: 'run until here',
                          action: function (e) {
                             e.preventDefault();
-                            self.debugger_obj.execute("-exec-until", [line_number_str]);
+                            thread_group_followed.execute("-exec-until", [bound_position_str]);
                          }
                       }
                   ];
@@ -115,8 +132,8 @@ define(["event_handler",'ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'o
                             e.preventDefault();
                             // TODO restrict this breakpoint to the threa group
                             // and/or if it is temporal
-                            self.debugger_obj.execute("-break-insert", [line_number_str], function (data) {
-                                self.debugger_obj.tracker._breakpoints_modified(data);
+                            thread_group_followed.execute("-break-insert", [bound_position_str], function (data) {
+                                thread_group_followed.tracker._breakpoints_modified(data);
                             });
                          }
                       },
@@ -124,7 +141,7 @@ define(["event_handler",'ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'o
                          text: 'run until here',
                          action: function (e) {
                             e.preventDefault();
-                            self.debugger_obj.execute("-exec-until", [line_number_str]);
+                            thread_group_followed.execute("-exec-until", [bound_position_str]);
                          }
                       }
                   ];
@@ -143,6 +160,12 @@ define(["event_handler",'ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'o
         this.edit_session.setMode("ace/mode/assembly_x86");  // TODO avoid re create the session if the file to load is already loaded
         this.use_the_gutter_for_hexa_addresses(addresses);
         this.load_code_from_string(assembly_code);
+    };
+
+    CodeEditor.prototype.clean_up= function () {
+        this.edit_session.setMode("ace/mode/c_cpp");
+        this.use_the_common_decimal_gutter();
+        this.load_code_from_string("");
     };
 
     CodeEditor.prototype.go_to_line = function (line_number_or_address) {
@@ -241,6 +264,8 @@ define(["event_handler",'ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'o
         this.editor.setTheme("ace/theme/monokai");
         this.editor.setOption("showPrintMargin", false)
         this.editor.setReadOnly(true);
+
+        this.editor.renderer.$cursorLayer.element.style.display = "none"
       
         this.editor.setHighlightActiveLine(false);
      
@@ -300,14 +325,22 @@ define(["event_handler",'ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'o
         var fs = require('fs');
         var code = fs.readFileSync(filename, encoding || "ascii");
         this.load_code_from_string(code);
+
+        this.loaded_filename = filename;
     };
 
     CodeEditor.prototype.load_code_from_string = function (string) {
         this.editor.setValue(string);
+        this.loaded_filename = null;
     };
 
-    CodeEditor.prototype.set_debugger = function (debugger_obj) {
-        this.debugger_obj = debugger_obj;
+    CodeEditor.prototype.bind_line_number_str_or_address_to_source_filename = function (line_number_str_or_address) {
+        if (this.loaded_filename) {
+            return this.loaded_filename + ":" + line_number_str_or_address;
+        }
+        else {
+            return line_number_str_or_address;
+        }
     };
 
     return {CodeEditor: CodeEditor};

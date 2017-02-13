@@ -14,6 +14,7 @@ info target
    >>> gdb = Gdb()
 
    >>> BIN="../src/cppTestCode/exe_with_and_without_symbols"
+   >>> BIN2="../src/cppTestCode/multiple_files"
 
    >>> request(gdb, "set target-async off", [])                 # doctest: +PASS
 
@@ -34,12 +35,16 @@ solo llamar a
    >>> r['results']['file'] 
    u'example.c'
 
-   >>> r['results']['fullname']              #doctest: +SKIP
-   u'/foo/bar/example.c'
+   >>> r['results']['fullname']              #doctest: +ELLIPSIS
+   u'/.../example.c'
 
-   >>> r['results']['line']                  #doctest: +SKIP
+   >>> r['results']['line']                  #doctest: +ELLIPSIS
    u'1'
 
+   >>> r = request(gdb, "-file-list-exec-source-files")
+   >>> r['results']                          #doctest: +ELLIPSIS
+   {u'files': [{u'file': u'example.c',
+                u'fullname': u'/.../example.c'}]}
 
 Para poder correr el ejecutable, ademas del obvio 'run', podemos hacer un 'start' y podemos
 luego ver cual es el estado del hilo principal donde podemos encontrar el archivo (file y fullname)
@@ -100,6 +105,9 @@ Pero que pasa si tenemos el ejecutable sin la informacion necesaria para debugge
    >>> r['results']['msg']
    u'No symbol table is loaded.  Use the "file" command.'
 
+   >>> r = request(gdb, "-file-list-exec-source-files")
+   >>> r['results']
+   {u'files': []}
 
 Aun sin la tabla de simbolos podemos saber donde esta la funcion main y su codigo
 assembly. Esto se debe a que el compilador (gcc)  no borra todos los simbolos.
@@ -266,6 +274,38 @@ Veamos como su stacktrace es mas reducida pero aun asi tenemos la direccion del 
      u'token': ...,
      u'type': u'Sync'}
 
+Como un ultimo comentario, veamos que pasa si tenemos los fuentes pero el binario tiene mas de un
+archivo fuente.
+Debido a un BUG en GDB, es necesario reiniciar el debugger, de otro modo este no reconoce al binario
+como un ejecutable valido ("Architecture of file not recognized")
+
+::
+
+   
+   >>> gdb.shutdown()
+   0
+   >>> gdb = Gdb()
+
+   >>> request(gdb, "-file-exec-and-symbols %s/sort" % BIN2) # doctest: +PASS
+
+   >>> r = request(gdb, "-file-list-exec-source-file")
+   >>> r['results']['file'] 
+   u'main.c'
+
+   >>> r['results']['fullname']              #doctest: +ELLIPSIS
+   u'/.../main.c'
+
+   >>> r['results']['line']                  #doctest: +ELLIPSIS
+   u'1'
+
+   >>> r = request(gdb, "-file-list-exec-source-files")
+   >>> r['results']                          #doctest: +ELLIPSIS
+   {u'files': [{u'file': u'main.c',
+                u'fullname': u'/.../main.c'},
+               {u'file': u'lib/sort.c',
+                u'fullname': u'/.../lib/sort.c'},
+               {u'file': u'lib/print.c',
+                u'fullname': u'/.../lib/print.c'}]}
 
 Limiamos todo:
 

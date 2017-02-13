@@ -36,7 +36,7 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'widgets/buttons',
             return new observation.Observation({target: self, context: self});
         });
 
-        this.selected_toolbar = this.toolbar_by_mode[false][false][false]
+        this.selected_toolbar = this.toolbar_for_a_dead_process;
         this._$container.append(this.selected_toolbar);
         this.select_toolbar();
         
@@ -123,12 +123,20 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'widgets/buttons',
 
 
     ThreadButtonBarController.prototype.select_toolbar = function () {
+        var is_process_alive = this.thread_follower.are_you_following_a_live_process();
+
         var is_running = this.pseudo_mode.is_running || this.mode.is_running;
         var is_in_assembly = this.is_in_assembly();
         var is_in_reverse_mode = this.is_in_reverse_mode();
 
         var previous_selected_toolbar = this.selected_toolbar;
-        this.selected_toolbar = this.toolbar_by_mode[is_running][is_in_assembly][is_in_reverse_mode];
+
+        if (is_process_alive) {
+            this.selected_toolbar = this.toolbar_by_mode_of_a_running_process[is_running][is_in_assembly][is_in_reverse_mode];
+        }
+        else {
+            this.selected_toolbar = this.toolbar_for_a_dead_process;
+        }
                                 
         //[this.pseudo_mode.is_targeting_all_threads|| this.mode.is_targeting_all_threads]\
         
@@ -173,8 +181,9 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'widgets/buttons',
     ThreadButtonBarController.prototype._target_of_the_action = function () {
         //TODO no hay ningun cambio en las toolbars que muestren este pseudo mode!!!
           var is_targeting_all_threads = this.pseudo_mode.is_targeting_all_threads || this.mode.is_targeting_all_threads;
-          if (is_targeting_all_threads) {
-              return this.thread_follower.thread_followed.get_thread_group_you_belong();
+
+          if (is_targeting_all_threads || !this.thread_follower.are_you_following_a_specific_thread()) {
+              return this.thread_follower.thread_group_followed;
           }
           else {
               return this.thread_follower.thread_followed;
@@ -206,7 +215,7 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'widgets/buttons',
                action: function (ev) {
                   ev.preventDefault();
                   var args = self._args_for_reversing_mode();
-                  var target = self.thread_follower.thread_followed;
+                  var target = self._target_of_the_action();
                   
                   if (self.is_in_assembly()) {
                       target.execute("-exec-next-instruction", args);
@@ -224,7 +233,7 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'widgets/buttons',
                action: function (ev) {
                   ev.preventDefault();
                   var args = self._args_for_reversing_mode();
-                  var target = self.thread_follower.thread_followed;
+                  var target = self._target_of_the_action();
 
                   if (self.is_in_assembly()) {
                       target.execute("-exec-step-instruction", args);
@@ -242,13 +251,15 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'widgets/buttons',
                action: function (ev) {
                   ev.preventDefault();
                   var args = self._args_for_reversing_mode();
-                  var target = self.thread_follower.thread_followed;
+                  var target = self._target_of_the_action();
 
                   target.execute("-exec-finish", args);
                },
             } 
             ];
 
+
+        var toolbar_to_control_a_dead_process = buttons.create_button_bar(this._create_button_descriptions_for_non_running_thread_group(button_descriptions_for_src_stopped_mode), true);
 
         var toolbar_to_control_a_stopped_thread = buttons.create_button_bar(button_descriptions_for_src_stopped_mode, true);
         var toolbar_to_control_a_stopped_thread_in_reverse_mode = buttons.create_button_bar(this._create_button_descriptions_for_reverse_mode_from(button_descriptions_for_src_stopped_mode), true);
@@ -261,10 +272,12 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'widgets/buttons',
         var toolbar_to_control_a_running_thread = buttons.create_button_bar(button_descriptions_in_running_mode, true);
         var toolbar_to_control_a_running_thread_in_reverse_mode = buttons.create_button_bar(this._create_button_descriptions_for_reverse_mode_from(button_descriptions_in_running_mode), true);
 
+        this.toolbar_for_a_dead_process = toolbar_to_control_a_dead_process;
+
         // By is_running first,  TODO add is_targeting_all_threads!!!
         // by is_in_assembly second,
         // by is_in_reverse_mode as last
-        this.toolbar_by_mode = {
+        this.toolbar_by_mode_of_a_running_process = {
             true: {
                 true: {
                     true: toolbar_to_control_a_running_thread_in_reverse_mode,
@@ -287,6 +300,21 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'widgets/buttons',
             },
         };
     };
+    
+    ThreadButtonBarController.prototype._create_button_descriptions_for_non_running_thread_group = function (button_descriptions_prototype) {
+        var button_descriptions = [];
+        var positions = [];
+        for (var i = 0; i < button_descriptions_prototype.length; ++i) {
+            var desc = this._copy_button_description(button_descriptions_prototype[i]);
+            button_descriptions.push(desc);
+            
+            positions.push(i);
+        }
+
+        this._configure_disable_buttons_inplace(positions, button_descriptions, button_descriptions_prototype);
+        return button_descriptions;
+    }
+
 
     ThreadButtonBarController.prototype._create_button_descriptions_for_reverse_mode_from = function (button_descriptions_prototype, position_of_disabled_buttons) {
         var note = "(backward)";

@@ -80,12 +80,18 @@ define(['jquery', 'underscore'], function ($, _) {
                                    if (typeof data[i].target !== 'undefined') {
                                            linkTarget = ' target="'+data[i].target+'"';
                                    }
+
                                    if (typeof data[i].subMenu !== 'undefined') {
                                            $sub = $('<li class="dropdown-submenu"><a tabindex="-1" href="' + data[i].href + '">' + data[i].text + '</a></li>');
                                    } else {
                                            $sub = $('<li><a tabindex="-1" href="' + data[i].href + '"'+linkTarget+'>' + data[i].text + '</a></li>');
                                    }
-                                   if (typeof data[i].action !== 'undefined') {
+                                   
+                                   if (data[i].disabled) {
+                                       $sub.attr("disabled", true).addClass("ui-state-disabled");
+                                   }
+
+                                   if (!data[i].disabled && typeof data[i].action !== 'undefined') {
                                            var actiond = new Date(),
                                                    actionID = 'event-' + actiond.getTime() * Math.floor(Math.random()*100000),
                                                    eventAction = data[i].action;

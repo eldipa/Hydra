@@ -2,13 +2,13 @@ define(["underscore", "jquery", "layout", "shortcuts", "jstree", "jstree_builder
    'use strict';
    var Frame = frame_module.Frame;
 
-   var StackView = function () {
+   var StackView = function (thread_follower) {
        this.super("StackView");
        this.build_and_initialize_panel_container('<div style="height: 100%; width: 100%"></div>');
        this.build_tree();
 
        this.thread = null;
-       this.follower = null;
+       this.thread_follower = thread_follower;
        this.frames = [];
        
        _.bindAll(this, "on_frames_updated_request_variables_update", "_variables_of_frame_updated");
@@ -17,25 +17,24 @@ define(["underscore", "jquery", "layout", "shortcuts", "jstree", "jstree_builder
    StackView.prototype.__proto__ = layout.Panel.prototype;
    layout.implement_render_and_unlink_methods(StackView.prototype);
 
-   StackView.prototype.follow = function (thread, follower) {
-       this.thread = thread;
-       this.follower = follower;
-       if (! this.thread) {
-           this.frames = []; // cleanup
+   StackView.prototype.request_frames_update = function () {
+       if (this.thread_follower.are_you_following_a_specific_thread()) {
+           var thread_followed = this.thread_follower.thread_followed;
+           thread_followed.request_an_update_thread_stack(this.on_frames_updated_request_variables_update);
        }
        else {
-           this.request_frames_update(); // force a sync
-       }
-   }
-   
-   StackView.prototype.request_frames_update = function () {
-       if (this.thread) {
-           this.thread.request_an_update_thread_stack(this.on_frames_updated_request_variables_update);
+           this.clean_up(); // if there isn't a thread, there aren't any frames
        }
    };
 
+   StackView.prototype.clean_up = function () {
+       this.frames = [];
+       this._update();
+   };
+
    StackView.prototype.on_frames_updated_request_variables_update = function () {
-        this.frames = this.thread.get_stack_frames();
+        var thread_followed = this.thread_follower.thread_followed;
+        this.frames = thread_followed.get_stack_frames();
         
         _.each(this.frames, function (frame) {
             this.request_variables_of_frame_update(frame);
@@ -69,12 +68,11 @@ define(["underscore", "jquery", "layout", "shortcuts", "jstree", "jstree_builder
                 var frame_level = "" + (data.level);
 
                 var frame = self.frames[frame_level];
-                var thread_followed = self.thread;
-                if (!thread_followed || !self.follower || !frame) {
+                if (!self.thread_follower.are_you_following_a_specific_thread() || !frame) {
                     return null;
                 }
 
-                self.follower.update_button_bar_and_code_editor_to_show(frame.source_fullname, 
+                self.thread_follower.update_button_bar_and_code_editor_to_show(frame.source_fullname, 
                                                                         frame.source_line_number,
                                                                         frame.instruction_address);
                 

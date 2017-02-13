@@ -1,0 +1,25 @@
+.code_selector {
+    background: rgba(51, 51, 51, 0.1);
+    color: rgba(255, 255, 255, 0.3);
+    border: none;
+
+    outline-color: transparent;
+    
+    text-align: right;
+    font-size: 12px;
+
+    width: 100px;
+}
+
+.code_selector:hover {
+    background: rgba(76, 90, 100, 0.3);
+}
+
+.code_selector:focus {
+    background: rgba(76, 90, 100, 0.3);
+    color: rgba(255, 255, 255, 1);
+    border: 1px solid rgba(89, 142, 187, 0.3);
+
+    text-align: left;
+}
+

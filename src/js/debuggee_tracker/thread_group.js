@@ -42,25 +42,49 @@ define(["underscore", "shortcuts", 'event_handler'], function (_, shortcuts, eve
 
         return txt.join(" ");
     };
+
+    ThreadGroup.prototype.are_you_alive = function () {
+        return this.state === "started";
+    };
     
-    ThreadGroup.prototype.get_display_controller = function () {
+    ThreadGroup.prototype.get_debugger_you_belong = function () {
+        return this.tracker.get_debugger_with_id(this.debugger_id);
+    };
+
+    ThreadGroup.prototype.is_executable_loaded = function () {
+        return this._is_executable_loaded === true; // this is a HACK TODO (if gdb removes the executable we don't notice it!!)
+    };
+    
+    ThreadGroup.prototype.get_display_controller = function (from_who) {
         var self = this;
-        return [{
-               text: 'Load sources', //TODO attach (and others)
+        var menu = [];
+
+        var debugger_id = self.debugger_id;
+        var debugger_obj = self.tracker.get_debugger_with_id(debugger_id);
+
+        var thread_follower = from_who.thread_follower;
+
+        menu.push({
+            text: 'Follow',
+            disabled: !self.is_executable_loaded() || !thread_follower,
+            action: function (e) {
+                e.preventDefault();
+                thread_follower.follow(null, self);
+            },
+        });
+
+        menu.push({divider: true});
+        menu.push({
+               text: 'Load executable', //TODO attach (and others)
                action: function (e) {
                   e.preventDefault();
-                  var debugger_id = self.debugger_id;
 
                   var input_file_dom = $('<input style="display:none;" type="file" />');
                   input_file_dom.change(function(evt) {
                       var file_exec_path = "" + $(this).val();
                       if (file_exec_path) {
                           self.load_file_exec_and_symbols(file_exec_path);
-
-                          // TODO XXX XXX  HACK, run the process
-                          var debugger_obj = self.tracker.get_debugger_with_id(debugger_id);
-                          debugger_obj.execute("-break-insert", ["-t", "main"]); // TODO restrict this breakpoint to the threa group 
-                          self.execute("-exec-run");
+                          thread_follower.follow(null, self);
                       }
                       else {
                           console.log("Loading nothing");
@@ -68,17 +92,41 @@ define(["underscore", "shortcuts", 'event_handler'], function (_, shortcuts, eve
                   });
                   input_file_dom.trigger('click');
                },
-              },
-              {
-                divider: true
-              },
-              {
+              });
+
+        menu.push({divider: true});
+        menu.push({
+            text: 'Run at main',
+            disabled: self.are_you_alive() || !self.is_executable_loaded(),
+            action: function (e) {
+                e.preventDefault();
+
+                self.execute("-break-insert", ["-t", "main"]); 
+                self.execute("-exec-run");
+            },
+        });
+        
+        menu.push({divider: true});
+        menu.push({
+            text: 'Send signal...',
+            disabled: !self.are_you_alive(),
+            action: function (e) {
+                e.preventDefault();
+                // TODO
+            },
+        });
+
+        menu.push({divider: true});
+        menu.push({
                text: 'Remove thread group',
                action: function (e) {
                   e.preventDefault();
                   self.remove();
                },
-              }];
+        });
+
+        return menu;
+
     };
 
     ThreadGroup.prototype.remove = function () {
@@ -93,6 +141,7 @@ define(["underscore", "shortcuts", 'event_handler'], function (_, shortcuts, eve
         var self = this;
         var update_my_status_when_file_is_loaded = function () {
             var s = self.tracker.thread_groups_by_debugger[self.debugger_id];
+            self._is_executable_loaded = true;
             self.tracker._request_an_update_thread_groups_info(s, self.debugger_id);
         };
 
@@ -126,6 +175,59 @@ define(["underscore", "shortcuts", 'event_handler'], function (_, shortcuts, eve
                 command,
                 args
                 );
+    };
+
+    ThreadGroup.prototype.update_source_fullnames = function (on_result) {
+        this.execute("-file-list-exec-source-files", [], function on_file_list(data) {
+            var results = data['results'];
+            var files = results['files'];
+
+            if (!files) {
+                // failed, try to find a reason of why
+                this.execute("-file-list-exec-source-file", [], function on_single_file(data) {
+                    var results = data['results'];
+                    var msg = results['msg'];
+
+                    if (msg) {
+                        on_result([], msg);
+                    }
+                    else {
+                        on_result([], 'No sources, unknown reason');
+                    }
+                });
+            }
+            else {
+                on_result(files, "Ok");
+            }
+        });
+    };
+
+    ThreadGroup.prototype.resolve_current_position = function (on_result) {
+        var self = this;
+        if (!this._source_fullname || !this._source_line || !this._instruction_address) {
+            this.update_source_fullnames(function on_file_list(file_list, msg) {
+                if (!file_list) {
+                    // log msg??
+                    var source_fullname = null;
+                    var source_line = null;
+                    var instruction_address = "0x000000"; // TODO replace this by the entry point
+                }
+                else {
+                    var source_fullname = file_list[0].fullname;
+                    var source_line = 1; 
+                    var instruction_address = null;
+                }
+
+                self._source_fullname = source_fullname;
+                self._source_line = source_line;
+                self._instruction_address = instruction_address;
+
+                on_result(source_fullname, source_line, instruction_address);
+            });
+        }
+        else {
+            on_result(this._source_fullname, this._source_line, this._instruction_address);
+        }
     };
 
     return {ThreadGroup: ThreadGroup};

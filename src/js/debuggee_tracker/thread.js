@@ -100,6 +100,10 @@ define(["underscore", "shortcuts", 'event_handler', 'debuggee_tracker/frame'], f
 
         thread.execute("-stack-list-frames", ["SELF", "--no-frame-filters"], create_frames_and_run_callback_on_success, 0);
    };
+    
+    Thread.prototype.resolve_current_position = function (on_result) {
+        on_result(this.source_fullname, this.source_line, this.instruction_address);
+    };
 
     return {Thread: Thread};
 });
