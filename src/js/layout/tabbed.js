@@ -162,7 +162,7 @@ define(['jquery', 'layout/panel', 'jqueryui'], function ($, P, _) {
          panel: panel
       };
 
-      tab.header = $('<li class="tab_in_panel_tabbed" style="display: inline; float: none;"><a style="float: none;" id="header_'+tab.id+'" href="#'+tab.id+'">'+(panel.name()||"tab")+'</a></li>');
+      tab.header = $('<li class="tab_in_panel_tabbed" style="display: inline; float: none;"><a class="layaout-tabbed-header" style="float: none;" id="header_'+tab.id+'" href="#'+tab.id+'">'+(panel.name()||"tab")+'</a></li>');
       tab.container = $('<div id="'+tab.id+'" style="padding: 0px;"></div>');
 
       this._create_ctxmenu_for_panel(tab.header, panel);
