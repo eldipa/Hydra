@@ -4,14 +4,13 @@ define(["underscore", "jquery", "layout", "event_handler", "widgets/log_view"], 
        this.super("SyscallTraceView");
        
        var columns = [
-           {id: 'n', name: "#", field: "n", width: 16, can_be_autosized: false},
-           {id: "time", name: "Time", field: "time", width: 96, can_be_autosized: false},
-           {id: "pid", name: "PID", field: "pid", width: 36, can_be_autosized: false, cssClass: "selectable_text"},
+           {id: 'n', name: "#", field: "n", width: 50, can_be_autosized: false},
+           {id: "time", name: "Time", field: "time", width: 70, can_be_autosized: false},
+           {id: "pid", name: "PID", field: "pid", width: 60, can_be_autosized: false, cssClass: "selectable_text"},
            {id: "tid", name: "TID", field: "tid", width: 16, can_be_autosized: false, cssClass: "selectable_text"},
-           {id: "name", name: "Name", field: "name", width: 36, cssClass: "selectable_text"},
-           {id: "arguments", name: "Arguments", field: "arguments", width: 96, cssClass: "selectable_text"},
-           //{id: "result", name: "Result", field: "result", width: 16, cssClass: "selectable_text"},
-           {id: "result_text", name: "Result Text", field: "result_text", width: 36, cssClass: "selectable_text"},
+           {id: "name", name: "Name", field: "name", width: 100, can_be_autosized: false, cssClass: "selectable_text"},
+           {id: "arguments", name: "Arguments", field: "arguments", width: 36, cssClass: "selectable_text"},
+           {id: "result_text", name: "Result Text", field: "result_text", width: 60, can_be_autosized: false, cssClass: "selectable_text"},
        ];
 
        this.log_view = new log_view_module.LogView(det_view, columns, Message);

@@ -4,9 +4,9 @@ define(["underscore", "jquery", "layout", "event_handler", "widgets/log_view"], 
        this.super("HidraLogView");
        
        var columns = [
-           {id: 'n', name: "#", field: "n", width: 16, can_be_autosized: false},
-           {id: "time", name: "Time", field: "time", width: 96, can_be_autosized: false},
-           {id: "source", name: "Source", field: "source", width: 96, can_be_autosized: false, cssClass: "selectable_text"},
+           {id: 'n', name: "#", field: "n", width: 50, can_be_autosized: false},
+           {id: "time", name: "Time", field: "time", width: 70, can_be_autosized: false},
+           {id: "source", name: "Source", field: "source", width: 160, can_be_autosized: false, cssClass: "selectable_text"},
            {id: "message", name: "Message", field: "message", cssClass: "selectable_text"},
        ];
 

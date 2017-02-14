@@ -117,6 +117,9 @@ classes should alter those!
   margin: 0;
   white-space: nowrap;
   cursor: default;
+
+  font-size: 14px;
+  font-family: monaco;
 }
 
 .slick-group {
@@ -174,7 +177,7 @@ classes should alter those!
 }
 
 .slick-row.odd {
-  background: #16191B;
+  background: #151515;
 }
 
 .slick-row.even {
