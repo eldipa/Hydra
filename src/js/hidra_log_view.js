@@ -19,9 +19,10 @@ define(["underscore", "jquery", "layout", "event_handler", "widgets/log_view"], 
        EH.subscribe("", function (data, topic) {
            var dtime = Date.now() - self.time_reference;
            self.time_reference += dtime;
+
            self.log_view.append_message({
                n: self.log_view.data.length + 1,
-               time: (dtime / 1000).toFixed(4),
+               time: (dtime / 1000).toFixed(3),
                source: "*" + topic,
                message: JSON.stringify(data)
            });
