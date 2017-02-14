@@ -21,7 +21,7 @@ define(["underscore", "jquery", "layout", "slickgrid", "event_handler", "observa
        var options = {
            enableCellNavigation: true, //
            enableColumnReorder: false,  // dont allow the user to reorder the columns
-           rowHeight: 20,               // this is the height of each row in the grid
+           rowHeight: 25,               // this is the height of each row in the grid
            syncColumnCellResize: true,  // update the width of the column while the column's header is resized by the user
            forceFitColumns: true,       // distribute the size of each column to a 1/Nth of the available space (unless that the column has the custom can_be_autosized=false in which case its width will remain unchanged.
            enableTextSelectionOnCells: true, // that: enable text selection. Use in conjuntion with out custom css class "selectable_text"
