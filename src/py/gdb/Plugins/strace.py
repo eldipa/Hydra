@@ -185,14 +185,15 @@ class PtraceSyscallPublisher(PtraceSyscall):
        name = self.name
        pid  = self.process.get_process_id()
        tid  = self.process.get_thread_id()
-       timestamp = str(datetime.datetime.now())
+       now  = datetime.datetime.now().time()
+       timestamp = str((now.hour*3600 + now.minute*60 + now.second) * 1000000 + now.microsecond)
        if self._are_we_at_exit:
            data = {
-               'timestamp':   timestamp,
-               'pid':         pid,
-               'tid':         tid,
-               'result':      self.result,
-               'result_text': self.result_text,
+               'timestamp':     timestamp,
+               'pid':           pid,
+               'tid':           tid,
+               'result':        self.result,
+               'result_text':   self.result_text,
                'decode_errors': self.get_decode_errors(),
            }
     
@@ -203,12 +204,12 @@ class PtraceSyscallPublisher(PtraceSyscall):
            arguments = self.get_format_of_arguments()
 
            data = {
-               'timestamp': timestamp,
-               'pid':       pid,
-               'tid':       tid,
-               'restype':   self.restype,
-               'name':      self.name,
-               'arguments': arguments,
+               'timestamp':     timestamp,
+               'pid':           pid,
+               'tid':           tid,
+               'restype':       self.restype,
+               'name':          self.name,
+               'arguments':     arguments,
                'decode_errors': self.get_decode_errors(),
            }
         

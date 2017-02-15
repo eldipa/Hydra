@@ -17,7 +17,7 @@ define(["underscore", "jquery", "layout", "event_handler", "widgets/log_view"], 
        this.didnt_finish_syscalls = {};
 
        var EH = event_handler.get_global_event_handler();
-       this.time_reference = Date.now();
+       this.time_reference = null;
 
        var self = this;
        EH.subscribe("notification-gdb", function (data, topic) {
@@ -30,6 +30,8 @@ define(["underscore", "jquery", "layout", "event_handler", "widgets/log_view"], 
            var syscall_key = "pid"+data.call.pid+"tid"+data.call.tid;
            if (at_enter) {
                var message = {
+                   _syscall_timestamp: data.call.timestamp,
+
                    n: self.log_view.data.length + 1,
                    pid:  data.call.pid,
                    tid:  data.call.tid,
@@ -43,6 +45,8 @@ define(["underscore", "jquery", "layout", "event_handler", "widgets/log_view"], 
            else {
                var incomplete_syscall = self.didnt_finish_syscalls[syscall_key];
                var message = {
+                   _syscall_timestamp: data.call.timestamp,
+
                    n: self.log_view.data.length + 1,
                    pid:  data.call.pid,
                    tid:  data.call.tid,
@@ -63,7 +67,7 @@ define(["underscore", "jquery", "layout", "event_handler", "widgets/log_view"], 
            if (at_enter) {
                var delay = 500;
                message.show_enter_delayed = _.delay(function () {
-                   self._add_and_update_time(message, delayed_by=delay);
+                   self._add_and_update_time(message);
                    self.log_view.append_message(message);
                }, delay);
            }
@@ -74,12 +78,20 @@ define(["underscore", "jquery", "layout", "event_handler", "widgets/log_view"], 
        });
    };
 
-   SyscallTraceView.prototype._add_and_update_time = function (message, delayed_by) {
-       var delay = delayed_by || 0;
-       var dtime = Date.now() - this.time_reference - delay;
-       this.time_reference += dtime;
+   SyscallTraceView.prototype._add_and_update_time = function (message) {
+       var syscall_timestamp = parseInt(message._syscall_timestamp);
+       delete message._syscall_timestamp;
 
-       message.time = (dtime / 1000).toFixed(3);
+       if (this.time_reference === null) {
+           var dtime = 0;
+           this.time_reference = syscall_timestamp;
+       }
+       else {
+           var dtime = syscall_timestamp - this.time_reference;
+           this.time_reference += dtime;
+       }
+
+       message.time = (dtime / 1000000).toFixed(6);
    };
 
    SyscallTraceView.prototype.__proto__ = layout.Panel.prototype;
