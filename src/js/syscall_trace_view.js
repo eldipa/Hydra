@@ -10,7 +10,7 @@ define(["underscore", "jquery", "layout", "event_handler", "widgets/log_view"], 
            {id: "tid", name: "TID", field: "tid", width: 16, can_be_autosized: false, cssClass: "selectable_text"},
            {id: "name", name: "Name", field: "name", width: 100, can_be_autosized: false, cssClass: "selectable_text"},
            {id: "arguments", name: "Arguments", field: "arguments", width: 36, cssClass: "selectable_text"},
-           {id: "result_text", name: "Result Text", field: "result_text", width: 60, can_be_autosized: false, cssClass: "selectable_text"},
+           {id: "result_text", name: "Result", field: "result_text", width: 60, can_be_autosized: false, cssClass: "selectable_text"},
        ];
 
        this.log_view = new log_view_module.LogView(det_view, columns, Message);
