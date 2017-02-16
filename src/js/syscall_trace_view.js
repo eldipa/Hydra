@@ -1,4 +1,4 @@
-define(["underscore", "jquery", "layout", "event_handler", "widgets/log_view"], function (_, $, layout, event_handler, log_view_module) {
+define(["underscore", "jquery", "layout", "event_handler", "widgets/log_view", 'snippet'], function (_, $, layout, event_handler, log_view_module, snippet) {
    'use strict';
    var SyscallTraceView = function (det_view) {
        this.super("SyscallTraceView");
@@ -36,9 +36,10 @@ define(["underscore", "jquery", "layout", "event_handler", "widgets/log_view"], 
                    pid:  data.call.pid,
                    tid:  data.call.tid,
                    name: data.call.name,
-                   'arguments': data.call['arguments'],
+                   args: data.call.args,
                    result: '?',
-                   result_text: 'not finish'
+                   result_text: 'not finish',
+                   restype: data.call.restype
                };
                self.didnt_finish_syscalls[syscall_key] = message;
            }
@@ -51,13 +52,15 @@ define(["underscore", "jquery", "layout", "event_handler", "widgets/log_view"], 
                    pid:  data.call.pid,
                    tid:  data.call.tid,
                    name: "?",
-                   'arguments': "?",
+                   args: ["?"],
                    result: data.call.result,
-                   result_text: data.call.result_text
+                   result_text: data.call.result_text,
+                   restype: data.call.restype
                };
                if (incomplete_syscall) {
                    message.name = incomplete_syscall.name;
-                   message['arguments'] = incomplete_syscall['arguments'];
+                   message.args = incomplete_syscall.args;
+                   message.restype = incomplete_syscall.restype;
 
                    clearTimeout(incomplete_syscall.show_enter_delayed);
                    delete self.didnt_finish_syscalls[syscall_key];
@@ -111,11 +114,40 @@ define(["underscore", "jquery", "layout", "event_handler", "widgets/log_view"], 
 
    
    var Message = function (row_index, log_line_object) {
-       var raw_message = log_line_object.message;
-       var obj = JSON.parse(raw_message);
-       var indented = JSON.stringify(obj, null, 2);
+       this.formatted_message = [];
+       
+       this.formatted_message.push(log_line_object.restype + " "); 
 
-       this.formatted_message = log_line_object.name;
+       this.formatted_message.push(log_line_object.name + " (");
+
+       var i_of_last = log_line_object.args.length - 1;
+       for(var i = 0; i < log_line_object.args.length; ++i) {
+           var args = log_line_object.args[i];
+
+           if (i !== i_of_last) {
+               var msg = "  " + args + ",";
+           }
+           else {
+               var msg = "  " + args;
+           }
+
+           this.formatted_message.push(msg);
+       }
+
+
+       var result_str = log_line_object.result.toString().trim();
+       var result_text_str = log_line_object.result_text.toString().trim();
+       
+       var result_msg = ") = " + result_str + ";";
+       if (result_str !== result_text_str) {
+           if (result_text_str.startsWith(result_str)) {
+               result_text_str = result_text_str.replace(result_str, "").trim();
+           }
+
+           result_msg += "  // " + result_text_str
+       }
+
+       this.formatted_message.push(result_msg);
    }
 
    Message.prototype.get_display_name = function () {
@@ -123,7 +155,15 @@ define(["underscore", "jquery", "layout", "event_handler", "widgets/log_view"], 
    };
    
    Message.prototype.get_display_details = function () {
-        return $("<pre></pre>").html(this.formatted_message);
+        var container = $('<div></div>');
+        for (var i = 0; i < this.formatted_message.length; ++i) {
+            var js = $('<div id="code_snippet"></div>');
+            var s = snippet.create_snippet(this.formatted_message[i], {font_size: 14});
+
+            s.appendTo(container);
+        }
+        
+        return container;
    };
    
    Message.prototype.get_display_fullname = function () {

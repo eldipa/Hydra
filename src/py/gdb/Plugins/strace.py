@@ -192,6 +192,7 @@ class PtraceSyscallPublisher(PtraceSyscall):
                'timestamp':     timestamp,
                'pid':           pid,
                'tid':           tid,
+               'restype':       "void<??>",
                'result':        self.result,
                'result_text':   self.result_text,
                'decode_errors': self.get_decode_errors(),
@@ -209,7 +210,7 @@ class PtraceSyscallPublisher(PtraceSyscall):
                'tid':           tid,
                'restype':       self.restype,
                'name':          self.name,
-               'arguments':     arguments,
+               'args':          arguments,
                'decode_errors': self.get_decode_errors(),
            }
         
@@ -239,7 +240,7 @@ class PtraceSyscallPublisher(PtraceSyscall):
 
             # set the syscall's result if we couldn't get one
             self.result = -1
-            self.result_text = "return<??>"
+            self.result_text = "<??>"
 
    def get_format_of_arguments(self):
         def safe_format(arg):

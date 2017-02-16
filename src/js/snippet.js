@@ -1,6 +1,6 @@
 define(['ace', 'jquery', 'underscore'], function (ace, $, _) {
     var create_snippet = function (code, opts) {
-        var font_size = 11;
+        var font_size = opts.font_size || 11;
         var height = font_size + 3; //px
 
         var _$container = $('<div style="width: 100%; height: '+height+'px; background-color: initial; font-family: monaco;"></div>');
@@ -8,7 +8,7 @@ define(['ace', 'jquery', 'underscore'], function (ace, $, _) {
 
         var editor = ace.ace.edit(_$container.get()[0]);
       
-        editor.setFontSize(11);
+        editor.setFontSize(font_size);
 
         editor.setTheme("ace/theme/monokai");
         editor.setOption("showPrintMargin", false)
