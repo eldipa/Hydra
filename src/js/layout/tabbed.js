@@ -80,10 +80,12 @@ define(['jquery', 'layout/panel', 'jqueryui'], function ($, P, _) {
             // around the page.
             // this alse require to fix its position (the point of reference is the 
             // 'body' now)
-            var offset = ui.helper.offset(); 
+            var offset = ui.helper.offset();
             ui.helper.appendTo(document.body);
             ui.helper.offset(offset);
+            ui.helper.addClass('ui-widget');
             tabs.find( ".ui-tabs-nav" ).sortable( "refreshPositions" );
+            
          },
          sort: function(ev, ui) {
             $headers.scrollTop(0); // fix this bug: the headers (tabs) are moved to the top of the container which is ugly
