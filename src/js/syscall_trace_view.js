@@ -114,6 +114,7 @@ define(["underscore", "jquery", "layout", "event_handler", "widgets/log_view", '
 
    
    var Message = function (row_index, log_line_object) {
+       this.max_line_length = 0;
        this.formatted_message = [];
        
        this.formatted_message.push(log_line_object.restype + " "); 
@@ -148,6 +149,12 @@ define(["underscore", "jquery", "layout", "event_handler", "widgets/log_view", '
        }
 
        this.formatted_message.push(result_msg);
+
+       for (var i = 0; i < this.formatted_message.length; ++i) {
+           if (this.formatted_message[i].length > this.max_line_length) {
+               this.max_line_length = this.formatted_message[i].length;
+           }
+       }
    }
 
    Message.prototype.get_display_name = function () {
@@ -155,13 +162,13 @@ define(["underscore", "jquery", "layout", "event_handler", "widgets/log_view", '
    };
    
    Message.prototype.get_display_details = function () {
-        var container = $('<div></div>');
-        for (var i = 0; i < this.formatted_message.length; ++i) {
-            var js = $('<div id="code_snippet"></div>');
-            var s = snippet.create_snippet(this.formatted_message[i], {font_size: 14});
+        var font_size = 14; //px
+        var width = this.max_line_length * (font_size - 4);
+        var container = $('<div style="width: '+width+'px; height: 100%; font-family: monaco;"></div>');
 
-            s.appendTo(container);
-        }
+        var js = $('<div id="code_snippet"></div>');
+        var s = snippet.create_snippet(this.formatted_message.join("\n"), {font_size: font_size, count_lines: this.formatted_message.length});
+        s.appendTo(container);
         
         return container;
    };

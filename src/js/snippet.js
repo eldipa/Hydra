@@ -1,7 +1,9 @@
 define(['ace', 'jquery', 'underscore'], function (ace, $, _) {
     var create_snippet = function (code, opts) {
         var font_size = opts.font_size || 11;
-        var height = font_size + 3; //px
+        var height_size = font_size + (opts.interline_size || 8); //px
+
+        var height = (opts.count_lines || 1) * height_size;
 
         var _$container = $('<div style="width: 100%; height: '+height+'px; background-color: initial; font-family: monaco;"></div>');
         var placeholder = _$container.clone(false, false);
