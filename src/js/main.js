@@ -212,34 +212,6 @@ requirejs(['processView', 'gdb_console_view', 'code_view', 'jquery', 'export_con
         } 
    });
 
-
-   //process_view.start();
-   //require('nw.gui').Window.get().reload(3);
-   /*
-   var v = new pgraph.ProcessGraph();
-   v.enable(main);
-   v.update([
-         {
-            pid: 1, 
-            name: 'A',
-            status: 'running'
-         },
-         {
-            pid: 2, 
-            name: 'B',
-            status: 'running'
-         },
-         {
-            pid: 3, 
-            name: 'C',
-            status: 'running'
-         }
-         ],
-
-         [
-         [0, 1],
-         [0, 2]
-            ]);*/
    
    // When the main window get closed, notify this to the backend
    var main_window = require('nw.gui').Window.get();
