@@ -1,4 +1,4 @@
-define(["underscore", "jquery", "layout", "event_handler", "widgets/log_view"], function (_, $, layout, event_handler, log_view_module) {
+define(["underscore", "jquery", "layout", "event_handler", "widgets/log_view", 'snippet'], function (_, $, layout, event_handler, log_view_module, snippet) {
    'use strict';
    var HidraLogView = function (det_view) {
        this.super("HidraLogView");
@@ -51,7 +51,14 @@ define(["underscore", "jquery", "layout", "event_handler", "widgets/log_view"], 
        var obj = JSON.parse(raw_message);
        var indented = JSON.stringify(obj, null, 2);
 
-       this.formatted_message = syntaxHighlight(indented);
+       this.formatted_message = indented.split("\n");
+       
+       this.max_line_length = 0;
+       for (var i = 0; i < this.formatted_message.length; ++i) {
+           if (this.formatted_message[i].length > this.max_line_length) {
+               this.max_line_length = this.formatted_message[i].length;
+           }
+       }
    }
 
    Message.prototype.get_display_name = function () {
@@ -59,7 +66,19 @@ define(["underscore", "jquery", "layout", "event_handler", "widgets/log_view"], 
    };
    
    Message.prototype.get_display_details = function () {
-        return $("<pre></pre>").html(this.formatted_message);
+        var font_size = 14; //px
+        var width = this.max_line_length * (font_size - 4);
+        var container = $('<div style="width: '+width+'px; height: 100%; font-family: monaco;"></div>');
+
+        var js = $('<div id="code_snippet"></div>');
+        var s = snippet.create_snippet(this.formatted_message.join("\n"), {
+            font_size: font_size, 
+            interline_size: font_size/2,
+            count_lines: this.formatted_message.length
+        });
+        s.appendTo(container);
+        
+        return container;
    };
    
    Message.prototype.get_display_fullname = function () {
@@ -69,35 +88,6 @@ define(["underscore", "jquery", "layout", "event_handler", "widgets/log_view"], 
    Message.prototype.get_display_controller = function () {
        return null;
    };
-
-
-   // from https://stackoverflow.com/questions/4810841/how-can-i-pretty-print-json-using-javascript
-   function syntaxHighlight(json) {
-    var css_style = {
-        string_  : "color: green;",
-        number_  : "color: darkorange;",
-        boolean_ : "color: blue;",
-        null_    : "color: magenta;",
-        key_     : "color: red;",
-    };
-
-    json = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-    return json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function (match) {
-        var cls = 'number_';
-        if (/^"/.test(match)) {
-            if (/:$/.test(match)) {
-                cls = 'key_';
-            } else {
-                cls = 'string_';
-            }
-        } else if (/true|false/.test(match)) {
-            cls = 'boolean_';
-        } else if (/null/.test(match)) {
-            cls = 'null_';
-        }
-        return '<span style="' + css_style[cls] + '">' + match + '</span>';
-    });
-   }
 
    return { HidraLogView: HidraLogView };
 });

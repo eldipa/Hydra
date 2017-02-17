@@ -167,7 +167,11 @@ define(["underscore", "jquery", "layout", "event_handler", "widgets/log_view", '
         var container = $('<div style="width: '+width+'px; height: 100%; font-family: monaco;"></div>');
 
         var js = $('<div id="code_snippet"></div>');
-        var s = snippet.create_snippet(this.formatted_message.join("\n"), {font_size: font_size, count_lines: this.formatted_message.length});
+        var s = snippet.create_snippet(this.formatted_message.join("\n"), {
+            font_size: font_size, 
+            interline_size: font_size/2,
+            count_lines: this.formatted_message.length
+        });
         s.appendTo(container);
         
         return container;

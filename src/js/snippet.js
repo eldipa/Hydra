@@ -1,7 +1,7 @@
 define(['ace', 'jquery', 'underscore'], function (ace, $, _) {
     var create_snippet = function (code, opts) {
         var font_size = opts.font_size || 11;
-        var height_size = font_size + (opts.interline_size || 8); //px
+        var height_size = font_size + (opts.interline_size || 7); //px
 
         var height = (opts.count_lines || 1) * height_size;
 
