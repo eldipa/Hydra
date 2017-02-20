@@ -40,8 +40,7 @@ class Gdb(object):
                         self._execute_a_request,
                         return_subscription_id=True, send_and_wait_echo=True),
                 
-                self.ev.subscribe("type-into-gdb-console",
-#                    "type-into-gdb-console.%i" % self.gdb.pid, 
+                self.ev.subscribe("type-into-gdb-console.%i" % self.gdb.pid, 
                         self._type_into_gdb_console,
                         return_subscription_id=True, send_and_wait_echo=True),
                 ]
