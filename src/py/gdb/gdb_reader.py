@@ -22,7 +22,10 @@ class GDBReader(threading.Thread):
 
         self.gdb_console_last_chunks = []
         self.how_much_gdb_console_buffered = 0
-        self.max_gdb_console_buffer_length = 2048 * 4
+        self.max_gdb_console_buffer_length = 2048 * 16
+
+        self.chunk_size_for_read_gdb_mi = 2048
+        self.chunk_size_for_read_gdb_console = 2048
 
         self.ev.subscribe(
                 "request-last-output-from-gdb-console.%i" % self.gdb_pid, 
@@ -60,7 +63,7 @@ class GDBReader(threading.Thread):
             sys.stderr.write("**BYE!**\n")
 
     def _process_gdb_mi_income(self):
-        chunk = os.read(self.gdb_mi_file_descriptor, 2048)
+        chunk = os.read(self.gdb_mi_file_descriptor, self.chunk_size_for_read_gdb_mi)
         if not chunk:
             self.is_gdb_running = False
             if self._DEBUG:
@@ -100,7 +103,7 @@ class GDBReader(threading.Thread):
 
 
     def _process_gdb_console_chunk(self):
-        chunk = os.read(self.gdb_console_file_descriptor, 2048)
+        chunk = os.read(self.gdb_console_file_descriptor, self.chunk_size_for_read_gdb_console)
         if chunk:
             topic = "output-from-gdb-console.%i" % (self.gdb_pid, )
             self.ev.publish(topic, chunk)
