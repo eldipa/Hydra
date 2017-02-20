@@ -92,6 +92,18 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
         }
     };
 
+    ThreadFollower.prototype.follow_nobody = function () {
+        return this.follow(null, null);
+    };
+
+    ThreadFollower.prototype.follow_thread_group = function (thread_group_to_follow) {
+        return this.follow(null, thread_group_to_follow);
+    };
+
+    ThreadFollower.prototype.follow_specific_thread = function (thread_to_follow) {
+        return this.follow(thread_to_follow, null);
+    };
+
     ThreadFollower.prototype.clean_up = function () {
         if (this.thread_followed || this.thread_group_followed) throw new Error("Invalid clean-up state of ThreadFollower");
 
@@ -108,6 +120,31 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
     };
 
 
+    /*
+     *                      DB or TG  is dead
+     *                /-------------------------\
+     *               /                           \
+     *              V                             \
+     *                          follow TG
+     *      Following nobody    --------->  Following a thread group (and its debugger)
+     *      ----------------                -------------------------------------------
+     *   th followed == null                 th followed == null
+     *   tg followed == null                 tg followed == TG
+     *   db followed == null                 db followed == TG's DB
+     *
+     *           ^   \                        |     ^
+     *           |    \          follow TH    |     |   TH is dead
+     *            \    \                      V     |
+     *             \    \
+     *              \    \--------------->  Following a thread (and its debugger and thread group)
+     *               \      follow TH       ------------------------------------------------------
+     *                \                      th followed == TH
+     *                 \                     tg followed == TH's TG
+     *                  \----------------    dg followed == TH's DB
+     *                    DB or TG is dead
+     *
+     * */
+
     // TODO: the ThreadFollower should update himself not only if its thread changed but also if
     // other threads changed and their files are the same that the file seen by this ThreadFollower
     ThreadFollower.prototype.update = function (data, topic, tracker) {
@@ -120,13 +157,13 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
         // ------------------------------------------------------
 
 
-        // Thread Group specific stuff --------------------------
-        //
-        //
-        if (! this.are_you_following_a_thread_group()) {
+        if (this.are_you_following_nobody()) {
             return;
         }
 
+        // Thread Group specific stuff --------------------------
+        // from here we should be following a thread group
+        //
         // If any breakpoint changed, update that breakpoint
         if (_.contains(["breakpoint_update", "breakpoint_deleted", "breakpoint_changed"], topic)) {
             var breakpoint = data.breakpoint;
@@ -146,8 +183,12 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
         }
 
         if (_.contains(["thread_group_exited"], topic) && data.thread_group == this.thread_group_followed) {
-            this.follow(null, null); // restart the following, our thread group (process) is dead!
+            this.follow_nobody(); // restart the following, our thread group (process) is dead!
+            return;
+        }
 
+        if (_.contains(["debugger_exited"], topic) && data.debugger_obj === this.thread_group_followed.get_debugger_you_belong()) {
+            this.follow_nobody(); // restart the following, our debugger was killed (and out thread group didn't finished!)!
             return;
         }
 
@@ -155,13 +196,14 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
         //
         // Thread Group specific stuff end.
 
-
-        // Thread alive specific stuff --------------------------
-        //
-        //
+        
         if (! this.are_you_following_a_specific_thread() ) {
             return;
         }
+
+        // Thread alive specific stuff --------------------------
+        // from here not only we are following a thread group but a specific thread too
+        //
         
         // Get all the threads involved in this event  and determine if our thread followed
         // is one of them
@@ -209,7 +251,7 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
 
 
             if (is_my_thread_updated && _.contains(["thread_exited"], topic)) {
-                this.follow(null, this.thread_group_followed); // refollowing us, our thread is dead!
+                this.follow_thread_group(this.thread_group_followed); // refollowing us, our thread is dead!
             }
 
         }
@@ -239,14 +281,21 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
         if (!this.are_you_following_a_thread_group()) {
             throw new Error("see_your_thread_and_update_yourself on a follower which it is not following anything.");
         }
-        else if (this.are_you_following_a_thread_group() && !this.are_you_following_a_specific_thread()) {
+        else if (this.are_you_following_a_thread_group() && !this.are_you_following_a_specific_thread() 
+                && this.thread_group_followed.is_executable_loaded()) {
             var target = this.thread_group_followed;
         }
-        else {
+        else if (this.are_you_following_a_specific_thread()){
             var target = this.thread_followed;
         }
+        else {
+            var target = null; // we don't have a binary executable loaded so we cannot show anything
+        }
         
-        target.resolve_current_position(_.partial(this.update_button_bar_and_code_editor_to_show, _, _, _, am_i_following_other_thread));
+
+        if (target) {
+            target.resolve_current_position(_.partial(this.update_button_bar_and_code_editor_to_show, _, _, _, am_i_following_other_thread));
+        }
     };
 
     ThreadFollower.prototype.update_button_bar_and_code_editor_to_show = function (source_fullname, line_number_str, instruction_address, am_i_following_other_thread) {
@@ -351,6 +400,10 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
 
     ThreadFollower.prototype.are_you_following_a_live_process = function () {
         return this.thread_group_followed && this.thread_group_followed.are_you_alive();
+    };
+
+    ThreadFollower.prototype.are_you_following_nobody = function () {
+        return ! this.are_you_following_a_thread_group();
     };
 
     ThreadFollower.prototype.are_you_following_a_thread_group = function () {

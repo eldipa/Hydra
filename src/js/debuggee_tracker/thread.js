@@ -31,7 +31,7 @@ define(["underscore", "shortcuts", 'event_handler', 'debuggee_tracker/frame'], f
                    text: 'Follow',
                    action: function (e) {
                       e.preventDefault();
-                      from_who.thread_follower.follow(self);
+                      from_who.thread_follower.follow_specific_thread(self);
                    },
                   }];
         }

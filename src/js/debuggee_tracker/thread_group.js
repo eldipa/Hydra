@@ -52,7 +52,7 @@ define(["underscore", "shortcuts", 'event_handler'], function (_, shortcuts, eve
     };
 
     ThreadGroup.prototype.is_executable_loaded = function () {
-        return this._is_executable_loaded === true; // this is a HACK TODO (if gdb removes the executable we don't notice it!!)
+        return this.executable !== undefined; // this is a HACK TODO (if gdb removes the executable we don't notice it!!)
     };
     
     ThreadGroup.prototype.get_display_controller = function (from_who) {
@@ -63,13 +63,14 @@ define(["underscore", "shortcuts", 'event_handler'], function (_, shortcuts, eve
         var debugger_obj = self.tracker.get_debugger_with_id(debugger_id);
 
         var thread_follower = from_who.thread_follower;
+        console.log(this.executable);
 
         menu.push({
             text: 'Follow',
             disabled: !self.is_executable_loaded() || !thread_follower,
             action: function (e) {
                 e.preventDefault();
-                thread_follower.follow(null, self);
+                thread_follower.follow_thread_group(self);
             },
         });
 
@@ -84,7 +85,7 @@ define(["underscore", "shortcuts", 'event_handler'], function (_, shortcuts, eve
                       var file_exec_path = "" + $(this).val();
                       if (file_exec_path) {
                           self.load_file_exec_and_symbols(file_exec_path);
-                          thread_follower.follow(null, self);
+                          thread_follower.follow_thread_group(self);
                       }
                       else {
                           console.log("Loading nothing");
@@ -141,7 +142,6 @@ define(["underscore", "shortcuts", 'event_handler'], function (_, shortcuts, eve
         var self = this;
         var update_my_status_when_file_is_loaded = function () {
             var s = self.tracker.thread_groups_by_debugger[self.debugger_id];
-            self._is_executable_loaded = true;
             self.tracker._request_an_update_thread_groups_info(s, self.debugger_id);
         };
 
