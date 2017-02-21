@@ -81,7 +81,7 @@ function (err) {
    alert("Error during the import (" + err.requireType + ").\nFailed modules: " + err.requireModules + "\n");
 });
 
-requirejs(['processView', 'gdb_console_view', 'code_view', 'jquery', 'export_console', 'layout', 'layout_examples', 'jqueryui', 'ctxmenu', 'notify_js_console', 'debuggee_tracker/tracker', 'event_handler', 'debuggee_tracker_view', 'underscore', 'shortcuts', 'thread_follower', "breakpoints_view", "details_view", "global_toolbar", "hidra_log_view", "syscall_trace_view", "ipcsInfoView"], function (processView, gdb_console_view, code_view, $, export_console, layout, layout_examples, jqueryui, ctxmenu, notify_js_console, debuggee_tracker, event_handler, debuggee_tracker_view, _, shortcuts, thread_follower, breakpoints_view, details_view, glob, hidra_log_view_module, syscall_trace_view_module,ipcsInfoView) {
+requirejs(['processView', 'gdb_console_view', 'code_view', 'jquery', 'export_console', 'layout', 'layout_examples', 'jqueryui', 'ctxmenu', 'notify_js_console', 'debuggee_tracker/tracker', 'event_handler', 'debuggee_tracker_view', 'underscore', 'shortcuts', 'thread_follower', "breakpoints_view", "details_view", "global_toolbar", "hydra_log_view", "syscall_trace_view", "ipcsInfoView"], function (processView, gdb_console_view, code_view, $, export_console, layout, layout_examples, jqueryui, ctxmenu, notify_js_console, debuggee_tracker, event_handler, debuggee_tracker_view, _, shortcuts, thread_follower, breakpoints_view, details_view, glob, hydra_log_view_module, syscall_trace_view_module,ipcsInfoView) {
    var EH = event_handler.get_global_event_handler();
    EH.publish("ui.loading", {'what': "Creating the Views..."});
    
@@ -128,7 +128,7 @@ requirejs(['processView', 'gdb_console_view', 'code_view', 'jquery', 'export_con
    var bkps_view = new breakpoints_view.BreakpointsView(dbg_tracker);
 
    var det_view = new details_view.DetailsView();
-   var hydra_log = new hidra_log_view_module.HydraLogView(det_view);
+   var hydra_log = new hydra_log_view_module.HydraLogView(det_view);
    var syscall_trace_view = new syscall_trace_view_module.SyscallTraceView(det_view);
     
    var processGraphView = new processView.ProcessView();
