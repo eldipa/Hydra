@@ -128,7 +128,7 @@ requirejs(['processView', 'gdb_console_view', 'code_view', 'jquery', 'export_con
    var bkps_view = new breakpoints_view.BreakpointsView(dbg_tracker);
 
    var det_view = new details_view.DetailsView();
-   var hidra_log = new hidra_log_view_module.HidraLogView(det_view);
+   var hydra_log = new hidra_log_view_module.HydraLogView(det_view);
    var syscall_trace_view = new syscall_trace_view_module.SyscallTraceView(det_view);
     
    var processGraphView = new processView.ProcessView();
@@ -142,7 +142,7 @@ requirejs(['processView', 'gdb_console_view', 'code_view', 'jquery', 'export_con
 
    var tabbed = new layout.Tabbed();
    tabbed.add_child(aGdbConsoleView, "intab");
-   tabbed.add_child(hidra_log, "intab");
+   tabbed.add_child(hydra_log, "intab");
    tabbed.add_child(syscall_trace_view, "intab");
     
 

@@ -1,7 +1,7 @@
 define(["underscore", "jquery", "layout", "event_handler", "widgets/log_view", 'snippet'], function (_, $, layout, event_handler, log_view_module, snippet) {
    'use strict';
-   var HidraLogView = function (det_view) {
-       this.super("HidraLogView");
+   var HydraLogView = function (det_view) {
+       this.super("HydraLogView");
        
        var columns = [
            {id: 'n', name: "#", field: "n", width: 50, can_be_autosized: false},
@@ -30,18 +30,18 @@ define(["underscore", "jquery", "layout", "event_handler", "widgets/log_view", '
    };
 
 
-   HidraLogView.prototype.__proto__ = layout.Panel.prototype;
+   HydraLogView.prototype.__proto__ = layout.Panel.prototype;
 
-   HidraLogView.prototype.render = function() {
+   HydraLogView.prototype.render = function() {
        this.log_view.box = this.box;
        return this.log_view.render(this.box);
    };
 
-   HidraLogView.prototype.unlink = function() {
+   HydraLogView.prototype.unlink = function() {
        return this.log_view.unlink();
    }
 
-   HidraLogView.prototype.is_in_the_dom = function() {
+   HydraLogView.prototype.is_in_the_dom = function() {
        return this.log_view.is_in_the_dom();
    }
 
@@ -89,5 +89,5 @@ define(["underscore", "jquery", "layout", "event_handler", "widgets/log_view", '
        return null;
    };
 
-   return { HidraLogView: HidraLogView };
+   return { HydraLogView: HydraLogView };
 });

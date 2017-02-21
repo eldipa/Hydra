@@ -9,13 +9,13 @@ import syslog
 syslog.openlog("(gdb plugin)", logoption=syslog.LOG_PID)
 syslog.setlogmask(syslog.LOG_UPTO(7))
 import sys
-sys.path.append("/home/joedoe/ConcuDebug/src/py")
-sys.path.append("/home/joedoe/ConcuDebug/src/py/gdb")
+sys.path.append("/home/joedoe/Hydra/src/py")
+sys.path.append("/home/joedoe/Hydra/src/py/gdb")
 import gdb_event_handler
 import gdb_module_loader
 gdb_event_handler.initialize()
 gdb_module_loader.initialize()
-sys.path.append("/home/joedoe/ConcuDebug/src/py/gdb/Plugins")
+sys.path.append("/home/joedoe/Hydra/src/py/gdb/Plugins")
 
 NOTE: you can find the last update python code used to load the module infrastracture
 in src/py/gdb/gdb.py

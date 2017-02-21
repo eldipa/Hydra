@@ -1551,7 +1551,7 @@ define(['jquery', 'layout', 'underscore', 'widgets/switch_theme', 'code_view', '
             cv_panel = new code_view.CodeView();
             
             cv_panel.swap(foo_msg);
-            cv_panel.load_file('/home/martin/Codigo/ConcuDebug/src/cppTestCode/simplified_unix_tools/echo.c');
+            cv_panel.load_file('/home/joedoe/Hydra//src/cppTestCode/simplified_unix_tools/echo.c');
 
             cv_panel.parent().parent().parent().set_percentage(50);
 
