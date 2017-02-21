@@ -1,4 +1,4 @@
-Hidra
+Hydra
 =====
 
 One Debugger to rule them all, One Debugger to find them,
