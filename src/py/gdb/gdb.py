@@ -188,6 +188,7 @@ sys.path.append("%(plugin_module_path)s")
         # load the modules
         python_code = '''
 gdb_module_loader.get_module_loader().load('strace')
+gdb_module_loader.get_module_loader().load('ld_preload')
 ''' 
         for line in python_code.strip().split('\n'):
             if line.strip(): # warning, any empty line will make gdb to enter into 'python mode': we need to execute one line at time.
@@ -197,6 +198,7 @@ gdb_module_loader.get_module_loader().load('strace')
         # activate the modules
         gdb_code = '''
 gdb-module-strace-activate
+gdb-module-ld_preload-activate
 '''
         for line in gdb_code.strip().split('\n'):
             if line.strip(): 

@@ -14,3 +14,4 @@ threads/three_pthreads
 threads/merge_sort/merge_sort_with_threads
 /semTest
 /msgTest
+/forkTest

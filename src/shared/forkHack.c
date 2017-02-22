@@ -44,7 +44,7 @@ int fork() {
 			printf("Error de ftok: %s\n", strerror(errno));
 			fflush(stdout);
 		}
-		int cola = msgget(clave, 0666 | IPC_CREAT);
+		int cola = msgget(clave, 0666);
 		if (cola == -1) {
 			printf("Error de msgget: %s\n", strerror(errno));
 			fflush(stdout);

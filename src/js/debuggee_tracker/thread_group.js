@@ -84,7 +84,7 @@ define(["underscore", "shortcuts", 'event_handler'], function (_, shortcuts, eve
                       var file_exec_path = "" + $(this).val();
                       if (file_exec_path) {
                           self.load_file_exec_and_symbols(file_exec_path);
-                          thread_follower.follow(null, self);
+
                       }
                       else {
                           console.log("Loading nothing");
