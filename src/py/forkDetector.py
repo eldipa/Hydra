@@ -14,7 +14,13 @@ from struct import *
 _QUEUE_PATH_ = "/tmp/forkHack"
 _QUEUE_CHAR_ = 'a'
 
-_STRUCT_FORMAT_ = '<l4xi4x' #Formato little endiand - long - 4 x padding - int - 4 x padding 
+_STRUCT_FORMAT_64_ = '<l4xi4x' #Formato little endiand - long - 4 x padding - int - 4 x padding 
+_STRUCT_FORMAT_32_ = '<li'
+_STRUCT_FORMAT_ = _STRUCT_FORMAT_32_
+
+is_64bit = calcsize('P') * 8 == 64 #Checkeo la arquitectura utilizada, P = integer
+if is_64bit:
+    _STRUCT_FORMAT_ = _STRUCT_FORMAT_64_
  
  
 class ForkDetector(threading.Thread):
@@ -52,7 +58,7 @@ class ForkDetector(threading.Thread):
         return msg
     
     def finalizar(self):
-        if self.msgQueue:
+        if hasattr(self, 'msgQueue'):
             msg = pack(_STRUCT_FORMAT_, 1, 0)
 #             print msg.encode('hex_codec')
 #             print sys.getsizeof(msg)
