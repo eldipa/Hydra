@@ -81,6 +81,10 @@ define(["underscore", "event_handler", "debuggee_tracker/debugger", "debuggee_tr
                                        event_data: data,
                                        debugger_obj: debugger_obj,
                                        });
+      
+      this.EH.publish("tracker.new_gdb_being_tracked", { 
+								          gdb_id: debugger_id,
+								          });
    };
 
    /*

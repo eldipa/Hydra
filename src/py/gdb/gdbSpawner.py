@@ -4,6 +4,7 @@ import publish_subscribe.eventHandler
 
 import globalconfig
 import traceback, syslog
+from psutil import pid_exists
 
 class GdbSpawner(object):
     def __init__(self, count_gdbs_at_begin=None): 
@@ -13,6 +14,7 @@ class GdbSpawner(object):
             count_gdbs_at_begin = cfg.getint('gdbspawner', 'count_gdbs_at_begin')
         
         self.gdb_by_its_pid = {}
+        self.process_remaining_to_be_attached = []
         
         self.ev = publish_subscribe.eventHandler.EventHandler(name=name)
         self._subscribe_to_interested_events_for_me()
@@ -28,6 +30,7 @@ class GdbSpawner(object):
             self.ev.subscribe("spawner.add-debugger-and-attach", self._spawn_and_attach_a_gdb, return_subscription_id=True, send_and_wait_echo=True),
             self.ev.subscribe("spawner.kill-debugger", self._shutdown_a_gdb, return_subscription_id=True, send_and_wait_echo=True),
             self.ev.subscribe("spawner.kill-all-debuggers", self._shutdown_all_gdbs, return_subscription_id=True, send_and_wait_echo=True),
+            self.ev.subscribe("tracker.new_gdb_being_tracked" , self._spawm_completed_now_attach, return_subscription_id=True, send_and_wait_echo=True),
             ]
     
     def _unsubscribe_me_for_all_events(self):
@@ -50,11 +53,18 @@ class GdbSpawner(object):
     
     def _spawn_and_attach_completed(self, data):
         self.ev.publish("spawner.spawn_and_attach_completed", data['token'])
+        
+    def _spawm_completed_now_attach(self, data):
+        if len (self.process_remaining_to_be_attached) > 0:
+            pid = self.process_remaining_to_be_attached.pop()
+            gdb_pid = data['gdb_id']
+            self.ev.publish("request-gdb.%i" % gdb_pid, {"command": "attach", "arguments": [str(pid)], "token": str(pid), "interpreter": "console"})
+            self.ev.subscribe_for_once_call('result-gdb.%i.%i.done' % (gdb_pid, pid), self._spawn_and_attach_completed)
+
     
     def _spawn_and_attach_a_gdb(self, pid):
-        gdb_pid = self._spawn_a_gdb(None)
-        self.ev.publish("request-gdb.%i" % gdb_pid, {"command": "attach", "arguments": [str(pid)], "token": str(pid), "interpreter": "console"})
-        self.ev.subscribe_for_once_call('result-gdb.%i.%i.done' % (gdb_pid, pid), self._spawn_and_attach_completed)
+        self.process_remaining_to_be_attached.append(pid)
+        self.ev.publish("spawner.add-debugger", {})
 
     def _shutdown_a_gdb(self, data):
         ''' Shutdown the GDB process with process id data['pid']. '''
