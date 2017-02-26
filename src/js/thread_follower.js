@@ -78,18 +78,33 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
             this.clean_up();
         }
 
-        if (false) {
-            if (this.are_you_following_a_thread_group() && !this.are_you_following_a_specific_thread()) {
-                console.log("Thread follower: following a thread group "+this.thread_group_followed.get_display_name()+" ("+this.thread_group_followed.get_debugger_you_belong().get_display_name()+")");
-            }
-            else if (this.are_you_following_a_specific_thread()) {
-                if (!this.are_you_following_a_thread_group()) throw new Error("Inconsistent following");
-                console.log("Thread follower: following the thread "+this.thread_followed.get_display_name()+" of "+this.thread_group_followed.get_display_name()+" ("+this.thread_group_followed.get_debugger_you_belong().get_display_name()+")");
+        this.show_my_status();
+    };
+
+    ThreadFollower.prototype.show_my_status = function () {
+        if (this.are_you_following_a_thread_group() && !this.are_you_following_a_specific_thread()) {
+            if (this.thread_group_followed.is_executable_loaded()) {
+                var msg = "following " +
+                           this.thread_group_followed.get_display_name() + 
+                           " ("+this.thread_group_followed.get_debugger_you_belong().get_display_name()+"); " +
+                           "none thread in particular.";
             }
             else {
-                console.log("Thread follower: not following anything.");
+                var msg = "following an empty thread group."
             }
         }
+        else if (this.are_you_following_a_specific_thread()) {
+            if (!this.are_you_following_a_thread_group()) throw new Error("Inconsistent following");
+            var msg = "following " + 
+                      this.thread_followed.get_display_name() + 
+                      " of "+this.thread_group_followed.get_display_name()+" " +
+                      "("+this.thread_group_followed.get_debugger_you_belong().get_display_name()+").";
+        }
+        else {
+            var msg = "not following anything.";
+        }
+
+        console.info(msg);
     };
 
     ThreadFollower.prototype.follow_nobody = function () {
@@ -113,6 +128,10 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
         
         this.code_editor.clean_up();
         this.code_editor._file_selector.disable();
+
+        this.current_loaded_file = "";
+        this.current_loaded_codepage = null;
+
         this.button_bar.select_toolbar(); // because this thread follower is not following anything, this call will disable the button bar
 
         this.breakpoint_highlights.clean_up();
@@ -182,13 +201,18 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
             return;
         }
 
-        if (_.contains(["thread_group_exited"], topic) && data.thread_group == this.thread_group_followed) {
+        if (_.contains(["thread_group_removed"], topic) && data.thread_group == this.thread_group_followed) {
             this.follow_nobody(); // restart the following, our thread group (process) is dead!
             return;
         }
 
         if (_.contains(["debugger_exited"], topic) && data.debugger_obj === this.thread_group_followed.get_debugger_you_belong()) {
             this.follow_nobody(); // restart the following, our debugger was killed (and out thread group didn't finished!)!
+            return;
+        }
+        
+        if (_.contains(["thread_group_exited"], topic) && data.thread_group == this.thread_group_followed) {
+            this.follow_thread_group(this.thread_group_followed); // restart the following, all the threads are dead
             return;
         }
 
