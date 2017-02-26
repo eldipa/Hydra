@@ -63,7 +63,6 @@ define(["underscore", "shortcuts", 'event_handler'], function (_, shortcuts, eve
         var debugger_obj = self.tracker.get_debugger_with_id(debugger_id);
 
         var thread_follower = from_who.thread_follower;
-        console.log(this.executable);
 
         menu.push({
             text: 'Follow',
