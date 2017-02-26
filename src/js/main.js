@@ -106,7 +106,7 @@ requirejs(['processView', 'gdb_console_view', 'code_view', 'jquery', 'export_con
    ctxmenu.attachDynamic('body', undefined);
   
    // Copy the messages to the "console" and shows them to the UI
-   notify_js_console.init();
+   notify_js_console.init({autoHideDelay: 12000});
    notify_js_console.start_redirection();
 
    // Global toolbar (for develop mode only)
