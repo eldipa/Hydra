@@ -1079,6 +1079,7 @@ Terminal.prototype.refresh = function(start, end, queue) {
   }
 
   var x, y, i, line, out, ch, ch_width, width, data, attr, bg, fg, flags, row, parent, focused = document.activeElement;
+  var _em = null;
 
   // If this is a big refresh, remove the terminal rows from the DOM for faster calculations
   if (end - start >= this.rows / 2) {
@@ -1114,6 +1115,11 @@ Terminal.prototype.refresh = function(start, end, queue) {
     i = 0;
 
     for (; i < width; i++) {
+      _em = line[i];
+      if (!_em) {
+          continue;
+      }
+
       data = line[i][0];
       ch = line[i][1];
       ch_width = line[i][2];
@@ -1226,6 +1232,11 @@ Terminal.prototype.refresh = function(start, end, queue) {
 
     if (attr !== this.defAttr) {
       out += '</span>';
+    }
+
+    _em = this.children[y];
+    if (!_em) {
+        continue;
     }
 
     this.children[y].innerHTML = out;
