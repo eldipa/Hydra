@@ -38,7 +38,7 @@ class ForkDetector(threading.Thread):
             self.msgQueue = MessageQueue(_QUEUE_PATH_, _QUEUE_CHAR_, 0666, False)
     
     def respondToForkedProcess(self, data):
-        if data in self.PID_of_forked:
+        if data['pid'] in self.PID_of_forked:
             msg = self.CrearMensaje(data, 0)
             self.msgQueue.push(msg)
             self.PID_of_forked.remove(data)

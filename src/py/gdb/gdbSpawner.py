@@ -4,7 +4,7 @@ import publish_subscribe.eventHandler
 
 import globalconfig
 import traceback, syslog
-from psutil import pid_exists
+from psutil import pid_exists, Process
 
 class GdbSpawner(object):
     def __init__(self, count_gdbs_at_begin=None): 
@@ -52,7 +52,8 @@ class GdbSpawner(object):
         return gdb_pid
     
     def _spawn_and_attach_completed(self, data):
-        self.ev.publish("spawner.spawn_and_attach_completed", data['token'])
+        self.ev.publish("spawner.spawn_and_attach_completed", {"pid": data['token'], "pathToExe": Process(data['token']).exe()})
+        
         
     def _spawm_completed_now_attach(self, data):
         if len (self.process_remaining_to_be_attached) > 0:
