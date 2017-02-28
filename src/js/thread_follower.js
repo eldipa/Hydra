@@ -260,7 +260,7 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
         }
 
         // a thread changed, we need to update us:
-        if (_.contains(["thread-stack-updated", 'thread_created', 'thread_running', 'thread_stopped', 'thread_exited', 'thread_update', 'thread_group_exited'], topic)) {
+        if (_.contains(["thread-stack-updated", 'thread_created', 'thread_running', 'thread_stopped', 'thread_exited', 'thread_update', 'thread_group_exited', 'thread_group_update'], topic)) {
             // Update our thread that we are following
             if (is_my_thread_updated) {
                 this.see_your_thread_and_update_yourself();
@@ -323,7 +323,7 @@ define(['ace', 'jquery', 'layout', 'shortcuts', 'underscore', 'code_editor', 'th
     };
 
     ThreadFollower.prototype.update_button_bar_and_code_editor_to_show = function (source_fullname, line_number_str, instruction_address, am_i_following_other_thread) {
-        if (source_fullname && line_number_str && !this.button_bar.is_in_assembly()) {
+        if (source_fullname && line_number_str) {
             this.button_bar.leave_assembly_mode();
             this.code_editor._file_selector.update_selection(source_fullname);
 
