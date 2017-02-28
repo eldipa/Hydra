@@ -68,17 +68,21 @@ class IPCSInfoRecolector(threading.Thread):
         #detailed info
         for shmem in shmemInfo:
             info = {}
-            detailedInfo = subprocess.check_output(["ipcs","-m", "-i", shmem["shmid"]]).splitlines()
-            if("ipcs" in detailedInfo):
-                #El ipcs desaparecio mientras se iteraba
-                shmemInfo.remove(shmem)
-            else:
-                for i in range(2,5):
-                    info.update(self.splitDetailedInfo(detailedInfo[i].split()))
-    
-                info.update(self.splitDetailedInfo([detailedInfo[5]]))
-                
-                shmem.update(info)
+            try:
+                detailedInfo = subprocess.check_output(["ipcs","-m", "-i", shmem["shmid"]]).splitlines()
+                if("ipcs" in detailedInfo):
+                    #El ipcs desaparecio mientras se iteraba
+                    shmemInfo.remove(shmem)
+                else:
+                    for i in range(2,5):
+                        info.update(self.splitDetailedInfo(detailedInfo[i].split()))
+        
+                    info.update(self.splitDetailedInfo([detailedInfo[5]]))
+                    
+                    shmem.update(info)
+            except Exception as inst:
+                self.ev.publish("IPCSInfo.warning", {"Info": "Could not get detailed info", "traceback": traceback.format_exc(), "type": type(inst)})
+
             
         
         return shmemInfo
@@ -94,30 +98,33 @@ class IPCSInfoRecolector(threading.Thread):
         #detailed info
         for sem in semInfo:
             info = {}
-            detailedInfo = subprocess.check_output(["ipcs","-s", "-i", sem["semid"]]).splitlines()
-            if("ipcs" in detailedInfo):
-                #El ipcs desaparecio mientras se iteraba
-                semInfo.remove(sem)
-            else:
-                for i in range(2,4):
-                    info.update(self.splitDetailedInfo(detailedInfo[i].split()))
-                
-                for i in range(4,7):
-                    info.update(self.splitDetailedInfo([detailedInfo[i]]))
-                
-                subHeaders = detailedInfo[7].split()
-                
-                subinfo = []
-                for i in range(int(info["nsems"])):
-                    individualInfo = {}
-                    singularSemData = detailedInfo[8 + i].split()
-                    for j in range(len(subHeaders)):
-                        individualInfo.update({subHeaders[j]: singularSemData[j]})
-                    subinfo.append(individualInfo)
-                
-                info.update({"sems": subinfo})
-                
-                sem.update(info)
+            try:
+                detailedInfo = subprocess.check_output(["ipcs","-s", "-i", sem["semid"]]).splitlines()
+                if("ipcs" in detailedInfo):
+                    #El ipcs desaparecio mientras se iteraba
+                    semInfo.remove(sem)
+                else:
+                    for i in range(2,4):
+                        info.update(self.splitDetailedInfo(detailedInfo[i].split()))
+                    
+                    for i in range(4,7):
+                        info.update(self.splitDetailedInfo([detailedInfo[i]]))
+                    
+                    subHeaders = detailedInfo[7].split()
+                    
+                    subinfo = []
+                    for i in range(int(info["nsems"])):
+                        individualInfo = {}
+                        singularSemData = detailedInfo[8 + i].split()
+                        for j in range(len(subHeaders)):
+                            individualInfo.update({subHeaders[j]: singularSemData[j]})
+                        subinfo.append(individualInfo)
+                    
+                    info.update({"sems": subinfo})
+                    
+                    sem.update(info)
+            except Exception as inst:
+                self.ev.publish("IPCSInfo.warning", {"Info": "Could not get detailed info", "traceback": traceback.format_exc(), "type": type(inst)})
             
         return semInfo
     
@@ -136,18 +143,21 @@ class IPCSInfoRecolector(threading.Thread):
         #detailed info
         for msq in msqInfo:
             info = {}
-            detailedInfo = subprocess.check_output(["ipcs","-q", "-i", msq["msqid"]]).splitlines()
-            if("ipcs" in detailedInfo):
-                #El ipcs desaparecio mientras se iteraba
-                msqInfo.remove(msq)
-            else:
-                for i in range(2,4):
-                    info.update(self.splitDetailedInfo(detailedInfo[i].split()))
-    
-                for i in range(4,7):
-                    info.update(self.splitDetailedInfo([detailedInfo[i]]))
-                
-                msq.update(info)
+            try: 
+                detailedInfo = subprocess.check_output(["ipcs","-q", "-i", msq["msqid"]]).splitlines()
+                if("ipcs" in detailedInfo):
+                    #El ipcs desaparecio mientras se iteraba
+                    msqInfo.remove(msq)
+                else:
+                    for i in range(2,4):
+                        info.update(self.splitDetailedInfo(detailedInfo[i].split()))
+        
+                    for i in range(4,7):
+                        info.update(self.splitDetailedInfo([detailedInfo[i]]))
+                    
+                    msq.update(info)
+            except Exception as inst:
+                self.ev.publish("IPCSInfo.warning", {"Info": "Could not get detailed info", "traceback": traceback.format_exc(), "type": type(inst)})
             
         
         return msqInfo
