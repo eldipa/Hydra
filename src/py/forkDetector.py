@@ -40,7 +40,6 @@ class ForkDetector(threading.Thread):
     def respondToForkedProcess(self, data):
         pid = data['pid']
         if pid in self.PID_of_forked:
-            print "enviando msg a " + str(pid)
             msg = self.CrearMensaje(pid, 0)
             self.msgQueue.push(msg)
             self.PID_of_forked.remove(pid)
@@ -50,7 +49,7 @@ class ForkDetector(threading.Thread):
 #         print msg.encode('hex_codec')
 #         print len(msg)
 
-        struct = unpack(_STRUCT_FORMAT_, msg) #TODO Este padding sirve para una pc de 64 bits, extender para 32 y ver si puede existir otro padding
+        struct = unpack(_STRUCT_FORMAT_, msg) 
         
 #         print struct
         return struct[1]
