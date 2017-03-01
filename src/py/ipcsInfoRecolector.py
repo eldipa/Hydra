@@ -2,6 +2,7 @@ import threading
 import publish_subscribe.eventHandler
 from time import sleep
 import subprocess
+import traceback
 
 class IPCSInfoRecolector(threading.Thread):
 
