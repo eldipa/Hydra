@@ -1,6 +1,6 @@
 .PHONY: multiple_files simplified_unix_tools threads
 
-all: Prueba testExe testVariables write_one_char_at_time multiplesPunteros multiple_files simplified_unix_tools outputTest stdinTest threads semTest msgTest forkTest
+all: Prueba testExe testVariables write_one_char_at_time multiplesPunteros multiple_files simplified_unix_tools outputTest stdinTest threads semTest msgTest forkTest attachTest
 
 defines= -D espera
 
@@ -36,6 +36,9 @@ msgTest: msgTest.cpp
 	
 forkTest: forkTest.cpp
 	g++ -g -o forkTest forkTest.cpp
+	
+attachTest: attachTest.cpp
+	g++ -g -o attachTest attachTest.cpp
 
 simplified_unix_tools:
 	$(MAKE) --no-print-directory -C ./simplified_unix_tools
@@ -44,7 +47,7 @@ threads:
 	$(MAKE) --no-print-directory -C ./threads
 
 clean:
-	rm Prueba testExe testVariables write_one_char_at_time multiplesPunteros outputTest stdinTest semTest msgTest forkTest
+	rm Prueba testExe testVariables write_one_char_at_time multiplesPunteros outputTest stdinTest semTest msgTest forkTest attachTest
 	$(MAKE) --no-print-directory -C ./multiple_files clean
 	$(MAKE) --no-print-directory -C ./simplified_unix_tools clean
 	$(MAKE) --no-print-directory -C ./threads clean
