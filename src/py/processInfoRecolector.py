@@ -65,6 +65,6 @@ class ProcessInfoRecolector(threading.Thread):
                     while remainingSize > 0:
                         processDivision = removedProcess[:self.msgTrunk]
                         removedProcess = removedProcess[self.msgTrunk:]
-                        self.ev.publish("processInfo.info", {"add": [], "remove": removedProcess})
+                        self.ev.publish("processInfo.info", {"add": [], "remove": processDivision})
                         remainingSize = len(removedProcess)
             

@@ -199,7 +199,7 @@ class IPCSInfoRecolector(threading.Thread):
                     while remainingSize > 0:
                         division = removed[:self.msgTrunk]
                         removed = removed[self.msgTrunk:]
-                        self.ev.publish("IPCSInfo.info", {"add": [], "remove": removed, "type": type})
+                        self.ev.publish("IPCSInfo.info", {"add": [], "remove": division, "type": type})
                         remainingSize = len(removed)
             
         
