@@ -11,7 +11,7 @@ int main(int argc, char **argv) {
 		if (pid == 0) {
 			// child process
 			usleep(1000000);
-			if (pid % 2 == 0) {
+			if (getpid() % 2 == 0) {
 				pid = fork();
 				if (pid == 0) {
 					usleep(1000000);
@@ -26,6 +26,7 @@ int main(int argc, char **argv) {
 				}
 				return 0;
 			}
+			return 0;
 
 		} else if (pid > 0) {
 			// parent process
