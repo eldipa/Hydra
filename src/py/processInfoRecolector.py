@@ -33,7 +33,11 @@ class ProcessInfoRecolector(threading.Thread):
             for pid in pidList:
                 try:
                     pidInfo = psutil.Process(pid)
-                    self.processInfo.append({"pid": pid, "ppid": pidInfo.ppid(), "command": pidInfo.name()})
+                    if pidInfo.status() == "zombie":
+                        status = pidInfo.status()
+                    else:
+                        status = "running"
+                    self.processInfo.append({"pid": pid, "ppid": pidInfo.ppid(), "command": pidInfo.name(), "status": status})
                 except psutil.NoSuchProcess:
                     pass # el proceso finalizo en el tiempo que se iteraba en la lista pidList, ignorar
                 except Exception as inst:

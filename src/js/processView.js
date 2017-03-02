@@ -49,13 +49,15 @@ define([ 'jquery', 'layout', 'shortcuts', 'event_handler', 'd3' ], function($, l
     		
     		var update = false;
 
-        	if (data.add.length >0){
-	        	my_self.addNodes(data.add);
-	        	update = true
-        	}
+        	
         	
         	if (data.remove.length >0){
 	        	my_self.removeNodes(data.remove);
+	        	update = true
+        	}
+        	
+        	if (data.add.length >0){
+	        	my_self.addNodes(data.add);
 	        	update = true
         	}
         	
@@ -209,21 +211,33 @@ define([ 'jquery', 'layout', 'shortcuts', 'event_handler', 'd3' ], function($, l
 		
 		this.node = this.g_nodes.selectAll(".node")
 		        .data(this.nodes, function (d) {
-		            return d.pid;
+		            return (d.pid + "-" + d.command + "-" + d.status);
 		        });
 		
 		var nodeEnter = this.node.enter().append("g").on("dblclick", this.dblclick);
 		
 		nodeEnter.append("svg:circle").attr("class", "node").attr("r", this.smallRadius)
 		      .style("fill", function(d) {
-		      		return color(Math.floor((Math.random() * 20) + 1));
+		    	  	var nodeColor;
+		    	  	if (d.status == "zombie") {
+			    	  	nodeColor = d3.rgb("white");
+		    	  	} else{
+		    	  		nodeColor = color(Math.floor((Math.random() * 20) + 1));
+		    	  	}
+		      		return nodeColor
 		      	}).call(this.force.drag).on("mouseover",
 		          function(d, i) {
 		          	// disable zoom
 		          	my_self.g.on(".zoom", null);
 		          	my_self.tooltip.transition().duration(200).style("opacity", .9);
-		          	my_self.tooltip.html(d.command + " " + d.pid).style("left", (d3.event.pageX) + "px").style("top",
+		          	var text = d.command + " " + d.pid + " " + d.status
+		          	my_self.tooltip.html(text).style("left", (d3.event.pageX) + "px").style("top",
 		                      (d3.event.pageY - 28) + "px");
+		          	if (text.length > 28){
+		          		my_self.tooltip.html(text).style("height", "36px");
+		          	} else {
+		          		my_self.tooltip.html(text).style("height", "18px");
+		          	}
 		          }).on("mouseout", function(d) {
 		          	my_self.tooltip.transition().duration(500).style("opacity", 0);
 		          	//reenable zoom
