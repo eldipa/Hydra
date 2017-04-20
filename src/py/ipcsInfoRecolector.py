@@ -82,7 +82,7 @@ class IPCSInfoRecolector(threading.Thread):
                     
                     shmem.update(info)
             except Exception as inst:
-                self.ev.publish("IPCSInfo.warning", {"Info": "Could not get detailed info", "traceback": traceback.format_exc(), "type": type(inst)})
+                self.ev.publish("IPCSInfo.warning", {"Info": "Could not get detailed info of shmem"})
 
             
         
@@ -125,7 +125,7 @@ class IPCSInfoRecolector(threading.Thread):
                     
                     sem.update(info)
             except Exception as inst:
-                self.ev.publish("IPCSInfo.warning", {"Info": "Could not get detailed info", "traceback": traceback.format_exc(), "type": type(inst)})
+                self.ev.publish("IPCSInfo.warning", {"Info": "Could not get detailed info of sem"})
             
         return semInfo
     
@@ -158,7 +158,7 @@ class IPCSInfoRecolector(threading.Thread):
                     
                     msq.update(info)
             except Exception as inst:
-                self.ev.publish("IPCSInfo.warning", {"Info": "Could not get detailed info", "traceback": traceback.format_exc(), "type": type(inst)})
+                self.ev.publish("IPCSInfo.warning", {"Info": "Could not get detailed info of msq"})
             
         
         return msqInfo
