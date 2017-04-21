@@ -9,6 +9,12 @@ define(["underscore", "shortcuts", 'event_handler'], function (_, shortcuts, eve
         this.id = id;
         this.tracker = tracker;
         this.EH = event_handler.get_global_event_handler();
+        
+        var my_self = this;
+        this.EH.subscribe('spawner.spawn_and_attach_completed',function(data){
+        	var s = my_self.tracker.thread_groups_by_debugger[data['debuggerId']];
+        	my_self.tracker._request_an_update_thread_groups_info(s, data['debuggerId']);
+        });
     };
 
     ThreadGroup.prototype.update = shortcuts._update_properties;
