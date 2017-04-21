@@ -81,7 +81,7 @@ class ForkDetector(threading.Thread):
                     self.PID_of_forked_lock.acquire() 
                     self.PID_of_forked.append(pid)
                     self.PID_of_forked_lock.release()
-                    self.ev.publish("spawner.add-debugger-and-attach.ForkDetector", pid)
+                    self.ev.publish("spawner.add-debugger-and-attach.ForkDetector", {'pid': pid, "continue": True})
 
         except Exception as inst:
             print type(inst)

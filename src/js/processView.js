@@ -426,7 +426,7 @@ define([ 'jquery', 'layout', 'shortcuts', 'event_handler', 'd3' ], function($, l
     	var debug = {
         	    text: 'Debug this',
         	    action: function(e){
-        	    	my_self.EH.publish("spawner.add-debugger-and-attach", node.pid)
+        	    	my_self.EH.publish("spawner.add-debugger-and-attach", {'pid': node.pid, 'continue': false})
         	    }
         	   };
     	
