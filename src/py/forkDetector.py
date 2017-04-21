@@ -40,8 +40,7 @@ class ForkDetector(threading.Thread):
     
     def respondToForkedProcess(self, data):
         pid = data['pid']
-#         print pid
-#         print self.PID_of_forked
+
         self.PID_of_forked_lock.acquire() 
         if pid in self.PID_of_forked:
             msg = self.CrearMensaje(pid, 0)

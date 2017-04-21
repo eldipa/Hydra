@@ -53,19 +53,18 @@ class GdbSpawner(object):
         return gdb_pid
     
     def _spawn_and_attach_completed(self, data):
-#         print data['token']
         self.ev.publish("spawner.spawn_and_attach_completed", {"pid": data['token'], "pathToExe": Process(data['token']).exe(), "debuggerId": data ['debugger-id']})
         if self.autoContinue:
             self.ev.publish("request-gdb.%i" % data ['debugger-id'], {"command": "continue", "arguments": [], "interpreter": "console", "token": str(data ['debugger-id'])})
         
         
     def _spawm_completed_now_attach(self, data):
-#         print self.process_remaining_to_be_attached
         if len (self.process_remaining_to_be_attached) > 0:
             pid = self.process_remaining_to_be_attached.pop()
             gdb_pid = data['gdb_id']
-            self.ev.publish("request-gdb.%i" % gdb_pid, {"command": "attach", "arguments": [str(pid)], "token": str(pid), "interpreter": "console"})
             self.ev.subscribe_for_once_call('result-gdb.%i.%i.done' % (gdb_pid, pid), self._spawn_and_attach_completed)
+            self.ev.publish("request-gdb.%i" % gdb_pid, {"command": "attach", "arguments": [str(pid)], "token": str(pid), "interpreter": "console"})
+            
 
     
     def _spawn_and_attach_a_gdb(self, pid):
