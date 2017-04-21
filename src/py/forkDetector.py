@@ -29,7 +29,7 @@ class ForkDetector(threading.Thread):
         threading.Thread.__init__(self)
         open(_QUEUE_PATH_,'a')
         self.PID_of_forked = []
-        PID_of_forked_lock = threading.Lock() 
+        self.PID_of_forked_lock = threading.Lock() 
         self.ev = publish_subscribe.eventHandler.EventHandler(name="ForkDetector")
         self.ev.subscribe('spawner.spawn_and_attach_completed', self.respondToForkedProcess)
         try:
@@ -40,12 +40,14 @@ class ForkDetector(threading.Thread):
     
     def respondToForkedProcess(self, data):
         pid = data['pid']
-        PID_of_forked_lock.acquire() 
+#         print pid
+#         print self.PID_of_forked
+        self.PID_of_forked_lock.acquire() 
         if pid in self.PID_of_forked:
             msg = self.CrearMensaje(pid, 0)
             self.msgQueue.push(msg)
             self.PID_of_forked.remove(pid)
-        PID_of_forked_lock.release()
+        self.PID_of_forked_lock.release()
             
 
     def ObtenerPID(self, msg):
@@ -77,9 +79,9 @@ class ForkDetector(threading.Thread):
                 if pid == 0:
                     salir = True
                 else:
-                    PID_of_forked_lock.acquire() 
+                    self.PID_of_forked_lock.acquire() 
                     self.PID_of_forked.append(pid)
-                    PID_of_forked_lock.release()
+                    self.PID_of_forked_lock.release()
                     self.ev.publish("spawner.add-debugger-and-attach.ForkDetector", pid)
 
         except Exception as inst:
